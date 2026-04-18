@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 /**
  * Prebuild data generator for the GAD landing site.
  *
@@ -174,6 +174,11 @@ const REQUIREMENTS_DIR = path.join(DOWNLOADS_DIR, "requirements");
 const PLANNING_ZIPS_DIR = path.join(DOWNLOADS_DIR, "planning");
 const PLAYABLE_DIR = path.join(PUBLIC_DIR, "playable");
 const GENERATED_FILE = path.join(SITE_ROOT, "lib", "eval-data.generated.ts");
+// Task 44-40: marketplace index — fast cross-project view of every published
+// generation. Emitted as both a TS export inside eval-data.generated.ts and as
+// a standalone JSON file so non-TS consumers (CLI, marketplace-only API
+// routes) can read it without bundling the full eval-data tree.
+const MARKETPLACE_INDEX_FILE = path.join(SITE_ROOT, "lib", "marketplace-index.generated.json");
 const CATALOG_FILE = path.join(SITE_ROOT, "lib", "catalog.generated.ts");
 const PROJECT_CONFIG_FILE = path.join(SITE_ROOT, "lib", "project-config.generated.ts");
 const DEVID_PROMPTS_FILE = path.join(SITE_ROOT, "lib", "devid-prompts.generated.ts");
@@ -228,6 +233,32 @@ function listEvalSpecies() {
     }
   }
   return out;
+}
+
+/**
+ * Task 44-39: read a generation's MANIFEST.json (publish lifecycle).
+ * Defaults to draft when the file is missing or malformed.
+ */
+function readGenerationManifest(genDir) {
+  const p = path.join(genDir, "MANIFEST.json");
+  if (!exists(p)) {
+    return { status: "draft", publishedAt: null, publishedBy: null, manifestExists: false };
+  }
+  try {
+    const raw = JSON.parse(fs.readFileSync(p, "utf8"));
+    const status =
+      raw.status === "published" || raw.status === "unlisted" || raw.status === "draft"
+        ? raw.status
+        : "draft";
+    return {
+      status,
+      publishedAt: typeof raw.publishedAt === "string" ? raw.publishedAt : null,
+      publishedBy: typeof raw.publishedBy === "string" ? raw.publishedBy : null,
+      manifestExists: true,
+    };
+  } catch {
+    return { status: "draft", publishedAt: null, publishedBy: null, manifestExists: false };
+  }
 }
 
 function listEvalGenerations() {
@@ -937,6 +968,7 @@ function scanCatalog() {
         id,
         name: data.name || id,
         description: data.description || firstParagraph(body, 280),
+        lane: data.lane ?? null,
         imagePath,
         origin: declaredOrigin,
         authoredBy: data["authored-by"] || null,
@@ -2175,6 +2207,7 @@ export interface CatalogSkill {
   id: string;
   name: string;
   description: string;
+  lane?: string | string[] | null;
   imagePath?: string | null;
   origin?: "human-authored" | "emergent" | "inherited" | "official" | "internal" | null;
   authoredBy?: string | null;
@@ -2988,6 +3021,26 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
     };
   }
 
+  // Task 44-39: enrich every record with publish-lifecycle status read from
+  // the per-generation MANIFEST.json. Index gens by id for O(1) lookup.
+  const genDirById = new Map();
+  for (const gen of listEvalGenerations()) {
+    genDirById.set(gen.id, gen.dir);
+  }
+  for (const r of records) {
+    const dir = genDirById.get(r.id);
+    const manifest = dir
+      ? readGenerationManifest(dir)
+      : { status: "draft", publishedAt: null, publishedBy: null, manifestExists: false };
+    r.status = manifest.status;
+    r.publishedAt = manifest.publishedAt;
+    r.publishedBy = manifest.publishedBy;
+    // Internal-only flag (not part of the exported type) so the marketplace
+    // index can apply the legacy "no manifest + playable build = published"
+    // back-compat rule below.
+    r._manifestExists = manifest.manifestExists;
+  }
+
   const playable = {};
   for (const r of records) {
     // Phase 43: playable index keyed by project/species/version.
@@ -3002,6 +3055,98 @@ function writeEvalDataTs(traces, evalTemplates, gadPackTemplate, extras) {
       playable[r.id] = urlPath;
     }
   }
+
+  // Task 44-40: build marketplace-index — every generation with status ===
+  // "published" AND a real playable build (status flipped but copy missing
+  // gets surfaced as a warning rather than published; we only list rows the
+  // user can actually open).
+  const marketplaceIndex = {
+    schema: "marketplace-index@1",
+    generated_at: new Date().toISOString(),
+    projects: (extras.evalProjects ?? []).map((p) => ({
+      id: p.id,
+      project: p.project ?? p.id,
+      species: p.species ?? null,
+      name: p.name,
+      description: p.description ?? null,
+      domain: p.domain ?? null,
+      techStack: p.techStack ?? null,
+      contextFramework: p.contextFramework ?? null,
+    })),
+    generations: records
+      .filter((r) => {
+        if (!playable[r.id]) return false;
+        if (r.status === "published") return true;
+        // Back-compat (task 44-39): pre-existing playable generations that
+        // never received an explicit MANIFEST default to published. Once the
+        // manifest exists the operator's choice is authoritative.
+        if (r.status === "draft" && !r._manifestExists) return true;
+        return false;
+      })
+      .map((r) => ({
+        id: r.id,
+        project: r.project,
+        species: r.species ?? null,
+        version: r.version,
+        status: "published",
+        publishedAt: r.publishedAt,
+        publishedBy: r.publishedBy,
+        playableUrl: playable[r.id],
+        score: r.scores?.composite ?? null,
+        date: r.date ?? null,
+        contextFramework:
+          (extras.evalProjects ?? []).find(
+            (p) => p.project === r.project && p.species === r.species,
+          )?.contextFramework ?? null,
+      }))
+      .sort((a, b) => {
+        const ta = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+        const tb = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+        return tb - ta;
+      }),
+  };
+  // Distinct species index (every species with >=1 published generation).
+  marketplaceIndex.species = Array.from(
+    marketplaceIndex.generations.reduce((acc, g) => {
+      if (!g.species) return acc;
+      const key = g.species;
+      const prev = acc.get(key) ?? {
+        species: key,
+        projects: new Set(),
+        publishedCount: 0,
+        latestPublishedAt: null,
+      };
+      prev.projects.add(g.project);
+      prev.publishedCount += 1;
+      if (
+        g.publishedAt &&
+        (!prev.latestPublishedAt || Date.parse(g.publishedAt) > Date.parse(prev.latestPublishedAt))
+      ) {
+        prev.latestPublishedAt = g.publishedAt;
+      }
+      acc.set(key, prev);
+      return acc;
+    }, new Map()).values(),
+  ).map((s) => ({
+    species: s.species,
+    projects: Array.from(s.projects).sort(),
+    publishedCount: s.publishedCount,
+    latestPublishedAt: s.latestPublishedAt,
+  }));
+
+  // Internal-only enrichment field — strip before the records get serialized
+  // into eval-data.generated.ts (would otherwise leak into EvalRunRecord type).
+  for (const r of records) delete r._manifestExists;
+
+  ensureDir(path.dirname(MARKETPLACE_INDEX_FILE));
+  fs.writeFileSync(
+    MARKETPLACE_INDEX_FILE,
+    JSON.stringify(marketplaceIndex, null, 2) + "\n",
+    "utf8",
+  );
+  console.log(
+    `  [write] ${path.relative(SITE_ROOT, MARKETPLACE_INDEX_FILE)} (${marketplaceIndex.generations.length} published generations, ${marketplaceIndex.species.length} species)`,
+  );
 
   const out = `/**
  * Auto-generated from evals/<project>/<version>/TRACE.json files.
@@ -3184,6 +3329,51 @@ export interface EvalRunRecord {
         skillsAuthored: string[];
       }
     | null;
+  /** Task 44-39: per-generation publish lifecycle. Source of truth: MANIFEST.json. */
+  status?: "draft" | "published" | "unlisted";
+  publishedAt?: string | null;
+  publishedBy?: string | null;
+}
+
+/**
+ * Task 44-40: marketplace index — every published generation across all
+ * projects/species, plus a derived species-index for the species browse view.
+ */
+export interface MarketplaceGeneration {
+  id: string;
+  project: string;
+  species: string | null;
+  version: string;
+  status: "published";
+  publishedAt: string | null;
+  publishedBy: string | null;
+  playableUrl: string;
+  score: number | null;
+  date: string | null;
+  contextFramework: string | null;
+}
+export interface MarketplaceSpecies {
+  species: string;
+  projects: string[];
+  publishedCount: number;
+  latestPublishedAt: string | null;
+}
+export interface MarketplaceProject {
+  id: string;
+  project: string;
+  species: string | null;
+  name: string;
+  description: string | null;
+  domain: string | null;
+  techStack: string | null;
+  contextFramework: string | null;
+}
+export interface MarketplaceIndex {
+  schema: "marketplace-index@1";
+  generated_at: string;
+  projects: MarketplaceProject[];
+  generations: MarketplaceGeneration[];
+  species: MarketplaceSpecies[];
 }
 
 export interface EvalTemplateAsset {
@@ -3268,6 +3458,8 @@ export const EVAL_PROJECTS: EvalProjectMeta[] = ${JSON.stringify(extras.evalProj
 export const PRODUCED_ARTIFACTS: Record<string, ProducedArtifacts> = ${JSON.stringify(extras.producedArtifacts ?? {}, null, 2)};
 
 export const PLAYABLE_INDEX: Record<string, string> = ${JSON.stringify(playable, null, 2)};
+
+export const MARKETPLACE_INDEX: MarketplaceIndex = ${JSON.stringify(marketplaceIndex, null, 2)};
 
 export interface OpenQuestion {
   id: string;

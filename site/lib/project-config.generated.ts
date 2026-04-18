@@ -11,57 +11,57 @@ export const REGISTERED_PROJECTS: RegisteredProject[] = [
   {
     "id": "get-anything-done",
     "kind": "planning",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\get-anything-done"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\get-anything-done"
   },
   {
     "id": "grime-time",
     "kind": "planning",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\grime-time-site"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\grime-time-site"
   },
   {
     "id": "repub-builder",
     "kind": "planning",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\repub-builder"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\repub-builder"
   },
   {
     "id": "mb-cli-framework",
     "kind": "planning",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\mb-cli-framework"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\mb-cli-framework"
   },
   {
     "id": "magicborn",
     "kind": "planning",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\projects\\magicborn"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\projects\\magicborn"
   },
   {
     "id": "global",
     "kind": "planning",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio"
   },
   {
     "id": "app-forge",
     "kind": "both",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\apps\\forge"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\apps\\forge"
   },
   {
     "id": "project-editor",
     "kind": "both",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\projects\\project-editor"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\projects\\project-editor"
   },
   {
     "id": "claw-cli",
     "kind": "planning",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\claw-code"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\claw-code"
   },
   {
     "id": "llm-from-scratch",
     "kind": "planning",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\projects\\llm-from-scratch"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\projects\\llm-from-scratch"
   },
   {
     "id": "portfolio-legacy",
     "kind": "evals",
-    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\evals"
+    "path": "c:\\Users\\benja\\Documents\\custom_portfolio\\evals"
   }
 ];
 

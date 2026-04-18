@@ -179,6 +179,51 @@ export interface EvalRunRecord {
         skillsAuthored: string[];
       }
     | null;
+  /** Task 44-39: per-generation publish lifecycle. Source of truth: MANIFEST.json. */
+  status?: "draft" | "published" | "unlisted";
+  publishedAt?: string | null;
+  publishedBy?: string | null;
+}
+
+/**
+ * Task 44-40: marketplace index — every published generation across all
+ * projects/species, plus a derived species-index for the species browse view.
+ */
+export interface MarketplaceGeneration {
+  id: string;
+  project: string;
+  species: string | null;
+  version: string;
+  status: "published";
+  publishedAt: string | null;
+  publishedBy: string | null;
+  playableUrl: string;
+  score: number | null;
+  date: string | null;
+  contextFramework: string | null;
+}
+export interface MarketplaceSpecies {
+  species: string;
+  projects: string[];
+  publishedCount: number;
+  latestPublishedAt: string | null;
+}
+export interface MarketplaceProject {
+  id: string;
+  project: string;
+  species: string | null;
+  name: string;
+  description: string | null;
+  domain: string | null;
+  techStack: string | null;
+  contextFramework: string | null;
+}
+export interface MarketplaceIndex {
+  schema: "marketplace-index@1";
+  generated_at: string;
+  projects: MarketplaceProject[];
+  generations: MarketplaceGeneration[];
+  species: MarketplaceSpecies[];
 }
 
 export interface EvalTemplateAsset {
@@ -364,7 +409,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 2,
       "commit_discipline": 0
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -487,7 +535,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 6,
       "commit_discipline": 0
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -603,7 +654,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 1,
       "commit_discipline": 0
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -752,7 +806,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -839,7 +896,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -955,7 +1015,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 2,
       "commit_discipline": 0
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1074,7 +1137,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 2,
       "commit_discipline": 0
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1231,7 +1297,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1318,7 +1387,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1402,7 +1474,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1506,7 +1581,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1674,7 +1752,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 0,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1756,7 +1837,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1840,7 +1924,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -1978,7 +2065,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 4,
       "commit_discipline": 0.25
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -2087,7 +2177,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 19,
       "commit_discipline": 1
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -2244,7 +2337,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 11,
       "commit_discipline": 0.9090909090909091
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -2396,7 +2492,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 13,
       "commit_discipline": 0.8461538461538461
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -2547,7 +2646,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 21,
       "commit_discipline": 0.8095238095238095
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -2662,7 +2764,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 0,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "escape-the-dungeon",
@@ -2793,7 +2898,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": 0,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   },
   {
     "project": "gad-explainer-video",
@@ -2875,7 +2983,10 @@ export const EVAL_RUNS: EvalRunRecord[] = [
       "subagent_utilization": null,
       "total_commits": null,
       "commit_discipline": null
-    }
+    },
+    "status": "draft",
+    "publishedAt": null,
+    "publishedBy": null
   }
 ];
 
@@ -3835,6 +3946,406 @@ export const PLAYABLE_INDEX: Record<string, string> = {
   "gad-explainer-video/gad/v1": "/playable/gad-explainer-video/gad/v1/index.html"
 };
 
+export const MARKETPLACE_INDEX: MarketplaceIndex = {
+  "schema": "marketplace-index@1",
+  "generated_at": "2026-04-18T20:56:03.802Z",
+  "projects": [
+    {
+      "id": "app-forge/gad",
+      "project": "app-forge",
+      "species": "gad",
+      "name": "app-forge/gad",
+      "description": "Greenfield: agent builds app-forge from scratch using the full GAD framework. v1 spawn = execute phase 01 from apps/forge/.planning/plans/phase-01/PLAN.md against a fresh worktree.",
+      "domain": "app",
+      "techStack": "next.js",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/bare",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "name": "escape-the-dungeon/bare",
+      "description": "Greenfield baseline: agent builds the game WITHOUT a planning framework, creating its own workflow",
+      "domain": "game",
+      "techStack": "kaplay",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/emergent",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "name": "escape-the-dungeon/emergent",
+      "description": "Greenfield emergent: agent builds the game with skills inherited from previous bare/emergent runs. Tests whether self-created systems improve over iterations.",
+      "domain": "game",
+      "techStack": "kaplay",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/gad",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "name": "escape-the-dungeon/gad",
+      "description": "Greenfield: agent builds the game from scratch using the full GAD framework",
+      "domain": "game",
+      "techStack": "kaplay",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/vcs-test",
+      "project": "escape-the-dungeon",
+      "species": "vcs-test",
+      "name": "escape-the-dungeon/vcs-test",
+      "description": "VCS portability test: bare v1 game with VCS skills installed. Tests whether an agent can build identifiers + dev panel in a KAPLAY canvas game.",
+      "domain": "game",
+      "techStack": "kaplay",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "gad-explainer-video/bare",
+      "project": "gad-explainer-video",
+      "species": "bare",
+      "name": "gad-explainer-video/bare",
+      "description": "gad-explainer-video-bare — tests the same hypotheses as gad-explainer-video but under the bare workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
+      "domain": "stories",
+      "techStack": "remotion",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "gad-explainer-video/emergent",
+      "project": "gad-explainer-video",
+      "species": "emergent",
+      "name": "gad-explainer-video/emergent",
+      "description": "gad-explainer-video-emergent — tests the same hypotheses as gad-explainer-video but under the emergent workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
+      "domain": "stories",
+      "techStack": "remotion",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "gad-explainer-video/gad",
+      "project": "gad-explainer-video",
+      "species": "gad",
+      "name": "gad-explainer-video/gad",
+      "description": "NEW EVAL DOMAIN (task 22-31, scaffolded 2026-04-09). The task is to produce a Remotion video that explains the GAD framework, its hypotheses, and its current state. The video requirements evolve across rounds the same way the escape-the-dungeon game requirements did — each round adds clarity, constraints, and complexity to the explainer script. Tests the same hypotheses (freedom / CSH / emergent-evolution) on a completely different task domain: video composition instead of game implementation. If bare still outperforms GAD here, freedom hypothesis generalizes beyond game dev. If not, freedom may be specific to creative implementation.",
+      "domain": "stories",
+      "techStack": "remotion",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "grime-time/gad",
+      "project": "grime-time",
+      "species": "gad",
+      "name": "grime-time/gad",
+      "description": "Brownfield GAD species: continue development on the existing grime-time-site codebase with the full GAD framework (skills, agents, planning, evaluation).",
+      "domain": "site",
+      "techStack": "next.js",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "magicborn/gad",
+      "project": "magicborn",
+      "species": "gad",
+      "name": "magicborn/gad",
+      "description": "Brownfield GAD species: continue manuscript/worldbuilding work using the full GAD framework with the manuscript content-skill overlay.",
+      "domain": "writing",
+      "techStack": "mdx",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "mb-cli-framework/gad",
+      "project": "mb-cli-framework",
+      "species": "gad",
+      "name": "mb-cli-framework/gad",
+      "description": "Brownfield GAD species: continue development on the existing mb-cli-framework codebase with the full GAD framework.",
+      "domain": "cli",
+      "techStack": "node+ink",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "project-editor/app-forge-baseline",
+      "project": "project-editor",
+      "species": "app-forge-baseline",
+      "name": "project-editor/app-forge-baseline",
+      "description": "Inherited baseline species — project-editor starts from app-forge v1 as its initial shape. Until project-editor produces its own generations, this species points at the app-forge v1 preserved build as the visible artifact so the Brood Editor has something to render when project-editor is selected.",
+      "domain": "app",
+      "techStack": "next.js",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "repub-builder/gad",
+      "project": "repub-builder",
+      "species": "gad",
+      "name": "repub-builder/gad",
+      "description": "Brownfield GAD species: continue development on the existing repub-builder codebase with the full GAD framework.",
+      "domain": "cli",
+      "techStack": "vite+react",
+      "contextFramework": "gad"
+    }
+  ],
+  "generations": [
+    {
+      "id": "escape-the-dungeon/bare/v1",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v1",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v1/index.html",
+      "score": 0.198,
+      "date": "2026-04-08",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/bare/v2",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v2",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v2/index.html",
+      "score": 0.601,
+      "date": "2026-04-08",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/bare/v3",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v3",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v3/index.html",
+      "score": 0.526,
+      "date": "2026-04-08",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/bare/v5",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v5",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v5/index.html",
+      "score": null,
+      "date": "2026-04-09",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/bare/v6",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v6",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v6/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v1",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v1",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v1/index.html",
+      "score": 0.303,
+      "date": "2026-04-08",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v2",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v2",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v2/index.html",
+      "score": 0.478,
+      "date": "2026-04-08",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v4",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v4",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v4/index.html",
+      "score": null,
+      "date": "2026-04-09",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v5",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v5",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v5/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v6",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v6",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v6/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v10",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v10",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v10/index.html",
+      "score": null,
+      "date": "2026-04-09",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v11",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v11",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v11/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v12",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v12",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v12/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v6",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v6",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v6/index.html",
+      "score": 0.347,
+      "date": "2026-04-08",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v7",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v7",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v7/index.html",
+      "score": 0.668,
+      "date": "2026-04-08",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v8",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v8",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v8/index.html",
+      "score": 0.177,
+      "date": "2026-04-08",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v9",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v9",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v9/index.html",
+      "score": null,
+      "date": "2026-04-09",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "gad-explainer-video/gad/v1",
+      "project": "gad-explainer-video",
+      "species": "gad",
+      "version": "v1",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/gad-explainer-video/gad/v1/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "gad"
+    }
+  ],
+  "species": [
+    {
+      "species": "bare",
+      "projects": [
+        "escape-the-dungeon"
+      ],
+      "publishedCount": 5,
+      "latestPublishedAt": null
+    },
+    {
+      "species": "emergent",
+      "projects": [
+        "escape-the-dungeon"
+      ],
+      "publishedCount": 5,
+      "latestPublishedAt": null
+    },
+    {
+      "species": "gad",
+      "projects": [
+        "escape-the-dungeon",
+        "gad-explainer-video"
+      ],
+      "publishedCount": 8,
+      "latestPublishedAt": null
+    }
+  ]
+};
+
 export interface OpenQuestion {
   id: string;
   title: string;
@@ -4752,6 +5263,60 @@ export interface DecisionRecord {
  * for the /decisions page and for <Ref id="gad-XX" /> cross-linking.
  */
 export const ALL_DECISIONS: DecisionRecord[] = [
+  {
+    "id": "gad-269",
+    "title": "vendor/get-anything-done/site is marketing-only; operator surfaces live in apps/planning-app",
+    "summary": "The Project Editor (`/projects/edit/[id]` + 4 tabs) and the entire `/api/dev/*` surface (secrets, env-defaults, scopes, evals/projects, gene-states, graph, live, command-bridge) move out of `vendor/get-anything-done/site/` and into `apps/planning-app/`. The vendor site keeps only the audience-facing landing/marketing/docs surfaces — anything that's \"operator chrome\" goes to planning-app where it can be auth-gated, redesigned, and packaged independently of the public site's release cycle. Shared code (eval-data, eval-data.generated, project-config) stays in vendor `site/lib/` and planning-app pulls it via the `@gad-site/*` tsconfig path alias rather than copying. Filesystem paths into the GAD vendor module (`lib/secrets-store.cjs`, `lib/eval-data-access.cjs`, `bin/gad.cjs`) resolve through `apps/planning-app/lib/gad-paths.ts` so they work regardless of which app spawned the Node process. Rationale: (a) the public landing site shouldn't ship operator-only routes that depend on local fs / OS keychain access, (b) keeping the editor in vendor meant every operator change had to go through the same parallel-agent submodule that ships the public site — see the 60-07b regression where uncommitted lib edits got clobbered by a parallel agent's vendor commit, (c) decision gad-261's planning-app split needed the editor anyway, and the rehome lands ahead of the planning-serve binary work tracked in phase 59.",
+    "impact": "Vendor site loses ~3,000 LoC of operator surfaces (19 editor components + 24 dev API route files). planning-app gains the same surfaces plus a small `lib/gad-paths.ts` helper, a stripped `components/site/SiteSection.tsx` (no dev-id band Visual Context Panel deps), and `next.config.mjs` updates (outputFileTracingRoot + experimental.externalDir). Phase 59 absorbs the rehome as task 59-23. Phase 60 BYOK UI work continues against the planning-app copy from here on. Future Project Editor surfaces (auth gating, marketplace, etc.) land in planning-app exclusively."
+  },
+  {
+    "id": "gad-268",
+    "title": "BYOK keys + non-secret env defaults are scope-resolved across species &gt; eval &gt; planning",
+    "summary": "Both encrypted secrets (BYOK) and non-secret env defaults resolve along an explicit scope chain instead of living in a single per-project bag. Default chain when nothing else is requested: most-specific scope (e.g. evals/&lt;eval&gt;/species/&lt;species&gt;) → evals/&lt;eval&gt; → planning (legacy bag, scope=&apos;&apos;). The most-specific bag that defines a key wins; parent bags whose entries get hidden are reported as `shadows[]` so the editor can show inheritance. Storage: secrets nest under .gad/secrets/&lt;projectId&gt;/&lt;scope-path&gt;.enc with a per-scope keychain account (&lt;projectId&gt;::&lt;scope&gt;) so each scope has its own master key and AAD-bound envelope; env defaults nest under .gad/env/&lt;projectId&gt;[/&lt;scope&gt;].json. The planning bag keeps its legacy on-disk path + bare keychain account so existing projects keep working with no migration. Scope ids are validated against path traversal and illegal segments via normalizeScope() before any FS access. Two new APIs — listChain / decryptChain on secrets, resolveChain on env-defaults — return the merged view with shadow metadata; single-scope list/get/set/rotate/revoke remain available for explicit-bag operations. Rationale: an eval-driven project may need a different OPENAI_API_KEY (or a different model env default) than its planning-side dev work, and a species inside that eval may need yet another. Forcing one bag per project either leaks across boundaries or duplicates secrets; scope chains let operators set the key once at the right altitude and inherit downward.",
+    "impact": "secrets-store + env-defaults-store both gain scope/scopeChain args; CLI gets --scope/--scope-chain on every verb plus BAG/SHADOWS columns in `gad env list`; ByokTab renders a scope picker, marks inherited rows read-only, and surfaces shadow counts. New API routes /api/dev/scopes/&lt;projectId&gt; (walks evals/*/species/* to populate the picker) and /api/dev/env-defaults/&lt;projectId&gt; ship alongside the scoped /api/dev/secrets/&lt;projectId&gt; endpoints. Side effect required: server-side Node contexts must set GAD_NO_TTY_PROMPT=1 — the secrets store would otherwise inherit the parent TTY and try to prompt for a master passphrase mid-HTTP-request, deadlocking Next.js dev. ByokTab&apos;s byokFetch wrapper recovers by translating PASSPHRASE_REQUIRED_NO_TTY (423) / PASSPHRASE_INVALID (401) into a window.prompt + cached retry. Docs follow-up: byok-design.md §scope-resolution."
+  },
+  {
+    "id": "gad-267",
+    "title": "Security patterns surfaced during spec/design work become teaching tips",
+    "summary": "When a spec-authoring or design-doc subagent surfaces defense-in-depth patterns (AEAD+AAD binding, fail-closed defaults, derive-dont-store, migration cutover windows, audit-log privacy tradeoffs, etc.) those patterns should be harvested into the teachings catalog under a 'security' category. Rationale: the llm-from-scratch project covers tokenizer-level LLM internals but the operator has limited exposure to applied context-security patterns (key management, prompt-injection hygiene, scoped-env discipline, gitignore+secret-store failure modes). BYOK spec work (phase 60 task 60-01) generated 6 such patterns which otherwise lived only inside the design doc. Treating them as teaching tips makes them portable — they apply to any agent/LLM app, not just GAD's BYOK surface.",
+    "impact": "New teachings category 'security' joins existing context-engineering / gad-framework / llm-internals. Spec/design subagent prompts (gad-doc-writer, researcher agents) gain an explicit directive: 'surface any defense-in-depth patterns you add beyond the original inputs; the main session will tip-author them.' First batch authored retroactively from phase 60 byok-design.md §2 design-decisions additions. Ongoing: phase 60 implementation tasks (60-02..60-08) continue feeding this category as they surface key-lifecycle, scoped-spawn, and browser-crypto patterns."
+  },
+  {
+    "id": "gad-266",
+    "title": "Phase 60 BYOK design choices — operator accepted all A-H advisor defaults",
+    "summary": "Operator accepted all 8 advisor-mode defaults from .planning/notes/phase-60-byok-discussion-2026-04-17.md. A crypto primitive AES-256-GCM with PBKDF2 KDF (adjusted from scrypt per D to achieve browser/CLI parity), 600k iterations. B master-key UX OS keychain with passphrase fallback; Windows Credential Manager adapter first, macOS + Linux adapters deferred until needed. C on-disk format versioned JSON envelope with per-key metadata (cipher, kdf, kdfParams, nonceB64, ciphertextB64, authTagB64, addedAt, lastRotated, provider, scope, version-aware for rotation). D site-side strategy browser-only WebCrypto decrypt; server stores encrypted envelope only. E rotation model additive with 7-day default grace period, configurable 0-30 days via --grace-days flag. F storage location project root .gad/secrets/ projectid .enc, auto-gitignored. G scoped-spawn default behavior merges project bag with parent env (not exclusive). H auth dependency for task 60-08 — transitive dep on phase 51 auth, no phase split; 60-08 just waits.",
+    "impact": "Task 60-01 is unblocked and can now produce vendor/get-anything-done/references/byok-design.md codifying these 8 choices as the authoritative spec. Downstream implementation tasks 60-02..60-08 have concrete targets. Decision D KDF parity flip from scrypt to PBKDF2 means task 60-02 secrets-store uses PBKDF2 on both Node (crypto.pbkdf2Sync) and browser (WebCrypto subtle.deriveKey) — same algorithm, same iteration count, simpler implementation. Master-key UX staging means Windows users get keychain-first day one; non-Windows users use passphrase fallback until platform adapter lands."
+  },
+  {
+    "id": "gad-265",
+    "title": "Phase 59 open questions — operator sign-off accepted planner recommendations",
+    "summary": "Operator accepted the gad-planner subagent recommendations for all 5 open questions on phase 59 PLAN.md. Q1 planning-app binary bundling — path B monorepo-only for this phase, follow-up todo for standalone bundling gated on task 44-28 pattern. Q2 teachings-reader migration timing — will not migrate during phase 59; barrel re-export approach (option b in task 59-02) stands. Q3 /my-projects BYOK status placeholder pre-phase-60 — option C disabled coming-in-60 tile with tooltip. Q4 landing /my-projects ownership post-split — reading 1, planning-app is local-dev primary; authed remote view is deferred to a later phase if ever needed. Q5 scope check — no sub-phase split; wave boundaries are natural pause points.",
+    "impact": "Phase 59 execution is unblocked. Location decided: apps/planning-app/ at monorepo root (pnpm workspace entry). Task 59-05 (gad planning serve) will shell out to pnpm filter during this phase; standalone binary bundling is a follow-up todo. Decision gad-264 teachings reader stays on landing site for the phase 59 window."
+  },
+  {
+    "id": "gad-264",
+    "title": "Teachings reader route promoted to active phase 46 scope",
+    "summary": "Phase 58 originally slotted the /teachings route as its item (3), but phase 58 is blocked on 46 and the 'only fun if you see it' gap on the teachings catalog is acute — tips exist but nothing renders them. Promote the teachings reader (index page + detail route, read from teachings/static/** via the existing catalog generator) into phase 46 active scope. Phase 58 keeps its other items (snapshot-footer tip-of-the-day line, daily-tip.yml end-to-end test, weekly recap, contribution path docs) and its dependency on 46. The teachings reader's long-term home is the planning app post gad-261 split, but landing it on the landing app under 46 is the fastest path to a visible learning loop.",
+    "impact": "Phase 46 gets one additional deliverable: /teachings index + /teachings/[slug] detail routes. Phase 58 item (3) crosses out, remaining items stay. Teachings data pipeline already exists in site/scripts/build-site-data.mjs -- reader page is a consumer of existing data, not new infra. Cross-linked from tip author bylines and from llm-from-scratch project docs once the subagent report contract adds a project-doc output."
+  },
+  {
+    "id": "gad-263",
+    "title": "Offload policy — big-token structured work goes to cheap models, reasoning stays with main agent",
+    "summary": "Cost-token triage for LLM calls across GAD. Default routing: (a) reasoning, novel content generation, agent-loop decisions, phase planning --&gt; main agent (Claude, operator-controlled runtime). (b) structured input / structured output transformations with predictable shape and high token volume --&gt; cheap model (gpt-4o-mini class or equivalent via BYOK, per-project). Examples that belong on the cheap side: git-diff digest generation, event-log daily summary, subagent-report formatter, template hydration (docs-map entries, feature-doc scaffolds), tip-seed expansion when needed, commit-message polish. Examples that stay on the main agent: tip authoring where grappling context matters, plan-phase, decision capture, debug investigation, code review. Gated on BYOK (gad-260) so the cheap-model key is per-project and never hard-coded. Until BYOK lands, offload scripts read OPENAI_API_KEY from process env and document that migration path.",
+    "impact": "New convention documented in vendor/get-anything-done/references/offload-policy.md (to be authored). CLI subcommand family 'gad offload &lt;job&gt;' wraps the cheap-model calls with consistent logging + error handling. Downstream: daily-digest generator, subagent-report formatter, weekly-recap (phase 58 item 4) all implemented against this pattern rather than hand-rolled. Tips stay in-subagent per gad-258 — they are reflection, not transformation."
+  },
+  {
+    "id": "gad-262",
+    "title": "gad start — daily dashboard entry command, distinct from gad startup",
+    "summary": "Two different audiences want two different entry points. Coding agents need text-mode session context: today that is 'gad startup --projectid X' which prints the session contract + triggers snapshot. Humans (operator) need a dashboard to see their projects, subagent-run history, next-actions, and BYOK status: that is 'gad start'. The command spawns 'gad planning serve' if not already running, then opens the browser to /my-projects. Idempotent — re-running attaches to the existing server. No positional args required for the happy path. Aliased as 'gad dashboard' for discoverability.",
+    "impact": "New top-level CLI verb. Does NOT replace 'gad startup' — they coexist. Documented as the operator's daily entry point in README. Depends on 'gad planning serve' landing (gad-261) and a /my-projects route existing on the planning app (new, tracks todo 2026-04-17-my-projects-dashboard.md)."
+  },
+  {
+    "id": "gad-261",
+    "title": "Planning surface splits into its own app — gad planning serve separate from landing",
+    "summary": "Today the landing Next app at vendor/get-anything-done/site/ hosts both marketing (/, /how-it-works, /library, /project-market) and planning (/planning, /projects). That coupling bleeds landing UI conventions into planning surfaces and makes it harder to treat planning as private, auth-gated, or locally-only. Split: planning surfaces move to a separate Next app (working name: planning-app) that ships with the GAD binary and runs via 'gad planning serve' on its own dev port. Landing stays public-marketing-only. Both apps share primitives via a packages/ui workspace entry so design drift is contained. Per-project planning data is consumed by the planning app directly from .planning/ roots the CLI already knows about.",
+    "impact": "New Next app added under vendor/get-anything-done/apps/planning-app/ (or similar path decided during phase plan). 'gad planning serve' CLI subcommand spawns it. Existing /planning and /projects routes on the landing app get deprecated over one release cycle. Teachings route placement re-scoped: during transition lives on landing under phase 46; long-term belongs on the planning app as 'my learnings.' Shared UI primitives extraction is a dependency and may surface as its own sub-phase."
+  },
   {
     "id": "gad-260",
     "title": "Per-project BYOK env storage - encrypted, uploadable via project editor, visible in project dashboard",
@@ -11132,6 +11697,19 @@ export const ALL_TASKS: TaskRecord[] = [
     "depends": []
   },
   {
+    "id": "42.4-24",
+    "phaseId": "42.4",
+    "status": "done",
+    "agentId": "claude-snapshot-format-0001",
+    "skill": null,
+    "type": "framework",
+    "goal": "Tree-format output for gad snapshot refs section per decision gad-241. Replace flat &apos;- path&apos; list with indented tree that groups shared prefixes (e.g. .planning/workflows/*, references/*, site/{lib,scripts,app}/*). Implementation: lib/snapshot-compact.cjs gains compactRefsTree() with single-child dir-chain collapse and single-leaf fold. Threshold REFS_TREE_THRESHOLD=5 keeps small lists flat. Tests: tests/snapshot-compact-refs-tree.test.cjs covers empty/below-threshold/tree-mode/collapse/fold/annotations/duplicates/dir-suffix/token-savings/compactStateXml-wiring (11 tests). Measured: full snapshot 17813B → 17622B (−191B, ~1%); refs section alone ~9% reduction; BPE token savings higher than byte due to shared-prefix coalescing. Follow-ups: apply same tree form to gad startup contract output; investigate deeper compression on DECISIONS section (title-only already compact).",
+    "keywords": [],
+    "depends": [
+      "42.4-23"
+    ]
+  },
+  {
     "id": "43-01",
     "phaseId": "43",
     "status": "done",
@@ -11909,6 +12487,54 @@ export const ALL_TASKS: TaskRecord[] = [
       "44-16"
     ],
     "depends": []
+  },
+  {
+    "id": "44-38",
+    "phaseId": "44",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm public registry) to GitHub Releases tarball. Discovered 2026-04-18: workflows/update.md step run_update invokes npx -y get-anything-done@latest which dies for every user. Rewrite: (a) hooks/gad-check-update.js polls GitHub Releases API for latest tag, (b) workflows/update.md fetches tarball via gh release download, unpacks, runs bin/install.js, (c) version-compare against git tag not npm, (d) keep backup/reapply-patches flow. Acceptance: gad update works on a clean machine with zero prior vendor checkout. Blocks wider adoption — today every user who runs /gad-update sees 404. Connects to 44-28.B0 (44-31, done).",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "44-39",
+    "phaseId": "44",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "Generation publish status: extend per-generation manifest with status (draft|published|unlisted), publishedAt, publishedBy. Editor publish button writes status; file copy to public/playable/ becomes a side effect of status===published. publish/route.ts gains GET (status), PATCH (set status). Status is source of truth.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "44-40",
+    "phaseId": "44",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "Compile marketplace-index.json from per-generation manifests + EVAL_PROJECTS at predev/prebuild. Index shape: { projects: [...], generations: [{projectId, species, version, status, publishedAt, publishedBy, buildPath, score?}] }. /project-market reads index instead of EVAL_PROJECTS.published. ProjectCard shows generation rows with species badge.",
+    "keywords": [],
+    "depends": [
+      "44-39"
+    ]
+  },
+  {
+    "id": "44-41",
+    "phaseId": "44",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "Species index view at /project-market — band that lists distinct species with &gt;=1 published generation, click filters marketplace by species. Read from marketplace-index.json.",
+    "keywords": [],
+    "depends": [
+      "44-40"
+    ]
   },
   {
     "id": "44.5-01",
@@ -12876,6 +13502,462 @@ export const ALL_TASKS: TaskRecord[] = [
       "46-02",
       "46-03"
     ]
+  },
+  {
+    "id": "46-09",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Teachings reader routes — /teachings index (card grid by category, difficulty + date + tags) and /teachings/[slug] detail (marked markdown render, frontmatter stripped, backrefs panel for implementation/decisions/phases/related). Server components read teachings/index.json + per-tip md bodies from teachings/static/**. Decision gad-264 promoted this into active phase 46 scope. Acceptance: curl /teachings returns 200 with tip titles visible; curl /teachings/&lt;slug&gt; returns 200 with rendered body. Verified against all 6 indexed tips.",
+    "keywords": [
+      "teachings",
+      "site",
+      "route",
+      "reader",
+      "markdown",
+      "backrefs"
+    ],
+    "depends": []
+  },
+  {
+    "id": "46-10",
+    "phaseId": "46",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Fix gad tip reindex ENOENT on installed binary. teachings-reader.cjs now resolves TEACHINGS_DIR by walking up from cwd looking for a gad-config.toml repo root and preferring vendor/get-anything-done/teachings/ (or direct teachings/) on that root before falling back to the bundled runtime location. GAD_TEACHINGS_DIR env override added for testing. Source CLI verified — 'node vendor/get-anything-done/bin/gad.cjs tip reindex' now writes to the user repo's teachings/ instead of the read-only runtime bundle. Installed binary picks up the fix on next reinstall (deferred: current gad.exe is still held open by this session).",
+    "keywords": [
+      "teachings",
+      "reindex",
+      "runtime",
+      "path-resolve",
+      "installed-binary"
+    ],
+    "depends": []
+  },
+  {
+    "id": "46-15",
+    "phaseId": "46",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "cleanup",
+    "goal": "Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each: last commit upstream vs. ours, production usage vs. dead references, whether still needed as submodule or should be pulled in-tree / deleted. Initial scan 2026-04-18: mb-cli-framework has 103 live references (packages/magicborn-cli tests + docs + vendor-registry + ink-tui) — KEEP. grime-time-site / repub-builder / claw-code status unknown, user suspects unused now that PayloadCMS pivot was dropped. Deliverable: references/submodule-audit-2026-04.md with KEEP/INLINE/DROP recommendation per submodule. Follow-up tasks for any DROP + gitmodules cleanup.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "55-00",
+    "phaseId": "55",
+    "status": "done",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "Catalog all 91 vendor SKILL.md files into DEV/PROD/META lanes per gad-247 + todo 2026-04-17-skill-lane-taxonomy. Output: .planning/notes/skill-lane-taxonomy-2026-04-18.md (counts: 60 dev, 22 meta, 3 prod, 6 dual-tag). Recommends META as third lane. Answers todo open questions (debug=dev+meta, verify-phase=dev, verify-work=dev+prod, create-skill=meta, third lane=yes). Provides phase 55 frontmatter schema + 5-wave migration order. Closes audit todo; phase 55 frontmatter rollout itself is a separate task.",
+    "keywords": [
+      "skill-catalog",
+      "lane",
+      "dev",
+      "prod",
+      "meta",
+      "taxonomy",
+      "phase-55-prep"
+    ],
+    "depends": []
+  },
+  {
+    "id": "59-01",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "scaffold",
+    "goal": "Scaffold apps/planning-app/ as a new Next 15 workspace entry. Minimal shell: layout.tsx with dev-only auth stub, home page redirecting to /my-projects, tailwind config mirroring the landing app, tsconfig paths. Runs on a distinct dev port (3002) so it coexists with the landing app during migration.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "59-02",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "refactor",
+    "goal": "Extract shared UI primitives into a consumable location. Candidates: MarketingShell (rename to AppShell with slot-based navigation), SectionEpigraph, SiteSection, SiteProse. Options: (a) packages/ui-shared workspace package, (b) direct imports from vendor/get-anything-done/site/components/site/ with a re-export barrel. Pick (b) initially — faster, defer package extraction until a third consumer emerges.",
+    "keywords": [],
+    "depends": [
+      "59-01"
+    ]
+  },
+  {
+    "id": "59-03",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "migration",
+    "goal": "Port /planning route from landing app to planning-app. All existing tabs (Tasks, Decisions, Requirements, Notes, Workflows, SkillCandidates, System) move intact. Data source stays the same — planning CLI readers via gad binary or direct XML parse. Landing app's /planning stays for one release cycle with a deprecation banner.",
+    "keywords": [],
+    "depends": [
+      "59-02"
+    ]
+  },
+  {
+    "id": "59-04",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "migration",
+    "goal": "Port /projects routes + build the /my-projects dashboard. Dashboard shows: list of owned projects with phase/next-action snippet, per-project drawer (current phase, open tasks, recent decisions, subagent-run history, BYOK env status), action buttons (trigger daily subagent, view last report, open planning XML). Consumes gad CLI readers. Lives on planning-app only — landing gets a redirect banner.",
+    "keywords": [],
+    "depends": [
+      "59-03"
+    ]
+  },
+  {
+    "id": "59-05",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Implement 'gad planning serve' CLI subcommand. Spawns planning-app (next dev in dev / next start in prod) on port 3002 with reuse detection — if something is already listening on the port and responds with a planning-app health endpoint, attach rather than spawn. Logs go to ~/.gad/logs/planning-app-&lt;date&gt;.jsonl. Graceful shutdown on SIGINT.",
+    "keywords": [],
+    "depends": [
+      "59-01"
+    ]
+  },
+  {
+    "id": "59-06",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Implement 'gad start' CLI subcommand (decision gad-262). Runs 'gad planning serve' if not running, waits for health, opens browser to http://localhost:3002/my-projects. Aliased as 'gad dashboard'. Idempotent. --no-browser flag skips the browser open for editor/iframe workflows.",
+    "keywords": [],
+    "depends": [
+      "59-05"
+    ]
+  },
+  {
+    "id": "59-07",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "Daily-subagent dispatch hook. 'gad start' (or an explicit 'gad start --dispatch-subagents') reads each project config for daily-subagent: true and, if today's run has not yet been recorded in .planning/subagent-runs/&lt;projectid&gt;/, spawns the configured subagent runtime with the project snapshot + task context. Writes run record on completion (consumes subagent-run-history todo schema).",
+    "keywords": [],
+    "depends": [
+      "59-04",
+      "59-06"
+    ]
+  },
+  {
+    "id": "59-08",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": "claude-default-0012",
+    "skill": "default",
+    "type": "cleanup",
+    "goal": "Deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view moved to gad planning serve' with copy-pasteable install+run commands. Keep for one release cycle then remove. Update all internal cross-links to /my-projects.",
+    "keywords": [],
+    "depends": [
+      "59-04"
+    ]
+  },
+  {
+    "id": "59-09",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "site",
+    "goal": "Render subagent-run history on /my-projects project drawer. Reads .planning/subagent-runs/&lt;projectid&gt;/*.json (schema from todo 2026-04-17-subagent-run-history.md). Timeline view — date, task id, status, one-line outcome, link to full report body, link to teaching tip produced. Empty state with a 'trigger a run' button.",
+    "keywords": [],
+    "depends": [
+      "59-04",
+      "59-07"
+    ]
+  },
+  {
+    "id": "59-10",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "code",
+    "goal": "CLI efficiency gap cluster: land task-registry writer + gad tasks add + gad tasks promote + gad tasks --stalled + gad next. Closes the hand-editing loop that forced agents to edit TASK-REGISTRY.xml by hand to register new tasks (root cause of the 45-todo backlog in vendor/get-anything-done/.planning/todos/ never becoming real tasks). New lib/task-registry-writer.cjs: pure addTaskToXml + atomic appendTaskToFile, fs-injectable for tests, stable error codes (TASK_ID_EXISTS, PHASE_NOT_FOUND, VALIDATION_FAILED, MALFORMED_XML, WRITE_FAILED). CLI subcommands under tasksV2Cmd: add (register by id/phase/goal), promote (lift a .planning/todos/*.md file into a task — filename derives id, first prose line becomes goal, todo moves to todos/promoted/ unless --keep). tasks list gains --stalled flag (in-progress tasks with no agent/skill/runtime attribution). New top-level gad next command: cross-project priority hotlist (tiers: active → stalled → next planned → idle). Tests: 16/16 in tests/task-registry-writer.test.cjs, all fs-injected, no real XML parser, no real disk. Also: operator-local gsd-* hooks deleted (gsd-check-update, gsd-context-monitor, gsd-prompt-guard, gsd-statusline, gsd-workflow-guard) + stale gsd-update-check.json cache + gsd-file-manifest.json — they were orphaned and surfacing /gsd:update prompts. Settings.json already points at gad-* siblings.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "59-23",
+    "phaseId": "59",
+    "status": "done",
+    "agentId": "cursor-byok-lane-0003",
+    "skill": null,
+    "type": "refactor",
+    "goal": "Project Editor + dev API rehome from vendor/get-anything-done/site/ to apps/planning-app/. Pulls the entire `/projects/edit/[id]` tree (19 .tsx files: ProjectEditor, BestiaryTab, RecipesTab, ByokTab, InspectorPane, ProjectCanvas, DiffTree, GenerationRunner, RadarChart, TraitBar, DnaEditor, DnaActionRow, EditableField, InventoryGrid, LiveDataPanel, CommandPalette, PreviewFrame, page.tsx, use-command-bridge.ts) plus the supporting eval-data-runtime.ts loader and 8 of 16 `/api/dev/*` route trees actually used by the editor (command-bridge, env-defaults, evals/projects/*, gene-states, graph, live, scopes, secrets/*) into apps/planning-app. Vendor site keeps only marketing/landing surfaces.\r\n\r\nImplementation: (1) tsconfig path `@gad-site/*` → `../../vendor/get-anything-done/site/*` so the editor still imports `eval-data` + `eval-data.generated` from the vendor site without copying the 19k-line generated file. (2) New apps/planning-app/lib/gad-paths.ts exports GAD_ROOT/GAD_LIB/GAD_BIN/GAD_SITE_DIR resolved via `import.meta.url` walk-up — replaces the original `process.cwd() + \"..\"` pattern that assumed cwd was the site dir. (3) scripts/rewrite-gad-paths.mjs (one-shot) sweeps all 19 copied files and substitutes the path-resolution patterns. (4) SiteSection ported into apps/planning-app/components/site/ as a stripped-down version (no dev-id band Visual Context Panel, no useDevId/BandDevPanel deps) so the public landing site can keep evolving its dev-id machinery without churning planning-app. (5) next.config.mjs sets outputFileTracingRoot to repo root + experimental.externalDir=true so Next traces the @gad-site imports cleanly. (6) Editor + dev API routes deleted from vendor site in the same change. Build verifies: pnpm --filter @portfolio/planning-app build succeeds with all 8 dev API routes + the editor route registered.\r\n\r\nVendor site `/projects/edit` and `/api/dev/*` routes are deleted in the same change. Captures decision-gad-269 boundary: vendor site = marketing/landing only; planning-app = operator surfaces (BYOK, evals, dev tooling).",
+    "keywords": [],
+    "depends": [
+      "59-01"
+    ]
+  },
+  {
+    "id": "60-01",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "design",
+    "goal": "Write references/byok-design.md resolving the open questions in phase 60 goal + decision gad-260: (a) crypto primitive — libsodium sealed-box vs AES-256-GCM with scrypt KDF, recommend one, (b) master-key UX — OS keychain-first (Windows Credential Manager, macOS Keychain, Linux secret-service) with passphrase fallback when keychain unavailable, (c) on-disk format — JSON envelope with version, salt, nonce, per-key metadata (last-rotated, scope, provider), (d) rotation model — in-place vs additive, (e) site-side strategy — browser-only WebCrypto decrypt vs server-side per-user KMS.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "60-02",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "code",
+    "goal": "Implement lib/secrets-store.cjs + OS-keychain wrappers. .gad/secrets/&lt;projectid&gt;.enc format from 60-01. Three keychain adapters: windows-credential-manager (via PowerShell or node-ffi), macos-keychain (security CLI), linux-secret-service (via dbus-next). Unit tests with a mock keychain adapter. .gad/ added to repo-level .gitignore across all projects that register a planning root.",
+    "keywords": [],
+    "depends": [
+      "60-01"
+    ]
+  },
+  {
+    "id": "60-03",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "cli",
+    "goal": "CLI family: 'gad env get &lt;KEY&gt; --projectid', 'gad env set &lt;KEY&gt; --projectid' (reads value from prompt, not argv, to avoid shell history), 'gad env list --projectid' (keys + metadata, never values), 'gad env rotate &lt;KEY&gt; --projectid', 'gad env revoke &lt;KEY&gt; --projectid'. All operations require master-key unlock.",
+    "keywords": [],
+    "depends": [
+      "60-02"
+    ]
+  },
+  {
+    "id": "60-04",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "code",
+    "goal": "Scoped spawn wrapper in lib/scoped-spawn.cjs. Given projectId + child command, decrypts that project's env bag, merges into child process.env ONLY for the child, never mutates parent process.env. Subagent dispatch (phase 59 task 59-07) uses this wrapper. Subagent sees OPENAI_API_KEY etc. without the main session leaking it.",
+    "keywords": [],
+    "depends": [
+      "60-03"
+    ]
+  },
+  {
+    "id": "60-05",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "code",
+    "goal": "Key lifecycle UX: rotation flow (generate new, re-encrypt, zero-out old buffer), revocation flow (remove from bag + record revocation event in audit log), audit log at .gad/secrets/&lt;projectid&gt;.audit.jsonl (append-only, gitignored).",
+    "keywords": [],
+    "depends": [
+      "60-03"
+    ]
+  },
+  {
+    "id": "60-05a",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "code",
+    "goal": "CLI wiring for the lib/secrets-lifecycle.cjs layer delivered in 60-05. Two new subcommands: `gad env audit &lt;projectid&gt; [--since ISO] [--limit N] [--json]` (newest-first audit-log view, wraps secretsLifecycle.auditLog) and `gad env purge &lt;projectid&gt; [--as-of ISO] [--dry-run] [--json]` (manual grace-period purge, wraps secretsLifecycle.purgeExpired). Plus a best-effort auto-purge preflight in `gad start` — scans all projects with an existing .gad/secrets/&lt;id&gt;.enc envelope, calls purgeExpired on each, logs one-line summary to stderr, NEVER fails start on purge error (swallow + log). Library extension in lib/env-cli.cjs adds auditCmd + purgeCmd following the same dep-injection + guarded error pattern. Tests in tests/env-cli.test.cjs (audit + purge describe blocks) with lifecycle mocks matching the existing store-mock shape.",
+    "keywords": [],
+    "depends": [
+      "60-05"
+    ]
+  },
+  {
+    "id": "60-06",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": null,
+    "skill": "default",
+    "type": "migration",
+    "goal": "Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scratch uses scoped-spawn + 'gad env get' to decrypt at dispatch time. Documents the expected migration in references/byok-design.md §Migration.",
+    "keywords": [],
+    "depends": [
+      "60-04"
+    ]
+  },
+  {
+    "id": "60-07",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": "cursor-byok-lane-0001",
+    "skill": null,
+    "type": "site",
+    "goal": "Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. Calls 'gad env' CLI via dev-server command bridge. Local-dev only — NODE_ENV=development gate. Shipped 2026-04-18: added 4th left-pane tab (BYOK) to ProjectEditor.tsx + new ByokTab.tsx component. Backend uses dedicated /api/dev/secrets/[projectId] route (GET list/POST set/PUT rotate/DELETE revoke) + /audit + /test sub-routes that import lib/secrets-store.cjs directly via createRequire — bypasses the SSE command-bridge for mutating ops to avoid stdin-pipe plaintext exposure. Also added 'env' to command-bridge ALLOWED_SUBCOMMANDS for any future read-only CLI calls. Provider validators: openai, anthropic, openrouter, groq (HTTP probe with 8s timeout). Last-four redaction via decryptAll() with synchronous plaintext drop. Audit tail surfaces last 20 envset/envrotate/envrevoke/envpurge events. Built clean against next 16.0.8 turbopack. Unblocks 60-08 (cloud BYOK surface, same shapes behind auth).",
+    "keywords": [],
+    "depends": [
+      "60-03",
+      "60-10"
+    ]
+  },
+  {
+    "id": "60-07b",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": "cursor-byok-lane-0002",
+    "skill": null,
+    "type": "framework",
+    "goal": "Scoped BYOK + non-secret env defaults + dev-server passphrase fix. Per decision gad-268, extend the BYOK surface so keys and env defaults resolve along a scope chain: species &gt; eval &gt; planning. Shipped 2026-04-18: (1) lib/secrets-store.cjs — scope arg threaded through get/set/list/rotate/revoke/decryptAll; envelope+audit paths nest under .gad/secrets/&lt;projectId&gt;/&lt;scope-path&gt;.enc; per-scope keychain account (projectId::scope) so each scope&apos;s master key is independent; new listChain/decryptChain walk most-specific→least, marking shadowed parents in shadows[]. Backward-compatible: no-scope = legacy planning bag at .gad/secrets/&lt;projectId&gt;.enc. (2) tests/secrets-store.test.cjs — added scope path resolution + per-scope isolation suites (29 tests pass total). (3) lib/env-defaults-store.cjs — new plain-JSON scoped store at .gad/env/&lt;projectId&gt;[/&lt;scope&gt;].json with CRUD, parent-merge resolveChain, path-traversal safety, auto-gitignore on first write. (4) tests/env-defaults-store.test.cjs — 12 tests round-trip + scope merge + validation + gitignore. (5) lib/env-cli.cjs — --scope/--scope-chain flags on list/get/set/rotate/revoke; renderListTable adds BAG + SHADOWS columns when present; fixed revokeCmd variable shadow that was dropping --scope on the way to store.revoke. (6) lib/keychain/passphrase-fallback.cjs — honor GAD_NO_TTY_PROMPT=1 to refuse interactive prompts in server contexts (Next.js dev server inherits parent TTY → would deadlock HTTP request). (7) lib/secrets-store-errors.cjs — added VALIDATION code shared with env-defaults-store. (8) New API routes /api/dev/env-defaults/[projectId] (list/set/unset, scope+chain) + /api/dev/scopes/[projectId] (walks evals/&lt;eval&gt;/species/&lt;species&gt; for picker source); /api/dev/secrets/[projectId] + /audit + /test now accept scope/scopeChain/scopeBag and decrypt-once per distinct bag for last-four tails. All routes set process.env.GAD_NO_TTY_PROMPT=&quot;1&quot; at module load. (9) ByokTab.tsx — ScopePicker dropdown, BagBadge (active vs inherited), ShadowHint (count of parents hidden), inherited rows go read-only (rotate/revoke disabled), AddKeyForm + RotateForm + TestCallButton thread scopeBag end-to-end, new EnvDefaultsSection mirrors the keys list for non-secret values, AuditList title shows active scope, byokFetch wrapper handles PASSPHRASE_REQUIRED_NO_TTY (423) + PASSPHRASE_INVALID (401) by prompting via window.prompt and caching in tab-lifetime Map. 108/108 BYOK-related tests pass. Note: re-applied after parallel-agent vendor commits clobbered the lib + planning edits — see commit message.",
+    "keywords": [],
+    "depends": [
+      "60-07",
+      "60-10"
+    ]
+  },
+  {
+    "id": "60-08",
+    "phaseId": "60",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "site",
+    "goal": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 + scope chain from 60-07b but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.",
+    "keywords": [],
+    "depends": [
+      "60-07b",
+      "59-04"
+    ]
+  },
+  {
+    "id": "60-09",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": "claude-default-0018",
+    "skill": null,
+    "type": "framework",
+    "goal": "Work-stealing handoff queue using per-file directory (not JSONL — decision per user 2026-04-18, see .planning/notes/2026-04-18-handoff-queue-design.md). Shape: .planning/handoffs/{open,claimed,closed}/ with one md file per handoff. Lifecycle = fs.rename between dirs (atomic on POSIX + Windows, no lock needed). Each file = YAML frontmatter {id, projectid, phase, task_id, created_at, created_by, claimed_by, claimed_at, completed_at, priority, estimated_context} + markdown body. CLI: gad handoffs {list,claim,complete,show,create}. gad-pause-work + gad-session pause invoke &apos;handoffs create&apos;. gad startup/snapshot surface unclaimed count + top-3 summary. Idle agents pick appropriate items by estimated_context (mechanical→Haiku/Sonnet, reasoning→Opus per offload policy). Gap discovered: no &apos;gad tasks update &lt;id&gt; --goal&apos; exists — surfaced in design note, file as follow-up. See .planning/notes/2026-04-18-handoff-queue-design.md for full schema.",
+    "keywords": [],
+    "depends": [
+      "59-10"
+    ]
+  },
+  {
+    "id": "60-10",
+    "phaseId": "60",
+    "status": "done",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "Split secrets-store error codes: PROJECT_NOT_FOUND for missing envelope on disk vs KEY_NOT_FOUND for envelope-exists-but-key-absent. Removes the substring-match antipattern in scoped-spawn.cjs (isMissingEnvelope) and env-cli.cjs list-empty soft-swallow. Files touched: lib/secrets-store.cjs (1 throw site), lib/scoped-spawn.cjs (isMissingEnvelope), lib/env-cli.cjs (messageFor + list catch), references/byok-design.md (sec.12 error table), tests/secrets-store.test.cjs (split test), tests/scoped-spawn.test.cjs (mock helper), tests/env-cli.test.cjs (list-empty + messageFor table). Closes todo 2026-04-17-secrets-store-project-not-found-split. Unblocks BYOK UI rendering in 60-07/60-08.",
+    "keywords": [],
+    "depends": [
+      "60-04",
+      "60-05"
+    ]
+  },
+  {
+    "id": "63-01",
+    "phaseId": "63",
+    "status": "done",
+    "agentId": "claude-default-0015",
+    "skill": null,
+    "type": "framework",
+    "goal": "State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-hook-state, skill-active-state, team-state, tmux-hook-state), .planning/{STATE.xml, TASK-REGISTRY.xml, .gad-log/*.jsonl, .trace-events.jsonl, .trace-seq, .gad-agent-lanes.json, graph.json, config.json, sessions/*.json, notes/, todos/}, .claude/{settings.json, settings.local.json, hooks/state}, ~/.cache/gad/. Classify per pattern: (a) contested AGGREGATE → CLI-mediated writes, (b) shared APPEND-ONLY streams → JSONL append-safe, (c) contested SINGLE-OWNER → per-agent dir, (d) cross-agent INTENT → per-file dir + fs.rename. Deliverable: references/state-writes-inventory.md. Follow-ups filed per consolidation action. See 2026-04-18 post-mortem notes.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "63-02",
+    "phaseId": "63",
+    "status": "planned",
+    "agentId": null,
+    "skill": null,
+    "type": "framework",
+    "goal": "Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session pause writes handoff file, (b) user settings 63-03 stores last-active-projectid, (c) &apos;gad start&apos; or new session auto-invokes gad handoffs list --unclaimed --mine-first + gad snapshot --projectid &lt;last-active&gt;, (d) if exactly one unclaimed handoff matches runtime auto-claim, (e) SessionStart hook surfaces &apos;1 unclaimed handoff — /pickup to resume&apos;. Metrics to beat: 2026-04-18 baseline ~35% of Claude turn on orientation (archaeology + /gsd:update + projectid guessing). Target &lt;1 tool call to restored context.",
+    "keywords": [],
+    "depends": [
+      "60-09"
+    ]
+  },
+  {
+    "id": "63-03",
+    "phaseId": "63",
+    "status": "done",
+    "agentId": "claude-default-0017",
+    "skill": null,
+    "type": "framework",
+    "goal": "User settings scaffold (non-checked-in). Local ~/.claude/gad-user.json (or .planning/.gad-user.json per-repo, decide per 63-01 audit). Fields: displayName (default = os.userInfo().username), lastActiveProjectid, assignedSouls {projectid: soulslug}, lastSessionId, preferredRuntime, teachingSnoozeUntil. Gitignored. Read by gad startup, gad snapshot, SessionStart hook, and anywhere we need to know &apos;who is logged in&apos;. Addresses 2026-04-18 user feedback: &apos;we should have user settings that dont get checked in so we know who is logged in. if they dont have a name, default to machine name. users can have souls assigned to them in the gad project for that to be injected.&apos;",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "63-04",
+    "phaseId": "63",
+    "status": "done",
+    "agentId": "claude-default-0013",
+    "skill": null,
+    "type": "framework",
+    "goal": "Agent lane manifest — canonical file/directory ownership per agent runtime. Authors a top-level AGENT-LANES.md (or references/agent-lanes.md) that every parallel agent consults as ground truth. Minimum content: (a) per-runtime lane definition (claude-code, codex, cursor, etc.) with file-glob allow + deny lists, (b) shared-write protocols (TASK-REGISTRY.xml via gad tasks add ONLY, etc.), (c) conflict-resolution playbook (who wins on collision, how to cede, how to request cross-lane work), (d) session-start etiquette (read this file BEFORE touching anything). Driven by 2026-04-18 3-agent overlap post-mortem where Cursor misattributed Claude&apos;s tasks to Codex, costing ~5% of its turn. Codex owns runtime/bin/gad.cjs + lib/runtime-* + verify; Cursor owns BYOK/lib/secrets-* + lib/env-cli + lib/scoped-spawn; Claude owns snapshot/lib/snapshot-* + planning docs + memory + cross-cutting framework hygiene. Operator assigns souls per lane per project.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "63-05",
+    "phaseId": "63",
+    "status": "done",
+    "agentId": "claude-default-0016",
+    "skill": null,
+    "type": "framework",
+    "goal": "Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader.cjs exist but the Claude SessionStart hook chain (~/.claude/hooks/gad-check-update.js + gad-session-state.sh) does not emit them. Also: SOUL.md at repo root is readable but not auto-mentioned — Kael persona only lands when I recall CLAUDE.md pointer. Wire: (a) gad-session-state.sh emits the day&apos;s teaching tip (falls through silently if no tip), (b) new hook or same emits &apos;Active soul: &lt;name&gt; (SOUL.md)&apos; when SOUL.md present, (c) teaching generation runs per decision gad-257 at startup (dedup across multi-session-per-day), (d) llm-from-scratch subagent dispatch per gad-256/258 when appropriate. Did NOT fire for Claude this session despite decisions gad-255..258 being in place.",
+    "keywords": [],
+    "depends": [
+      "58"
+    ]
+  },
+  {
+    "id": "63-06",
+    "phaseId": "63",
+    "status": "done",
+    "agentId": "claude-default-0014",
+    "skill": null,
+    "type": "framework",
+    "goal": "Gap closed: gad phases add atomically syncs TASK-REGISTRY.xml container, gad tasks update --goal available. DONE 2026-04-18 S20 by claude-opus-4-7. Regex boundary bug in addPhaseToRegistryXml (word-boundary after closing quote) prevented idempotent no-op detection — fixed in lib/task-registry-writer.cjs. All 23 writer tests + phases-add-registry-sync tests pass. Installed gad v1.33.0 still pre-fix — 44-38 rebuild needed for distribution.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "63-06a",
+    "phaseId": "63",
+    "status": "done",
+    "agentId": "human-default-0001",
+    "skill": null,
+    "type": "framework",
+    "goal": "Harden gad runtime launch new-shell path using generated temp PowerShell script files and strict argument passing; remove raw -Command one-liners.",
+    "keywords": [],
+    "depends": []
+  },
+  {
+    "id": "63-06b",
+    "phaseId": "63",
+    "status": "done",
+    "agentId": "human-default-0002",
+    "skill": null,
+    "type": "framework",
+    "goal": "Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&gt; --goal CLI path.",
+    "keywords": [],
+    "depends": []
   }
 ];
 
@@ -13338,6 +14420,27 @@ export const ALL_PHASES: PhaseRecord[] = [
     "status": "planned",
     "goal": "Wire the teachings/ catalog into user-facing surfaces. (1) Snapshot footer: add a one-line 'tip of the day' reference to gad snapshot output (~60 chars, zero token cost beyond that line). (2) GitHub Actions daily-tip.yml tested end-to-end with OPENAI_API_KEY secret. (3) Site /teachings route under phase 46 — card grid, category filter, search, difficulty badges. (4) Optional weekly recap generator. (5) Document contribution path for static tips in teachings/README.md. Content backlog is fed by llm-from-scratch project (decision llm-004 / gad-256) + daily generator.",
     "outcome": null
+  },
+  {
+    "id": "59",
+    "title": "Planning-app split + gad planning serve + gad start daily entry",
+    "status": "planned",
+    "goal": "Split planning surfaces from the landing Next app into a dedicated planning-app (decisions gad-261, gad-262). Scope: (1) scaffold apps/planning-app/ (or vendor/get-anything-done/apps/planning-app/) Next 15 workspace entry with shared primitives from packages/ui. (2) Migrate /planning, /projects, my-projects dashboard routes out of landing into planning-app. (3) CLI: 'gad planning serve' spawns planning-app dev server (port detection + reuse if already running). (4) CLI: 'gad start' spawns 'gad planning serve' if needed + opens browser to /my-projects. (5) Deprecate landing-site /planning + /projects over one release cycle — redirect stubs with 'moved to gad planning serve' banner. (6) Subagent-run history render on /my-projects (consumer of todo 2026-04-17-subagent-run-history.md data). (7) daily-subagent dispatch trigger — 'gad start' optionally auto-dispatches pending daily subagent runs if project config has daily-subagent: true (decision gad-258 enforcement mechanism). (8) Project Editor rehome — `/projects/edit/[id]` route + 4-tab editor (Bestiary, Recipes, BYOK, Inspector) + the entire `/api/dev/*` surface (secrets, env-defaults, scopes, evals/projects/*, gene-states, graph, live, command-bridge) move from `vendor/get-anything-done/site/` to `apps/planning-app/`. Vendor site keeps only the marketing/landing surfaces. Implemented via `@gad-site/*` tsconfig alias for shared eval-data + `apps/planning-app/lib/gad-paths.ts` to resolve vendor lib through createRequire from any cwd. Tracked as task 59-23 (rehome) — landed 2026-04-18 ahead of the planning-serve binary work.",
+    "outcome": null
+  },
+  {
+    "id": "60",
+    "title": "Per-project BYOK encrypted env — .gad/secrets store, CLI, scoped spawn, UI surfaces",
+    "status": "planned",
+    "goal": "Implement decision gad-260 per-project BYOK env storage. Scope: (1) crypto primitive decision (libsodium sealed-box vs AES-256-GCM+scrypt) written up in references/byok-design.md, (2) master-key UX — OS keychain first (Windows Credential Manager, macOS Keychain, linux secret-service) with passphrase fallback, (3) .gad/secrets/&amp;lt;projectid&amp;gt;.enc storage format (versioned, per-key metadata), (4) CLI family 'gad env get|set|rotate|list|revoke --projectid', (5) scoped spawn wrapper so subagents inherit per-project env without process-wide leak, (6) .gitignore enforcement for .gad/secrets/, (7) migration — llm-from-scratch OPENAI_API_KEY moves from global env into its project bag, (8) project-editor BYOK tab UI (local-dev, paste+validate+save), (9) landing-site project-dashboard BYOK surface (auth-gated, lands on planning-app post phase 59 split). Acceptance: llm-from-scratch subagent reads OPENAI_API_KEY from its encrypted bag via 'gad env get'; key never persists on disk in plaintext; 'gad env rotate' works end-to-end.",
+    "outcome": null
+  },
+  {
+    "id": "63",
+    "title": "Agent/state/session hygiene",
+    "status": "planned",
+    "goal": "Consolidate scattered state/log writes across .omx/, .planning/, team-state, hud-state, etc; land session-continuity contract so 'lets continue' works without orientation cost; scaffold non-checked-in user settings (machine-name default + assigned soul); author canonical agent-lane manifest so parallel agents (claude/codex/cursor) have clear file ownership; wire daily tip + soul reference into session-open surface. Driven by 2026-04-18 post-mortem: 3-agent parallel session lost ~15% of Claude turn to stash incident and ~20% to orientation-from-logs instead of handoff pickup.",
+    "outcome": null
   }
 ];
 
@@ -13354,6 +14457,69 @@ export interface SearchEntry {
  * lowercased at prebuild so the client matcher only does substring checks.
  */
 export const SEARCH_INDEX: SearchEntry[] = [
+  {
+    "id": "gad-269",
+    "title": "vendor/get-anything-done/site is marketing-only; operator surfaces live in apps/planning-app",
+    "kind": "decision",
+    "href": "/decisions#gad-269",
+    "body": "gad-269 vendor/get-anything-done/site is marketing-only; operator surfaces live in apps/planning-app the project editor (`/projects/edit/[id]` + 4 tabs) and the entire `/api/dev/*` surface (secrets, env-defaults, scopes, evals/projects, gene-states, graph, live, command-bridge) move out of `vendor/get-anything-done/site/` and into `apps/planning-app/`. the vendor site keeps only the audience-facing landing/marketing/docs surfaces — anything that's \"operator chrome\" goes to planning-app where it c"
+  },
+  {
+    "id": "gad-268",
+    "title": "BYOK keys + non-secret env defaults are scope-resolved across species &gt; eval &gt; planning",
+    "kind": "decision",
+    "href": "/decisions#gad-268",
+    "body": "gad-268 byok keys + non-secret env defaults are scope-resolved across species &gt; eval &gt; planning both encrypted secrets (byok) and non-secret env defaults resolve along an explicit scope chain instead of living in a single per-project bag. default chain when nothing else is requested: most-specific scope (e.g. evals/&lt;eval&gt;/species/&lt;species&gt;) → evals/&lt;eval&gt; → planning (legacy bag, scope=&apos;&apos;). the most-specific bag that defines a key wins; parent bags whose entries ge"
+  },
+  {
+    "id": "gad-267",
+    "title": "Security patterns surfaced during spec/design work become teaching tips",
+    "kind": "decision",
+    "href": "/decisions#gad-267",
+    "body": "gad-267 security patterns surfaced during spec/design work become teaching tips when a spec-authoring or design-doc subagent surfaces defense-in-depth patterns (aead+aad binding, fail-closed defaults, derive-dont-store, migration cutover windows, audit-log privacy tradeoffs, etc.) those patterns should be harvested into the teachings catalog under a 'security' category. rationale: the llm-from-scratch project covers tokenizer-level llm internals but the operator has limited e"
+  },
+  {
+    "id": "gad-266",
+    "title": "Phase 60 BYOK design choices — operator accepted all A-H advisor defaults",
+    "kind": "decision",
+    "href": "/decisions#gad-266",
+    "body": "gad-266 phase 60 byok design choices — operator accepted all a-h advisor defaults operator accepted all 8 advisor-mode defaults from .planning/notes/phase-60-byok-discussion-2026-04-17.md. a crypto primitive aes-256-gcm with pbkdf2 kdf (adjusted from scrypt per d to achieve browser/cli parity), 600k iterations. b master-key ux os keychain with passphrase fallback; windows credential manager adapter first, macos + linux adapters deferred until needed. c on-disk format versioned "
+  },
+  {
+    "id": "gad-265",
+    "title": "Phase 59 open questions — operator sign-off accepted planner recommendations",
+    "kind": "decision",
+    "href": "/decisions#gad-265",
+    "body": "gad-265 phase 59 open questions — operator sign-off accepted planner recommendations operator accepted the gad-planner subagent recommendations for all 5 open questions on phase 59 plan.md. q1 planning-app binary bundling — path b monorepo-only for this phase, follow-up todo for standalone bundling gated on task 44-28 pattern. q2 teachings-reader migration timing — will not migrate during phase 59; barrel re-export approach (option b in task 59-02) stands. q3 /my-projects byok sta"
+  },
+  {
+    "id": "gad-264",
+    "title": "Teachings reader route promoted to active phase 46 scope",
+    "kind": "decision",
+    "href": "/decisions#gad-264",
+    "body": "gad-264 teachings reader route promoted to active phase 46 scope phase 58 originally slotted the /teachings route as its item (3), but phase 58 is blocked on 46 and the 'only fun if you see it' gap on the teachings catalog is acute — tips exist but nothing renders them. promote the teachings reader (index page + detail route, read from teachings/static/** via the existing catalog generator) into phase 46 active scope. phase 58 keeps its other items (snapshot-fo"
+  },
+  {
+    "id": "gad-263",
+    "title": "Offload policy — big-token structured work goes to cheap models, reasoning stays with main agent",
+    "kind": "decision",
+    "href": "/decisions#gad-263",
+    "body": "gad-263 offload policy — big-token structured work goes to cheap models, reasoning stays with main agent cost-token triage for llm calls across gad. default routing: (a) reasoning, novel content generation, agent-loop decisions, phase planning --&gt; main agent (claude, operator-controlled runtime). (b) structured input / structured output transformations with predictable shape and high token volume --&gt; cheap model (gpt-4o-mini class or equivalent via byok, per-project). examples that belong on th"
+  },
+  {
+    "id": "gad-262",
+    "title": "gad start — daily dashboard entry command, distinct from gad startup",
+    "kind": "decision",
+    "href": "/decisions#gad-262",
+    "body": "gad-262 gad start — daily dashboard entry command, distinct from gad startup two different audiences want two different entry points. coding agents need text-mode session context: today that is 'gad startup --projectid x' which prints the session contract + triggers snapshot. humans (operator) need a dashboard to see their projects, subagent-run history, next-actions, and byok status: that is 'gad start'. the command spawns 'gad planning serve' if not already running, then"
+  },
+  {
+    "id": "gad-261",
+    "title": "Planning surface splits into its own app — gad planning serve separate from landing",
+    "kind": "decision",
+    "href": "/decisions#gad-261",
+    "body": "gad-261 planning surface splits into its own app — gad planning serve separate from landing today the landing next app at vendor/get-anything-done/site/ hosts both marketing (/, /how-it-works, /library, /project-market) and planning (/planning, /projects). that coupling bleeds landing ui conventions into planning surfaces and makes it harder to treat planning as private, auth-gated, or locally-only. split: planning surfaces move to a separate next app (working name: planning-app) that sh"
+  },
   {
     "id": "gad-260",
     "title": "Per-project BYOK env storage - encrypted, uploadable via project editor, visible in project dashboard",
@@ -17205,6 +18371,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "42.4-23 `gad site serve` distinct default ports: dev/monorepo 3456 vs packaged consumer 3780 via `--consumer`; env `gad_site_serve_port` / `gad_site_port`; explicit `--port` wins. cli site-serve port consumer monorepo"
   },
   {
+    "id": "42.4-24",
+    "title": "Tree-format output for gad snapshot refs section per decision gad-241. Replace flat &apos;- path&apos; list with indente",
+    "kind": "task",
+    "href": "/planning?tab=tasks#42.4-24",
+    "body": "42.4-24 tree-format output for gad snapshot refs section per decision gad-241. replace flat &apos;- path&apos; list with indented tree that groups shared prefixes (e.g. .planning/workflows/*, references/*, site/{lib,scripts,app}/*). implementation: lib/snapshot-compact.cjs gains compactrefstree() with single-child dir-chain collapse and single-leaf fold. threshold refs_tree_threshold=5 keeps small lists flat. tests: tests/snapshot-compact-refs-tree.test.cjs covers empty/below-threshold/tree-mode/collapse/fold/annotations/duplicates/dir-suffix/token-savings/compactstatexml-wiring (11 tests). measured: full snapshot 17813b → 17622b (−191b, ~1%); refs section alone ~9% reduction; bpe token savings higher than byte due to shared-prefix coalescing. follow-ups: apply same tree form to gad startup contract output; investigate deeper compression on decisions section (title-only already compact). "
+  },
+  {
     "id": "43-01",
     "title": "Delete the conditions being dropped from the eval matrix: escape-the-dungeon-gad-emergent (D-20), escape-the-dungeon-pla",
     "kind": "task",
@@ -17518,6 +18691,34 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#44-37",
     "body": "44-37 retrospective: visual context landing band — intro landmarks vs inner showcase scope (2026-04-15). capture where confusion lived (agent prioritized showcase/meteor demos; user wanted intro kicker/title/body as separate identified targets for devpanel), resolution (split `landingvisualcontextintrokicker`, `introtitle`, `introbody` under outer `landingvisualcontextshowcase`), and mitigations for future ui work (name scope explicitly; atomic identified per devpanel target; verify with grep before closing). retrospective visual-context identified landmarks intro dev-panel 44-15 44-16"
+  },
+  {
+    "id": "44-38",
+    "title": "44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm publ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-38",
+    "body": "44-38 44-28.b5 — fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm public registry) to github releases tarball. discovered 2026-04-18: workflows/update.md step run_update invokes npx -y get-anything-done@latest which dies for every user. rewrite: (a) hooks/gad-check-update.js polls github releases api for latest tag, (b) workflows/update.md fetches tarball via gh release download, unpacks, runs bin/install.js, (c) version-compare against git tag not npm, (d) keep backup/reapply-patches flow. acceptance: gad update works on a clean machine with zero prior vendor checkout. blocks wider adoption — today every user who runs /gad-update sees 404. connects to 44-28.b0 (44-31, done). "
+  },
+  {
+    "id": "44-39",
+    "title": "Generation publish status: extend per-generation manifest with status (draft|published|unlisted), publishedAt, published",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-39",
+    "body": "44-39 generation publish status: extend per-generation manifest with status (draft|published|unlisted), publishedat, publishedby. editor publish button writes status; file copy to public/playable/ becomes a side effect of status===published. publish/route.ts gains get (status), patch (set status). status is source of truth. "
+  },
+  {
+    "id": "44-40",
+    "title": "Compile marketplace-index.json from per-generation manifests + EVAL_PROJECTS at predev/prebuild. Index shape: { projects",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-40",
+    "body": "44-40 compile marketplace-index.json from per-generation manifests + eval_projects at predev/prebuild. index shape: { projects: [...], generations: [{projectid, species, version, status, publishedat, publishedby, buildpath, score?}] }. /project-market reads index instead of eval_projects.published. projectcard shows generation rows with species badge. "
+  },
+  {
+    "id": "44-41",
+    "title": "Species index view at /project-market — band that lists distinct species with &gt;=1 published generation, click filters",
+    "kind": "task",
+    "href": "/planning?tab=tasks#44-41",
+    "body": "44-41 species index view at /project-market — band that lists distinct species with &gt;=1 published generation, click filters marketplace by species. read from marketplace-index.json. "
   },
   {
     "id": "44.5-01",
@@ -17882,6 +19083,251 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "task",
     "href": "/planning?tab=tasks#46-08",
     "body": "46-08 verify build passes after route removal + nav trim. fix broken imports from deleted routes. full type-check + vcs audit. verification build type-check broken-imports"
+  },
+  {
+    "id": "46-09",
+    "title": "Teachings reader routes — /teachings index (card grid by category, difficulty + date + tags) and /teachings/[slug] detai",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-09",
+    "body": "46-09 teachings reader routes — /teachings index (card grid by category, difficulty + date + tags) and /teachings/[slug] detail (marked markdown render, frontmatter stripped, backrefs panel for implementation/decisions/phases/related). server components read teachings/index.json + per-tip md bodies from teachings/static/**. decision gad-264 promoted this into active phase 46 scope. acceptance: curl /teachings returns 200 with tip titles visible; curl /teachings/&lt;slug&gt; returns 200 with rendered body. verified against all 6 indexed tips. teachings site route reader markdown backrefs"
+  },
+  {
+    "id": "46-10",
+    "title": "Fix gad tip reindex ENOENT on installed binary. teachings-reader.cjs now resolves TEACHINGS_DIR by walking up from cwd l",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-10",
+    "body": "46-10 fix gad tip reindex enoent on installed binary. teachings-reader.cjs now resolves teachings_dir by walking up from cwd looking for a gad-config.toml repo root and preferring vendor/get-anything-done/teachings/ (or direct teachings/) on that root before falling back to the bundled runtime location. gad_teachings_dir env override added for testing. source cli verified — 'node vendor/get-anything-done/bin/gad.cjs tip reindex' now writes to the user repo's teachings/ instead of the read-only runtime bundle. installed binary picks up the fix on next reinstall (deferred: current gad.exe is still held open by this session). teachings reindex runtime path-resolve installed-binary"
+  },
+  {
+    "id": "46-15",
+    "title": "Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each:",
+    "kind": "task",
+    "href": "/planning?tab=tasks#46-15",
+    "body": "46-15 submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. scope each: last commit upstream vs. ours, production usage vs. dead references, whether still needed as submodule or should be pulled in-tree / deleted. initial scan 2026-04-18: mb-cli-framework has 103 live references (packages/magicborn-cli tests + docs + vendor-registry + ink-tui) — keep. grime-time-site / repub-builder / claw-code status unknown, user suspects unused now that payloadcms pivot was dropped. deliverable: references/submodule-audit-2026-04.md with keep/inline/drop recommendation per submodule. follow-up tasks for any drop + gitmodules cleanup. "
+  },
+  {
+    "id": "55-00",
+    "title": "Catalog all 91 vendor SKILL.md files into DEV/PROD/META lanes per gad-247 + todo 2026-04-17-skill-lane-taxonomy. Output:",
+    "kind": "task",
+    "href": "/planning?tab=tasks#55-00",
+    "body": "55-00 catalog all 91 vendor skill.md files into dev/prod/meta lanes per gad-247 + todo 2026-04-17-skill-lane-taxonomy. output: .planning/notes/skill-lane-taxonomy-2026-04-18.md (counts: 60 dev, 22 meta, 3 prod, 6 dual-tag). recommends meta as third lane. answers todo open questions (debug=dev+meta, verify-phase=dev, verify-work=dev+prod, create-skill=meta, third lane=yes). provides phase 55 frontmatter schema + 5-wave migration order. closes audit todo; phase 55 frontmatter rollout itself is a separate task. skill-catalog lane dev prod meta taxonomy phase-55-prep"
+  },
+  {
+    "id": "59-01",
+    "title": "Scaffold apps/planning-app/ as a new Next 15 workspace entry. Minimal shell: layout.tsx with dev-only auth stub, home pa",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-01",
+    "body": "59-01 scaffold apps/planning-app/ as a new next 15 workspace entry. minimal shell: layout.tsx with dev-only auth stub, home page redirecting to /my-projects, tailwind config mirroring the landing app, tsconfig paths. runs on a distinct dev port (3002) so it coexists with the landing app during migration. "
+  },
+  {
+    "id": "59-02",
+    "title": "Extract shared UI primitives into a consumable location. Candidates: MarketingShell (rename to AppShell with slot-based ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-02",
+    "body": "59-02 extract shared ui primitives into a consumable location. candidates: marketingshell (rename to appshell with slot-based navigation), sectionepigraph, sitesection, siteprose. options: (a) packages/ui-shared workspace package, (b) direct imports from vendor/get-anything-done/site/components/site/ with a re-export barrel. pick (b) initially — faster, defer package extraction until a third consumer emerges. "
+  },
+  {
+    "id": "59-03",
+    "title": "Port /planning route from landing app to planning-app. All existing tabs (Tasks, Decisions, Requirements, Notes, Workflo",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-03",
+    "body": "59-03 port /planning route from landing app to planning-app. all existing tabs (tasks, decisions, requirements, notes, workflows, skillcandidates, system) move intact. data source stays the same — planning cli readers via gad binary or direct xml parse. landing app's /planning stays for one release cycle with a deprecation banner. "
+  },
+  {
+    "id": "59-04",
+    "title": "Port /projects routes + build the /my-projects dashboard. Dashboard shows: list of owned projects with phase/next-action",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-04",
+    "body": "59-04 port /projects routes + build the /my-projects dashboard. dashboard shows: list of owned projects with phase/next-action snippet, per-project drawer (current phase, open tasks, recent decisions, subagent-run history, byok env status), action buttons (trigger daily subagent, view last report, open planning xml). consumes gad cli readers. lives on planning-app only — landing gets a redirect banner. "
+  },
+  {
+    "id": "59-05",
+    "title": "Implement 'gad planning serve' CLI subcommand. Spawns planning-app (next dev in dev / next start in prod) on port 3002 w",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-05",
+    "body": "59-05 implement 'gad planning serve' cli subcommand. spawns planning-app (next dev in dev / next start in prod) on port 3002 with reuse detection — if something is already listening on the port and responds with a planning-app health endpoint, attach rather than spawn. logs go to ~/.gad/logs/planning-app-&lt;date&gt;.jsonl. graceful shutdown on sigint. "
+  },
+  {
+    "id": "59-06",
+    "title": "Implement 'gad start' CLI subcommand (decision gad-262). Runs 'gad planning serve' if not running, waits for health, ope",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-06",
+    "body": "59-06 implement 'gad start' cli subcommand (decision gad-262). runs 'gad planning serve' if not running, waits for health, opens browser to http://localhost:3002/my-projects. aliased as 'gad dashboard'. idempotent. --no-browser flag skips the browser open for editor/iframe workflows. "
+  },
+  {
+    "id": "59-07",
+    "title": "Daily-subagent dispatch hook. 'gad start' (or an explicit 'gad start --dispatch-subagents') reads each project config fo",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-07",
+    "body": "59-07 daily-subagent dispatch hook. 'gad start' (or an explicit 'gad start --dispatch-subagents') reads each project config for daily-subagent: true and, if today's run has not yet been recorded in .planning/subagent-runs/&lt;projectid&gt;/, spawns the configured subagent runtime with the project snapshot + task context. writes run record on completion (consumes subagent-run-history todo schema). "
+  },
+  {
+    "id": "59-08",
+    "title": "Deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view mo",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-08",
+    "body": "59-08 deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view moved to gad planning serve' with copy-pasteable install+run commands. keep for one release cycle then remove. update all internal cross-links to /my-projects. "
+  },
+  {
+    "id": "59-09",
+    "title": "Render subagent-run history on /my-projects project drawer. Reads .planning/subagent-runs/&lt;projectid&gt;/*.json (sche",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-09",
+    "body": "59-09 render subagent-run history on /my-projects project drawer. reads .planning/subagent-runs/&lt;projectid&gt;/*.json (schema from todo 2026-04-17-subagent-run-history.md). timeline view — date, task id, status, one-line outcome, link to full report body, link to teaching tip produced. empty state with a 'trigger a run' button. "
+  },
+  {
+    "id": "59-10",
+    "title": "CLI efficiency gap cluster: land task-registry writer + gad tasks add + gad tasks promote + gad tasks --stalled + gad ne",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-10",
+    "body": "59-10 cli efficiency gap cluster: land task-registry writer + gad tasks add + gad tasks promote + gad tasks --stalled + gad next. closes the hand-editing loop that forced agents to edit task-registry.xml by hand to register new tasks (root cause of the 45-todo backlog in vendor/get-anything-done/.planning/todos/ never becoming real tasks). new lib/task-registry-writer.cjs: pure addtasktoxml + atomic appendtasktofile, fs-injectable for tests, stable error codes (task_id_exists, phase_not_found, validation_failed, malformed_xml, write_failed). cli subcommands under tasksv2cmd: add (register by id/phase/goal), promote (lift a .planning/todos/*.md file into a task — filename derives id, first prose line becomes goal, todo moves to todos/promoted/ unless --keep). tasks list gains --stalled flag (in-progress tasks with no agent/skill/runtime attribution). new top-level gad next command: cross-project priority hotlist (tiers: active → stalled → next planned → idle). tests: 16/16 in tests/task-registry-writer.test.cjs, all fs-injected, no real xml parser, no real disk. also: operator-local gsd-* hooks deleted (gsd-check-update, gsd-context-monitor, gsd-prompt-guard, gsd-statusline, gsd-workflow-guard) + stale gsd-update-check.json cache + gsd-file-manifest.json — they were orphaned and surfacing /gsd:update prompts. settings.json already points at gad-* siblings. "
+  },
+  {
+    "id": "59-23",
+    "title": "Project Editor + dev API rehome from vendor/get-anything-done/site/ to apps/planning-app/. Pulls the entire `/projects/e",
+    "kind": "task",
+    "href": "/planning?tab=tasks#59-23",
+    "body": "59-23 project editor + dev api rehome from vendor/get-anything-done/site/ to apps/planning-app/. pulls the entire `/projects/edit/[id]` tree (19 .tsx files: projecteditor, bestiarytab, recipestab, byoktab, inspectorpane, projectcanvas, difftree, generationrunner, radarchart, traitbar, dnaeditor, dnaactionrow, editablefield, inventorygrid, livedatapanel, commandpalette, previewframe, page.tsx, use-command-bridge.ts) plus the supporting eval-data-runtime.ts loader and 8 of 16 `/api/dev/*` route trees actually used by the editor (command-bridge, env-defaults, evals/projects/*, gene-states, graph, live, scopes, secrets/*) into apps/planning-app. vendor site keeps only marketing/landing surfaces.\r\n\r\nimplementation: (1) tsconfig path `@gad-site/*` → `../../vendor/get-anything-done/site/*` so the editor still imports `eval-data` + `eval-data.generated` from the vendor site without copying the 19k-line generated file. (2) new apps/planning-app/lib/gad-paths.ts exports gad_root/gad_lib/gad_bin/gad_site_dir resolved via `import.meta.url` walk-up — replaces the original `process.cwd() + \"..\"` pattern that assumed cwd was the site dir. (3) scripts/rewrite-gad-paths.mjs (one-shot) sweeps all 19 copied files and substitutes the path-resolution patterns. (4) sitesection ported into apps/planning-app/components/site/ as a stripped-down version (no dev-id band visual context panel, no usedevid/banddevpanel deps) so the public landing site can keep evolving its dev-id machinery without churning planning-app. (5) next.config.mjs sets outputfiletracingroot to repo root + experimental.externaldir=true so next traces the @gad-site imports cleanly. (6) editor + dev api routes deleted from vendor site in the same change. build verifies: pnpm --filter @portfolio/planning-app build succeeds with all 8 dev api routes + the editor route registered.\r\n\r\nvendor site `/projects/edit` and `/api/dev/*` routes are deleted in the same change. captures decision-gad-269 boundary: vendor site = marketing/landing only; planning-app = operator surfaces (byok, evals, dev tooling). "
+  },
+  {
+    "id": "60-01",
+    "title": "Write references/byok-design.md resolving the open questions in phase 60 goal + decision gad-260: (a) crypto primitive —",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-01",
+    "body": "60-01 write references/byok-design.md resolving the open questions in phase 60 goal + decision gad-260: (a) crypto primitive — libsodium sealed-box vs aes-256-gcm with scrypt kdf, recommend one, (b) master-key ux — os keychain-first (windows credential manager, macos keychain, linux secret-service) with passphrase fallback when keychain unavailable, (c) on-disk format — json envelope with version, salt, nonce, per-key metadata (last-rotated, scope, provider), (d) rotation model — in-place vs additive, (e) site-side strategy — browser-only webcrypto decrypt vs server-side per-user kms. "
+  },
+  {
+    "id": "60-02",
+    "title": "Implement lib/secrets-store.cjs + OS-keychain wrappers. .gad/secrets/&lt;projectid&gt;.enc format from 60-01. Three keyc",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-02",
+    "body": "60-02 implement lib/secrets-store.cjs + os-keychain wrappers. .gad/secrets/&lt;projectid&gt;.enc format from 60-01. three keychain adapters: windows-credential-manager (via powershell or node-ffi), macos-keychain (security cli), linux-secret-service (via dbus-next). unit tests with a mock keychain adapter. .gad/ added to repo-level .gitignore across all projects that register a planning root. "
+  },
+  {
+    "id": "60-03",
+    "title": "CLI family: 'gad env get &lt;KEY&gt; --projectid', 'gad env set &lt;KEY&gt; --projectid' (reads value from prompt, not a",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-03",
+    "body": "60-03 cli family: 'gad env get &lt;key&gt; --projectid', 'gad env set &lt;key&gt; --projectid' (reads value from prompt, not argv, to avoid shell history), 'gad env list --projectid' (keys + metadata, never values), 'gad env rotate &lt;key&gt; --projectid', 'gad env revoke &lt;key&gt; --projectid'. all operations require master-key unlock. "
+  },
+  {
+    "id": "60-04",
+    "title": "Scoped spawn wrapper in lib/scoped-spawn.cjs. Given projectId + child command, decrypts that project's env bag, merges i",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-04",
+    "body": "60-04 scoped spawn wrapper in lib/scoped-spawn.cjs. given projectid + child command, decrypts that project's env bag, merges into child process.env only for the child, never mutates parent process.env. subagent dispatch (phase 59 task 59-07) uses this wrapper. subagent sees openai_api_key etc. without the main session leaking it. "
+  },
+  {
+    "id": "60-05",
+    "title": "Key lifecycle UX: rotation flow (generate new, re-encrypt, zero-out old buffer), revocation flow (remove from bag + reco",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-05",
+    "body": "60-05 key lifecycle ux: rotation flow (generate new, re-encrypt, zero-out old buffer), revocation flow (remove from bag + record revocation event in audit log), audit log at .gad/secrets/&lt;projectid&gt;.audit.jsonl (append-only, gitignored). "
+  },
+  {
+    "id": "60-05a",
+    "title": "CLI wiring for the lib/secrets-lifecycle.cjs layer delivered in 60-05. Two new subcommands: `gad env audit &lt;projectid",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-05a",
+    "body": "60-05a cli wiring for the lib/secrets-lifecycle.cjs layer delivered in 60-05. two new subcommands: `gad env audit &lt;projectid&gt; [--since iso] [--limit n] [--json]` (newest-first audit-log view, wraps secretslifecycle.auditlog) and `gad env purge &lt;projectid&gt; [--as-of iso] [--dry-run] [--json]` (manual grace-period purge, wraps secretslifecycle.purgeexpired). plus a best-effort auto-purge preflight in `gad start` — scans all projects with an existing .gad/secrets/&lt;id&gt;.enc envelope, calls purgeexpired on each, logs one-line summary to stderr, never fails start on purge error (swallow + log). library extension in lib/env-cli.cjs adds auditcmd + purgecmd following the same dep-injection + guarded error pattern. tests in tests/env-cli.test.cjs (audit + purge describe blocks) with lifecycle mocks matching the existing store-mock shape. "
+  },
+  {
+    "id": "60-06",
+    "title": "Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scra",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-06",
+    "body": "60-06 migrate llm-from-scratch openai_api_key from global process.env into its project bag. subagent wrapper for llm-from-scratch uses scoped-spawn + 'gad env get' to decrypt at dispatch time. documents the expected migration in references/byok-design.md §migration. "
+  },
+  {
+    "id": "60-07",
+    "title": "Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-07",
+    "body": "60-07 project-editor byok tab ui. lives in local-dev project-editor (phase 44.5). tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. calls 'gad env' cli via dev-server command bridge. local-dev only — node_env=development gate. shipped 2026-04-18: added 4th left-pane tab (byok) to projecteditor.tsx + new byoktab.tsx component. backend uses dedicated /api/dev/secrets/[projectid] route (get list/post set/put rotate/delete revoke) + /audit + /test sub-routes that import lib/secrets-store.cjs directly via createrequire — bypasses the sse command-bridge for mutating ops to avoid stdin-pipe plaintext exposure. also added 'env' to command-bridge allowed_subcommands for any future read-only cli calls. provider validators: openai, anthropic, openrouter, groq (http probe with 8s timeout). last-four redaction via decryptall() with synchronous plaintext drop. audit tail surfaces last 20 envset/envrotate/envrevoke/envpurge events. built clean against next 16.0.8 turbopack. unblocks 60-08 (cloud byok surface, same shapes behind auth). "
+  },
+  {
+    "id": "60-07b",
+    "title": "Scoped BYOK + non-secret env defaults + dev-server passphrase fix. Per decision gad-268, extend the BYOK surface so keys",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-07b",
+    "body": "60-07b scoped byok + non-secret env defaults + dev-server passphrase fix. per decision gad-268, extend the byok surface so keys and env defaults resolve along a scope chain: species &gt; eval &gt; planning. shipped 2026-04-18: (1) lib/secrets-store.cjs — scope arg threaded through get/set/list/rotate/revoke/decryptall; envelope+audit paths nest under .gad/secrets/&lt;projectid&gt;/&lt;scope-path&gt;.enc; per-scope keychain account (projectid::scope) so each scope&apos;s master key is independent; new listchain/decryptchain walk most-specific→least, marking shadowed parents in shadows[]. backward-compatible: no-scope = legacy planning bag at .gad/secrets/&lt;projectid&gt;.enc. (2) tests/secrets-store.test.cjs — added scope path resolution + per-scope isolation suites (29 tests pass total). (3) lib/env-defaults-store.cjs — new plain-json scoped store at .gad/env/&lt;projectid&gt;[/&lt;scope&gt;].json with crud, parent-merge resolvechain, path-traversal safety, auto-gitignore on first write. (4) tests/env-defaults-store.test.cjs — 12 tests round-trip + scope merge + validation + gitignore. (5) lib/env-cli.cjs — --scope/--scope-chain flags on list/get/set/rotate/revoke; renderlisttable adds bag + shadows columns when present; fixed revokecmd variable shadow that was dropping --scope on the way to store.revoke. (6) lib/keychain/passphrase-fallback.cjs — honor gad_no_tty_prompt=1 to refuse interactive prompts in server contexts (next.js dev server inherits parent tty → would deadlock http request). (7) lib/secrets-store-errors.cjs — added validation code shared with env-defaults-store. (8) new api routes /api/dev/env-defaults/[projectid] (list/set/unset, scope+chain) + /api/dev/scopes/[projectid] (walks evals/&lt;eval&gt;/species/&lt;species&gt; for picker source); /api/dev/secrets/[projectid] + /audit + /test now accept scope/scopechain/scopebag and decrypt-once per distinct bag for last-four tails. all routes set process.env.gad_no_tty_prompt=&quot;1&quot; at module load. (9) byoktab.tsx — scopepicker dropdown, bagbadge (active vs inherited), shadowhint (count of parents hidden), inherited rows go read-only (rotate/revoke disabled), addkeyform + rotateform + testcallbutton thread scopebag end-to-end, new envdefaultssection mirrors the keys list for non-secret values, auditlist title shows active scope, byokfetch wrapper handles passphrase_required_no_tty (423) + passphrase_invalid (401) by prompting via window.prompt and caching in tab-lifetime map. 108/108 byok-related tests pass. note: re-applied after parallel-agent vendor commits clobbered the lib + planning edits — see commit message. "
+  },
+  {
+    "id": "60-08",
+    "title": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management ",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-08",
+    "body": "60-08 landing-site project-dashboard byok surface. lands on planning-app post phase 59 split. auth-gated. same key-management surface as 60-07 + scope chain from 60-07b but for cloud projects. decryption strategy per 60-01 decision — browser webcrypto or server-side kms. keys never transit plaintext over the wire in either direction. "
+  },
+  {
+    "id": "60-09",
+    "title": "Work-stealing handoff queue using per-file directory (not JSONL — decision per user 2026-04-18, see .planning/notes/2026",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-09",
+    "body": "60-09 work-stealing handoff queue using per-file directory (not jsonl — decision per user 2026-04-18, see .planning/notes/2026-04-18-handoff-queue-design.md). shape: .planning/handoffs/{open,claimed,closed}/ with one md file per handoff. lifecycle = fs.rename between dirs (atomic on posix + windows, no lock needed). each file = yaml frontmatter {id, projectid, phase, task_id, created_at, created_by, claimed_by, claimed_at, completed_at, priority, estimated_context} + markdown body. cli: gad handoffs {list,claim,complete,show,create}. gad-pause-work + gad-session pause invoke &apos;handoffs create&apos;. gad startup/snapshot surface unclaimed count + top-3 summary. idle agents pick appropriate items by estimated_context (mechanical→haiku/sonnet, reasoning→opus per offload policy). gap discovered: no &apos;gad tasks update &lt;id&gt; --goal&apos; exists — surfaced in design note, file as follow-up. see .planning/notes/2026-04-18-handoff-queue-design.md for full schema. "
+  },
+  {
+    "id": "60-10",
+    "title": "Split secrets-store error codes: PROJECT_NOT_FOUND for missing envelope on disk vs KEY_NOT_FOUND for envelope-exists-but",
+    "kind": "task",
+    "href": "/planning?tab=tasks#60-10",
+    "body": "60-10 split secrets-store error codes: project_not_found for missing envelope on disk vs key_not_found for envelope-exists-but-key-absent. removes the substring-match antipattern in scoped-spawn.cjs (ismissingenvelope) and env-cli.cjs list-empty soft-swallow. files touched: lib/secrets-store.cjs (1 throw site), lib/scoped-spawn.cjs (ismissingenvelope), lib/env-cli.cjs (messagefor + list catch), references/byok-design.md (sec.12 error table), tests/secrets-store.test.cjs (split test), tests/scoped-spawn.test.cjs (mock helper), tests/env-cli.test.cjs (list-empty + messagefor table). closes todo 2026-04-17-secrets-store-project-not-found-split. unblocks byok ui rendering in 60-07/60-08. "
+  },
+  {
+    "id": "63-01",
+    "title": "State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-h",
+    "kind": "task",
+    "href": "/planning?tab=tasks#63-01",
+    "body": "63-01 state+log consolidation audit. enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-hook-state, skill-active-state, team-state, tmux-hook-state), .planning/{state.xml, task-registry.xml, .gad-log/*.jsonl, .trace-events.jsonl, .trace-seq, .gad-agent-lanes.json, graph.json, config.json, sessions/*.json, notes/, todos/}, .claude/{settings.json, settings.local.json, hooks/state}, ~/.cache/gad/. classify per pattern: (a) contested aggregate → cli-mediated writes, (b) shared append-only streams → jsonl append-safe, (c) contested single-owner → per-agent dir, (d) cross-agent intent → per-file dir + fs.rename. deliverable: references/state-writes-inventory.md. follow-ups filed per consolidation action. see 2026-04-18 post-mortem notes. "
+  },
+  {
+    "id": "63-02",
+    "title": "Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session",
+    "kind": "task",
+    "href": "/planning?tab=tasks#63-02",
+    "body": "63-02 session continuity contract — &apos;lets continue&apos; zero-cost pickup. prereq 60-09 handoff queue. (a) claude session pause writes handoff file, (b) user settings 63-03 stores last-active-projectid, (c) &apos;gad start&apos; or new session auto-invokes gad handoffs list --unclaimed --mine-first + gad snapshot --projectid &lt;last-active&gt;, (d) if exactly one unclaimed handoff matches runtime auto-claim, (e) sessionstart hook surfaces &apos;1 unclaimed handoff — /pickup to resume&apos;. metrics to beat: 2026-04-18 baseline ~35% of claude turn on orientation (archaeology + /gsd:update + projectid guessing). target &lt;1 tool call to restored context. "
+  },
+  {
+    "id": "63-03",
+    "title": "User settings scaffold (non-checked-in). Local ~/.claude/gad-user.json (or .planning/.gad-user.json per-repo, decide per",
+    "kind": "task",
+    "href": "/planning?tab=tasks#63-03",
+    "body": "63-03 user settings scaffold (non-checked-in). local ~/.claude/gad-user.json (or .planning/.gad-user.json per-repo, decide per 63-01 audit). fields: displayname (default = os.userinfo().username), lastactiveprojectid, assignedsouls {projectid: soulslug}, lastsessionid, preferredruntime, teachingsnoozeuntil. gitignored. read by gad startup, gad snapshot, sessionstart hook, and anywhere we need to know &apos;who is logged in&apos;. addresses 2026-04-18 user feedback: &apos;we should have user settings that dont get checked in so we know who is logged in. if they dont have a name, default to machine name. users can have souls assigned to them in the gad project for that to be injected.&apos; "
+  },
+  {
+    "id": "63-04",
+    "title": "Agent lane manifest — canonical file/directory ownership per agent runtime. Authors a top-level AGENT-LANES.md (or refer",
+    "kind": "task",
+    "href": "/planning?tab=tasks#63-04",
+    "body": "63-04 agent lane manifest — canonical file/directory ownership per agent runtime. authors a top-level agent-lanes.md (or references/agent-lanes.md) that every parallel agent consults as ground truth. minimum content: (a) per-runtime lane definition (claude-code, codex, cursor, etc.) with file-glob allow + deny lists, (b) shared-write protocols (task-registry.xml via gad tasks add only, etc.), (c) conflict-resolution playbook (who wins on collision, how to cede, how to request cross-lane work), (d) session-start etiquette (read this file before touching anything). driven by 2026-04-18 3-agent overlap post-mortem where cursor misattributed claude&apos;s tasks to codex, costing ~5% of its turn. codex owns runtime/bin/gad.cjs + lib/runtime-* + verify; cursor owns byok/lib/secrets-* + lib/env-cli + lib/scoped-spawn; claude owns snapshot/lib/snapshot-* + planning docs + memory + cross-cutting framework hygiene. operator assigns souls per lane per project. "
+  },
+  {
+    "id": "63-05",
+    "title": "Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader",
+    "kind": "task",
+    "href": "/planning?tab=tasks#63-05",
+    "body": "63-05 wire daily tip + soul reference into claude sessionstart. today: scripts/generate-daily-tip.mjs and lib/teachings-reader.cjs exist but the claude sessionstart hook chain (~/.claude/hooks/gad-check-update.js + gad-session-state.sh) does not emit them. also: soul.md at repo root is readable but not auto-mentioned — kael persona only lands when i recall claude.md pointer. wire: (a) gad-session-state.sh emits the day&apos;s teaching tip (falls through silently if no tip), (b) new hook or same emits &apos;active soul: &lt;name&gt; (soul.md)&apos; when soul.md present, (c) teaching generation runs per decision gad-257 at startup (dedup across multi-session-per-day), (d) llm-from-scratch subagent dispatch per gad-256/258 when appropriate. did not fire for claude this session despite decisions gad-255..258 being in place. "
+  },
+  {
+    "id": "63-06",
+    "title": "Gap closed: gad phases add atomically syncs TASK-REGISTRY.xml container, gad tasks update --goal available. DONE 2026-04",
+    "kind": "task",
+    "href": "/planning?tab=tasks#63-06",
+    "body": "63-06 gap closed: gad phases add atomically syncs task-registry.xml container, gad tasks update --goal available. done 2026-04-18 s20 by claude-opus-4-7. regex boundary bug in addphasetoregistryxml (word-boundary after closing quote) prevented idempotent no-op detection — fixed in lib/task-registry-writer.cjs. all 23 writer tests + phases-add-registry-sync tests pass. installed gad v1.33.0 still pre-fix — 44-38 rebuild needed for distribution. "
+  },
+  {
+    "id": "63-06a",
+    "title": "Harden gad runtime launch new-shell path using generated temp PowerShell script files and strict argument passing; remov",
+    "kind": "task",
+    "href": "/planning?tab=tasks#63-06a",
+    "body": "63-06a harden gad runtime launch new-shell path using generated temp powershell script files and strict argument passing; remove raw -command one-liners. "
+  },
+  {
+    "id": "63-06b",
+    "title": "Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&g",
+    "kind": "task",
+    "href": "/planning?tab=tasks#63-06b",
+    "body": "63-06b fix phases add to sync task-registry phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&gt; --goal cli path. "
   },
   {
     "id": "01",
@@ -18330,6 +19776,27 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "kind": "phase",
     "href": "/planning?tab=phases#58",
     "body": "58 daily teachings system — pipeline + site integration wire the teachings/ catalog into user-facing surfaces. (1) snapshot footer: add a one-line 'tip of the day' reference to gad snapshot output (~60 chars, zero token cost beyond that line). (2) github actions daily-tip.yml tested end-to-end with openai_api_key secret. (3) site /teachings route under phase 46 — card grid, category filter, search, difficulty badges. (4) optional weekly recap generator. (5) document contribution path for static tips in teachings/readme.md. content backlog is fed by llm-from-scratch project (decision llm-004 / gad-256) + daily generator."
+  },
+  {
+    "id": "59",
+    "title": "Phase 59 â€” Planning-app split + gad planning serve + gad start daily entry",
+    "kind": "phase",
+    "href": "/planning?tab=phases#59",
+    "body": "59 planning-app split + gad planning serve + gad start daily entry split planning surfaces from the landing next app into a dedicated planning-app (decisions gad-261, gad-262). scope: (1) scaffold apps/planning-app/ (or vendor/get-anything-done/apps/planning-app/) next 15 workspace entry with shared primitives from packages/ui. (2) migrate /planning, /projects, my-projects dashboard routes out of landing into planning-app. (3) cli: 'gad planning serve' spawns planning-app dev server (port detection + reuse if already running). (4) cli: 'gad start' spawns 'gad planning serve' if needed + opens browser to /my-projects. (5) deprecate landing-site /planning + /projects over one release cycle — redirect stubs with 'moved to gad planning serve' banner. (6) subagent-run history render on /my-projects (consumer of todo 2026-04-17-subagent-run-history.md data). (7) daily-subagent dispatch trigger — 'gad start' optionally auto-dispatches pending daily subagent runs if project config has daily-subagent: true (decision gad-258 enforcement mechanism). (8) project editor rehome — `/projects/edit/[id]` route + 4-tab editor (bestiary, recipes, byok, inspector) + the entire `/api/dev/*` surface (secrets, env-defaults, scopes, evals/projects/*, gene-states, graph, live, command-bridge) move from `vendor/get-anything-done/site/` to `apps/planning-app/`. vendor site keeps only the marketing/landing surfaces. implemented via `@gad-site/*` tsconfig alias for shared eval-data + `apps/planning-app/lib/gad-paths.ts` to resolve vendor lib through createrequire from any cwd. tracked as task 59-23 (rehome) — landed 2026-04-18 ahead of the planning-serve binary work."
+  },
+  {
+    "id": "60",
+    "title": "Phase 60 â€” Per-project BYOK encrypted env — .gad/secrets store, CLI, scoped spawn, UI surfaces",
+    "kind": "phase",
+    "href": "/planning?tab=phases#60",
+    "body": "60 per-project byok encrypted env — .gad/secrets store, cli, scoped spawn, ui surfaces implement decision gad-260 per-project byok env storage. scope: (1) crypto primitive decision (libsodium sealed-box vs aes-256-gcm+scrypt) written up in references/byok-design.md, (2) master-key ux — os keychain first (windows credential manager, macos keychain, linux secret-service) with passphrase fallback, (3) .gad/secrets/&amp;lt;projectid&amp;gt;.enc storage format (versioned, per-key metadata), (4) cli family 'gad env get|set|rotate|list|revoke --projectid', (5) scoped spawn wrapper so subagents inherit per-project env without process-wide leak, (6) .gitignore enforcement for .gad/secrets/, (7) migration — llm-from-scratch openai_api_key moves from global env into its project bag, (8) project-editor byok tab ui (local-dev, paste+validate+save), (9) landing-site project-dashboard byok surface (auth-gated, lands on planning-app post phase 59 split). acceptance: llm-from-scratch subagent reads openai_api_key from its encrypted bag via 'gad env get'; key never persists on disk in plaintext; 'gad env rotate' works end-to-end."
+  },
+  {
+    "id": "63",
+    "title": "Phase 63 â€” Agent/state/session hygiene",
+    "kind": "phase",
+    "href": "/planning?tab=phases#63",
+    "body": "63 agent/state/session hygiene consolidate scattered state/log writes across .omx/, .planning/, team-state, hud-state, etc; land session-continuity contract so 'lets continue' works without orientation cost; scaffold non-checked-in user settings (machine-name default + assigned soul); author canonical agent-lane manifest so parallel agents (claude/codex/cursor) have clear file ownership; wire daily tip + soul reference into session-open surface. driven by 2026-04-18 post-mortem: 3-agent parallel session lost ~15% of claude turn to stash incident and ~20% to orientation-from-logs instead of handoff pickup."
   },
   {
     "id": "compound-skills-hypothesis",
@@ -18913,6 +20380,13 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "body": "gad-forensics gad:forensics post-mortem investigation for failed gad workflows — analyzes git history, artifacts, and state to diagnose what went wrong"
   },
   {
+    "id": "gad-handoffs",
+    "title": "gad-handoffs",
+    "kind": "skill",
+    "href": "/skills/gad-handoffs",
+    "body": "gad-handoffs gad-handoffs >-"
+  },
+  {
     "id": "gad-health",
     "title": "gad:health",
     "kind": "skill",
@@ -19015,7 +20489,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "gad:pause-work",
     "kind": "skill",
     "href": "/skills/gad-pause-work",
-    "body": "gad-pause-work gad:pause-work create context handoff when pausing work mid-phase"
+    "body": "gad-pause-work gad:pause-work >-"
   },
   {
     "id": "gad-plan-milestone-gaps",
@@ -19085,7 +20559,7 @@ export const SEARCH_INDEX: SearchEntry[] = [
     "title": "gad:reverse-engineer",
     "kind": "skill",
     "href": "/skills/gad-reverse-engineer",
-    "body": "gad-reverse-engineer gad:reverse-engineer analyze any codebase (local or github url) and produce requirements for clean-room reimplementation"
+    "body": "gad-reverse-engineer gad:reverse-engineer analyze any codebase (local or github url) and extract implementation-agnostic requirements plus system-skill contracts for clean-room reimplementation"
   },
   {
     "id": "gad-review",

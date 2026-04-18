@@ -1,0 +1,399 @@
+{
+  "schema": "marketplace-index@1",
+  "generated_at": "2026-04-18T20:56:03.802Z",
+  "projects": [
+    {
+      "id": "app-forge/gad",
+      "project": "app-forge",
+      "species": "gad",
+      "name": "app-forge/gad",
+      "description": "Greenfield: agent builds app-forge from scratch using the full GAD framework. v1 spawn = execute phase 01 from apps/forge/.planning/plans/phase-01/PLAN.md against a fresh worktree.",
+      "domain": "app",
+      "techStack": "next.js",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/bare",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "name": "escape-the-dungeon/bare",
+      "description": "Greenfield baseline: agent builds the game WITHOUT a planning framework, creating its own workflow",
+      "domain": "game",
+      "techStack": "kaplay",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/emergent",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "name": "escape-the-dungeon/emergent",
+      "description": "Greenfield emergent: agent builds the game with skills inherited from previous bare/emergent runs. Tests whether self-created systems improve over iterations.",
+      "domain": "game",
+      "techStack": "kaplay",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/gad",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "name": "escape-the-dungeon/gad",
+      "description": "Greenfield: agent builds the game from scratch using the full GAD framework",
+      "domain": "game",
+      "techStack": "kaplay",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/vcs-test",
+      "project": "escape-the-dungeon",
+      "species": "vcs-test",
+      "name": "escape-the-dungeon/vcs-test",
+      "description": "VCS portability test: bare v1 game with VCS skills installed. Tests whether an agent can build identifiers + dev panel in a KAPLAY canvas game.",
+      "domain": "game",
+      "techStack": "kaplay",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "gad-explainer-video/bare",
+      "project": "gad-explainer-video",
+      "species": "bare",
+      "name": "gad-explainer-video/bare",
+      "description": "gad-explainer-video-bare — tests the same hypotheses as gad-explainer-video but under the bare workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
+      "domain": "stories",
+      "techStack": "remotion",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "gad-explainer-video/emergent",
+      "project": "gad-explainer-video",
+      "species": "emergent",
+      "name": "gad-explainer-video/emergent",
+      "description": "gad-explainer-video-emergent — tests the same hypotheses as gad-explainer-video but under the emergent workflow condition. See gad-explainer-video/gad.json for the full rubric and gad-explainer-video/REQUIREMENTS.md for the task spec.",
+      "domain": "stories",
+      "techStack": "remotion",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "gad-explainer-video/gad",
+      "project": "gad-explainer-video",
+      "species": "gad",
+      "name": "gad-explainer-video/gad",
+      "description": "NEW EVAL DOMAIN (task 22-31, scaffolded 2026-04-09). The task is to produce a Remotion video that explains the GAD framework, its hypotheses, and its current state. The video requirements evolve across rounds the same way the escape-the-dungeon game requirements did — each round adds clarity, constraints, and complexity to the explainer script. Tests the same hypotheses (freedom / CSH / emergent-evolution) on a completely different task domain: video composition instead of game implementation. If bare still outperforms GAD here, freedom hypothesis generalizes beyond game dev. If not, freedom may be specific to creative implementation.",
+      "domain": "stories",
+      "techStack": "remotion",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "grime-time/gad",
+      "project": "grime-time",
+      "species": "gad",
+      "name": "grime-time/gad",
+      "description": "Brownfield GAD species: continue development on the existing grime-time-site codebase with the full GAD framework (skills, agents, planning, evaluation).",
+      "domain": "site",
+      "techStack": "next.js",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "magicborn/gad",
+      "project": "magicborn",
+      "species": "gad",
+      "name": "magicborn/gad",
+      "description": "Brownfield GAD species: continue manuscript/worldbuilding work using the full GAD framework with the manuscript content-skill overlay.",
+      "domain": "writing",
+      "techStack": "mdx",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "mb-cli-framework/gad",
+      "project": "mb-cli-framework",
+      "species": "gad",
+      "name": "mb-cli-framework/gad",
+      "description": "Brownfield GAD species: continue development on the existing mb-cli-framework codebase with the full GAD framework.",
+      "domain": "cli",
+      "techStack": "node+ink",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "project-editor/app-forge-baseline",
+      "project": "project-editor",
+      "species": "app-forge-baseline",
+      "name": "project-editor/app-forge-baseline",
+      "description": "Inherited baseline species — project-editor starts from app-forge v1 as its initial shape. Until project-editor produces its own generations, this species points at the app-forge v1 preserved build as the visible artifact so the Brood Editor has something to render when project-editor is selected.",
+      "domain": "app",
+      "techStack": "next.js",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "repub-builder/gad",
+      "project": "repub-builder",
+      "species": "gad",
+      "name": "repub-builder/gad",
+      "description": "Brownfield GAD species: continue development on the existing repub-builder codebase with the full GAD framework.",
+      "domain": "cli",
+      "techStack": "vite+react",
+      "contextFramework": "gad"
+    }
+  ],
+  "generations": [
+    {
+      "id": "escape-the-dungeon/bare/v1",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v1",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v1/index.html",
+      "score": 0.198,
+      "date": "2026-04-08",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/bare/v2",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v2",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v2/index.html",
+      "score": 0.601,
+      "date": "2026-04-08",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/bare/v3",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v3",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v3/index.html",
+      "score": 0.526,
+      "date": "2026-04-08",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/bare/v5",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v5",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v5/index.html",
+      "score": null,
+      "date": "2026-04-09",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/bare/v6",
+      "project": "escape-the-dungeon",
+      "species": "bare",
+      "version": "v6",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/bare/v6/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "bare"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v1",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v1",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v1/index.html",
+      "score": 0.303,
+      "date": "2026-04-08",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v2",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v2",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v2/index.html",
+      "score": 0.478,
+      "date": "2026-04-08",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v4",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v4",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v4/index.html",
+      "score": null,
+      "date": "2026-04-09",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v5",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v5",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v5/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/emergent/v6",
+      "project": "escape-the-dungeon",
+      "species": "emergent",
+      "version": "v6",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/emergent/v6/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "custom"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v10",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v10",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v10/index.html",
+      "score": null,
+      "date": "2026-04-09",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v11",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v11",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v11/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v12",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v12",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v12/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v6",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v6",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v6/index.html",
+      "score": 0.347,
+      "date": "2026-04-08",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v7",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v7",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v7/index.html",
+      "score": 0.668,
+      "date": "2026-04-08",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v8",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v8",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v8/index.html",
+      "score": 0.177,
+      "date": "2026-04-08",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "escape-the-dungeon/gad/v9",
+      "project": "escape-the-dungeon",
+      "species": "gad",
+      "version": "v9",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/escape-the-dungeon/gad/v9/index.html",
+      "score": null,
+      "date": "2026-04-09",
+      "contextFramework": "gad"
+    },
+    {
+      "id": "gad-explainer-video/gad/v1",
+      "project": "gad-explainer-video",
+      "species": "gad",
+      "version": "v1",
+      "status": "published",
+      "publishedAt": null,
+      "publishedBy": null,
+      "playableUrl": "/playable/gad-explainer-video/gad/v1/index.html",
+      "score": null,
+      "date": "2026-04-10",
+      "contextFramework": "gad"
+    }
+  ],
+  "species": [
+    {
+      "species": "bare",
+      "projects": [
+        "escape-the-dungeon"
+      ],
+      "publishedCount": 5,
+      "latestPublishedAt": null
+    },
+    {
+      "species": "emergent",
+      "projects": [
+        "escape-the-dungeon"
+      ],
+      "publishedCount": 5,
+      "latestPublishedAt": null
+    },
+    {
+      "species": "gad",
+      "projects": [
+        "escape-the-dungeon",
+        "gad-explainer-video"
+      ],
+      "publishedCount": 8,
+      "latestPublishedAt": null
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import { ProjectMarketHeader } from "@/components/project-market/ProjectMarketHe
 import { ProjectFilterBar } from "@/components/project-market/ProjectFilterBar";
 import { ProjectMarketGrid } from "@/components/project-market/ProjectMarketGrid";
 import { ProjectMarketRuns } from "@/components/project-market/ProjectMarketRuns";
+import { ProjectMarketSpeciesBand } from "@/components/project-market/ProjectMarketSpeciesBand";
 import { useProjectMarket } from "@/components/project-market/use-project-market";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection } from "@/components/site";
@@ -26,12 +27,15 @@ export default function ProjectMarket({ scopeProject = null }: ProjectMarketProp
     allRounds,
     domainFilter,
     workflowFilter,
+    speciesFilter,
     roundFilter,
     statusFilter,
     searchQuery,
     showAllRounds,
+    speciesIndex,
     setDomainFilter,
     setWorkflowFilter,
+    setSpeciesFilter,
     setRoundFilter,
     setStatusFilter,
     setSearchQuery,
@@ -83,6 +87,16 @@ export default function ProjectMarket({ scopeProject = null }: ProjectMarketProp
             onShowAllRoundsChange={setShowAllRounds}
             onClearAll={clearAllFilters}
           />
+
+          {/* Task 44-41: species directory band — only show on the full
+              marketplace, not when collapsed to a single project. */}
+          {!scopeProject && (
+            <ProjectMarketSpeciesBand
+              species={speciesIndex}
+              active={speciesFilter}
+              onSelect={setSpeciesFilter}
+            />
+          )}
 
           <div className="mt-8">
             <ProjectMarketGrid featured={featuredProjects} other={otherProjects} />
