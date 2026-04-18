@@ -1,6 +1,7 @@
 ---
 name: gad:plan-milestone-gaps
 description: Create phases to close all gaps identified by milestone audit
+lane: dev
 allowed-tools:
   - Read
   - Write

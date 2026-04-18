@@ -9,6 +9,7 @@ description: >-
   you learn the lesson — not at the end. In bare/emergent eval conditions this is the
   primary mechanism for agent-authored methodology. The agent IS the workflow author, and
   skills are how that authorship persists.
+lane: meta
 ---
 
 # create-skill

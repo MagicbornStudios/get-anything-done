@@ -1,6 +1,7 @@
 ---
 name: gad:settings
 description: Configure GAD workflow toggles and model profile
+lane: dev
 allowed-tools:
   - Read
   - Write

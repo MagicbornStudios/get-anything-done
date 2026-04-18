@@ -10,6 +10,7 @@ description: >-
   (its DNA / skill set) improves between milestones. Refuses to run if any
   pending proto-skills from a previous evolution still need human review —
   clear the queue first via gad skill promote --framework / gad evolution discard.
+lane: meta
 workflow: workflows/evolution-evolve.md
 ---
 

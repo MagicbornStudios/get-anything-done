@@ -12,6 +12,7 @@ description: >-
   on "make a skill for", "create a skill", "we need a skill that", "turn this
   into a skill", "promote this candidate to a skill", or whenever a completed
   task reveals a reusable pattern worth capturing.
+lane: meta
 workflow: workflows/skill-creator.md
 ---
 

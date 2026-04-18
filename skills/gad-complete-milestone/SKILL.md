@@ -2,6 +2,7 @@
 type: prompt
 name: gad:complete-milestone
 description: Archive completed milestone and prepare for next version
+lane: dev
 argument-hint: <version>
 allowed-tools:
   - Read

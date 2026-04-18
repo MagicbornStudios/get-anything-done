@@ -1,6 +1,7 @@
 ---
 name: gad:plan-phase
 description: Create detailed phase plan (PLAN.md) with verification loop
+lane: dev
 argument-hint: "[phase] [--auto] [--research] [--skip-research] [--gaps] [--skip-verify] [--prd <file>] [--reviews] [--text]"
 agent: gad-planner
 allowed-tools:

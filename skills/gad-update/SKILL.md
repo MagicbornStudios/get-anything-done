@@ -1,6 +1,7 @@
 ---
 name: gad:update
 description: Update GAD to latest version with changelog display
+lane: meta
 allowed-tools:
   - Bash
   - AskUserQuestion

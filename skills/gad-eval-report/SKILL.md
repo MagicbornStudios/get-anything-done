@@ -1,6 +1,7 @@
 ---
 name: gad:eval-report
 description: Show cross-project eval comparison and findings
+lane: dev
 allowed-tools:
   - Read
   - Bash

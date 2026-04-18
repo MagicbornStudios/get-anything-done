@@ -1,6 +1,7 @@
 ---
 name: gad:remove-phase
 description: Remove a future phase from roadmap and renumber subsequent phases
+lane: dev
 argument-hint: <phase-number>
 allowed-tools:
   - Read

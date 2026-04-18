@@ -10,6 +10,7 @@ description: >-
   proto-skill. Use when `gad-evolution-evolve` finishes drafting a proto-skill,
   or any time you want to validate an existing proto-skill in
   `.planning/proto-skills/<slug>/`.
+lane: meta
 workflow: workflows/evolution-validator.md
 ---
 

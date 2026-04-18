@@ -1,6 +1,7 @@
 ---
 name: build-and-release-locally
 description: Cut a new GAD release — version bump, CHANGELOG entry, Node SEA rebuild, git tag, and `gh release create` with artifacts attached. Operator-triggered only, no CI, no npm publish. Trigger this skill whenever the user asks to "cut a release", "ship v<N>", "publish a new release", "bump the version", or any variation that means "the canonical GAD repo should have a new downloadable installer artifact on GitHub Releases." Canonical-repo-only: refuses to run outside the MagicbornStudios/get-anything-done clone. See decision gad-188 (44-28 umbrella — distribution is GitHub Releases + executable download, no GitHub Actions).
+lane: prod
 ---
 
 # build-and-release-locally

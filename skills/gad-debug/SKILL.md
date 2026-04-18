@@ -1,6 +1,7 @@
 ---
 name: gad:debug
 description: Systematic debugging with persistent state across context resets
+lane: [dev, meta]
 argument-hint: [--diagnose] [issue description]
 allowed-tools:
   - Read

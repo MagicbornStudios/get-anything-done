@@ -1,6 +1,7 @@
 ---
 name: gad:eval-run
 description: Run an eval project in an isolated git worktree
+lane: dev
 argument-hint: --project <name> [--baseline <sha>] [--agent <model>]
 allowed-tools:
   - Read

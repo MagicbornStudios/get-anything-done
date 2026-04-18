@@ -9,6 +9,7 @@ description: >-
   point at a skill folder and wrap it as an eval, or compare skill versions.
   Triggers on "evaluate this skill", "test this skill", "install skill into
   eval", "run eval with skill", "compare skill versions".
+lane: meta
 ---
 
 # eval-skill-install

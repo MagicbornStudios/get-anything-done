@@ -1,6 +1,7 @@
 ---
 name: gad:migrate-schema
 description: Convert RP XML planning files (STATE.xml, ROADMAP.xml) to GAD Markdown format
+lane: dev
 argument-hint: [--path <planning-dir>]
 allowed-tools:
   - Read

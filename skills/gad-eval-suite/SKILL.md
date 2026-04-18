@@ -1,6 +1,7 @@
 ---
 name: gad:eval-suite
 description: Run all eval projects in parallel with bootstrap prompts
+lane: meta
 allowed-tools:
   - Read
   - Write

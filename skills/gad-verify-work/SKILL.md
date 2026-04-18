@@ -1,6 +1,7 @@
 ---
 name: gad:verify-work
 description: Validate built features through conversational UAT
+lane: [dev, prod]
 argument-hint: "[phase number, e.g., '4']"
 allowed-tools:
   - Read

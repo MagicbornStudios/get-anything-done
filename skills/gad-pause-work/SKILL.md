@@ -1,6 +1,7 @@
 ---
 name: gad:pause-work
 description: Create context handoff when pausing work mid-phase
+lane: dev
 allowed-tools:
   - Read
   - Write

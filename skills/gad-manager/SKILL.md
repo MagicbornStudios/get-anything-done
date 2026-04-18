@@ -1,6 +1,7 @@
 ---
 name: gad:manager
 description: Interactive command center for managing multiple phases from one terminal
+lane: dev
 allowed-tools:
   - Read
   - Write

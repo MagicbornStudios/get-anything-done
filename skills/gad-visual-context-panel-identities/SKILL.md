@@ -4,6 +4,7 @@ description: >-
   Build and maintain source-searchable visual context identities for the GAD site so humans can
   point at what they see, copy exact component/section tokens, and hand off precise update/delete
   prompts to coding agents through the Visual Context Panel.
+lane: dev
 workflow: workflows/visual-context-panel-identities.md
 ---
 

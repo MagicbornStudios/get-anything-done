@@ -1,6 +1,7 @@
 ---
 name: gad:note
 description: Zero-friction idea capture. Append, list, or promote notes to todos.
+lane: dev
 argument-hint: "<text> | list | promote <N> [--global]"
 allowed-tools:
   - Read

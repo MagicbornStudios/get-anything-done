@@ -1,6 +1,7 @@
 ---
 name: gad:progress
 description: Check project progress, show context, and route to next action (execute or plan)
+lane: dev
 allowed-tools:
   - Read
   - Bash

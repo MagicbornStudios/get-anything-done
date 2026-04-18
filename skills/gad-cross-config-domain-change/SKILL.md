@@ -11,6 +11,7 @@ description: >-
   projects", or "this rename touches both the framework and the site". Both
   workflows begin with a pre-flight config audit so the operator sees exactly
   which roots will be touched before any file moves.
+lane: meta
 source_phase: "44"
 source_evolution: 2026-04-14-002
 status: proto

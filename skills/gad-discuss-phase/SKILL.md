@@ -1,6 +1,7 @@
 ---
 name: gad:discuss-phase
 description: Gather phase context through adaptive questioning before planning. Use --auto to skip interactive questions (Claude picks recommended defaults). Use --chain for interactive discuss followed by automatic plan+execute.
+lane: dev
 argument-hint: "<phase> [--auto] [--chain] [--batch] [--analyze] [--text]"
 allowed-tools:
   - Read

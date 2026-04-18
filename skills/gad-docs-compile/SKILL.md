@@ -1,6 +1,7 @@
 ---
 name: gad:docs-compile
 description: Compile planning docs from all roots into docs_sink as MDX files
+lane: dev
 argument-hint: [--sink <path>]
 allowed-tools:
   - Read

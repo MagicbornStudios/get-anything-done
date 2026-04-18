@@ -1,6 +1,7 @@
 ---
 name: gad:next
 description: Automatically advance to the next logical step in the GAD workflow
+lane: dev
 allowed-tools:
   - Read
   - Bash

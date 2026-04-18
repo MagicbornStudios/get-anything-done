@@ -15,6 +15,7 @@ description: >-
   proto-vs-proto supersession, NOT proto-vs-canonical replacement (canonical
   is framework-specific; projects have their own skill ecosystems that grow
   and obsolete each other).
+lane: meta
 workflow: workflows/proto-skill-battery.md
 ---
 

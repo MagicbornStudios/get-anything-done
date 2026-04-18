@@ -1,6 +1,7 @@
 ---
 name: gad:list-phase-assumptions
 description: Surface Claude's assumptions about a phase approach before planning
+lane: dev
 argument-hint: "[phase]"
 allowed-tools:
   - Read

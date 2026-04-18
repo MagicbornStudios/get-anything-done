@@ -1,6 +1,7 @@
 ---
 name: gad:session-report
 description: Generate a session report with token usage estimates, work summary, and outcomes
+lane: dev
 allowed-tools:
   - Read
   - Bash

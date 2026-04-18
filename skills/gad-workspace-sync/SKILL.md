@@ -1,6 +1,7 @@
 ---
 name: gad:workspace-sync
 description: Crawl monorepo for .planning/ directories and sync gad-config.toml roots
+lane: dev
 allowed-tools:
   - Read
   - Write

@@ -1,6 +1,7 @@
 ---
 name: gad:health
 description: Diagnose planning directory health and optionally repair issues
+lane: dev
 argument-hint: [--repair]
 allowed-tools:
   - Read

@@ -1,6 +1,7 @@
 ---
 name: gad:set-profile
 description: Switch model profile for GAD agents (quality/balanced/budget/inherit)
+lane: dev
 argument-hint: <profile (quality|balanced|budget|inherit)>
 model: haiku
 allowed-tools:

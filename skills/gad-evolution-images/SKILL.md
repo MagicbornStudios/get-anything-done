@@ -5,6 +5,7 @@ description: >-
   CLI. Use when you need a missing-image report, a structured prompt payload
   for image jobs, or an opt-in OpenAI generation pass. Generation is disabled
   by default and requires OPENAI_API_KEY.
+lane: prod
 workflow: workflows/evolution-images.md
 ---
 

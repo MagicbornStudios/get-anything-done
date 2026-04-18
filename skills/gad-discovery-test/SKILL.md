@@ -10,6 +10,7 @@ description: >-
   or as a regression test after skill catalog / CLI surface changes. Also
   populates site/data/discovery-findings.json for the planning site
   visualization.
+lane: meta
 workflow: workflows/discovery-test.md
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: gad:insert-phase
 description: Insert urgent work as decimal phase (e.g., 72.1) between existing phases
+lane: dev
 argument-hint: <after> <description>
 allowed-tools:
   - Read

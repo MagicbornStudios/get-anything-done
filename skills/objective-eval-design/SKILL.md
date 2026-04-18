@@ -9,6 +9,7 @@ description: >-
   should answer a specific research question, expose its inputs clearly, and be comparable
   across runs. If a score can't be decomposed into dimensions or traced back to the events
   that produced it, it isn't objective — it's just a vibe with a number attached.
+lane: meta
 ---
 
 # objective-eval-design

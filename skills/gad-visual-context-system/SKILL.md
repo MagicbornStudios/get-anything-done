@@ -8,6 +8,7 @@ description: >-
   (maintenance/rollout). Use when a user says "I can't find the component I'm
   looking at", "we need a dev panel", "hook up the visual context system in
   <new app/game>", or "normalize the ids across <existing app>".
+lane: dev
 source_phase: "44"
 source_evolution: 2026-04-14-001
 status: stable

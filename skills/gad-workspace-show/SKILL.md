@@ -1,6 +1,7 @@
 ---
 name: gad:workspace-show
 description: Show all registered planning roots and their current status
+lane: dev
 allowed-tools:
   - Read
   - Bash

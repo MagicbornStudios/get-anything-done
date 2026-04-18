@@ -1,6 +1,7 @@
 ---
 name: gad:write-intent
 description: Capture user intent for a project into planning docs. Use when starting a new project, clarifying what a project is for, or when requirements are missing or vague.
+lane: dev
 workflow: workflows/write-intent.md
 ---
 

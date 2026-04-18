@@ -14,6 +14,7 @@ description: >-
   and gad-85 this is one of the three fundamental skills (find-skills +
   merge-skill + create-skill) that enable the emergent-evolution hypothesis
   to be tested in practice.
+lane: meta
 ---
 
 # find-skills

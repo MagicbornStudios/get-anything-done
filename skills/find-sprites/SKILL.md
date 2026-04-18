@@ -1,6 +1,7 @@
 ---
 name: find-sprites
 description: Source visual assets (sprites, icons, tilesets, portraits) for a game or UI-heavy build in a way that yields a coherent, intentional look instead of a debug-console aesthetic. Use this skill when you need art for rooms, entities, UI controls, HP bars, spell icons, status effects, or any other visual element; when the build is failing its UI-quality gate because it looks unintentional; or when you're about to fall back to raw ASCII/text UI. The goal is "looks like someone designed it" — not photorealism, not 1:1 with AAA games, but internally consistent and readable.
+lane: dev
 ---
 
 # find-sprites

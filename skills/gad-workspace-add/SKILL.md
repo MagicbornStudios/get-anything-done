@@ -1,6 +1,7 @@
 ---
 name: gad:workspace-add
 description: Add a path as a planning root in gad-config.toml
+lane: dev
 argument-hint: <path> [--id <id>]
 allowed-tools:
   - Read

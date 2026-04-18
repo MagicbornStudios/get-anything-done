@@ -1,6 +1,7 @@
 ---
 name: gad:stats
 description: Display project statistics — phases, plans, requirements, git metrics, and timeline
+lane: dev
 allowed-tools:
   - Read
   - Bash

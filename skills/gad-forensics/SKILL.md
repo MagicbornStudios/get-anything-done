@@ -2,6 +2,7 @@
 type: prompt
 name: gad:forensics
 description: Post-mortem investigation for failed GAD workflows — analyzes git history, artifacts, and state to diagnose what went wrong
+lane: [dev, meta]
 argument-hint: "[problem description]"
 allowed-tools:
   - Read

@@ -1,6 +1,7 @@
 ---
 name: gad:plant-seed
 description: Capture a forward-looking idea with trigger conditions — surfaces automatically at the right milestone
+lane: dev
 argument-hint: "[idea summary]"
 allowed-tools:
   - Read

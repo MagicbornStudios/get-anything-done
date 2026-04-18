@@ -1,6 +1,7 @@
 ---
 name: gad:thread
 description: Manage persistent context threads for cross-session work
+lane: dev
 argument-hint: [name | description]
 allowed-tools:
   - Read

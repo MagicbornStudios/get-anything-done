@@ -1,6 +1,7 @@
 ---
 name: gad:research-phase
 description: Research how to implement a phase (standalone - usually use /gad:plan-phase instead)
+lane: dev
 argument-hint: "[phase]"
 allowed-tools:
   - Read

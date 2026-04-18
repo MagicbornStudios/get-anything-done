@@ -1,6 +1,7 @@
 ---
 name: gad:eval-list
 description: List available eval projects and their run history
+lane: dev
 allowed-tools:
   - Read
   - Bash
