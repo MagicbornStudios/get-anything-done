@@ -21,10 +21,18 @@ Shared aggregate files (`TASK-REGISTRY.xml`, `STATE.xml`, `DECISIONS.xml`,
 | **claude-code** | Planning, docs, snapshot, cross-cutting hygiene | `lib/snapshot-*`, `lib/narrative.cjs`, `lib/teachings-reader.cjs`, `lib/task-registry-writer.cjs` (read), `scripts/generate-daily-tip.mjs`, `references/**`, `docs/**`, `.planning/notes/**`, `SOUL.md`, `CLAUDE.md`, memory under `~/.claude/projects/*/memory/` | `bin/gad.cjs` (runtime sections), `lib/runtime-*`, `lib/secrets-*`, `lib/env-cli.cjs`, `lib/scoped-spawn.cjs` |
 | **codex** | Runtime, CLI harness, verify, selection/pipeline | `bin/gad.cjs`, `bin/gad-config.cjs`, `bin/gad-tools.cjs`, `bin/gad-mcp.cjs`, `lib/runtime-*`, `tests/runtime-*`, `tests/verify-*`, `workflows/settings.md` | `lib/snapshot-*`, `lib/secrets-*`, `lib/env-cli.cjs`, site apps |
 | **cursor** | BYOK/secrets, env plumbing, editor UI polish | `lib/secrets-*`, `lib/env-cli.cjs`, `lib/scoped-spawn.cjs`, `lib/keychain/**`, `lib/envelope.cjs`, `lib/kdf.cjs`, `tests/secrets-*`, `tests/env-cli*`, `tests/scoped-spawn*`, `references/byok-design.md`, React/TSX UI under `apps/portfolio/`, `site/` | `bin/gad.cjs`, `lib/runtime-*`, `lib/snapshot-*` |
+| **gemini** | Research, cross-project synthesis, large-context docs passes, UI/site client work (pending explicit split with cursor) | `apps/**` (client apps), `site/**` content + copy, `docs/**`, `.planning/notes/**`, large-read summaries | `bin/gad.cjs` (runtime sections), `lib/runtime-*`, `lib/secrets-*`, `lib/env-cli.cjs`, `lib/snapshot-*`, `lib/handoffs.cjs` (read-only ok; mutations via CLI) |
 | **general-purpose subagent** | Mechanical work dispatched by a primary | Scoped per invocation — inherits spawning agent's lane | Same deny list as spawning agent |
 
-A 4th runtime (e.g. Gemini, OpenCode) added later gets its own row with explicit
-allow + deny globs. Do not let a new runtime start work until the row exists.
+When a new runtime joins (e.g. OpenCode, another Gemini instance), add a
+row here BEFORE it starts work. Start conservative on allow globs; widen
+as the runtime proves reliable on a few handoffs.
+
+If **gemini and cursor both target `site/**` / `apps/**`** work:
+temporarily subdivide — gemini on copy + content + docs compile, cursor
+on BYOK + interactive UI + editor surfaces. File cross-lane handoffs
+freely instead of silent edits; collision playbook (below) handles
+races.
 
 ## Shared-write protocols
 

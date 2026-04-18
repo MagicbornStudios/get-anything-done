@@ -52,6 +52,28 @@ tone — otherwise inherit the default.
 
 Auto-compact handles it. After compaction, run `gad snapshot` to re-hydrate and continue. Never stop work, never ask the user to restart.
 
+## Snapshot vs handoffs — the two-axis mental model
+
+**`gad snapshot` = ambient orientation.** Current phase, sprint, state,
+recent commits, open tasks, decisions, refs. Answers: *where am I, what
+has happened, what's the terrain?* Every session opens with this.
+
+**`gad handoffs` = directed intent.** A file someone wrote that says
+*"this specific work needs doing, here's the scope, claim it if you're
+the right runtime."* Answers: *what should I do next?*
+
+Neither replaces the other. Snapshot without handoffs → you orient but
+pick a task cold (risk: low-priority or already-in-flight). Handoffs
+without snapshot → you know the assignment but not the terrain (risk:
+wrong approach, missed constraints, duplicated work). Together: orient,
+then pick up assigned work.
+
+Handoffs are a **strict superset of note-passing** — the directory
+layout is the index, the frontmatter carries routing (runtime preference,
+priority, context size), and atomic `fs.rename` handles concurrency
+across any number of parallel agents. See `skills/gad-handoffs/SKILL.md`
+for the full lifecycle.
+
 ## Daily workflow (every session, every agent)
 
 Same four commands in the same order. No exceptions.
