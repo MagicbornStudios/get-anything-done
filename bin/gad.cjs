@@ -2530,6 +2530,94 @@ function inferTaskShapeFromState(state, explicitTaskShape) {
   return 'planning';
 }
 
+function toSelectionTrace(selection = {}, opts = {}) {
+  const computedPrimary = Object.prototype.hasOwnProperty.call(selection, 'computedPrimary')
+    ? selection.computedPrimary
+    : selection?.computed?.primary ?? null;
+  const effectivePrimary = Object.prototype.hasOwnProperty.call(selection, 'effectivePrimary')
+    ? selection.effectivePrimary
+    : selection?.effective?.primary ?? null;
+  const fallbackChain = Array.isArray(selection?.fallbackChain)
+    ? selection.fallbackChain
+    : Array.isArray(selection?.effective?.fallbackChain)
+      ? selection.effective.fallbackChain
+      : [];
+  const reasoning = Array.isArray(selection?.reasoning)
+    ? selection.reasoning
+    : Array.isArray(selection?.effective?.reasoning)
+      ? selection.effective.reasoning
+      : [];
+  const appliedSkills = Array.isArray(selection?.appliedSkills)
+    ? selection.appliedSkills
+    : Array.isArray(selection?.effective?.appliedSkills)
+      ? selection.effective.appliedSkills
+      : [];
+  const suppressedSkills = Array.isArray(selection?.suppressedSkills) ? selection.suppressedSkills : [];
+  return {
+    mode: selection?.mode ?? null,
+    configuredPrimary: selection?.configuredPrimary ?? null,
+    computedPrimary,
+    effectivePrimary,
+    fallbackChain,
+    reasoning,
+    appliedSkills,
+    suppressedSkills,
+    suppressedReason: selection?.suppressedReason ?? null,
+    projectOverrideActive: Boolean(opts.projectOverrideActive),
+    forceRuntimeActive: Boolean(opts.forceRuntimeActive),
+    forceRuntime: opts.forceRuntime || null,
+  };
+}
+
+function buildGadContextProvenance(context) {
+  const contextRefs = Array.isArray(context?.contextRefs) ? context.contextRefs : [];
+  const handoffArtifacts = Array.isArray(context?.handoffArtifacts) ? context.handoffArtifacts : [];
+  const contextBlocks = Array.isArray(context?.contextBlocks) ? context.contextBlocks : [];
+  const snapshotRefPaths = contextRefs.map((ref) => String(ref?.file || '')).filter(Boolean);
+  return {
+    projectId: context?.projectId || null,
+    sessionId: context?.sessionId || null,
+    snapshotSource: {
+      present: snapshotRefPaths.length > 0,
+      refCount: snapshotRefPaths.length,
+      refs: snapshotRefPaths.slice(0, 12),
+    },
+    handoffInputs: {
+      present: handoffArtifacts.length > 0,
+      count: handoffArtifacts.length,
+      artifacts: handoffArtifacts,
+    },
+    docInputs: {
+      present: contextBlocks.length > 0,
+      contextBlockCount: contextBlocks.length,
+      contextRefCount: contextRefs.length,
+    },
+    taskShape: {
+      value: context?.taskShape || null,
+      source: context?.taskShapeSource || 'state.next-action',
+    },
+    contextBlocksInjected: contextBlocks.length,
+  };
+}
+
+function annotateJsonArtifact(filePath, patch) {
+  if (!filePath || !patch) return;
+  try {
+    if (!fs.existsSync(filePath)) return;
+    const current = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const next = { ...current, ...patch };
+    fs.writeFileSync(filePath, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
+  } catch {}
+}
+
+function annotateRuntimeArtifacts(payload, patch) {
+  if (!payload || !patch || typeof patch !== 'object') return;
+  if (payload.matrixFile) annotateJsonArtifact(payload.matrixFile, patch);
+  if (Array.isArray(payload.traceFiles)) {
+    for (const traceFile of payload.traceFiles) annotateJsonArtifact(traceFile, patch);
+  }
+}
+
 async function resolveGadRuntimeContext({
   projectId = '',
   sessionId = '',
@@ -2559,6 +2647,7 @@ async function resolveGadRuntimeContext({
 
   const resolvedSessionId = session?.id || (explicitSessionId || null);
   const state = readState(root, baseDir);
+  const taskShapeSource = taskShape ? 'cli.task-shape' : 'state.next-action';
   const resolvedTaskShape = inferTaskShapeFromState(state, taskShape);
   const refs = buildContextRefs(root, baseDir, session);
   const contextBlocks = [];
@@ -2603,6 +2692,14 @@ async function resolveGadRuntimeContext({
 
   const coreModulePath = pathToFileURL(path.join(runtimeRepoRoot, 'scripts', 'runtime-substrate-core.mjs')).href;
   const core = await import(coreModulePath);
+  const loadedRuntimeSubstrateConfig = typeof core.loadRuntimeSubstrateConfig === 'function'
+    ? core.loadRuntimeSubstrateConfig(runtimeRepoRoot)
+    : { projects: {} };
+  const projectOverrideActive = Boolean(
+    loadedRuntimeSubstrateConfig
+    && loadedRuntimeSubstrateConfig.projects
+    && Object.prototype.hasOwnProperty.call(loadedRuntimeSubstrateConfig.projects, root.id),
+  );
   const effectiveRuntimeConfig = core.resolveEffectiveRuntimeSubstrateConfig({
     repoRoot: runtimeRepoRoot,
     projectId: root.id,
@@ -2625,7 +2722,7 @@ async function resolveGadRuntimeContext({
     `next-action: ${nextAction || 'none'}`,
   ].join('\n');
 
-  return {
+  const context = {
     baseDir,
     runtimeRepoRoot,
     core,
@@ -2638,16 +2735,22 @@ async function resolveGadRuntimeContext({
     contextBlocks,
     handoffArtifacts,
     taskShape: resolvedTaskShape,
+    taskShapeSource,
     handoffArtifactsFound: handoffArtifacts.length,
     effectiveRuntimeConfig,
+    projectOverrideActive,
+    forceRuntimeActive: Boolean(forceRuntime),
     promotedSkills,
     defaultPrompt,
+    contextProvenance: null,
     selectionInput: {
       taskShape: resolvedTaskShape,
       promotedSkills,
       forceRuntime: forceRuntime || null,
     },
   };
+  context.contextProvenance = buildGadContextProvenance(context);
+  return context;
 }
 
 function buildRuntimePrompt(core, context, explicitPrompt) {
@@ -2700,6 +2803,7 @@ const runtimeCheckCmd = defineCommand({
         sessionId: context.sessionId,
         sessionResolved: context.sessionResolved,
         handoffArtifacts: context.handoffArtifacts,
+        contextProvenance: context.contextProvenance,
       };
 
       if (args.json || shouldUseJson()) {
@@ -2793,6 +2897,14 @@ const runtimeSelectCmd = defineCommand({
         effectiveConfig: context.effectiveRuntimeConfig,
         forceRuntime: getRuntimeArg(args, 'force-runtime', '') || null,
       });
+      const selectionTrace = toSelectionTrace(decision, {
+        projectOverrideActive: context.projectOverrideActive,
+        forceRuntimeActive: Boolean(getRuntimeArg(args, 'force-runtime', '')),
+        forceRuntime: getRuntimeArg(args, 'force-runtime', ''),
+      });
+      if (decision.mode === 'shadow' && !context.effectiveRuntimeConfig.log_shadow_decisions) {
+        selectionTrace.computedPrimary = null;
+      }
 
       const payload = {
         projectId: context.projectId,
@@ -2815,6 +2927,10 @@ const runtimeSelectCmd = defineCommand({
         runMode: getRuntimeArg(args, 'run-mode', 'plan') || 'plan',
         promotedSkillCount: context.promotedSkills.length,
         handoffArtifacts: context.handoffArtifacts,
+        contextProvenance: context.contextProvenance,
+        selectionTrace,
+        projectOverrideActive: context.projectOverrideActive,
+        forceRuntimeActive: selectionTrace.forceRuntimeActive,
         computed: decision.mode === 'shadow' && !context.effectiveRuntimeConfig.log_shadow_decisions
           ? null
           : decision.computed,
@@ -2829,6 +2945,8 @@ const runtimeSelectCmd = defineCommand({
       console.log('Runtime selection (GAD)');
       console.log(`project=${payload.projectId} session=${payload.sessionId || 'none'} mode=${payload.mode}`);
       console.log(`configured=${payload.configuredPrimary || 'none'} computed=${payload.computedPrimary || 'none'} effective=${payload.effectivePrimary || 'none'}`);
+      console.log(`fallback=${payload.fallbackChain.join(', ') || '(none)'} suppressed-reason=${payload.suppressedReason || 'none'}`);
+      console.log(`project-override=${payload.projectOverrideActive ? 'yes' : 'no'} force-runtime=${payload.forceRuntimeActive ? 'yes' : 'no'}`);
       if (payload.forceRuntime) console.log(`force-runtime=${payload.forceRuntime}`);
       if (payload.reasoning.length > 0) {
         console.log('\nreasoning:');
@@ -2907,6 +3025,17 @@ const runtimeMatrixCmd = defineCommand({
       if (noShadowLog) scriptArgs.push('--no-shadow-log');
 
       const payload = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-matrix.mjs', scriptArgs);
+      const selectionTrace = toSelectionTrace(payload.selection, {
+        projectOverrideActive: context.projectOverrideActive,
+        forceRuntimeActive: Boolean(forceRuntime),
+        forceRuntime,
+      });
+      const artifactPatch = {
+        gadContextProvenance: context.contextProvenance,
+        gadSelectionTrace: selectionTrace,
+      };
+      annotateRuntimeArtifacts(payload, artifactPatch);
+      payload.selectionTrace = selectionTrace;
       payload.gadContext = {
         projectId: context.projectId,
         sessionId: context.sessionId,
@@ -2914,6 +3043,9 @@ const runtimeMatrixCmd = defineCommand({
         contextRefCount: context.contextRefs.length,
         contextBlockCount: context.contextBlocks.length,
         handoffArtifacts: context.handoffArtifacts,
+        contextProvenance: context.contextProvenance,
+        projectOverrideActive: context.projectOverrideActive,
+        forceRuntimeActive: Boolean(forceRuntime),
       };
 
       if (args.json || shouldUseJson()) {
@@ -2923,6 +3055,8 @@ const runtimeMatrixCmd = defineCommand({
 
       console.log(`Runtime matrix complete (project=${context.projectId}, session=${context.sessionId || 'none'})`);
       console.log(`mode=${payload.substrateMode || context.effectiveRuntimeConfig.mode} runMode=${payload.runMode || args['run-mode']}`);
+      console.log(`configured=${selectionTrace.configuredPrimary || 'none'} computed=${selectionTrace.computedPrimary || 'none'} effective=${selectionTrace.effectivePrimary || 'none'}`);
+      console.log(`fallback=${selectionTrace.fallbackChain.join(', ') || '(none)'} suppressed-reason=${selectionTrace.suppressedReason || 'none'}`);
       const rows = (payload.runs || []).map((run) => ({
         runtime: run.runtime,
         status: run.status,
@@ -3011,6 +3145,17 @@ const runtimePipelineCmd = defineCommand({
       if (noShadowLog) matrixArgs.push('--no-shadow-log');
 
       const matrix = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-matrix.mjs', matrixArgs);
+      const selectionTrace = toSelectionTrace(matrix.selection, {
+        projectOverrideActive: context.projectOverrideActive,
+        forceRuntimeActive: Boolean(forceRuntime),
+        forceRuntime,
+      });
+      const artifactPatch = {
+        gadContextProvenance: context.contextProvenance,
+        gadSelectionTrace: selectionTrace,
+      };
+      annotateRuntimeArtifacts(matrix, artifactPatch);
+      matrix.selectionTrace = selectionTrace;
       const score = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-score.mjs', ['--project-id', context.projectId, '--json']);
       const candidates = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-candidates.mjs', ['--json']);
 
@@ -3025,7 +3170,11 @@ const runtimePipelineCmd = defineCommand({
           contextRefCount: context.contextRefs.length,
           contextBlockCount: context.contextBlocks.length,
           handoffArtifacts: context.handoffArtifacts,
+          contextProvenance: context.contextProvenance,
+          projectOverrideActive: context.projectOverrideActive,
+          forceRuntimeActive: Boolean(forceRuntime),
         },
+        selectionTrace,
         check,
         matrix,
         score,
@@ -3039,6 +3188,8 @@ const runtimePipelineCmd = defineCommand({
 
       console.log(`Runtime pipeline complete (project=${context.projectId}, session=${context.sessionId || 'none'})`);
       console.log(`mode=${context.effectiveRuntimeConfig.mode} task-shape=${context.taskShape}`);
+      console.log(`configured=${selectionTrace.configuredPrimary || 'none'} computed=${selectionTrace.computedPrimary || 'none'} effective=${selectionTrace.effectivePrimary || 'none'}`);
+      console.log(`project-override=${selectionTrace.projectOverrideActive ? 'yes' : 'no'} force-runtime=${selectionTrace.forceRuntimeActive ? 'yes' : 'no'}`);
       const emitted = Array.isArray(candidates.emitted) ? candidates.emitted.length : 0;
       console.log(`candidates-emitted=${emitted}`);
       const runs = Array.isArray(matrix.runs) ? matrix.runs : [];
@@ -8571,6 +8722,7 @@ const snapshotV2Cmd = defineCommand({
     skills: { type: 'string', description: 'Number of equipped skills to surface (44-35). 0 disables. Default: 5.', default: '5' },
     mode: { type: 'string', description: 'full (default) | active — "active" emits ONLY STATE.xml next-action + current phase + open sprint tasks (skips static catalog, references, decisions). Decision gad-195: static info loaded once at session start, active info re-pullable cheap without context waste.', default: '' },
     session: { type: 'string', description: 'Session ID. When provided, auto-downgrades to mode=active if static context was already delivered in this session. Env fallback: GAD_SESSION_ID.', default: '' },
+    sessionid: { type: 'string', description: 'Session ID alias for --session (runtime command compatibility).', default: '' },
     format: { type: 'string', description: 'compact (default) | xml — "compact" strips XML envelope tokens (prolog, outer tags, per-item tag pairs) while preserving content. "xml" dumps raw file content (legacy). Decision gad-241.', default: 'compact' },
   },
   run({ args }) {
@@ -8602,7 +8754,7 @@ const snapshotV2Cmd = defineCommand({
 
     // Session-aware mode resolution: auto-downgrade to active when session
     // has already received static context, unless --mode was explicitly passed.
-    const sessionId = (args.session || process.env.GAD_SESSION_ID || '').trim();
+    const sessionId = (args.sessionid || args.session || process.env.GAD_SESSION_ID || '').trim();
     let snapshotSession = null;
     if (sessionId) {
       const allSessions = loadSessions(baseDir, [root]);
