@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>2026-04-17 S17. WAVE 5 DONE: 59-07 dispatch (54ff71b, 15 tests), 60-05 lifecycle (cb15f64, 17 tests), 60-06 OPENAI migration (94a5497, 22 tests, 105 total BYOK). 20 teachings across 4 categories. Todos: openai-client bin wiring, env-fallback removal post-cutover, real dispatch runtime. RESTART recommended — installed gad.exe still pre-59-05. NEXT: 59-08+59-09 phase 59 closeout OR 60-05a CLI wiring.</next-action>
+  <next-action>2026-04-18 S18. 59-08 DONE: landing /planning + /projects/[...id] deprecation stubs (PlanningAppRedirectStub, 3-step install/serve UX). Nav /projects → /project-market. llms.txt Planning entry relabeled. tsc clean, next build clean. NEXT: 59-09 (subagent-run history flesh-out on /my-projects drawer) to close phase 59, OR 60-05a CLI wiring. Installed gad.exe still pre-59-05 — restart recommended before 59-09 touches planning-app runtime.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

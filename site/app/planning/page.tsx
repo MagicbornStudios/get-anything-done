@@ -1,11 +1,18 @@
-import { redirect } from "next/navigation";
+import { PlanningAppRedirectStub } from "@/components/site";
 
 export const metadata = {
-  title: "Planning Dashboard - GAD",
+  title: "Planning moved to planning-app — GAD",
   description:
-    "Cross-project planning hub linking to per-project Planning, Evolution, and System tabs.",
+    "The /planning dashboard moved to the local planning-app (gad planning serve). Landing route ships as a deprecation stub for one release cycle.",
 };
 
-export default function PlanningDashboardPage() {
-  redirect("/projects/get-anything-done?tab=planning");
+export default function PlanningDeprecatedPage() {
+  return (
+    <PlanningAppRedirectStub
+      cid="planning-deprecated-stub"
+      surface="Planning dashboard"
+      targetPath="/planning"
+      summary="The cross-project planning hub — Tasks, Decisions, Requirements, Notes, Workflows, SkillCandidates, System — now lives on the local planning-app. Run it on your machine to see live state; the landing site no longer hosts this view."
+    />
+  );
 }

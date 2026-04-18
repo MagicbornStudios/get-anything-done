@@ -21,7 +21,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Explore",
     links: [
       { href: "/library", label: "Library", note: "play published generation builds" },
-      { href: "/projects", label: "Projects", note: "browse all projects" },
+      { href: "/project-market", label: "Projects", note: "browse all projects" },
       { href: "/videos", label: "Videos", note: "demos and walkthroughs" },
     ],
   },

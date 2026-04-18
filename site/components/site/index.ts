@@ -12,3 +12,7 @@ export {
 } from "./SiteSectionHeading";
 export { SiteTextCard, type SiteTextCardProps } from "./SiteTextCard";
 export { SectionEpigraph } from "./SectionEpigraph";
+export {
+  PlanningAppRedirectStub,
+  type PlanningAppRedirectStubProps,
+} from "./PlanningAppRedirectStub";

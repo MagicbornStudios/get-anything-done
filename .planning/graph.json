@@ -4492,9 +4492,9 @@
       "type": "task",
       "id": "task:59-04",
       "label": "Port /projects routes + build the /my-projects dashboard. Dashboard shows: list of owned projects with phase/next-action",
-      "status": "planned",
+      "status": "done",
       "goal": "Port /projects routes + build the /my-projects dashboard. Dashboard shows: list of owned projects with phase/next-action snippet, per-project drawer (current phase, open tasks, recent decisions, subagent-run history, BYOK env status), action buttons (trigger daily subagent, view last report, open planning XML). Consumes gad CLI readers. Lives on planning-app only — landing gets a redirect banner.",
-      "skill": "",
+      "skill": "default",
       "taskType": "migration",
       "keywords": ""
     },
@@ -4522,9 +4522,9 @@
       "type": "task",
       "id": "task:59-07",
       "label": "Daily-subagent dispatch hook. 'gad start' (or an explicit 'gad start --dispatch-subagents') reads each project config fo",
-      "status": "planned",
+      "status": "done",
       "goal": "Daily-subagent dispatch hook. 'gad start' (or an explicit 'gad start --dispatch-subagents') reads each project config for daily-subagent: true and, if today's run has not yet been recorded in .planning/subagent-runs/&lt;projectid&gt;/, spawns the configured subagent runtime with the project snapshot + task context. Writes run record on completion (consumes subagent-run-history todo schema).",
-      "skill": "",
+      "skill": "default",
       "taskType": "cli",
       "keywords": ""
     },
@@ -4532,9 +4532,9 @@
       "type": "task",
       "id": "task:59-08",
       "label": "Deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view mo",
-      "status": "planned",
+      "status": "done",
       "goal": "Deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view moved to gad planning serve' with copy-pasteable install+run commands. Keep for one release cycle then remove. Update all internal cross-links to /my-projects.",
-      "skill": "",
+      "skill": "default",
       "taskType": "cleanup",
       "keywords": ""
     },
@@ -4582,9 +4582,9 @@
       "type": "task",
       "id": "task:60-04",
       "label": "Scoped spawn wrapper in lib/scoped-spawn.cjs. Given projectId + child command, decrypts that project's env bag, merges i",
-      "status": "planned",
+      "status": "done",
       "goal": "Scoped spawn wrapper in lib/scoped-spawn.cjs. Given projectId + child command, decrypts that project's env bag, merges into child process.env ONLY for the child, never mutates parent process.env. Subagent dispatch (phase 59 task 59-07) uses this wrapper. Subagent sees OPENAI_API_KEY etc. without the main session leaking it.",
-      "skill": "",
+      "skill": "default",
       "taskType": "code",
       "keywords": ""
     },
@@ -4592,9 +4592,9 @@
       "type": "task",
       "id": "task:60-05",
       "label": "Key lifecycle UX: rotation flow (generate new, re-encrypt, zero-out old buffer), revocation flow (remove from bag + reco",
-      "status": "planned",
+      "status": "done",
       "goal": "Key lifecycle UX: rotation flow (generate new, re-encrypt, zero-out old buffer), revocation flow (remove from bag + record revocation event in audit log), audit log at .gad/secrets/&lt;projectid&gt;.audit.jsonl (append-only, gitignored).",
-      "skill": "",
+      "skill": "default",
       "taskType": "code",
       "keywords": ""
     },
@@ -4602,9 +4602,9 @@
       "type": "task",
       "id": "task:60-06",
       "label": "Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scra",
-      "status": "planned",
+      "status": "done",
       "goal": "Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scratch uses scoped-spawn + 'gad env get' to decrypt at dispatch time. Documents the expected migration in references/byok-design.md §Migration.",
-      "skill": "",
+      "skill": "default",
       "taskType": "migration",
       "keywords": ""
     },
@@ -12124,6 +12124,11 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:59-04",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:59-05",
       "target": "phase:59",
       "type": "BELONGS_TO"
@@ -12174,6 +12179,11 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:59-07",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:59-08",
       "target": "phase:59",
       "type": "BELONGS_TO"
@@ -12182,6 +12192,11 @@
       "source": "task:59-08",
       "target": "task:59-04",
       "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-08",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:59-09",
@@ -12270,6 +12285,11 @@
     },
     {
       "source": "task:60-04",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:60-04",
       "target": "phase:59",
       "type": "CITES"
     },
@@ -12289,6 +12309,11 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:60-05",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:60-06",
       "target": "phase:60",
       "type": "BELONGS_TO"
@@ -12297,6 +12322,11 @@
       "source": "task:60-06",
       "target": "task:60-04",
       "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-06",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:60-07",
@@ -14741,9 +14771,9 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T00:06:30.599Z",
+    "generated": "2026-04-18T01:10:05.825Z",
     "nodeCount": 974,
-    "edgeCount": 1401,
+    "edgeCount": 1407,
     "nodeTypes": {
       "phase": 66,
       "task": 410,
@@ -14755,7 +14785,7 @@
       "BELONGS_TO": 412,
       "CITES": 548,
       "DEPENDS_ON": 81,
-      "USES_SKILL": 192,
+      "USES_SKILL": 198,
       "REFERENCES": 89,
       "USES_WORKFLOW": 79
     }

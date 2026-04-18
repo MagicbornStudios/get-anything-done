@@ -1752,7 +1752,7 @@ function writeAgentIngestFiles({ catalog, allDecisions, allTasks, allPhases, pse
 ## System
 
 - [Contribute](${SITE_URL}/contribute): Human-first workflow (clone â†’ install â†’ open in Claude â†’ talk)
-- [Planning](${SITE_URL}/planning): State + tabs for tasks (${allTasks.length}), phases (${allPhases.length}), decisions (${allDecisions.length}), roadmap, requirements, bugs (${(pseudoDb.bugs?.bugs ?? []).length})
+- [Planning (moved)](${SITE_URL}/planning): Landing route is a deprecation stub since phase 59. Live planning dashboard — tasks (${allTasks.length}), phases (${allPhases.length}), decisions (${allDecisions.length}), roadmap, requirements, bugs (${(pseudoDb.bugs?.bugs ?? []).length}) — lives on the local planning-app (\`gad planning serve\` → http://localhost:3002/planning).
 
 ## Machine-readable
 
