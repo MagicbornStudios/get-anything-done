@@ -6,7 +6,13 @@
  *   node vendor/get-anything-done/scripts/generate-daily-tip.mjs
  *
  * Env:
- *   OPENAI_API_KEY   required — stored as repo secret
+ *   GAD_PROJECT_ID   optional — project whose BYOK bag holds OPENAI_API_KEY.
+ *                    Defaults to `get-anything-done` (this framework's own bag).
+ *                    Injected automatically when invoked via scoped-spawn.
+ *   OPENAI_API_KEY   legacy — ambient env fallback during the 60-06 cutover
+ *                    window. A deprecation warning is printed if used.
+ *                    Preferred path: `gad env set OPENAI_API_KEY --projectid
+ *                    <id>` and rely on scoped-spawn + bag resolution.
  *   OPENAI_MODEL     optional — default gpt-4.1
  *   TIP_DATE         optional — YYYY-MM-DD, overrides today (for backfills)
  *
@@ -15,11 +21,20 @@
  *   - Appends to teachings/index.json
  *
  * Cost: ~$0.002/tip at GPT-4.1 with web_search_preview. Under $1/year.
+ *
+ * Migration (task 60-06):
+ *   The OpenAI key resolution path now goes through
+ *   `vendor/get-anything-done/lib/openai-client.cjs` via
+ *   `createApiKeyResolver({ store, env, logger })`. That helper tries the
+ *   project BYOK bag first and falls back to `process.env.OPENAI_API_KEY`
+ *   only if the bag has no entry. A wrong passphrase on the bag does NOT
+ *   fall back to env — it aborts with the security error, per byok-design §14.
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GAD_DIR = path.resolve(__dirname, '..');
@@ -27,10 +42,30 @@ const TEACHINGS_DIR = path.join(GAD_DIR, 'teachings');
 const INDEX_PATH = path.join(TEACHINGS_DIR, 'index.json');
 
 const MODEL = process.env.OPENAI_MODEL || 'gpt-4.1';
-const API_KEY = process.env.OPENAI_API_KEY;
 
-if (!API_KEY) {
-  console.error('OPENAI_API_KEY missing. Set it in env or GitHub secret.');
+// Bridge ESM → CJS helpers. The BYOK stack lives in `.cjs` modules.
+const require = createRequire(import.meta.url);
+const secretsStore = require('../lib/secrets-store.cjs');
+const { createApiKeyResolver } = require('../lib/openai-client.cjs');
+
+const PROJECT_ID = process.env.GAD_PROJECT_ID || 'get-anything-done';
+
+const resolveApiKey = createApiKeyResolver({
+  store: secretsStore,
+  env: process.env,
+  logger: {
+    warn: (msg) => console.warn(`[daily-tip] ${msg}`),
+    info: () => {},
+    error: (msg) => console.error(`[daily-tip] ${msg}`),
+  },
+});
+
+let API_KEY;
+try {
+  API_KEY = await resolveApiKey({ projectId: PROJECT_ID });
+} catch (err) {
+  const code = err && err.code ? err.code : 'UNRESOLVED';
+  console.error(`[daily-tip] could not resolve OPENAI_API_KEY for project '${PROJECT_ID}' (${code}): ${err.message}`);
   process.exit(1);
 }
 
