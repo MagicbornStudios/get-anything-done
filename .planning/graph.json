@@ -4679,8 +4679,8 @@
       "type": "task",
       "id": "task:60-07",
       "label": "Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 ",
-      "status": "planned",
-      "goal": "Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. Calls 'gad env' CLI via dev-server command bridge. Local-dev only — NODE_ENV=development gate.",
+      "status": "done",
+      "goal": "Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. Calls 'gad env' CLI via dev-server command bridge. Local-dev only — NODE_ENV=development gate. Shipped 2026-04-18: added 4th left-pane tab (BYOK) to ProjectEditor.tsx + new ByokTab.tsx component. Backend uses dedicated /api/dev/secrets/[projectId] route (GET list/POST set/PUT rotate/DELETE revoke) + /audit + /test sub-routes that import lib/secrets-store.cjs directly via createRequire — bypasses the SSE command-bridge for mutating ops to avoid stdin-pipe plaintext exposure. Also added 'env' to command-bridge ALLOWED_SUBCOMMANDS for any future read-only CLI calls. Provider validators: openai, anthropic, openrouter, groq (HTTP probe with 8s timeout). Last-four redaction via decryptAll() with synchronous plaintext drop. Audit tail surfaces last 20 envset/envrotate/envrevoke/envpurge events. Built clean against next 16.0.8 turbopack. Unblocks 60-08 (cloud BYOK surface, same shapes behind auth).",
       "skill": "",
       "taskType": "site",
       "keywords": ""
@@ -4719,7 +4719,7 @@
       "type": "task",
       "id": "task:63-01",
       "label": "State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-h",
-      "status": "planned",
+      "status": "done",
       "goal": "State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-hook-state, skill-active-state, team-state, tmux-hook-state), .planning/{STATE.xml, TASK-REGISTRY.xml, .gad-log/*.jsonl, .trace-events.jsonl, .trace-seq, .gad-agent-lanes.json, graph.json, config.json, sessions/*.json, notes/, todos/}, .claude/{settings.json, settings.local.json, hooks/state}, ~/.cache/gad/. Classify per pattern: (a) contested AGGREGATE → CLI-mediated writes, (b) shared APPEND-ONLY streams → JSONL append-safe, (c) contested SINGLE-OWNER → per-agent dir, (d) cross-agent INTENT → per-file dir + fs.rename. Deliverable: references/state-writes-inventory.md. Follow-ups filed per consolidation action. See 2026-04-18 post-mortem notes.",
       "skill": "",
       "taskType": "framework",
@@ -4759,7 +4759,7 @@
       "type": "task",
       "id": "task:63-05",
       "label": "Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader",
-      "status": "planned",
+      "status": "done",
       "goal": "Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader.cjs exist but the Claude SessionStart hook chain (~/.claude/hooks/gad-check-update.js + gad-session-state.sh) does not emit them. Also: SOUL.md at repo root is readable but not auto-mentioned — Kael persona only lands when I recall CLAUDE.md pointer. Wire: (a) gad-session-state.sh emits the day&apos;s teaching tip (falls through silently if no tip), (b) new hook or same emits &apos;Active soul: &lt;name&gt; (SOUL.md)&apos; when SOUL.md present, (c) teaching generation runs per decision gad-257 at startup (dedup across multi-session-per-day), (d) llm-from-scratch subagent dispatch per gad-256/258 when appropriate. Did NOT fire for Claude this session despite decisions gad-255..258 being in place.",
       "skill": "",
       "taskType": "framework",
@@ -12599,7 +12599,22 @@
     },
     {
       "source": "task:60-07",
+      "target": "task:60-10",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-07",
       "target": "phase:44.5",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-07",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-07",
+      "target": "task:60-08",
       "type": "CITES"
     },
     {
@@ -15190,9 +15205,9 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T17:31:52.718Z",
+    "generated": "2026-04-18T18:07:54.338Z",
     "nodeCount": 990,
-    "edgeCount": 1459,
+    "edgeCount": 1462,
     "nodeTypes": {
       "phase": 67,
       "task": 426,
@@ -15202,8 +15217,8 @@
     },
     "edgeTypes": {
       "BELONGS_TO": 428,
-      "CITES": 574,
-      "DEPENDS_ON": 88,
+      "CITES": 576,
+      "DEPENDS_ON": 89,
       "USES_SKILL": 201,
       "REFERENCES": 89,
       "USES_WORKFLOW": 79

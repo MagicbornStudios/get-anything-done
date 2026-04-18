@@ -1996,7 +1996,7 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
     </task>
   </phase>
   <phase id="63">
-    <task id="63-01" type="framework" status="planned">
+    <task id="63-01" type="framework" status="done" agent-id="claude-default-0015" agent-role="default" runtime="claude-code">
       <goal>State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-hook-state, skill-active-state, team-state, tmux-hook-state), .planning/{STATE.xml, TASK-REGISTRY.xml, .gad-log/*.jsonl, .trace-events.jsonl, .trace-seq, .gad-agent-lanes.json, graph.json, config.json, sessions/*.json, notes/, todos/}, .claude/{settings.json, settings.local.json, hooks/state}, ~/.cache/gad/. Classify per pattern: (a) contested AGGREGATE → CLI-mediated writes, (b) shared APPEND-ONLY streams → JSONL append-safe, (c) contested SINGLE-OWNER → per-agent dir, (d) cross-agent INTENT → per-file dir + fs.rename. Deliverable: references/state-writes-inventory.md. Follow-ups filed per consolidation action. See 2026-04-18 post-mortem notes.</goal>
     </task>
     <task id="63-02" type="framework" status="planned">
@@ -2009,7 +2009,7 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
     <task id="63-04" type="framework" status="done" agent-id="claude-default-0013" agent-role="default" runtime="claude-code">
       <goal>Agent lane manifest — canonical file/directory ownership per agent runtime. Authors a top-level AGENT-LANES.md (or references/agent-lanes.md) that every parallel agent consults as ground truth. Minimum content: (a) per-runtime lane definition (claude-code, codex, cursor, etc.) with file-glob allow + deny lists, (b) shared-write protocols (TASK-REGISTRY.xml via gad tasks add ONLY, etc.), (c) conflict-resolution playbook (who wins on collision, how to cede, how to request cross-lane work), (d) session-start etiquette (read this file BEFORE touching anything). Driven by 2026-04-18 3-agent overlap post-mortem where Cursor misattributed Claude&apos;s tasks to Codex, costing ~5% of its turn. Codex owns runtime/bin/gad.cjs + lib/runtime-* + verify; Cursor owns BYOK/lib/secrets-* + lib/env-cli + lib/scoped-spawn; Claude owns snapshot/lib/snapshot-* + planning docs + memory + cross-cutting framework hygiene. Operator assigns souls per lane per project.</goal>
     </task>
-    <task id="63-05" type="framework" status="planned">
+    <task id="63-05" type="framework" status="done" agent-id="claude-default-0016" agent-role="default" runtime="claude-code">
       <goal>Wire daily tip + soul reference into Claude SessionStart. Today: scripts/generate-daily-tip.mjs and lib/teachings-reader.cjs exist but the Claude SessionStart hook chain (~/.claude/hooks/gad-check-update.js + gad-session-state.sh) does not emit them. Also: SOUL.md at repo root is readable but not auto-mentioned — Kael persona only lands when I recall CLAUDE.md pointer. Wire: (a) gad-session-state.sh emits the day&apos;s teaching tip (falls through silently if no tip), (b) new hook or same emits &apos;Active soul: &lt;name&gt; (SOUL.md)&apos; when SOUL.md present, (c) teaching generation runs per decision gad-257 at startup (dedup across multi-session-per-day), (d) llm-from-scratch subagent dispatch per gad-256/258 when appropriate. Did NOT fire for Claude this session despite decisions gad-255..258 being in place.</goal>
       <depends>58</depends>
     </task>
