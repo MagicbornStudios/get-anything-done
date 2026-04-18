@@ -490,6 +490,37 @@
         "security-fail-closed-01",
         "security-passphrase-verifier-01"
       ]
+    },
+    {
+      "id": "security-surgical-aead-mutation-01",
+      "title": "Mutate the envelope, not the crypto — surgical edits on AEAD-protected stores",
+      "category": "security",
+      "difficulty": "advanced",
+      "tags": [
+        "crypto",
+        "aead",
+        "aes-gcm",
+        "envelope",
+        "performance",
+        "defense-in-depth"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/security/07-surgical-aead-envelope-mutation.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/secrets-lifecycle.cjs"
+      ],
+      "decisions": [
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-aead-aad-01",
+        "security-passphrase-verifier-01"
+      ]
     }
   ]
 }
