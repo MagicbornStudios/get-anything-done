@@ -51,7 +51,7 @@ describe('snapshot session-aware mode', () => {
     assert.ok(out.includes('static elided'), 'header mentions static elided');
     assert.ok(!out.includes('-- DECISIONS'), 'active mode omits DECISIONS section');
     assert.ok(!out.includes('-- EQUIPPED SKILLS'), 'active mode omits EQUIPPED SKILLS section');
-    assert.ok(out.includes('STATE.xml'), 'active mode includes STATE');
+    assert.ok(out.includes('-- STATE'), 'active mode includes STATE section header');
     assert.ok(out.includes('TASKS'), 'active mode includes TASKS');
   });
 
@@ -64,7 +64,7 @@ describe('snapshot session-aware mode', () => {
   test('explicit --mode=active without session works', () => {
     const out = gad('snapshot --projectid get-anything-done --mode=active');
     assert.ok(!out.includes('-- DECISIONS'), 'active mode without session omits DECISIONS section');
-    assert.ok(out.includes('STATE.xml'), 'active mode without session includes STATE');
+    assert.ok(out.includes('-- STATE'), 'active mode without session includes STATE section header');
   });
 
   test('GAD_SESSION_ID env var works as fallback', () => {
