@@ -92,6 +92,37 @@
       ]
     },
     {
+      "id": "gad-framework-deprecation-migration-hint-01",
+      "title": "Deprecation warnings should name the migration command — not just \"use the new way",
+      "category": "gad-framework",
+      "difficulty": "beginner",
+      "tags": [
+        "deprecation",
+        "migration",
+        "ux",
+        "cli",
+        "operator-experience"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/gad-framework/deprecation-with-migration-hint.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/openai-client.cjs"
+      ],
+      "decisions": [
+        "gad-263",
+        "gad-266",
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:60"
+      ],
+      "related": [
+        "security-error-code-remediation-01",
+        "gad-framework-filename-prefix-idempotency-01"
+      ]
+    },
+    {
       "id": "gad-framework-error-cause-preservation-01",
       "title": "Error rewrap with .cause — preserve the stack across module boundaries",
       "category": "gad-framework",
