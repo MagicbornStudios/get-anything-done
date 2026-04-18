@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   EVAL_PROJECTS,
   EVAL_RUNS,
@@ -20,18 +20,100 @@ import {
   type ProjectDomain,
 } from "@/components/project-market/project-market-shared";
 
+// Task 44-42: URL keys for shareable marketplace filters. Kept short so the
+// query string stays scannable. `domain` and `q` are full words because they
+// already are; the rest are 2-4 chars.
+const URL_KEYS = {
+  domain: "domain",
+  workflow: "wf",
+  species: "sp",
+  round: "rnd",
+  status: "st",
+  query: "q",
+  allRounds: "all",
+  selected: "sel",
+} as const;
+
+const VALID_REVIEW_STATES = new Set<"all" | ReviewState>([
+  "all",
+  "reviewed",
+  "needs-review",
+  "excluded",
+]);
+
+function readInitialFilters() {
+  if (typeof window === "undefined") {
+    return {
+      domain: null as ProjectDomain | null,
+      workflow: null as string | null,
+      species: null as string | null,
+      round: null as string | null,
+      status: "all" as "all" | ReviewState,
+      query: "",
+      allRounds: false,
+      selected: null as string | null,
+    };
+  }
+  const params = new URLSearchParams(window.location.search);
+  const status = params.get(URL_KEYS.status) ?? "all";
+  return {
+    domain: (params.get(URL_KEYS.domain) as ProjectDomain | null) || null,
+    workflow: params.get(URL_KEYS.workflow) || null,
+    species: params.get(URL_KEYS.species) || null,
+    round: params.get(URL_KEYS.round) || null,
+    status: VALID_REVIEW_STATES.has(status as "all" | ReviewState)
+      ? (status as "all" | ReviewState)
+      : "all",
+    query: params.get(URL_KEYS.query) ?? "",
+    allRounds: params.get(URL_KEYS.allRounds) === "1",
+    selected: params.get(URL_KEYS.selected) || null,
+  };
+}
+
 export function useProjectMarket() {
-  // Filter state (local, not shared with home page)
-  const [domainFilter, setDomainFilter] = useState<ProjectDomain | null>(null);
-  const [workflowFilter, setWorkflowFilter] = useState<string | null>(null);
-  const [roundFilter, setRoundFilter] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<"all" | ReviewState>("all");
+  // Filter state (local, not shared with home page) — hydrated from URL on
+  // first render so links like `/project-market?sp=app-forge` work.
+  const initial = useRef(readInitialFilters()).current;
+  const [domainFilter, setDomainFilter] = useState<ProjectDomain | null>(initial.domain);
+  const [workflowFilter, setWorkflowFilter] = useState<string | null>(initial.workflow);
+  const [roundFilter, setRoundFilter] = useState<string | null>(initial.round);
+  const [statusFilter, setStatusFilter] = useState<"all" | ReviewState>(initial.status);
   // Task 44-41: species filter — null = all species, else show only rows for
   // the chosen species (one of MARKETPLACE_INDEX.species).
-  const [speciesFilter, setSpeciesFilter] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showAllRounds, setShowAllRounds] = useState(false);
-  const [selectedRunKey, setSelectedRunKey] = useState<string | null>(null);
+  const [speciesFilter, setSpeciesFilter] = useState<string | null>(initial.species);
+  const [searchQuery, setSearchQuery] = useState(initial.query);
+  const [showAllRounds, setShowAllRounds] = useState(initial.allRounds);
+  const [selectedRunKey, setSelectedRunKey] = useState<string | null>(initial.selected);
+
+  // Task 44-42: write back to URL whenever filter state changes. Uses
+  // `replaceState` so the back button still walks user history pages instead
+  // of every filter toggle, but exposes a shareable URL on copy.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams();
+    if (domainFilter) params.set(URL_KEYS.domain, domainFilter);
+    if (workflowFilter) params.set(URL_KEYS.workflow, workflowFilter);
+    if (speciesFilter) params.set(URL_KEYS.species, speciesFilter);
+    if (roundFilter) params.set(URL_KEYS.round, roundFilter);
+    if (statusFilter !== "all") params.set(URL_KEYS.status, statusFilter);
+    if (searchQuery.trim()) params.set(URL_KEYS.query, searchQuery.trim());
+    if (showAllRounds) params.set(URL_KEYS.allRounds, "1");
+    if (selectedRunKey) params.set(URL_KEYS.selected, selectedRunKey);
+    const qs = params.toString();
+    const next = `${window.location.pathname}${qs ? `?${qs}` : ""}${window.location.hash}`;
+    if (next !== `${window.location.pathname}${window.location.search}${window.location.hash}`) {
+      window.history.replaceState(null, "", next);
+    }
+  }, [
+    domainFilter,
+    workflowFilter,
+    speciesFilter,
+    roundFilter,
+    statusFilter,
+    searchQuery,
+    showAllRounds,
+    selectedRunKey,
+  ]);
 
   // Marketplace truth (task 44-40): MARKETPLACE_INDEX.generations is the
   // canonical set of "things a visitor can play right now". A row qualifies
