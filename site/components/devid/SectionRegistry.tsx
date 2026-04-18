@@ -11,16 +11,16 @@
  */
 
 import { createContext, useContext, useRef, useState, useCallback, useMemo } from "react";
+import type { VcComponentTag, VcRegistryEntry } from "./vc-core";
 
-export type DevIdComponentTag = "SiteSection" | "Identified";
-
-export interface RegistryEntry {
-  cid: string;
-  label: string;
-  depth: number;
-  componentTag?: DevIdComponentTag;
-  searchHint?: string;
-}
+/**
+ * `RegistryEntry` / `DevIdComponentTag` are kept as legacy aliases over the
+ * framework-agnostic `vc-core` shape, so existing callers keep compiling while
+ * non-React adapters (vc-dom, vc-kaplay, vc-phaser) can speak the same schema.
+ * New code should prefer importing the `Vc*` names from `./vc-core` directly.
+ */
+export type DevIdComponentTag = VcComponentTag;
+export type RegistryEntry = VcRegistryEntry;
 
 interface SectionRegistryValue {
   register: (entry: RegistryEntry) => () => void;

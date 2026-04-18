@@ -291,6 +291,180 @@ export function buildUpdateLockedPrefixMerged(
   return headOut + targets + split.tail;
 }
 
+/**
+ * Outer-lane update prompt — user's notes target the neighborhood around an anchor that is
+ * almost certainly NOT yet identified in VCS (no `Identified` / `data-cid` / stableCid). The
+ * anchor is passed for locating the file/region only; the agent's first job is to walk
+ * parents/siblings in the same JSX tree, add identification per the VCS skill, and then apply
+ * the user's requested update to those surrounding components.
+ */
+export function buildOuterUpdateLockedPrefix(
+  pageUrl: string,
+  label: string,
+  cid: string,
+  componentTag: HandoffComponentTag,
+  searchHint?: string,
+  verbosity: PromptVerbosity = "full",
+): string {
+  const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
+  const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
+  const searchShort = truncateForPrompt(searchHint ?? cid, Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX));
+  const tag = componentTag ?? "Identified";
+
+  if (verbosity === "compact") {
+    return (
+      `Update outer region (Ctrl lane).\n` +
+      `Route: ${pageUrl}\n` +
+      `Anchor: ${tag} | ${escapeAttrInCode(labelShort)}\n` +
+      `anchor-search: ${escapeAttrInCode(searchShort)}\n` +
+      `anchor-data-cid: ${escapeAttrInCode(cidShort)}\n` +
+      `Scope: components AROUND the anchor, likely missing \`Identified\` / \`data-cid\`.\n` +
+      `Skill ref (mandatory): ${VISUAL_CONTEXT_SKILL_REF}\n` +
+      `\n` +
+      `Plan: (1) open the anchor's file, (2) list unidentified sibling/parent JSX candidates in the same section, ` +
+      `(3) refactor them to carry \`<Identified as="..." stableCid="..." />\` or \`data-cid\`, ` +
+      `(4) apply the user's notes below.\n\n` +
+      `<workflow name="subagent-reuse">\n` +
+      `  <branch if="matched_subagent_exists_and_same_or_similar_ui_context">\n` +
+      `    <output>Reuse matched subagent via \`send_input\` with \`interrupt=true\`.</output>\n` +
+      `  </branch>\n` +
+      `  <else>\n` +
+      `    <output>Spawn one subagent for this UI area.</output>\n` +
+      `  </else>\n` +
+      `</workflow>\n` +
+      `\nTasking (outer-update — user's notes follow):\n`
+    );
+  }
+
+  return (
+    `Objective: identify + update the outer/surrounding region around an anchor target.\n` +
+    `Route: **${pageUrl}**\n` +
+    `Skill ref (mandatory): ${VISUAL_CONTEXT_SKILL_REF}\n` +
+    `\n` +
+    `Anchor (known — locate this first, then work outward):\n` +
+    `- wrapper: ${tag}\n` +
+    `- as: ${escapeAttrInCode(labelShort)}\n` +
+    `- search: ${escapeAttrInCode(searchShort)}\n` +
+    `- data-cid: ${escapeAttrInCode(cidShort)}\n` +
+    `- role: anchor only — the user's notes describe the NEIGHBORHOOD, not this node\n` +
+    `\n` +
+    `Outer scope (likely unidentified — this is why the outer lane was used):\n` +
+    `- The surrounding components almost certainly do NOT yet carry \`Identified\` / \`data-cid\` / \`stableCid\`, or carry them too coarsely to target individually.\n` +
+    `- First pass: open the file containing the anchor, walk parent / sibling / adjacent JSX in the same section, and list candidates that need VCS identity.\n` +
+    `- Refactor those candidates per the skill ref — add \`<Identified as="..." stableCid="...">\` or \`data-cid\` attributes. Keep identifiers greppable from source (kebab-case, literal strings).\n` +
+    `- Only after the surrounding region is legible to VCS: apply the user's requested change in the Tasking block below.\n` +
+    `\n` +
+    `Execution model:\n` +
+    `- Default: subagent.\n` +
+    `- Subagent scope: the anchor's file + adjacent JSX in the same section. Do not pull in unrelated features.\n` +
+    `- If multiple sibling components need identification, land the identification refactor in one atomic commit before making user-facing changes.\n` +
+    `\n` +
+    `<workflow name="subagent-reuse">\n` +
+    `  <step id="match-context">Match existing subagent by same route and similar UI context (anchor \`as\`, \`cid\`, section wording).</step>\n` +
+    `  <branch if="user_says_new_lane">\n` +
+    `    <output>Spawn new subagent lane.</output>\n` +
+    `  </branch>\n` +
+    `  <branch if="matched_subagent_exists">\n` +
+    `    <output>Reuse matched subagent via \`send_input\` with \`interrupt=true\`.</output>\n` +
+    `  </branch>\n` +
+    `  <else>\n` +
+    `    <output>Spawn one subagent for this UI area.</output>\n` +
+    `  </else>\n` +
+    `</workflow>\n` +
+    `\n` +
+    `Report:\n` +
+    `- identification-added: list of new \`as\` + \`stableCid\` pairs introduced around the anchor\n` +
+    `- changes-applied: what the user's notes asked for, once the neighborhood was legible\n` +
+    `- preserve route / anchor as / anchor search / anchor data-cid\n` +
+    `\n` +
+    `Tasking (outer-update — user's notes follow):\n`
+  );
+}
+
+/**
+ * Outer-lane delete prompt — user wants to remove the unidentifiable components around an anchor.
+ * Anchor is the locate-point only; the agent must figure out which surrounding JSX the notes refer to
+ * (often load-bearing, often uncovered in VCS) and remove it cleanly.
+ */
+export function buildOuterDeletePrompt(
+  pageUrl: string,
+  label: string,
+  cid: string,
+  componentTag: HandoffComponentTag,
+  searchHint?: string,
+  verbosity: PromptVerbosity = "full",
+): string {
+  const labelShort = truncateForPrompt(label, BLOCK_LABEL_MAX);
+  const cidShort = truncateForPrompt(cid, BLOCK_CID_MAX);
+  const searchShort = truncateForPrompt(searchHint ?? cid, Math.max(BLOCK_LABEL_MAX, BLOCK_CID_MAX));
+  const tag = componentTag ?? "Identified";
+
+  if (verbosity === "compact") {
+    return (
+      `Delete outer region (Alt lane).\n` +
+      `Route: ${pageUrl}\n` +
+      `Anchor (keep): ${tag} | ${escapeAttrInCode(labelShort)}\n` +
+      `anchor-search: ${escapeAttrInCode(searchShort)}\n` +
+      `anchor-data-cid: ${escapeAttrInCode(cidShort)}\n` +
+      `Scope: unidentified components AROUND the anchor — the user's notes name which ones to remove.\n` +
+      `Skill ref (mandatory): ${VISUAL_CONTEXT_SKILL_REF}\n` +
+      `\nCleanup: remove dead imports/components/assets; typecheck touched package; preserve the anchor.\n` +
+      `\n<workflow name="subagent-reuse">\n` +
+      `  <branch if="matched_subagent_exists_and_same_or_similar_ui_context">\n` +
+      `    <output>Reuse matched subagent via \`send_input\` with \`interrupt=true\`.</output>\n` +
+      `  </branch>\n` +
+      `  <else>\n` +
+      `    <output>Spawn one subagent for this UI area.</output>\n` +
+      `  </else>\n` +
+      `</workflow>\n` +
+      `\nTasking (outer-delete — user's notes follow):\n`
+    );
+  }
+
+  return (
+    `Objective: delete unidentified surrounding components around an anchor target.\n` +
+    `Route: **${pageUrl}**\n` +
+    `Skill ref (mandatory): ${VISUAL_CONTEXT_SKILL_REF}\n` +
+    `\n` +
+    `Anchor (keep — use only to locate the neighborhood):\n` +
+    `- wrapper: ${tag}\n` +
+    `- as: ${escapeAttrInCode(labelShort)}\n` +
+    `- search: ${escapeAttrInCode(searchShort)}\n` +
+    `- data-cid: ${escapeAttrInCode(cidShort)}\n` +
+    `- role: DO NOT delete this node — it's the reference point\n` +
+    `\n` +
+    `Outer scope (targets for deletion):\n` +
+    `- Around the anchor are components/sections that are NOT yet identified in VCS (no \`Identified\` / \`data-cid\`), which is why the outer delete lane was used.\n` +
+    `- The user's notes below name specifically which surrounding region(s) to remove. If the notes are ambiguous, first list candidate sibling/parent components you can see in the file, then apply the user's instructions against that list.\n` +
+    `- Remove dead imports, unused components, and any assets that were only referenced by the deleted region.\n` +
+    `- Preserve the anchor and any siblings the user didn't call out.\n` +
+    `\n` +
+    `Execution model:\n` +
+    `- Default: subagent.\n` +
+    `- Subagent scope: the anchor's file + adjacent JSX. Touch only the removed region's imports and assets.\n` +
+    `\n` +
+    `<workflow name="subagent-reuse">\n` +
+    `  <step id="match-context">Match existing subagent by same route and similar UI context (anchor \`as\`, \`cid\`, section wording).</step>\n` +
+    `  <branch if="user_says_new_lane">\n` +
+    `    <output>Spawn new subagent lane.</output>\n` +
+    `  </branch>\n` +
+    `  <branch if="matched_subagent_exists">\n` +
+    `    <output>Reuse matched subagent via \`send_input\` with \`interrupt=true\`.</output>\n` +
+    `  </branch>\n` +
+    `  <else>\n` +
+    `    <output>Spawn one subagent for this UI area.</output>\n` +
+    `  </else>\n` +
+    `</workflow>\n` +
+    `\n` +
+    `Report:\n` +
+    `- removed: list of deleted components + file paths\n` +
+    `- cleanup: imports / assets / dead refs pruned\n` +
+    `- anchor preserved: confirm \`${escapeAttrInCode(cidShort)}\` still renders\n` +
+    `\n` +
+    `Tasking (outer-delete — user's notes follow):\n`
+  );
+}
+
 export function buildDeletePromptMerged(
   pageUrl: string,
   altEntries: RegistryEntry[],

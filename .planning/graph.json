@@ -449,6 +449,20 @@
       "goal": "Wire the teachings/ catalog into user-facing surfaces. (1) Snapshot footer: add a one-line 'tip of the day' reference to gad snapshot output (~60 chars, zero token cost beyond that line). (2) GitHub Actions daily-tip.yml tested end-to-end with OPENAI_API_KEY secret. (3) Site /teachings route under phase 46 — card grid, category filter, search, difficulty badges. (4) Optional weekly recap generator. (5) Document contribution path for static tips in teachings/README.md. Content backlog is fed by llm-from-scratch project (decision llm-004 / gad-256) + daily generator."
     },
     {
+      "type": "phase",
+      "id": "phase:59",
+      "label": "Planning-app split + gad planning serve + gad start daily entry",
+      "status": "planned",
+      "goal": "Split planning surfaces from the landing Next app into a dedicated planning-app (decisions gad-261, gad-262). Scope: (1) scaffold apps/planning-app/ (or vendor/get-anything-done/apps/planning-app/) Next 15 workspace entry with shared primitives from packages/ui. (2) Migrate /planning, /projects, my-projects dashboard routes out of landing into planning-app. (3) CLI: 'gad planning serve' spawns planning-app dev server (port detection + reuse if already running). (4) CLI: 'gad start' spawns 'gad planning serve' if needed + opens browser to /my-projects. (5) Deprecate landing-site /planning + /projects over one release cycle — redirect stubs with 'moved to gad planning serve' banner. (6) Subagent-run history render on /my-projects (consumer of todo 2026-04-17-subagent-run-history.md data). (7) daily-subagent dispatch trigger — 'gad start' optionally auto-dispatches pending daily subagent runs if project config has daily-subagent: true (decision gad-258 enforcement mechanism)."
+    },
+    {
+      "type": "phase",
+      "id": "phase:60",
+      "label": "Per-project BYOK encrypted env — .gad/secrets store, CLI, scoped spawn, UI surfaces",
+      "status": "planned",
+      "goal": "Implement decision gad-260 per-project BYOK env storage. Scope: (1) crypto primitive decision (libsodium sealed-box vs AES-256-GCM+scrypt) written up in references/byok-design.md, (2) master-key UX — OS keychain first (Windows Credential Manager, macOS Keychain, linux secret-service) with passphrase fallback, (3) .gad/secrets/&amp;lt;projectid&amp;gt;.enc storage format (versioned, per-key metadata), (4) CLI family 'gad env get|set|rotate|list|revoke --projectid', (5) scoped spawn wrapper so subagents inherit per-project env without process-wide leak, (6) .gitignore enforcement for .gad/secrets/, (7) migration — llm-from-scratch OPENAI_API_KEY moves from global env into its project bag, (8) project-editor BYOK tab UI (local-dev, paste+validate+save), (9) landing-site project-dashboard BYOK surface (auth-gated, lands on planning-app post phase 59 split). Acceptance: llm-from-scratch subagent reads OPENAI_API_KEY from its encrypted bag via 'gad env get'; key never persists on disk in plaintext; 'gad env rotate' works end-to-end."
+    },
+    {
       "type": "task",
       "id": "task:10-01",
       "label": "Create .planning/ scaffold for get-anything-done and register in planning-config.toml.",
@@ -4425,6 +4439,196 @@
       "keywords": "verification,build,type-check,broken-imports"
     },
     {
+      "type": "task",
+      "id": "task:46-09",
+      "label": "Teachings reader routes — /teachings index (card grid by category, difficulty + date + tags) and /teachings/[slug] detai",
+      "status": "done",
+      "goal": "Teachings reader routes — /teachings index (card grid by category, difficulty + date + tags) and /teachings/[slug] detail (marked markdown render, frontmatter stripped, backrefs panel for implementation/decisions/phases/related). Server components read teachings/index.json + per-tip md bodies from teachings/static/**. Decision gad-264 promoted this into active phase 46 scope. Acceptance: curl /teachings returns 200 with tip titles visible; curl /teachings/&lt;slug&gt; returns 200 with rendered body. Verified against all 6 indexed tips.",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "teachings,site,route,reader,markdown,backrefs"
+    },
+    {
+      "type": "task",
+      "id": "task:46-10",
+      "label": "Fix gad tip reindex ENOENT on installed binary. teachings-reader.cjs now resolves TEACHINGS_DIR by walking up from cwd l",
+      "status": "done",
+      "goal": "Fix gad tip reindex ENOENT on installed binary. teachings-reader.cjs now resolves TEACHINGS_DIR by walking up from cwd looking for a gad-config.toml repo root and preferring vendor/get-anything-done/teachings/ (or direct teachings/) on that root before falling back to the bundled runtime location. GAD_TEACHINGS_DIR env override added for testing. Source CLI verified — 'node vendor/get-anything-done/bin/gad.cjs tip reindex' now writes to the user repo's teachings/ instead of the read-only runtime bundle. Installed binary picks up the fix on next reinstall (deferred: current gad.exe is still held open by this session).",
+      "skill": "default",
+      "taskType": "cli",
+      "keywords": "teachings,reindex,runtime,path-resolve,installed-binary"
+    },
+    {
+      "type": "task",
+      "id": "task:59-01",
+      "label": "Scaffold apps/planning-app/ as a new Next 15 workspace entry. Minimal shell: layout.tsx with dev-only auth stub, home pa",
+      "status": "done",
+      "goal": "Scaffold apps/planning-app/ as a new Next 15 workspace entry. Minimal shell: layout.tsx with dev-only auth stub, home page redirecting to /my-projects, tailwind config mirroring the landing app, tsconfig paths. Runs on a distinct dev port (3002) so it coexists with the landing app during migration.",
+      "skill": "default",
+      "taskType": "scaffold",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-02",
+      "label": "Extract shared UI primitives into a consumable location. Candidates: MarketingShell (rename to AppShell with slot-based ",
+      "status": "done",
+      "goal": "Extract shared UI primitives into a consumable location. Candidates: MarketingShell (rename to AppShell with slot-based navigation), SectionEpigraph, SiteSection, SiteProse. Options: (a) packages/ui-shared workspace package, (b) direct imports from vendor/get-anything-done/site/components/site/ with a re-export barrel. Pick (b) initially — faster, defer package extraction until a third consumer emerges.",
+      "skill": "default",
+      "taskType": "refactor",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-03",
+      "label": "Port /planning route from landing app to planning-app. All existing tabs (Tasks, Decisions, Requirements, Notes, Workflo",
+      "status": "done",
+      "goal": "Port /planning route from landing app to planning-app. All existing tabs (Tasks, Decisions, Requirements, Notes, Workflows, SkillCandidates, System) move intact. Data source stays the same — planning CLI readers via gad binary or direct XML parse. Landing app's /planning stays for one release cycle with a deprecation banner.",
+      "skill": "default",
+      "taskType": "migration",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-04",
+      "label": "Port /projects routes + build the /my-projects dashboard. Dashboard shows: list of owned projects with phase/next-action",
+      "status": "planned",
+      "goal": "Port /projects routes + build the /my-projects dashboard. Dashboard shows: list of owned projects with phase/next-action snippet, per-project drawer (current phase, open tasks, recent decisions, subagent-run history, BYOK env status), action buttons (trigger daily subagent, view last report, open planning XML). Consumes gad CLI readers. Lives on planning-app only — landing gets a redirect banner.",
+      "skill": "",
+      "taskType": "migration",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-05",
+      "label": "Implement 'gad planning serve' CLI subcommand. Spawns planning-app (next dev in dev / next start in prod) on port 3002 w",
+      "status": "done",
+      "goal": "Implement 'gad planning serve' CLI subcommand. Spawns planning-app (next dev in dev / next start in prod) on port 3002 with reuse detection — if something is already listening on the port and responds with a planning-app health endpoint, attach rather than spawn. Logs go to ~/.gad/logs/planning-app-&lt;date&gt;.jsonl. Graceful shutdown on SIGINT.",
+      "skill": "default",
+      "taskType": "cli",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-06",
+      "label": "Implement 'gad start' CLI subcommand (decision gad-262). Runs 'gad planning serve' if not running, waits for health, ope",
+      "status": "done",
+      "goal": "Implement 'gad start' CLI subcommand (decision gad-262). Runs 'gad planning serve' if not running, waits for health, opens browser to http://localhost:3002/my-projects. Aliased as 'gad dashboard'. Idempotent. --no-browser flag skips the browser open for editor/iframe workflows.",
+      "skill": "default",
+      "taskType": "cli",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-07",
+      "label": "Daily-subagent dispatch hook. 'gad start' (or an explicit 'gad start --dispatch-subagents') reads each project config fo",
+      "status": "planned",
+      "goal": "Daily-subagent dispatch hook. 'gad start' (or an explicit 'gad start --dispatch-subagents') reads each project config for daily-subagent: true and, if today's run has not yet been recorded in .planning/subagent-runs/&lt;projectid&gt;/, spawns the configured subagent runtime with the project snapshot + task context. Writes run record on completion (consumes subagent-run-history todo schema).",
+      "skill": "",
+      "taskType": "cli",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-08",
+      "label": "Deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view mo",
+      "status": "planned",
+      "goal": "Deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view moved to gad planning serve' with copy-pasteable install+run commands. Keep for one release cycle then remove. Update all internal cross-links to /my-projects.",
+      "skill": "",
+      "taskType": "cleanup",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:59-09",
+      "label": "Render subagent-run history on /my-projects project drawer. Reads .planning/subagent-runs/&lt;projectid&gt;/*.json (sche",
+      "status": "planned",
+      "goal": "Render subagent-run history on /my-projects project drawer. Reads .planning/subagent-runs/&lt;projectid&gt;/*.json (schema from todo 2026-04-17-subagent-run-history.md). Timeline view — date, task id, status, one-line outcome, link to full report body, link to teaching tip produced. Empty state with a 'trigger a run' button.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-01",
+      "label": "Write references/byok-design.md resolving the open questions in phase 60 goal + decision gad-260: (a) crypto primitive —",
+      "status": "done",
+      "goal": "Write references/byok-design.md resolving the open questions in phase 60 goal + decision gad-260: (a) crypto primitive — libsodium sealed-box vs AES-256-GCM with scrypt KDF, recommend one, (b) master-key UX — OS keychain-first (Windows Credential Manager, macOS Keychain, Linux secret-service) with passphrase fallback when keychain unavailable, (c) on-disk format — JSON envelope with version, salt, nonce, per-key metadata (last-rotated, scope, provider), (d) rotation model — in-place vs additive, (e) site-side strategy — browser-only WebCrypto decrypt vs server-side per-user KMS.",
+      "skill": "default",
+      "taskType": "design",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-02",
+      "label": "Implement lib/secrets-store.cjs + OS-keychain wrappers. .gad/secrets/&lt;projectid&gt;.enc format from 60-01. Three keyc",
+      "status": "done",
+      "goal": "Implement lib/secrets-store.cjs + OS-keychain wrappers. .gad/secrets/&lt;projectid&gt;.enc format from 60-01. Three keychain adapters: windows-credential-manager (via PowerShell or node-ffi), macos-keychain (security CLI), linux-secret-service (via dbus-next). Unit tests with a mock keychain adapter. .gad/ added to repo-level .gitignore across all projects that register a planning root.",
+      "skill": "default",
+      "taskType": "code",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-03",
+      "label": "CLI family: 'gad env get &lt;KEY&gt; --projectid', 'gad env set &lt;KEY&gt; --projectid' (reads value from prompt, not a",
+      "status": "done",
+      "goal": "CLI family: 'gad env get &lt;KEY&gt; --projectid', 'gad env set &lt;KEY&gt; --projectid' (reads value from prompt, not argv, to avoid shell history), 'gad env list --projectid' (keys + metadata, never values), 'gad env rotate &lt;KEY&gt; --projectid', 'gad env revoke &lt;KEY&gt; --projectid'. All operations require master-key unlock.",
+      "skill": "default",
+      "taskType": "cli",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-04",
+      "label": "Scoped spawn wrapper in lib/scoped-spawn.cjs. Given projectId + child command, decrypts that project's env bag, merges i",
+      "status": "planned",
+      "goal": "Scoped spawn wrapper in lib/scoped-spawn.cjs. Given projectId + child command, decrypts that project's env bag, merges into child process.env ONLY for the child, never mutates parent process.env. Subagent dispatch (phase 59 task 59-07) uses this wrapper. Subagent sees OPENAI_API_KEY etc. without the main session leaking it.",
+      "skill": "",
+      "taskType": "code",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-05",
+      "label": "Key lifecycle UX: rotation flow (generate new, re-encrypt, zero-out old buffer), revocation flow (remove from bag + reco",
+      "status": "planned",
+      "goal": "Key lifecycle UX: rotation flow (generate new, re-encrypt, zero-out old buffer), revocation flow (remove from bag + record revocation event in audit log), audit log at .gad/secrets/&lt;projectid&gt;.audit.jsonl (append-only, gitignored).",
+      "skill": "",
+      "taskType": "code",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-06",
+      "label": "Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scra",
+      "status": "planned",
+      "goal": "Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scratch uses scoped-spawn + 'gad env get' to decrypt at dispatch time. Documents the expected migration in references/byok-design.md §Migration.",
+      "skill": "",
+      "taskType": "migration",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-07",
+      "label": "Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 ",
+      "status": "planned",
+      "goal": "Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. Calls 'gad env' CLI via dev-server command bridge. Local-dev only — NODE_ENV=development gate.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:60-08",
+      "label": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management ",
+      "status": "planned",
+      "goal": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.",
+      "skill": "",
+      "taskType": "site",
+      "keywords": ""
+    },
+    {
       "type": "decision",
       "id": "decision:gad-92",
       "label": "docs/ is GSD upstream â€” archive it, don't rewrite it",
@@ -6177,6 +6381,84 @@
       "summary": "Reverses the GitHub Actions cron approach from gad-255. Daily tip generation runs LOCALLY as part of gad startup if OPENAI_API_KEY is set AND today's tip file is missing. Rationale: operator works with gad CLI every day anyway — generation happens naturally on session start, only when they're actual"
     },
     {
+      "type": "decision",
+      "id": "decision:gad-258",
+      "label": "llm-from-scratch always executes via subagent; chat surface receives report + tip only",
+      "summary": "The llm-from-scratch project is intentionally isolated from the GAD framework's own development concerns. Its tasks (BPE, embeddings, attention, training, agent, context engine) are self-contained and share no direct coupling with framework code. Running them inline in the main GAD session wastes op"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-259",
+      "label": "Remove DAILY/tip section from snapshot output",
+      "summary": "The DAILY section added by decision gad-257 surfaced today's llm-internals tip plus the llm-from-scratch next-action in every snapshot. After gad-258 the subagent model makes that duplicate work: the subagent is the one actually consuming the tip and the next-action, not the main session. Keeping DA"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad-snapshot-optimize",
+      "label": "gad-snapshot-optimize",
+      "source": "decision-citation"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-260",
+      "label": "Per-project BYOK env storage - encrypted, uploadable via project editor, visible in project dashboard",
+      "summary": "Projects increasingly need their own API keys (OpenAI for llm-from-scratch tip-gen, model providers for per-project evals, cloud services per-project). A single global env var bag does not scope properly: different projects want different providers, different rate-limit budgets, and different access"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad-env-get",
+      "label": "gad-env-get",
+      "source": "decision-citation"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-261",
+      "label": "Planning surface splits into its own app — gad planning serve separate from landing",
+      "summary": "Today the landing Next app at vendor/get-anything-done/site/ hosts both marketing (/, /how-it-works, /library, /project-market) and planning (/planning, /projects). That coupling bleeds landing UI conventions into planning surfaces and makes it harder to treat planning as private, auth-gated, or loc"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-262",
+      "label": "gad start — daily dashboard entry command, distinct from gad startup",
+      "summary": "Two different audiences want two different entry points. Coding agents need text-mode session context: today that is 'gad startup --projectid X' which prints the session contract + triggers snapshot. Humans (operator) need a dashboard to see their projects, subagent-run history, next-actions, and BY"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-263",
+      "label": "Offload policy — big-token structured work goes to cheap models, reasoning stays with main agent",
+      "summary": "Cost-token triage for LLM calls across GAD. Default routing: (a) reasoning, novel content generation, agent-loop decisions, phase planning --&gt; main agent (Claude, operator-controlled runtime). (b) structured input / structured output transformations with predictable shape and high token volume --"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-264",
+      "label": "Teachings reader route promoted to active phase 46 scope",
+      "summary": "Phase 58 originally slotted the /teachings route as its item (3), but phase 58 is blocked on 46 and the 'only fun if you see it' gap on the teachings catalog is acute — tips exist but nothing renders them. Promote the teachings reader (index page + detail route, read from teachings/static/** via the"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-265",
+      "label": "Phase 59 open questions — operator sign-off accepted planner recommendations",
+      "summary": "Operator accepted the gad-planner subagent recommendations for all 5 open questions on phase 59 PLAN.md. Q1 planning-app binary bundling — path B monorepo-only for this phase, follow-up todo for standalone bundling gated on task 44-28 pattern. Q2 teachings-reader migration timing — will not migrate "
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-266",
+      "label": "Phase 60 BYOK design choices — operator accepted all A-H advisor defaults",
+      "summary": "Operator accepted all 8 advisor-mode defaults from .planning/notes/phase-60-byok-discussion-2026-04-17.md. A crypto primitive AES-256-GCM with PBKDF2 KDF (adjusted from scrypt per D to achieve browser/CLI parity), 600k iterations. B master-key UX OS keychain with passphrase fallback; Windows Credent"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-267",
+      "label": "Security patterns surfaced during spec/design work become teaching tips",
+      "summary": "When a spec-authoring or design-doc subagent surfaces defense-in-depth patterns (AEAD+AAD binding, fail-closed defaults, derive-dont-store, migration cutover windows, audit-log privacy tradeoffs, etc.) those patterns should be harvested into the teachings catalog under a 'security' category. Rationa"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad-doc-writer",
+      "label": "gad-doc-writer",
+      "source": "decision-citation"
+    },
+    {
       "type": "workflow",
       "id": "workflow:./workflow.md",
       "label": "./workflow.md",
@@ -6669,6 +6951,14 @@
       "id": "workflow:workflows/gad-map-codebase.md",
       "label": "workflows/gad-map-codebase.md",
       "source": "skill-ref"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad:merge-skill",
+      "label": ">-",
+      "slug": "gad-merge-skill",
+      "trigger": "",
+      "source": "canonical"
     },
     {
       "type": "skill",
@@ -11754,6 +12044,306 @@
       "type": "USES_SKILL"
     },
     {
+      "source": "task:46-09",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-09",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-09",
+      "target": "decision:gad-264",
+      "type": "CITES"
+    },
+    {
+      "source": "task:46-09",
+      "target": "phase:46",
+      "type": "CITES"
+    },
+    {
+      "source": "task:46-10",
+      "target": "phase:46",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:46-10",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:59-01",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-01",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:59-02",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-02",
+      "target": "task:59-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-02",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:59-03",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-03",
+      "target": "task:59-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-03",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:59-04",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-04",
+      "target": "task:59-03",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-05",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-05",
+      "target": "task:59-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-05",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:59-06",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-06",
+      "target": "task:59-05",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-06",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:59-06",
+      "target": "decision:gad-262",
+      "type": "CITES"
+    },
+    {
+      "source": "task:59-07",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-07",
+      "target": "task:59-04",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-07",
+      "target": "task:59-06",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-08",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-08",
+      "target": "task:59-04",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-09",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-09",
+      "target": "task:59-04",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-09",
+      "target": "task:59-07",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-09",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-01",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-01",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:60-01",
+      "target": "decision:gad-260",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-01",
+      "target": "phase:60",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-02",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-02",
+      "target": "task:60-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-02",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:60-02",
+      "target": "task:60-01",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-03",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-03",
+      "target": "task:60-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-03",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:60-04",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-04",
+      "target": "task:60-03",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-04",
+      "target": "phase:59",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-04",
+      "target": "task:59-07",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-05",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-05",
+      "target": "task:60-03",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-06",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-06",
+      "target": "task:60-04",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-07",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-07",
+      "target": "task:60-03",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-07",
+      "target": "phase:44.5",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-08",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-08",
+      "target": "task:60-07",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-08",
+      "target": "task:59-04",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-08",
+      "target": "phase:59",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-08",
+      "target": "task:60-07",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-08",
+      "target": "task:60-01",
+      "type": "CITES"
+    },
+    {
       "source": "decision:gad-92",
       "target": "task:2026-04",
       "type": "CITES"
@@ -13589,6 +14179,171 @@
       "type": "CITES"
     },
     {
+      "source": "decision:gad-258",
+      "target": "decision:gad-257",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-259",
+      "target": "task:50-200",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-259",
+      "target": "decision:gad-257",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-259",
+      "target": "decision:gad-258",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-259",
+      "target": "skill:gad-snapshot-optimize",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-260",
+      "target": "skill:gad-env-get",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-261",
+      "target": "phase:46",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-262",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-262",
+      "target": "decision:gad-261",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-263",
+      "target": "phase:58",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-263",
+      "target": "decision:gad-260",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-263",
+      "target": "decision:gad-258",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-264",
+      "target": "phase:58",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-264",
+      "target": "phase:46",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-264",
+      "target": "decision:gad-261",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-265",
+      "target": "task:44-28",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-265",
+      "target": "task:59-02",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-265",
+      "target": "task:59-05",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-265",
+      "target": "phase:59",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-265",
+      "target": "decision:gad-264",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-265",
+      "target": "skill:gad-planner",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-266",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-266",
+      "target": "task:0-30",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-266",
+      "target": "task:60-08",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-266",
+      "target": "task:60-01",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-266",
+      "target": "task:60-02",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-266",
+      "target": "phase:51",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-267",
+      "target": "task:60-01",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-267",
+      "target": "task:60-02",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-267",
+      "target": "task:60-08",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-267",
+      "target": "phase:60",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-267",
+      "target": "skill:gad-framework",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-267",
+      "target": "skill:gad-doc-writer",
+      "type": "REFERENCES"
+    },
+    {
       "source": "skill:create-proto-skill",
       "target": "workflow:./workflow.md",
       "type": "USES_WORKFLOW"
@@ -13986,22 +14741,22 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-17T20:20:44.071Z",
-    "nodeCount": 939,
-    "edgeCount": 1308,
+    "generated": "2026-04-18T00:06:30.599Z",
+    "nodeCount": 974,
+    "edgeCount": 1401,
     "nodeTypes": {
-      "phase": 64,
-      "task": 391,
-      "skill": 128,
-      "decision": 252,
+      "phase": 66,
+      "task": 410,
+      "skill": 132,
+      "decision": 262,
       "workflow": 104
     },
     "edgeTypes": {
-      "BELONGS_TO": 393,
-      "CITES": 507,
-      "DEPENDS_ON": 63,
-      "USES_SKILL": 182,
-      "REFERENCES": 84,
+      "BELONGS_TO": 412,
+      "CITES": 548,
+      "DEPENDS_ON": 81,
+      "USES_SKILL": 192,
+      "REFERENCES": 89,
       "USES_WORKFLOW": 79
     }
   }

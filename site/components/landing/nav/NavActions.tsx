@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Github, Menu, X } from "lucide-react";
 import { Identified } from "@/components/devid/Identified";
 import { GlobalSearch } from "@/components/search/global-search/GlobalSearch";
@@ -13,7 +14,9 @@ type Props = {
 export function NavActions({ mobileOpen, onToggleMobile }: Props) {
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <NavProjectPicker />
+      <Suspense fallback={null}>
+        <NavProjectPicker />
+      </Suspense>
       <Identified as="NavGlobalSearch" className="hidden md:block">
         <GlobalSearch />
       </Identified>

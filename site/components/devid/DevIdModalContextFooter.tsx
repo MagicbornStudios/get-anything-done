@@ -1,11 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { usePathname } from "next/navigation";
 import { Check, ChevronLeft, ChevronRight, Copy, Mic, MicOff, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useDevId } from "./DevIdProvider";
-import { buildDeletePrompt, buildUpdateLockedPrefix, type PromptVerbosity } from "./DevIdPromptTemplates";
+import {
+  buildDeletePrompt,
+  buildOuterDeletePrompt,
+  buildOuterUpdateLockedPrefix,
+  buildUpdateLockedPrefix,
+  type PromptVerbosity,
+} from "./DevIdPromptTemplates";
+import { usePanelChord } from "./vc-chord";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { collectScopedEntries, escapeCidSelector, sortRegistryEntries } from "./devid-dom-scan";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
@@ -34,6 +41,13 @@ function locateInTree(cid: string, root: HTMLElement | null, flash: (c: string) 
 /**
  * Compact visual-context strip for portaled modals: scans `scanRootRef` for `[data-cid]`,
  * paginates, syncs with global `highlightCid` (Alt+click on Identified; Alt+click again clears), copy / speech / agent dialog.
+ *
+ * Modifier lanes on the action cluster:
+ * - **Upd**: default → inner update prompt for the current target. Hold **Ctrl/Cmd** while clicking
+ *   to start recording in the *outer* lane — prompt anchors at the current target but instructs
+ *   the agent to refactor / identify surrounding (unidentified) components first, then apply notes.
+ * - **Del**: default → inner delete prompt for the current target. Hold **Alt** while clicking to
+ *   copy a delete prompt that targets the unidentifiable sections *around* the anchor instead.
  */
 export function DevIdModalContextFooter({
   open,
@@ -62,10 +76,14 @@ export function DevIdModalContextFooter({
     promptVerbosity: sharedPromptVerbosity,
     setPromptVerbosity: setSharedPromptVerbosity,
   } = useDevId();
+  const { outerUpdateHeld, outerDeleteHeld } = usePanelChord();
   const [entries, setEntries] = useState<RegistryEntry[]>([]);
   const [idx, setIdx] = useState(0);
   const [headerCopied, setHeaderCopied] = useState<"update" | "delete" | "cid" | null>(null);
   const [chromeFooterUpdateCopied, setChromeFooterUpdateCopied] = useState(false);
+  /** Recording started in outer (Ctrl) lane? Captured at toggle time so async finalize picks the right builder. */
+  const outerUpdateRef = useRef(false);
+  const [lastUpdateLane, setLastUpdateLane] = useState<"inner" | "outer">("inner");
   const effectivePromptVerbosity = promptVerbosity ?? sharedPromptVerbosity;
 
   const recompute = useCallback(() => {
@@ -120,20 +138,33 @@ export function DevIdModalContextFooter({
   const finalizeUpdate = useCallback(
     (transcript: string) => {
       if (!current) return;
-      const prefix = buildUpdateLockedPrefix(
-        absolutePageUrl(pathname),
-        current.label,
-        current.cid,
-        current.componentTag ?? "Identified",
-        current.searchHint,
-        undefined,
-        effectivePromptVerbosity,
-      );
+      const outer = outerUpdateRef.current;
+      outerUpdateRef.current = false;
+      const prefix = outer
+        ? buildOuterUpdateLockedPrefix(
+            absolutePageUrl(pathname),
+            current.label,
+            current.cid,
+            current.componentTag ?? "Identified",
+            current.searchHint,
+            effectivePromptVerbosity,
+          )
+        : buildUpdateLockedPrefix(
+            absolutePageUrl(pathname),
+            current.label,
+            current.cid,
+            current.componentTag ?? "Identified",
+            current.searchHint,
+            undefined,
+            effectivePromptVerbosity,
+          );
       const resolved = `${prefix}\n${transcript.trim()}`;
       navigator.clipboard?.writeText(resolved).catch(() => {});
       setHeaderCopied("update");
       window.setTimeout(() => setHeaderCopied(null), 1200);
-      toast.success(transcript.trim() ? "Update prompt copied" : "Update template copied");
+      const label = outer ? "Outer-update prompt copied" : "Update prompt copied";
+      const templateLabel = outer ? "Outer-update template copied" : "Update template copied";
+      toast.success(transcript.trim() ? label : templateLabel);
     },
     [current, pathname, effectivePromptVerbosity],
   );
@@ -141,6 +172,18 @@ export function DevIdModalContextFooter({
   const { listening, interim, toggle: toggleSpeech } = useDictatedPromptCopy({
     onFinalize: finalizeUpdate,
   });
+
+  const onUpdateClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!listening) {
+        const outer = e.ctrlKey || e.metaKey;
+        outerUpdateRef.current = outer;
+        setLastUpdateLane(outer ? "outer" : "inner");
+      }
+      toggleSpeech();
+    },
+    [listening, toggleSpeech],
+  );
 
   const finalizeModalChromeSelfPrompt = useCallback(
     (transcript: string) => {
@@ -171,22 +214,35 @@ export function DevIdModalContextFooter({
     listeningMessage: "Listening for modal VC chrome…",
   });
 
-  const copyDelete = useCallback(() => {
-    if (!current) return;
-    const resolved = buildDeletePrompt(
-      absolutePageUrl(pathname),
-      current.label,
-      current.cid,
-      current.componentTag ?? "Identified",
-      current.searchHint,
-      undefined,
-      effectivePromptVerbosity,
-    );
-    navigator.clipboard?.writeText(resolved).catch(() => {});
-    setHeaderCopied("delete");
-    window.setTimeout(() => setHeaderCopied(null), 1200);
-    toast.success("Delete prompt copied");
-  }, [current, pathname, effectivePromptVerbosity]);
+  const copyDelete = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (!current) return;
+      const outer = e.altKey;
+      const resolved = outer
+        ? buildOuterDeletePrompt(
+            absolutePageUrl(pathname),
+            current.label,
+            current.cid,
+            current.componentTag ?? "Identified",
+            current.searchHint,
+            effectivePromptVerbosity,
+          )
+        : buildDeletePrompt(
+            absolutePageUrl(pathname),
+            current.label,
+            current.cid,
+            current.componentTag ?? "Identified",
+            current.searchHint,
+            undefined,
+            effectivePromptVerbosity,
+          );
+      navigator.clipboard?.writeText(resolved).catch(() => {});
+      setHeaderCopied("delete");
+      window.setTimeout(() => setHeaderCopied(null), 1200);
+      toast.success(outer ? "Outer-delete prompt copied" : "Delete prompt copied");
+    },
+    [current, pathname, effectivePromptVerbosity],
+  );
 
   const go = (nextIdx: number) => {
     if (!entries.length) return;
@@ -239,13 +295,21 @@ export function DevIdModalContextFooter({
     </div>
   );
 
-  const liveDictationLine =
-    listening || listeningChrome ? (
-      <p className="mt-1 max-w-full truncate border-t border-border/40 pt-1 text-[9px] text-emerald-400/95">
-        <span className="font-semibold">Live — </span>
-        {(listening ? interim : interimChrome) || "\u00a0"}
-      </p>
-    ) : null;
+  const anyListening = listening || listeningChrome;
+  const activeInterim = listening ? interim : interimChrome;
+  const listeningOuter = listening && lastUpdateLane === "outer";
+  const activeLabel = listeningOuter ? "Outer · live" : "Live";
+  const liveDictationLine = anyListening ? (
+    <p
+      className={cn(
+        "mt-1 max-w-full truncate border-t border-border/40 pt-1 text-[9px]",
+        listeningOuter ? "text-amber-300/95" : "text-emerald-400/95",
+      )}
+    >
+      <span className="font-semibold">{activeLabel} — </span>
+      {activeInterim || "\u00a0"}
+    </p>
+  ) : null;
 
   if (!entries.length) {
     return (
@@ -260,7 +324,7 @@ export function DevIdModalContextFooter({
       >
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           {modalTitleChrome}
-          <span>
+          <span className="flex-1">
             — no <code className="rounded bg-muted px-0.5 font-mono text-[8px]">data-cid</code> in this modal.
           </span>
         </div>
@@ -283,7 +347,9 @@ export function DevIdModalContextFooter({
           body={
             <p>
               Alt+click a landmark toggles a persistent highlight. Esc clears. Chevrons change the active target in
-              this modal footer.
+              this modal footer. <strong>Ctrl+Upd</strong> switches the update prompt to the <em>outer</em> lane
+              (neighborhood refactor + identification around this anchor). <strong>Alt+Del</strong> switches the
+              delete prompt to the outer lane (remove unidentified surrounding sections).
             </p>
           }
         >
@@ -334,32 +400,81 @@ export function DevIdModalContextFooter({
             <div className="min-w-0 flex-1" />
           )}
           <div className="flex shrink-0 items-center gap-0.5">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="h-6 gap-0.5 px-1.5 text-[9px]"
-              onClick={toggleSpeech}
+            <DevChromeHoverHint
+              body={
+                <p>
+                  Dictate additions to the update prompt for this target.
+                  <br />
+                  <strong>Ctrl/Cmd+click</strong> to record in the outer lane — prompt uses this target as an anchor
+                  and asks the agent to identify + refactor surrounding unidentified components first.
+                </p>
+              }
             >
-              {headerCopied === "update" ? (
-                <Check size={10} />
-              ) : listening ? (
-                <MicOff size={10} />
-              ) : (
-                <Mic size={10} />
-              )}
-              Upd
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className="h-6 gap-0.5 px-1.5 text-[9px]"
-              onClick={copyDelete}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                aria-label={
+                  listening
+                    ? lastUpdateLane === "outer"
+                      ? "Stop outer-update recording and copy"
+                      : "Stop update recording and copy"
+                    : outerUpdateHeld
+                      ? "Start outer-update recording (Ctrl held)"
+                      : "Start update recording (hold Ctrl for outer lane)"
+                }
+                className={cn(
+                  "h-6 gap-0.5 px-1.5 text-[9px] transition-colors",
+                  (listening && lastUpdateLane === "outer") ||
+                    (!listening && outerUpdateHeld)
+                    ? "bg-amber-400/20 text-amber-200 ring-1 ring-amber-400/50"
+                    : undefined,
+                )}
+                onClick={onUpdateClick}
+              >
+                {headerCopied === "update" ? (
+                  <Check size={10} />
+                ) : listening ? (
+                  <MicOff size={10} />
+                ) : (
+                  <Mic size={10} />
+                )}
+                {(listening && lastUpdateLane === "outer") ||
+                (!listening && outerUpdateHeld)
+                  ? "Upd·out"
+                  : "Upd"}
+              </Button>
+            </DevChromeHoverHint>
+            <DevChromeHoverHint
+              body={
+                <p>
+                  Copy a delete prompt for this target.
+                  <br />
+                  <strong>Alt+click</strong> to copy the outer-delete prompt instead — instructs the agent to remove
+                  the unidentified surrounding section(s) around this anchor.
+                </p>
+              }
             >
-              {headerCopied === "delete" ? <Check size={10} /> : <Trash2 size={10} />}
-              Del
-            </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                aria-label={
+                  outerDeleteHeld
+                    ? "Copy outer-delete prompt (Alt held — removes surrounding unidentified sections)"
+                    : "Copy delete prompt (hold Alt for outer-delete)"
+                }
+                className={cn(
+                  "h-6 gap-0.5 px-1.5 text-[9px] transition-colors",
+                  outerDeleteHeld &&
+                    "bg-destructive/15 text-destructive ring-1 ring-destructive/50",
+                )}
+                onClick={copyDelete}
+              >
+                {headerCopied === "delete" ? <Check size={10} /> : <Trash2 size={10} />}
+                {outerDeleteHeld ? "Del·out" : "Del"}
+              </Button>
+            </DevChromeHoverHint>
             <Button type="button" variant="secondary" size="icon" className="size-6" onClick={copyCid}>
               {headerCopied === "cid" ? <Check size={10} /> : <Copy size={10} />}
             </Button>

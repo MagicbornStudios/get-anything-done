@@ -14,6 +14,8 @@
  */
 
 import { V8DissectionComposition } from "./compositions/V8Dissection";
+import { VcsExplainerComposition } from "./compositions/VcsExplainer";
+import { GadEvolutionExplainerComposition } from "./compositions/GadEvolutionExplainer";
 
 export interface CompositionEntry {
   slug: string;
@@ -31,6 +33,32 @@ export interface CompositionEntry {
 }
 
 export const COMPOSITIONS: CompositionEntry[] = [
+  {
+    slug: "vcs-explainer",
+    title: "Visual context system — anywhere",
+    description:
+      "A 30-second walkthrough of the Visual Context System pattern: source-searchable cid/as identifiers, the SiteSection + Identified landmark pair, and the four skills that install this pattern into any GUI project.",
+    tags: ["skill", "gad-visual-context-system", "vcs", "explainer"],
+    durationInFrames: 900, // 30s @ 30fps
+    fps: 30,
+    width: 1920,
+    height: 1080,
+    component: VcsExplainerComposition,
+    status: "draft",
+  },
+  {
+    slug: "gad-evolution-explainer",
+    title: "Skills born from pressure — the GAD evolution loop",
+    description:
+      "30 seconds on why get-anything-done is evolutionary: the Pressure v3 formula (gad-222) that names skill candidates, the five-step detect → candidate → draft → install → shed loop, and the claim that every skill on this site was born this way.",
+    tags: ["framework", "evolution", "pressure", "explainer", "gad-222"],
+    durationInFrames: 900, // 30s @ 30fps
+    fps: 30,
+    width: 1920,
+    height: 1080,
+    component: GadEvolutionExplainerComposition,
+    status: "draft",
+  },
   {
     slug: "v8-dissection",
     title: "Escape the Dungeon v8 — process metrics lied",

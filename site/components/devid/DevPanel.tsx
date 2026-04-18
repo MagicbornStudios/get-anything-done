@@ -9,7 +9,7 @@ import {
   type MouseEvent,
 } from "react";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 import { useDevId } from "./DevIdProvider";
 import { useSectionRegistry, type RegistryEntry } from "./SectionRegistry";
@@ -32,53 +32,32 @@ import {
   DEV_PANEL_STABLE_CID,
 } from "./dev-panel-constants";
 import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
+import { DevPanelDepthPager } from "./DevPanelDepthPager";
 import { DevPanelHoverPromptActions } from "./DevPanelHoverPromptActions";
 import { absolutePageUrl } from "./absolutePageUrl";
 import { useDictatedPromptCopy } from "./useDictatedPromptCopy";
 import { DevPanelPositionControls } from "./DevPanelPositionControls";
 import { DevPanelListItem } from "./DevPanelListItem";
+import { PanelChordProvider } from "./vc-chord";
+import { selectLeaf } from "./vc-selection";
 import {
   DevPanelHandoffActionRow,
   DevPanelVcHintsFooter,
   VC_HOVER_FRAMEWORK,
 } from "./DevPanelHandoffToolbar";
 import { resolveVcExportForPanelMediaPick } from "./vc-export-session";
-import {
-  vcChordShowsDeleteMediaPair,
-  vcChordShowsUpdateMediaPair,
-} from "./vcChordModifiers";
 import { mergeUniqueMediaPaths } from "./vcMediaPaths";
 import { pickImagesFromSessionFolder, supportsVcLocalFolder, supportsVcOpenFilePicker } from "./vc-screenshot";
 import { VcPanelHoverAnchorContext } from "./VcPanelHoverAnchorContext";
 import { VcOctantDragSnippet } from "./VcOctantDragSnippet";
 import { Button } from "@/components/ui/button";
 import {
-  collectScopedEntries,
-  escapeCidSelector,
-  queryByCid,
-  readEntryFromElement,
-  sortRegistryEntries,
-} from "./devid-dom-scan";
-
-function resolveEntriesOrdered(pool: RegistryEntry[], cids: string[]): RegistryEntry[] {
-  return cids
-    .map((c) => pool.find((e) => e.cid === c))
-    .filter((e): e is RegistryEntry => Boolean(e));
-}
-
-/** Ordered merge list for handoff when ≥2 cids selected at the current depth slice. */
-function resolveHandoffEntries(
-  clicked: RegistryEntry,
-  visible: RegistryEntry[],
-  mergeCids: string[],
-): RegistryEntry[] {
-  const ordered = mergeCids
-    .filter((c) => visible.some((e) => e.cid === c))
-    .map((c) => visible.find((e) => e.cid === c)!)
-    .filter((e): e is RegistryEntry => Boolean(e));
-  if (ordered.length >= 2) return ordered;
-  return [clicked];
-}
+  collectBandEntriesWithPortals,
+  locateComponentOnPage,
+  resolveEntriesOrdered,
+  resolveHandoffEntries,
+} from "./devpanel-helpers";
+import { readEntryFromElement, sortRegistryEntries } from "./devid-dom-scan";
 
 type DevPanelProps =
   | { mode: "section" }
@@ -93,180 +72,23 @@ type DevPanelProps =
       onDismiss?: () => void;
     };
 
-/** Depth pager — hint card docks beside the panel (`dockCorner`) like other VC chrome. */
-function DevPanelDepthPager(props: {
-  dockCorner: "left" | "right";
-  currentDepth: number;
-  visibleCount: number;
-  onPrev: () => void;
-  onNext: () => void;
-  prevDisabled: boolean;
-  nextDisabled: boolean;
-  /** Section scan cap from registry; omit in band mode. */
-  maxScanDepth?: number;
-  /** While Control is held, disabled chevrons become dismiss (X) if this is set. */
-  onDismissPanel?: () => void;
-}) {
-  const {
-    dockCorner,
-    currentDepth,
-    visibleCount,
-    onPrev,
-    onNext,
-    prevDisabled,
-    nextDisabled,
-    maxScanDepth,
-    onDismissPanel,
-  } = props;
-
-  const [ctrlHeld, setCtrlHeld] = useState(false);
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Control" || e.code === "ControlLeft" || e.code === "ControlRight") {
-        setCtrlHeld(true);
-      }
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Control" || e.code === "ControlLeft" || e.code === "ControlRight") {
-        setCtrlHeld(false);
-      }
-    };
-    const clear = () => setCtrlHeld(false);
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", clear);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      window.removeEventListener("blur", clear);
-    };
-  }, []);
-
-  const prevClose = Boolean(ctrlHeld && prevDisabled && onDismissPanel);
-  const nextClose = Boolean(ctrlHeld && nextDisabled && onDismissPanel);
-
+/**
+ * Public `DevPanel` wrapper — installs the single per-panel chord subscription
+ * (`PanelChordProvider`) around the body. Every chord-reactive descendant
+ * (depth pager, handoff row, screenshot button, hover prompt actions,
+ * position controls, and anything Radix-portaled from here) reads via
+ * `usePanelChord()` instead of subscribing to the global store, so one chord
+ * change commits per mounted panel instead of per leaf.
+ */
+export function DevPanel(props: DevPanelProps) {
   return (
-    <DevChromeHoverHint
-      dockCorner={dockCorner}
-      openDelay={100}
-      closeDelay={80}
-      contentClassName="p-3 [&_p+p]:mt-1.5"
-      body={
-        <>
-          <p className="font-medium text-foreground">Depth {currentDepth}</p>
-          <p className="text-muted-foreground">
-            {visibleCount} landmark{visibleCount === 1 ? "" : "s"} in this slice. Chevrons step toward the section
-            shell (back) or into nested{" "}
-            <code className="rounded bg-muted/80 px-0.5 font-mono text-[9px]">Identified</code> blocks (forward).
-          </p>
-          {onDismissPanel ? (
-            <p className="border-t border-border/50 pt-2 text-muted-foreground">
-              Hold <kbd className="rounded bg-muted/80 px-1 font-mono text-[9px]">Ctrl</kbd> to turn a blocked chevron
-              into <span className="text-foreground">close</span> (<span className="font-mono">X</span>).
-            </p>
-          ) : null}
-          {maxScanDepth != null ? (
-            <p className="border-t border-border/50 pt-2 text-muted-foreground">Section scan window: depth ≤ {maxScanDepth}.</p>
-          ) : null}
-        </>
-      }
-    >
-      <div
-        className="ml-2 flex cursor-help items-center gap-1 rounded-sm px-0.5 py-0.5 ring-offset-background hover:bg-muted/40 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        tabIndex={0}
-        aria-label={`Landmarks at nesting depth ${currentDepth}, ${visibleCount} in this slice`}
-      >
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={[
-            "size-5",
-            prevClose ? "text-destructive hover:bg-destructive/15 hover:text-destructive" : "",
-          ].join(" ")}
-          disabled={!prevClose && prevDisabled}
-          onClick={prevClose ? () => onDismissPanel?.() : onPrev}
-          aria-label={prevClose ? "Close context panel" : "Shallower nesting depth"}
-        >
-          {prevClose ? <X size={10} strokeWidth={2.5} /> : <ChevronLeft size={10} />}
-        </Button>
-        <span className="w-16 text-center tabular-nums">
-          d{currentDepth} - {visibleCount}
-        </span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={[
-            "size-5",
-            nextClose ? "text-destructive hover:bg-destructive/15 hover:text-destructive" : "",
-          ].join(" ")}
-          disabled={!nextClose && nextDisabled}
-          onClick={nextClose ? () => onDismissPanel?.() : onNext}
-          aria-label={nextClose ? "Close context panel" : "Deeper nesting depth"}
-        >
-          {nextClose ? <X size={10} strokeWidth={2.5} /> : <ChevronRight size={10} />}
-        </Button>
-      </div>
-    </DevChromeHoverHint>
+    <PanelChordProvider>
+      <DevPanelBody {...props} />
+    </PanelChordProvider>
   );
 }
 
-function locateComponentOnPage(cid: string, flashComponent: (cid: string) => void) {
-  const el = queryByCid(cid);
-  if (!el) return;
-  const hadTab = el.hasAttribute("tabindex");
-  if (!hadTab) el.setAttribute("tabindex", "-1");
-  el.focus({ preventScroll: true });
-  el.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-  flashComponent(cid);
-  window.setTimeout(() => {
-    if (!hadTab) el.removeAttribute("tabindex");
-  }, 1400);
-}
-
-/** Open Radix dialogs portaled to `body` are outside the section DOM; merge by `data-devid-band`. */
-function collectBandEntriesWithPortals(
-  bandCid: string,
-  bandLabel: string,
-  bandComponentTag: RegistryEntry["componentTag"] | undefined,
-  bandSearchHint: string | undefined,
-): RegistryEntry[] {
-  const scope = queryByCid(bandCid);
-  const fromSection = collectScopedEntries(scope, {
-    includeScope: true,
-    fallbackRoot: {
-      cid: bandCid,
-      label: bandLabel,
-      depth: 0,
-      componentTag: bandComponentTag,
-      searchHint: bandSearchHint,
-    },
-  });
-  if (typeof document === "undefined") return fromSection;
-
-  /** Radix Content may not expose `role="dialog"` on the same node as our attrs in all versions — match by band + open state only. */
-  let dialogRoots: HTMLElement[];
-  try {
-    dialogRoots = Array.from(
-      document.querySelectorAll<HTMLElement>(`[data-devid-band="${escapeCidSelector(bandCid)}"]`),
-    ).filter((el) => el.getAttribute("data-state") === "open");
-  } catch {
-    return fromSection;
-  }
-
-  const fromDialogs: RegistryEntry[] = [];
-  for (const root of dialogRoots) {
-    fromDialogs.push(...collectScopedEntries(root, { includeScope: false }));
-  }
-
-  const merged = new Map<string, RegistryEntry>();
-  for (const e of fromDialogs) merged.set(e.cid, e);
-  for (const e of fromSection) merged.set(e.cid, e);
-  return sortRegistryEntries(Array.from(merged.values()));
-}
-
-export function DevPanel(props: DevPanelProps) {
+function DevPanelBody(props: DevPanelProps) {
   const mode = props.mode;
   const isBand = mode === "band";
   const bandCid = isBand ? props.cid : "";
@@ -294,7 +116,6 @@ export function DevPanel(props: DevPanelProps) {
     setUpdatePromptMediaRefs,
     deletePromptMediaRefs,
     clearPersistedVcExportFolder,
-    vcChordModifiers,
     vcExportDirHandleRef,
     submitVcHandoffUpdateSnippet,
     consumeVcHandoffQueuedSnippets,
@@ -594,9 +415,6 @@ export function DevPanel(props: DevPanelProps) {
     return `${altSummary}${ctrlHint}`;
   })();
 
-  const updateMediaChordShow = vcChordShowsUpdateMediaPair(vcChordModifiers);
-  const deleteMediaChordShow = vcChordShowsDeleteMediaPair(vcChordModifiers);
-
   const finalizeUpdatePromptCopy = useCallback(
     (transcript: string) => {
       if (!panelHandoffEntriesResolved.length) return;
@@ -786,10 +604,10 @@ export function DevPanel(props: DevPanelProps) {
         return;
       }
 
-      setCtrlLaneCids([]);
-      setSameDepthMergeCids([entry.cid]);
+      // Plain click: one batched store mutation (clears Ctrl lane, collapses
+      // Alt merge to [cid], sets highlight) + React state for activeCid.
+      selectLeaf(entry.cid);
       setActiveCid(entry.cid);
-      setHighlightCid(entry.cid);
       locate(entry.cid);
     },
     [sectionVisibleEntries, setSameDepthMergeCids, setCtrlLaneCids, setActiveCid, setHighlightCid, locate],
@@ -824,10 +642,8 @@ export function DevPanel(props: DevPanelProps) {
         return;
       }
 
-      setCtrlLaneCids([]);
-      setSameDepthMergeCids([entry.cid]);
+      selectLeaf(entry.cid);
       setActiveCid(entry.cid);
-      setHighlightCid(entry.cid);
       locate(entry.cid);
     },
     [bandVisibleEntries, setSameDepthMergeCids, setCtrlLaneCids, setActiveCid, setHighlightCid, locate],
@@ -970,8 +786,6 @@ export function DevPanel(props: DevPanelProps) {
                 size="section"
                 headerCopied={headerCopied}
                 listening={listening}
-                updateMediaChordShow={updateMediaChordShow}
-                deleteMediaChordShow={deleteMediaChordShow}
                 handoffDisabled={!panelHandoffEntriesResolved.length}
                 onUpdateClick={onUpdateHandoffButtonClick}
                 onDeleteClick={onDeleteHandoffButtonClick}
@@ -1152,8 +966,6 @@ export function DevPanel(props: DevPanelProps) {
               size="band"
               headerCopied={headerCopied}
               listening={listening}
-              updateMediaChordShow={updateMediaChordShow}
-              deleteMediaChordShow={deleteMediaChordShow}
               handoffDisabled={!panelHandoffEntriesResolved.length}
               onUpdateClick={onUpdateHandoffButtonClick}
               onDeleteClick={onDeleteHandoffButtonClick}

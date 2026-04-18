@@ -25,7 +25,7 @@
 ## System
 
 - [Contribute](https://get-anything-done.vercel.app/contribute): Human-first workflow (clone â†’ install â†’ open in Claude â†’ talk)
-- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (391), phases (51), decisions (228), roadmap, requirements, bugs (4)
+- [Planning](https://get-anything-done.vercel.app/planning): State + tabs for tasks (391), phases (64), decisions (256), roadmap, requirements, bugs (4)
 
 ## Machine-readable
 

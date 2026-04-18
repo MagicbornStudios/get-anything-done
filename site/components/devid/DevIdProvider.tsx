@@ -20,27 +20,54 @@ import {
   clearPersistedVcExportDirectory,
   restoreVcExportDirectoryHandle,
 } from "./vc-export-persist";
+import type { VcChordModifiers } from "./vc-chord";
+import { matchShortcut } from "./devid-shortcut-registry";
 import {
-  VC_CHORD_IDLE,
-  attachVcChordGlobalListeners,
-  type VcChordModifiers,
-} from "./vcChordModifiers";
+  clearAllSelection,
+  peekSelection,
+  setCtrlLaneCids as setCtrlLaneCidsStore,
+  setFlashCid as setFlashCidStore,
+  setHighlightCid as setHighlightCidStore,
+  setSameDepthMergeCids as setSameDepthMergeCidsStore,
+  useSelectionSnapshot,
+} from "./vc-selection";
 
 export type { VcChordModifiers };
 
-interface DevIdContextValue {
+/**
+ * Context is split into three slices so hot consumers (the hundreds of `Identified`
+ * instances) only re-render on the state they actually care about. `useDevId()` stays
+ * as a legacy merged hook that composes all three — existing callers keep working.
+ *
+ * - `DevIdEnabledContext`: `{ enabled, toggle }` — rarely flips.
+ * - `DevIdSelectionContext`: highlight / lane state — changes on Alt/Ctrl+click and Escape.
+ * - `DevIdSettingsContext`: verbosity, hover hints, export folder, media refs,
+ *   PNG-capture ring suppression, VC handoff snippet API, dismissed bands.
+ *
+ * Why three contexts instead of one context + selector: React's built-in context
+ * notifies every consumer on any value change, regardless of which field changed.
+ * Slicing gives per-field change isolation without pulling in `use-context-selector`.
+ */
+
+interface DevIdEnabledContextValue {
   enabled: boolean;
   toggle: () => void;
+}
+
+interface DevIdSelectionContextValue {
   highlightCid: string | null;
   setHighlightCid: (cid: string | null) => void;
   /** Alt-lane: same-depth merge / primary handoff group (panel: Alt+click rows; page: Alt+click landmarks). */
-  sameDepthMergeCids: string[];
+  sameDepthMergeCids: readonly string[];
   setSameDepthMergeCids: Dispatch<SetStateAction<string[]>>;
   /** Ctrl/Cmd-lane: cross-depth reference targets (panel: Ctrl/Cmd+click rows; page: Ctrl/Cmd+click landmarks). */
-  ctrlLaneCids: string[];
+  ctrlLaneCids: readonly string[];
   setCtrlLaneCids: Dispatch<SetStateAction<string[]>>;
   flashCid: string | null;
   flashComponent: (cid: string) => void;
+}
+
+interface DevIdSettingsContextValue {
   promptVerbosity: PromptVerbosity;
   setPromptVerbosity: Dispatch<SetStateAction<PromptVerbosity>>;
   /** Radix hovercards / docked tooltips on VC panel chrome; persisted like prompt verbosity. */
@@ -56,8 +83,6 @@ interface DevIdContextValue {
   /** Display paths appended to delete handoff when using Ctrl/Cmd+Pick. */
   deletePromptMediaRefs: string[];
   setDeletePromptMediaRefs: Dispatch<SetStateAction<string[]>>;
-  /** Alt / Ctrl|Meta / Shift for VC panel chord preview (single listener, shared by buttons). */
-  vcChordModifiers: VcChordModifiers;
   /**
    * While true, `Identified` omits Alt/Ctrl/flash ring styling so PNG capture matches ship chrome.
    * Set only around `captureElementToPngBlob` (not persisted).
@@ -76,11 +101,19 @@ interface DevIdContextValue {
   resetDismissedBands: () => void;
 }
 
+/** Legacy merged value preserved for existing `useDevId()` callers. */
+export type DevIdContextValue = DevIdEnabledContextValue &
+  DevIdSelectionContextValue &
+  DevIdSettingsContextValue;
+
 const noopRef = { current: null } as MutableRefObject<FileSystemDirectoryHandle | null>;
 
-const DevIdContext = createContext<DevIdContextValue>({
+const DevIdEnabledContext = createContext<DevIdEnabledContextValue>({
   enabled: false,
   toggle: () => {},
+});
+
+const DevIdSelectionContext = createContext<DevIdSelectionContextValue>({
   highlightCid: null,
   setHighlightCid: () => {},
   sameDepthMergeCids: [],
@@ -89,6 +122,9 @@ const DevIdContext = createContext<DevIdContextValue>({
   setCtrlLaneCids: () => {},
   flashCid: null,
   flashComponent: () => {},
+});
+
+const DevIdSettingsContext = createContext<DevIdSettingsContextValue>({
   promptVerbosity: "compact",
   setPromptVerbosity: () => {},
   vcPanelHoverHintsEnabled: false,
@@ -99,7 +135,6 @@ const DevIdContext = createContext<DevIdContextValue>({
   setUpdatePromptMediaRefs: () => {},
   deletePromptMediaRefs: [],
   setDeletePromptMediaRefs: () => {},
-  vcChordModifiers: VC_CHORD_IDLE,
   vcIdentifiedRingsSuppressedForPngCapture: false,
   setVcIdentifiedRingsSuppressedForPngCapture: () => {},
   submitVcHandoffUpdateSnippet: () => {},
@@ -113,10 +148,43 @@ const DevIdContext = createContext<DevIdContextValue>({
 export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/";
   const [enabled, setEnabled] = useState(false);
-  const [highlightCid, setHighlightCid] = useState<string | null>(null);
-  const [sameDepthMergeCids, setSameDepthMergeCids] = useState<string[]>([]);
-  const [ctrlLaneCids, setCtrlLaneCids] = useState<string[]>([]);
-  const [flashCid, setFlashCid] = useState<string | null>(null);
+  /**
+   * Selection is owned by the `vc-selection` external store so each `Identified`
+   * can subscribe only to its own cid via `useIsHighlighted(cid)` etc.
+   * `useSelectionSnapshot()` re-renders the provider whenever any slice changes
+   * (rare — only on click / Escape / flash), and we feed the slices into the
+   * legacy selection context so panels keep working.
+   */
+  const selectionSnapshot = useSelectionSnapshot();
+  const { highlightCid, sameDepthMergeCids, ctrlLaneCids, flashCid } = selectionSnapshot;
+
+  // Stable setter references that write through to the store.
+  const setHighlightCid = useCallback((cid: string | null) => {
+    setHighlightCidStore(cid);
+  }, []);
+  const setSameDepthMergeCids = useCallback<Dispatch<SetStateAction<string[]>>>(
+    (next) => {
+      if (typeof next === "function") {
+        const updater = next as (prev: string[]) => string[];
+        setSameDepthMergeCidsStore((prev) => updater([...prev]));
+      } else {
+        setSameDepthMergeCidsStore(next);
+      }
+    },
+    [],
+  );
+  const setCtrlLaneCids = useCallback<Dispatch<SetStateAction<string[]>>>((next) => {
+    if (typeof next === "function") {
+      const updater = next as (prev: string[]) => string[];
+      setCtrlLaneCidsStore((prev) => updater([...prev]));
+    } else {
+      setCtrlLaneCidsStore(next);
+    }
+  }, []);
+  const setFlashCid = useCallback((cid: string | null) => {
+    setFlashCidStore(cid);
+  }, []);
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [promptVerbosity, setPromptVerbosity] = useState<PromptVerbosity>("compact");
   const [vcPanelHoverHintsEnabled, setVcPanelHoverHintsEnabled] = useState(false);
@@ -124,7 +192,6 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   const [deletePromptMediaRefs, setDeletePromptMediaRefs] = useState<string[]>([]);
   const vcExportDirHandleRef = useRef<FileSystemDirectoryHandle | null>(null);
   const flashTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [vcChordModifiers, setVcChordModifiers] = useState<VcChordModifiers>(VC_CHORD_IDLE);
   const [vcIdentifiedRingsSuppressedForPngCapture, setVcIdentifiedRingsSuppressedForPngCapture] =
     useState(false);
 
@@ -223,13 +290,13 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  useEffect(() => attachVcChordGlobalListeners(setVcChordModifiers), []);
-
   const flashComponent = useCallback((cid: string) => {
     if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
-    setFlashCid(cid);
+    setFlashCidStore(cid);
     flashTimeoutRef.current = setTimeout(() => {
-      setFlashCid((cur) => (cur === cid ? null : cur));
+      // Only clear if we're still the active flash — don't clobber a newer one.
+      const { flashCid: current } = peekSelection();
+      if (current === cid) setFlashCidStore(null);
       flashTimeoutRef.current = null;
     }, 1100);
   }, []);
@@ -295,39 +362,45 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      /**
+       * Fast path: plain typing has no effect here. Only Escape and
+       * Alt/Ctrl/Meta combos trigger any branch below, so bail before the
+       * `closest()` DOM walk. Every shortcut matched below is also declared
+       * in `devid-shortcut-registry` so the `?` cheatsheet stays in sync.
+       */
+      if (e.key !== "Escape" && !e.altKey && !e.ctrlKey && !e.metaKey) return;
+      if (!enabled && e.key !== "Escape") return;
       const target = e.target;
       const inEditable =
         target instanceof HTMLElement &&
         Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
       if (inEditable && e.key !== "Escape") return;
-      if (e.altKey && (e.key === "i" || e.key === "I")) {
+
+      if (matchShortcut(e, "devid.toggle")) {
         e.preventDefault();
         toggle();
         return;
       }
-      if (e.altKey && (e.key === "k" || e.key === "K")) {
+      if (matchShortcut(e, "devid.search")) {
         e.preventDefault();
         setSearchOpen((v) => !v);
         return;
       }
-      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === "d" || e.key === "D")) {
+      if (matchShortcut(e, "devid.resetAltMerge")) {
         e.preventDefault();
         setSameDepthMergeCids(highlightCid ? [highlightCid] : []);
         return;
       }
-      if (!e.altKey && (e.ctrlKey || e.metaKey) && (e.key === "d" || e.key === "D")) {
+      if (matchShortcut(e, "devid.clearCtrlLane")) {
         e.preventDefault();
         setCtrlLaneCids([]);
         return;
       }
-      if (e.key === "Escape") {
-        setHighlightCid(null);
-        setSameDepthMergeCids([]);
-        setCtrlLaneCids([]);
+      if (matchShortcut(e, "devid.escape")) {
+        clearAllSelection();
         setUpdatePromptMediaRefs([]);
         setDeletePromptMediaRefs([]);
         vcHandoffSnippetQueueRef.current = [];
-        setFlashCid(null);
         if (flashTimeoutRef.current) {
           clearTimeout(flashTimeoutRef.current);
           flashTimeoutRef.current = null;
@@ -336,12 +409,15 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [toggle, highlightCid]);
+  }, [enabled, toggle, highlightCid]);
 
-  const contextValue = useMemo<DevIdContextValue>(
+  const enabledValue = useMemo<DevIdEnabledContextValue>(
+    () => ({ enabled, toggle }),
+    [enabled, toggle],
+  );
+
+  const selectionValue = useMemo<DevIdSelectionContextValue>(
     () => ({
-      enabled,
-      toggle,
       highlightCid,
       setHighlightCid,
       sameDepthMergeCids,
@@ -350,6 +426,18 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       setCtrlLaneCids,
       flashCid,
       flashComponent,
+    }),
+    [
+      highlightCid,
+      sameDepthMergeCids,
+      ctrlLaneCids,
+      flashCid,
+      flashComponent,
+    ],
+  );
+
+  const settingsValue = useMemo<DevIdSettingsContextValue>(
+    () => ({
       promptVerbosity,
       setPromptVerbosity,
       vcPanelHoverHintsEnabled,
@@ -360,7 +448,6 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       setUpdatePromptMediaRefs,
       deletePromptMediaRefs,
       setDeletePromptMediaRefs,
-      vcChordModifiers,
       vcIdentifiedRingsSuppressedForPngCapture,
       setVcIdentifiedRingsSuppressedForPngCapture,
       submitVcHandoffUpdateSnippet,
@@ -371,19 +458,11 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
       resetDismissedBands,
     }),
     [
-      enabled,
-      toggle,
-      highlightCid,
-      sameDepthMergeCids,
-      ctrlLaneCids,
-      flashCid,
-      flashComponent,
       promptVerbosity,
       vcPanelHoverHintsEnabled,
       clearPersistedVcExportFolder,
       updatePromptMediaRefs,
       deletePromptMediaRefs,
-      vcChordModifiers,
       vcIdentifiedRingsSuppressedForPngCapture,
       submitVcHandoffUpdateSnippet,
       registerVcHandoffSnippetInserter,
@@ -395,19 +474,23 @@ export function DevIdProvider({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <DevIdContext.Provider value={contextValue}>
-      {children}
-      {enabled ? (
-        <>
-          <DevIdStatusBadge
-            onOpenSearch={() => setSearchOpen(true)}
-            dismissedCount={dismissedBandCids.size}
-            onResetDismissed={resetDismissedBands}
-          />
-          <DevIdSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
-        </>
-      ) : null}
-    </DevIdContext.Provider>
+    <DevIdEnabledContext.Provider value={enabledValue}>
+      <DevIdSelectionContext.Provider value={selectionValue}>
+        <DevIdSettingsContext.Provider value={settingsValue}>
+          {children}
+          {enabled ? (
+            <>
+              <DevIdStatusBadge
+                onOpenSearch={() => setSearchOpen(true)}
+                dismissedCount={dismissedBandCids.size}
+                onResetDismissed={resetDismissedBands}
+              />
+              <DevIdSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+            </>
+          ) : null}
+        </DevIdSettingsContext.Provider>
+      </DevIdSelectionContext.Provider>
+    </DevIdEnabledContext.Provider>
   );
 }
 
@@ -445,6 +528,29 @@ function DevIdStatusBadge({
   );
 }
 
-export function useDevId() {
-  return useContext(DevIdContext);
+/** Narrow hook: subscribes only to enabled / toggle. */
+export function useDevIdEnabled(): DevIdEnabledContextValue {
+  return useContext(DevIdEnabledContext);
+}
+
+/** Narrow hook: subscribes only to selection state (highlight, lanes, flash). */
+export function useDevIdSelection(): DevIdSelectionContextValue {
+  return useContext(DevIdSelectionContext);
+}
+
+/** Narrow hook: subscribes only to settings state (verbosity, media refs, VC handoff, dismissed bands, etc.). */
+export function useDevIdSettings(): DevIdSettingsContextValue {
+  return useContext(DevIdSettingsContext);
+}
+
+/**
+ * Legacy merged hook preserved for callers that want everything at once. Prefer the
+ * narrow slice hooks above in hot-path components (mounted in large numbers or re-rendered
+ * often); this one re-renders whenever any of the three slices changes.
+ */
+export function useDevId(): DevIdContextValue {
+  const enabledSlice = useContext(DevIdEnabledContext);
+  const selectionSlice = useContext(DevIdSelectionContext);
+  const settingsSlice = useContext(DevIdSettingsContext);
+  return { ...enabledSlice, ...selectionSlice, ...settingsSlice };
 }

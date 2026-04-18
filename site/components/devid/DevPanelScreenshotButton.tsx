@@ -16,8 +16,9 @@ import {
 import {
   readChordFromEvent,
   resolveVcScreenshotChordMode,
+  usePanelChord,
   type VcScreenshotChordMode,
-} from "./vcChordModifiers";
+} from "./vc-chord";
 import {
   captureElementToPngBlob,
   pickImagesFromSessionFolder,
@@ -40,9 +41,9 @@ export function DevPanelScreenshotButton({
   const {
     vcExportDirHandleRef,
     setUpdatePromptMediaRefs,
-    vcChordModifiers,
     setVcIdentifiedRingsSuppressedForPngCapture,
   } = useDevId();
+  const { chord: vcChordModifiers } = usePanelChord();
   const [busy, setBusy] = useState(false);
   const hintMode: VcScreenshotChordMode = resolveVcScreenshotChordMode(vcChordModifiers);
 

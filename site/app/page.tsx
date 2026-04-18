@@ -1,7 +1,6 @@
-export const dynamic = "force-dynamic";
 import { LandingEvolutionBand } from "@/components/landing/home/LandingEvolutionBand";
+import { LandingExplainersBand } from "@/components/landing/home/LandingExplainersBand";
 import { LandingEvolutionLoopBand } from "@/components/landing/home/LandingEvolutionLoopBand";
-import { LandingGraphifyChaosBand } from "@/components/landing/home/LandingGraphifyChaosBand";
 import { LandingInstallerUpstreamBand } from "@/components/landing/home/LandingInstallerUpstreamBand";
 import { LandingVisualContextAndPromptBand } from "@/components/landing/home/LandingVisualContextAndPromptBand";
 import AgentHandoffCycle from "@/components/landing/agent-handoff-cycle/AgentHandoffCycle";
@@ -13,10 +12,10 @@ export default function Page() {
     <MarketingShell>
       <LandingEvolutionBand />
       <SectionEpigraph section="hero" seed="home-hero" align="center" />
+      <LandingExplainersBand />
+      <SectionEpigraph section="system" seed="home-explainers" />
       <LandingEvolutionLoopBand />
       <SectionEpigraph section="evolution" seed="home-evolution-loop" />
-      <LandingGraphifyChaosBand />
-      <SectionEpigraph section="system" seed="home-system" />
       <LandingVisualContextAndPromptBand />
       <SectionEpigraph section="planning" seed="home-planning" />
       <PlayableTeaser />

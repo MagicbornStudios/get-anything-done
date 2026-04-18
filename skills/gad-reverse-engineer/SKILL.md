@@ -1,6 +1,6 @@
 ---
 name: gad:reverse-engineer
-description: Analyze any codebase (local or GitHub URL) and produce requirements for clean-room reimplementation
+description: Analyze any codebase (local or GitHub URL) and extract implementation-agnostic requirements plus system-skill contracts for clean-room reimplementation
 argument-hint: --path <local-path> | --repo <github-url> [--branch <branch>]
 allowed-tools:
   - Read
@@ -21,7 +21,7 @@ Run the workflow. All procedural detail, examples, and tool sequencing live in t
 
 ## Extraction tiers
 
-The workflow uses a tiered extraction pipeline — highest available tier wins:
+The workflow uses a tiered extraction pipeline; highest available tier wins:
 
 | Tier | Condition | Extractor | Speed |
 |------|-----------|-----------|-------|
@@ -30,9 +30,19 @@ The workflow uses a tiered extraction pipeline — highest available tier wins:
 | 3 (graphify) | Python + `graphify` available | `graphify` CLI (external) | Slow |
 | Fallback | None of the above | Manual 5-pass deep analysis | Manual |
 
+## Evidence priority (first-class inputs)
+
+Requirement extraction must prioritize evidence in this order:
+
+1. GAD planning artifacts (`.planning/` XML, `planning/` docs, requirements/roadmap/state/decisions)
+2. Architecture docs (`architecture.md`, `ARCHITECTURE.md`, ADR-style docs)
+3. Product and engineering docs (`docs/`, design notes, specs)
+4. Source code (`src/`, app code, tests, configs)
+
 ## Outputs
 
-- `REQUIREMENTS.xml` — stable IDs (REQ-NNN)
-- `DECISIONS.xml` — inferred architectural decisions (RE-D-NNN)
-- `notes/` — pitfalls, tech debt, gotchas (one file per topic)
-- `graph.json` — knowledge graph of analyzed codebase
+- `REQUIREMENTS.xml` - stable IDs (REQ-NNN)
+- `DECISIONS.xml` - inferred architectural decisions (RE-D-NNN)
+- `SYSTEM-SKILLS.md` - reusable system-skill contracts (trigger, invariant, required behaviors, non-goals) without prescribing exact implementation
+- `notes/` - pitfalls, tech debt, gotchas (one file per topic)
+- `graph.json` - knowledge graph of analyzed codebase

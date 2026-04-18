@@ -2,7 +2,7 @@
 status: candidate
 source_phase: "46"
 source_phase_title: "Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning"
-pressure_score: 20
+pressure_score: 23.63
 tasks_total: 8
 tasks_done: 8
 crosscuts: 3
@@ -16,7 +16,7 @@ created_by: compute-self-eval
 
 ```
 get-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning
-selection pressure: 20  (8 tasks, 8 done, 3 crosscuts)
+selection pressure: 23.63  (8 tasks, 8 done, 3 crosscuts)
 ```
 
 ## Tasks

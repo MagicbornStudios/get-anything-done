@@ -1,9 +1,25 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, X } from "lucide-react";
+import { type ReactNode } from "react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
+  X,
+} from "lucide-react";
 import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
+import { Identified } from "@/components/devid/Identified";
+import { usePanelChord } from "@/components/devid/vc-chord";
 import { Button } from "@/components/ui/button";
+
+/**
+ * Stable identity literals for the Visual Context Panel footer region.
+ * Keep these in source so VCS prompts can target the directional footer
+ * by name (route: <cid> / stableCid) without running a useId suffix.
+ */
+export const VC_PANEL_FOOTER_STABLE_CID = "visual-context-panel-footer";
+export const VC_PANEL_FOOTER_LABEL = "Visual Context Panel Footer";
 
 export function DevPanelPositionControls({
   edge,
@@ -22,29 +38,7 @@ export function DevPanelPositionControls({
   /** When set, holding Ctrl shows a dismiss (X) button in the footer. */
   onDismissPanel?: () => void;
 }) {
-  const [ctrlHeld, setCtrlHeld] = useState(false);
-  useEffect(() => {
-    if (!onDismissPanel) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Control" || e.code === "ControlLeft" || e.code === "ControlRight") {
-        setCtrlHeld(true);
-      }
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (e.key === "Control" || e.code === "ControlLeft" || e.code === "ControlRight") {
-        setCtrlHeld(false);
-      }
-    };
-    const clear = () => setCtrlHeld(false);
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", clear);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-      window.removeEventListener("blur", clear);
-    };
-  }, [onDismissPanel]);
+  const ctrlHeld = usePanelChord().ctrl;
 
   /** When Ctrl is held and onDismissPanel is provided, arrows whose direction is
    *  already active (no-op) transform into dismiss (X) buttons. */
@@ -58,7 +52,12 @@ export function DevPanelPositionControls({
   const dismissClass = "text-destructive hover:bg-destructive/15 hover:text-destructive";
 
   return (
-    <div className="relative z-10 mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-t border-border/60 pt-1">
+    <Identified
+      as="VisualContextPanelFooter"
+      stableCid={VC_PANEL_FOOTER_STABLE_CID}
+      register={false}
+      className="relative z-10 mt-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-t border-border/60 pt-1"
+    >
       <div className="flex items-center gap-1">
         <DevChromeHoverHint
           dockCorner={corner}
@@ -126,7 +125,7 @@ export function DevPanelPositionControls({
         </div>
         {trailing}
       </div>
-    </div>
+    </Identified>
   );
 }
 

@@ -6,24 +6,24 @@
       "days": 11
     },
     "totals": {
-      "events": 8091,
-      "sessions": 29,
-      "gad_cli_calls": 631
+      "events": 8680,
+      "sessions": 32,
+      "gad_cli_calls": 697
     },
     "runtime_distribution": [
       {
         "runtime": "claude-code",
-        "count": 7154
+        "count": 7677
       },
       {
         "runtime": "unknown",
-        "count": 937
+        "count": 1003
       }
     ],
     "runtime_sessions": [
       {
         "runtime": "claude-code",
-        "sessions": 29
+        "sessions": 32
       },
       {
         "runtime": "unknown",
@@ -33,35 +33,35 @@
     "tool_distribution": [
       {
         "tool": "Bash",
-        "count": 2505
+        "count": 2692
       },
       {
         "tool": "unknown",
-        "count": 1638
+        "count": 1796
       },
       {
         "tool": "Read",
-        "count": 1379
+        "count": 1433
       },
       {
         "tool": "Edit",
-        "count": 966
+        "count": 1033
       },
       {
         "tool": "Write",
-        "count": 474
+        "count": 506
       },
       {
         "tool": "Grep",
-        "count": 431
+        "count": 457
       },
       {
         "tool": "TaskUpdate",
-        "count": 293
+        "count": 334
       },
       {
         "tool": "TaskCreate",
-        "count": 212
+        "count": 235
       },
       {
         "tool": "Agent",
@@ -73,7 +73,7 @@
       },
       {
         "tool": "ToolSearch",
-        "count": 16
+        "count": 17
       },
       {
         "tool": "WebFetch",
@@ -135,28 +135,28 @@
       },
       {
         "day": "2026-04-17",
-        "count": 183
+        "count": 772
       }
     ],
     "framework_overhead": {
-      "planning_ops": 702,
-      "source_ops": 2462,
-      "ratio": 0.222,
+      "planning_ops": 738,
+      "source_ops": 2604,
+      "ratio": 0.221,
       "score": 0.7
     },
     "gad_cli_breakdown": {
-      "snapshot": 88,
+      "snapshot": 96,
       "eval": 128,
-      "other": 415
+      "other": 473
     },
-    "computed_at": "2026-04-17T03:43:30.478Z",
+    "computed_at": "2026-04-17T21:00:59.519Z",
     "tasks": {
       "done": 368,
       "planned": 50,
       "in_progress": 5,
       "total": 423
     },
-    "decisions": 228,
+    "decisions": 256,
     "phases_pressure": [
       {
         "phase": "10",
@@ -501,11 +501,11 @@
         "crosscuts": 17,
         "crosscuts_anticipated": 3,
         "crosscuts_latent": 14,
-        "decisions": 1,
-        "decision_rate": 0.04,
-        "decision_entropy": 4.58,
+        "decisions": 2,
+        "decision_rate": 0.09,
+        "decision_entropy": 7.29,
         "latent_entropy": 16.06,
-        "pressure_score": 88.22,
+        "pressure_score": 91.43,
         "high_pressure": true
       },
       {
@@ -571,11 +571,11 @@
         "crosscuts": 3,
         "crosscuts_anticipated": 0,
         "crosscuts_latent": 3,
-        "decisions": 0,
-        "decision_rate": 0,
-        "decision_entropy": 0,
+        "decisions": 1,
+        "decision_rate": 0.13,
+        "decision_entropy": 3.17,
         "latent_entropy": 3,
-        "pressure_score": 20,
+        "pressure_score": 23.63,
         "high_pressure": true
       }
     ],
@@ -1014,7 +1014,7 @@
         "name": "phase-46-site-architecture-redesign-cli-consolida",
         "source_phase": "46",
         "source_phase_title": "Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning",
-        "pressure_score": 20,
+        "pressure_score": 23.63,
         "tasks_total": 8,
         "tasks_done": 8,
         "crosscuts": 3,
@@ -1025,8 +1025,8 @@
         "reviewed": false,
         "reviewed_on": null,
         "reviewed_notes": null,
-        "body_raw": "---\nstatus: candidate\nsource_phase: \"46\"\nsource_phase_title: \"Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\"\npressure_score: 20\ntasks_total: 8\ntasks_done: 8\ncrosscuts: 3\ncreated_on: \"2026-04-17\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 46\n\n## Phase\n\n```\nget-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\nselection pressure: 20  (8 tasks, 8 done, 3 crosscuts)\n```\n\n## Tasks\n\n```\n46-01 done Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.\n46-02 done Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.\n46-03 done Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.\n46-04 done Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.\n46-05 done Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.\n46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.\n46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.\n46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n46 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`create-proto-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `.planning/proto-skills/phase-46-site-architecture-redesign-cli-consolida/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
-        "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;46&quot;\nsource_phase_title: &quot;Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning&quot;\npressure_score: 20\ntasks_total: 8\ntasks_done: 8\ncrosscuts: 3\ncreated_on: &quot;2026-04-17&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 46</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\nselection pressure: 20  (8 tasks, 8 done, 3 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>46-01 done Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.\n46-02 done Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.\n46-03 done Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.\n46-04 done Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&amp;lt;name&amp;gt;/.planning/ dirs as sub-roots. Decision gad-209.\n46-05 done Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.\n46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.\n46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.\n46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n46 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>create-proto-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>.planning/proto-skills/phase-46-site-architecture-redesign-cli-consolida/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
+        "body_raw": "---\nstatus: candidate\nsource_phase: \"46\"\nsource_phase_title: \"Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\"\npressure_score: 23.63\ntasks_total: 8\ntasks_done: 8\ncrosscuts: 3\ncreated_on: \"2026-04-17\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 46\n\n## Phase\n\n```\nget-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\nselection pressure: 23.63  (8 tasks, 8 done, 3 crosscuts)\n```\n\n## Tasks\n\n```\n46-01 done Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.\n46-02 done Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.\n46-03 done Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.\n46-04 done Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.\n46-05 done Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.\n46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.\n46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.\n46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n46 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`create-proto-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `.planning/proto-skills/phase-46-site-architecture-redesign-cli-consolida/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
+        "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;46&quot;\nsource_phase_title: &quot;Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning&quot;\npressure_score: 23.63\ntasks_total: 8\ntasks_done: 8\ncrosscuts: 3\ncreated_on: &quot;2026-04-17&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 46</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\nselection pressure: 23.63  (8 tasks, 8 done, 3 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>46-01 done Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.\n46-02 done Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.\n46-03 done Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.\n46-04 done Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&amp;lt;name&amp;gt;/.planning/ dirs as sub-roots. Decision gad-209.\n46-05 done Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.\n46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.\n46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.\n46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n46 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>create-proto-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>.planning/proto-skills/phase-46-site-architecture-redesign-cli-consolida/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
         "tasks": [
           {
             "id": "46-01",
@@ -1091,10 +1091,10 @@
     },
     "project_tokens": {
       "exact_eval_tokens": 0,
-      "estimated_live_input_tokens": 211895,
-      "estimated_live_output_tokens": 708858,
-      "estimated_live_total_tokens": 920753,
-      "combined_total_tokens": 920753,
+      "estimated_live_input_tokens": 246118,
+      "estimated_live_output_tokens": 682952,
+      "estimated_live_total_tokens": 929070,
+      "combined_total_tokens": 929070,
       "trace_files": 2,
       "trace_events": 2000,
       "runtime_distribution": [
@@ -1107,16 +1107,16 @@
         {
           "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 127378,
-          "estimated_output_tokens": 354143,
-          "estimated_total_tokens": 481521
+          "estimated_input_tokens": 133008,
+          "estimated_output_tokens": 354610,
+          "estimated_total_tokens": 487618
         },
         {
           "path": ".planning/.trace-events.jsonl",
           "events": 1000,
-          "estimated_input_tokens": 84517,
-          "estimated_output_tokens": 354715,
-          "estimated_total_tokens": 439232
+          "estimated_input_tokens": 113110,
+          "estimated_output_tokens": 328342,
+          "estimated_total_tokens": 441452
         }
       ]
     },
@@ -1137,48 +1137,54 @@
       "score": 0.029
     },
     "hydration": {
-      "snapshot_count": 752,
-      "estimated_snapshot_tokens": 4062898,
+      "snapshot_count": 777,
+      "estimated_snapshot_tokens": 3113421,
       "projects": [
         {
           "project": "get-anything-done",
-          "count": 325,
-          "estimated_tokens_per_snapshot": 8744,
-          "estimated_total_tokens": 2841800
+          "count": 341,
+          "estimated_tokens_per_snapshot": 5763,
+          "estimated_total_tokens": 1965183
         },
         {
           "project": "grime-time",
-          "count": 174,
-          "estimated_tokens_per_snapshot": 2593,
-          "estimated_total_tokens": 451182
+          "count": 176,
+          "estimated_tokens_per_snapshot": 2509,
+          "estimated_total_tokens": 441584
         },
         {
           "project": "global",
-          "count": 146,
-          "estimated_tokens_per_snapshot": 3831,
-          "estimated_total_tokens": 559326
+          "count": 148,
+          "estimated_tokens_per_snapshot": 3290,
+          "estimated_total_tokens": 486920
         },
         {
           "project": "app-forge",
-          "count": 79,
-          "estimated_tokens_per_snapshot": 2356,
-          "estimated_total_tokens": 186124
+          "count": 81,
+          "estimated_tokens_per_snapshot": 2344,
+          "estimated_total_tokens": 189864
         },
         {
           "project": "claw-cli",
-          "count": 26,
-          "estimated_tokens_per_snapshot": 941,
-          "estimated_total_tokens": 24466
+          "count": 28,
+          "estimated_tokens_per_snapshot": 1002,
+          "estimated_total_tokens": 28056
         },
         {
           "project": "unknown",
           "count": 2,
           "estimated_tokens_per_snapshot": 0,
           "estimated_total_tokens": 0
+        },
+        {
+          "project": "llm-from-scratch",
+          "count": 1,
+          "estimated_tokens_per_snapshot": 1814,
+          "estimated_total_tokens": 1814
         }
       ],
-      "total_project_tokens": 920753,
-      "overhead_ratio": 4.413
+      "total_project_tokens": 929070,
+      "overhead_ratio": 3.351
     },
     "active_assignments": {
       "total_active_agents": 0,
@@ -7129,24 +7135,24 @@
         "days": 11
       },
       "totals": {
-        "events": 8091,
-        "sessions": 29,
-        "gad_cli_calls": 631
+        "events": 8680,
+        "sessions": 32,
+        "gad_cli_calls": 697
       },
       "runtime_distribution": [
         {
           "runtime": "claude-code",
-          "count": 7154
+          "count": 7677
         },
         {
           "runtime": "unknown",
-          "count": 937
+          "count": 1003
         }
       ],
       "runtime_sessions": [
         {
           "runtime": "claude-code",
-          "sessions": 29
+          "sessions": 32
         },
         {
           "runtime": "unknown",
@@ -7156,35 +7162,35 @@
       "tool_distribution": [
         {
           "tool": "Bash",
-          "count": 2505
+          "count": 2692
         },
         {
           "tool": "unknown",
-          "count": 1638
+          "count": 1796
         },
         {
           "tool": "Read",
-          "count": 1379
+          "count": 1433
         },
         {
           "tool": "Edit",
-          "count": 966
+          "count": 1033
         },
         {
           "tool": "Write",
-          "count": 474
+          "count": 506
         },
         {
           "tool": "Grep",
-          "count": 431
+          "count": 457
         },
         {
           "tool": "TaskUpdate",
-          "count": 293
+          "count": 334
         },
         {
           "tool": "TaskCreate",
-          "count": 212
+          "count": 235
         },
         {
           "tool": "Agent",
@@ -7196,7 +7202,7 @@
         },
         {
           "tool": "ToolSearch",
-          "count": 16
+          "count": 17
         },
         {
           "tool": "WebFetch",
@@ -7258,28 +7264,28 @@
         },
         {
           "day": "2026-04-17",
-          "count": 183
+          "count": 772
         }
       ],
       "framework_overhead": {
-        "planning_ops": 702,
-        "source_ops": 2462,
-        "ratio": 0.222,
+        "planning_ops": 738,
+        "source_ops": 2604,
+        "ratio": 0.221,
         "score": 0.7
       },
       "gad_cli_breakdown": {
-        "snapshot": 88,
+        "snapshot": 96,
         "eval": 128,
-        "other": 415
+        "other": 473
       },
-      "computed_at": "2026-04-17T03:43:30.478Z",
+      "computed_at": "2026-04-17T21:00:59.519Z",
       "tasks": {
         "done": 368,
         "planned": 50,
         "in_progress": 5,
         "total": 423
       },
-      "decisions": 228,
+      "decisions": 256,
       "phases_pressure": [
         {
           "phase": "10",
@@ -7624,11 +7630,11 @@
           "crosscuts": 17,
           "crosscuts_anticipated": 3,
           "crosscuts_latent": 14,
-          "decisions": 1,
-          "decision_rate": 0.04,
-          "decision_entropy": 4.58,
+          "decisions": 2,
+          "decision_rate": 0.09,
+          "decision_entropy": 7.29,
           "latent_entropy": 16.06,
-          "pressure_score": 88.22,
+          "pressure_score": 91.43,
           "high_pressure": true
         },
         {
@@ -7694,11 +7700,11 @@
           "crosscuts": 3,
           "crosscuts_anticipated": 0,
           "crosscuts_latent": 3,
-          "decisions": 0,
-          "decision_rate": 0,
-          "decision_entropy": 0,
+          "decisions": 1,
+          "decision_rate": 0.13,
+          "decision_entropy": 3.17,
           "latent_entropy": 3,
-          "pressure_score": 20,
+          "pressure_score": 23.63,
           "high_pressure": true
         }
       ],
@@ -8137,7 +8143,7 @@
           "name": "phase-46-site-architecture-redesign-cli-consolida",
           "source_phase": "46",
           "source_phase_title": "Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning",
-          "pressure_score": 20,
+          "pressure_score": 23.63,
           "tasks_total": 8,
           "tasks_done": 8,
           "crosscuts": 3,
@@ -8148,8 +8154,8 @@
           "reviewed": false,
           "reviewed_on": null,
           "reviewed_notes": null,
-          "body_raw": "---\nstatus: candidate\nsource_phase: \"46\"\nsource_phase_title: \"Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\"\npressure_score: 20\ntasks_total: 8\ntasks_done: 8\ncrosscuts: 3\ncreated_on: \"2026-04-17\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 46\n\n## Phase\n\n```\nget-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\nselection pressure: 20  (8 tasks, 8 done, 3 crosscuts)\n```\n\n## Tasks\n\n```\n46-01 done Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.\n46-02 done Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.\n46-03 done Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.\n46-04 done Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.\n46-05 done Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.\n46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.\n46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.\n46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n46 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`create-proto-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `.planning/proto-skills/phase-46-site-architecture-redesign-cli-consolida/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
-          "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;46&quot;\nsource_phase_title: &quot;Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning&quot;\npressure_score: 20\ntasks_total: 8\ntasks_done: 8\ncrosscuts: 3\ncreated_on: &quot;2026-04-17&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 46</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\nselection pressure: 20  (8 tasks, 8 done, 3 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>46-01 done Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.\n46-02 done Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.\n46-03 done Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.\n46-04 done Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&amp;lt;name&amp;gt;/.planning/ dirs as sub-roots. Decision gad-209.\n46-05 done Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.\n46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.\n46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.\n46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n46 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>create-proto-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>.planning/proto-skills/phase-46-site-architecture-redesign-cli-consolida/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
+          "body_raw": "---\nstatus: candidate\nsource_phase: \"46\"\nsource_phase_title: \"Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\"\npressure_score: 23.63\ntasks_total: 8\ntasks_done: 8\ncrosscuts: 3\ncreated_on: \"2026-04-17\"\ncreated_by: compute-self-eval\n---\n\n# Candidate from phase 46\n\n## Phase\n\n```\nget-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\nselection pressure: 23.63  (8 tasks, 8 done, 3 crosscuts)\n```\n\n## Tasks\n\n```\n46-01 done Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.\n46-02 done Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.\n46-03 done Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.\n46-04 done Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.\n46-05 done Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.\n46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.\n46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.\n46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.\n```\n\n## What this candidate is for\n\nThis file was auto-generated by `compute-self-eval.mjs` because phase\n46 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.\n\nThis is the **raw input** to the drafting step. The drafter (`create-proto-skill`,\ninvoked by `gad-evolution-evolve`) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(`evals/FINDINGS-2026-04-13-evolution-loop-experiment.md`).\n\n## How the drafter should enrich this\n\nThe drafter should pull additional context from:\n\n- `gad decisions --projectid get-anything-done | grep -i <keyword>` —\n  relevant decisions for this phase\n- `git log --follow --oneline <file>` — historical context for files this\n  phase touched (catches the \"three attempts at task X failed\" thread that\n  lives in commit history)\n- `gad --help` and `gad <subcommand> --help` — CLI surface available\n  to the skill\n- `ls vendor/get-anything-done/skills/` — existing skills to avoid\n  duplicating\n\nThe drafter does **not** ask a human for anything. Make decisions and\ndocument them in the SKILL.md.\n\n## Output location\n\nThe drafter writes to `.planning/proto-skills/phase-46-site-architecture-redesign-cli-consolida/SKILL.md` — a\n**different directory** from this candidate. Candidates and proto-skills\nare two distinct stages:\n\n- **candidate** (this file) = raw selection-pressure output\n- **proto-skill** (drafter output) = drafted SKILL.md awaiting human review\n- **skill** (post-promote) = lives in `skills/` as part of species DNA\n\nThe human reviewer runs `gad evolution promote <slug>` or\n`gad evolution discard <slug>` after reviewing the proto-skill.\n",
+          "body_html": "<hr>\n<h2>status: candidate\nsource_phase: &quot;46&quot;\nsource_phase_title: &quot;Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning&quot;\npressure_score: 23.63\ntasks_total: 8\ntasks_done: 8\ncrosscuts: 3\ncreated_on: &quot;2026-04-17&quot;\ncreated_by: compute-self-eval</h2>\n<h1>Candidate from phase 46</h1>\n<h2>Phase</h2>\n<pre><code>get-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning\nselection pressure: 23.63  (8 tasks, 8 done, 3 crosscuts)\n</code></pre>\n<h2>Tasks</h2>\n<pre><code>46-01 done Consolidate gad workspace commands into gad projects (sync/add/ignore). Deprecate workspace as alias with notice. Update all error messages referencing workspace. Decision gad-208.\n46-02 done Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.\n46-03 done Build SpriteAnimation React component — CSS steps() based sprite sheet renderer. Props: src, frameWidth, frameHeight, frameCount, fps, loop, direction, paused. Decision gad-211.\n46-04 done Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&amp;lt;name&amp;gt;/.planning/ dirs as sub-roots. Decision gad-209.\n46-05 done Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.\n46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.\n46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.\n46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.\n</code></pre>\n<h2>What this candidate is for</h2>\n<p>This file was auto-generated by <code>compute-self-eval.mjs</code> because phase\n46 exceeded the selection pressure threshold. High pressure\nsignals a recurring pattern that may want to become a reusable skill.</p>\n<p>This is the <strong>raw input</strong> to the drafting step. The drafter (<code>create-proto-skill</code>,\ninvoked by <code>gad-evolution-evolve</code>) reads this file and decides what the\nskill should be. No curator pre-digestion happens — see the 2026-04-13\nevolution-loop experiment finding for why\n(<code>evals/FINDINGS-2026-04-13-evolution-loop-experiment.md</code>).</p>\n<h2>How the drafter should enrich this</h2>\n<p>The drafter should pull additional context from:</p>\n<ul>\n<li><code>gad decisions --projectid get-anything-done | grep -i &lt;keyword&gt;</code> —\nrelevant decisions for this phase</li>\n<li><code>git log --follow --oneline &lt;file&gt;</code> — historical context for files this\nphase touched (catches the &quot;three attempts at task X failed&quot; thread that\nlives in commit history)</li>\n<li><code>gad --help</code> and <code>gad &lt;subcommand&gt; --help</code> — CLI surface available\nto the skill</li>\n<li><code>ls vendor/get-anything-done/skills/</code> — existing skills to avoid\nduplicating</li>\n</ul>\n<p>The drafter does <strong>not</strong> ask a human for anything. Make decisions and\ndocument them in the SKILL.md.</p>\n<h2>Output location</h2>\n<p>The drafter writes to <code>.planning/proto-skills/phase-46-site-architecture-redesign-cli-consolida/SKILL.md</code> — a\n<strong>different directory</strong> from this candidate. Candidates and proto-skills\nare two distinct stages:</p>\n<ul>\n<li><strong>candidate</strong> (this file) = raw selection-pressure output</li>\n<li><strong>proto-skill</strong> (drafter output) = drafted SKILL.md awaiting human review</li>\n<li><strong>skill</strong> (post-promote) = lives in <code>skills/</code> as part of species DNA</li>\n</ul>\n<p>The human reviewer runs <code>gad evolution promote &lt;slug&gt;</code> or\n<code>gad evolution discard &lt;slug&gt;</code> after reviewing the proto-skill.</p>\n",
           "tasks": [
             {
               "id": "46-01",
@@ -8214,10 +8220,10 @@
       },
       "project_tokens": {
         "exact_eval_tokens": 0,
-        "estimated_live_input_tokens": 211895,
-        "estimated_live_output_tokens": 708858,
-        "estimated_live_total_tokens": 920753,
-        "combined_total_tokens": 920753,
+        "estimated_live_input_tokens": 246118,
+        "estimated_live_output_tokens": 682952,
+        "estimated_live_total_tokens": 929070,
+        "combined_total_tokens": 929070,
         "trace_files": 2,
         "trace_events": 2000,
         "runtime_distribution": [
@@ -8230,16 +8236,16 @@
           {
             "path": "vendor/get-anything-done/.planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 127378,
-            "estimated_output_tokens": 354143,
-            "estimated_total_tokens": 481521
+            "estimated_input_tokens": 133008,
+            "estimated_output_tokens": 354610,
+            "estimated_total_tokens": 487618
           },
           {
             "path": ".planning/.trace-events.jsonl",
             "events": 1000,
-            "estimated_input_tokens": 84517,
-            "estimated_output_tokens": 354715,
-            "estimated_total_tokens": 439232
+            "estimated_input_tokens": 113110,
+            "estimated_output_tokens": 328342,
+            "estimated_total_tokens": 441452
           }
         ]
       },
@@ -8260,48 +8266,54 @@
         "score": 0.029
       },
       "hydration": {
-        "snapshot_count": 752,
-        "estimated_snapshot_tokens": 4062898,
+        "snapshot_count": 777,
+        "estimated_snapshot_tokens": 3113421,
         "projects": [
           {
             "project": "get-anything-done",
-            "count": 325,
-            "estimated_tokens_per_snapshot": 8744,
-            "estimated_total_tokens": 2841800
+            "count": 341,
+            "estimated_tokens_per_snapshot": 5763,
+            "estimated_total_tokens": 1965183
           },
           {
             "project": "grime-time",
-            "count": 174,
-            "estimated_tokens_per_snapshot": 2593,
-            "estimated_total_tokens": 451182
+            "count": 176,
+            "estimated_tokens_per_snapshot": 2509,
+            "estimated_total_tokens": 441584
           },
           {
             "project": "global",
-            "count": 146,
-            "estimated_tokens_per_snapshot": 3831,
-            "estimated_total_tokens": 559326
+            "count": 148,
+            "estimated_tokens_per_snapshot": 3290,
+            "estimated_total_tokens": 486920
           },
           {
             "project": "app-forge",
-            "count": 79,
-            "estimated_tokens_per_snapshot": 2356,
-            "estimated_total_tokens": 186124
+            "count": 81,
+            "estimated_tokens_per_snapshot": 2344,
+            "estimated_total_tokens": 189864
           },
           {
             "project": "claw-cli",
-            "count": 26,
-            "estimated_tokens_per_snapshot": 941,
-            "estimated_total_tokens": 24466
+            "count": 28,
+            "estimated_tokens_per_snapshot": 1002,
+            "estimated_total_tokens": 28056
           },
           {
             "project": "unknown",
             "count": 2,
             "estimated_tokens_per_snapshot": 0,
             "estimated_total_tokens": 0
+          },
+          {
+            "project": "llm-from-scratch",
+            "count": 1,
+            "estimated_tokens_per_snapshot": 1814,
+            "estimated_total_tokens": 1814
           }
         ],
-        "total_project_tokens": 920753,
-        "overhead_ratio": 4.413
+        "total_project_tokens": 929070,
+        "overhead_ratio": 3.351
       },
       "active_assignments": {
         "total_active_agents": 0,

@@ -3,6 +3,7 @@
 import type { MouseEvent, ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { BandDevPanel } from "@/components/devid/BandDevPanel";
+import { BandDevPanelGate } from "@/components/devid/BandDevPanelGate";
 import { DevIdBandProvider } from "@/components/devid/DevIdBandContext";
 import { useDevId } from "@/components/devid/DevIdProvider";
 import { cn } from "@/lib/utils";
@@ -108,8 +109,26 @@ function SiteSectionSurface({
         }
       : undefined;
 
+  const bandPanelActive =
+    devIds && enabled && !!sectionBandCid && allowContextPanel && !dismissedBandCids.has(sectionBandCid);
+
   return (
-    <div className="group/site-band relative">
+    <BandDevPanelGate
+      active={bandPanelActive}
+      renderPanel={() =>
+        sectionBandCid ? (
+          <BandDevPanel
+            cid={sectionBandCid}
+            label={sectionBandLabel}
+            edge="top"
+            corner="right"
+            componentTag="SiteSection"
+            searchHint={searchHint}
+            onDismiss={() => toggleBandDismiss(sectionBandCid)}
+          />
+        ) : null
+      }
+    >
       <section
         id={id}
         data-cid={bandCid}
@@ -132,20 +151,10 @@ function SiteSectionSurface({
         </div>
         {afterShell}
       </section>
-      {devIds && enabled && sectionBandCid && allowContextPanel && !dismissedBandCids.has(sectionBandCid) ? (
-        <BandDevPanel
-          cid={sectionBandCid}
-          label={sectionBandLabel}
-          edge="top"
-          corner="right"
-          componentTag="SiteSection"
-          searchHint={searchHint}
-          onDismiss={() => toggleBandDismiss(sectionBandCid)}
-        />
-      ) : null}
-    </div>
+    </BandDevPanelGate>
   );
 }
+
 
 export function SiteSection({
   children,

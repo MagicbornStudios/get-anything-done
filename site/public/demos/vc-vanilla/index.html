@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visual Context System — Vanilla HTML Demo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 2rem;
+      background: #0a0a0a;
+      color: #e5e5e5;
+    }
+    h1 { margin: 0 0 .5rem 0; font-weight: 600; letter-spacing: -0.01em; }
+    p.lede { color: #a3a3a3; margin: 0 0 2rem 0; max-width: 60ch; }
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 2rem;
+      align-items: start;
+    }
+    [data-cid] {
+      position: relative;
+      border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    [data-cid].vc-hover {
+      outline: 2px solid rgba(52, 211, 153, 0.8);
+      outline-offset: -2px;
+    }
+    [data-cid].vc-highlight {
+      outline: 2px solid #60a5fa;
+      outline-offset: -2px;
+    }
+    aside {
+      position: sticky;
+      top: 2rem;
+      padding: 1rem;
+      background: #171717;
+      border: 1px solid #262626;
+      border-radius: 10px;
+      max-height: calc(100vh - 4rem);
+      overflow: auto;
+    }
+    aside h2 { margin: 0 0 .75rem 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.06em; color: #a3a3a3; }
+    aside ul { list-style: none; margin: 0; padding: 0; }
+    aside li {
+      padding: .5rem .6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .85rem;
+      line-height: 1.4;
+    }
+    aside li:hover { background: #262626; }
+    aside li[data-active="true"] { background: #1e3a5f; color: #bfdbfe; }
+    aside code {
+      display: block;
+      color: #a3a3a3;
+      font-size: .7rem;
+      margin-top: .15rem;
+    }
+    button.copy {
+      margin-top: 1rem;
+      width: 100%;
+      padding: .6rem;
+      background: #1e3a5f;
+      color: #bfdbfe;
+      border: 1px solid #2563eb55;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: .8rem;
+    }
+    button.copy:hover { background: #2c4c7a; }
+  </style>
+</head>
+<body>
+  <h1>Visual Context — Vanilla HTML Demo</h1>
+  <p class="lede">
+    This page is a plain static HTML file. No React, no framework. The Visual Context
+    registry on the right is built by scanning <code style="color:#e5e5e5;background:#262626;padding:.1em .3em;border-radius:3px">[data-cid]</code>
+    attributes in the DOM with the same framework-agnostic <code style="color:#e5e5e5;background:#262626;padding:.1em .3em;border-radius:3px">vc-dom</code>
+    module the Next.js app uses. Alt-click any landmark to copy its search hint.
+  </p>
+
+  <div class="layout">
+    <main
+      data-cid="vanilla-demo-root"
+      data-cid-label="Demo Root"
+      data-cid-component-tag="SiteSection"
+      data-cid-search='cid="vanilla-demo-root"'
+    >
+      <section
+        data-cid="hero-section"
+        data-cid-label="Hero"
+        data-cid-component-tag="SiteSection"
+        data-cid-search='cid="hero-section"'
+      >
+        <h2>A Hero Section</h2>
+        <p>This section is identified with <code>data-cid="hero-section"</code>.</p>
+      </section>
+
+      <section
+        data-cid="feature-grid"
+        data-cid-label="Features"
+        data-cid-component-tag="SiteSection"
+        data-cid-search='cid="feature-grid"'
+      >
+        <h2>Features</h2>
+        <div
+          data-cid="feature-grid::card-1"
+          data-cid-label="Card 1"
+          data-cid-component-tag="Identified"
+          data-cid-search='cid="feature-grid::card-1"'
+        >
+          <strong>Feature One</strong>
+          <p>Nested landmarks get a higher depth in the registry.</p>
+        </div>
+        <div
+          data-cid="feature-grid::card-2"
+          data-cid-label="Card 2"
+          data-cid-component-tag="Identified"
+          data-cid-search='cid="feature-grid::card-2"'
+        >
+          <strong>Feature Two</strong>
+          <p>The scan is O(nodes-with-data-cid), not O(all nodes).</p>
+        </div>
+      </section>
+
+      <section
+        data-cid="cta-section"
+        data-cid-label="CTA"
+        data-cid-component-tag="SiteSection"
+        data-cid-search='cid="cta-section"'
+      >
+        <h2>Call to Action</h2>
+        <p>Drop <code>vc-dom</code> into any HTML project — including a Kaplay / Phaser canvas wrapped in a DOM overlay div — and you get the same panel.</p>
+      </section>
+    </main>
+
+    <aside>
+      <h2>Visual Context Panel</h2>
+      <ul id="vc-registry-list"></ul>
+      <button class="copy" id="vc-copy-btn" disabled>Copy selected search hint</button>
+    </aside>
+  </div>
+
+  <script type="module">
+    /**
+     * Minimal vanilla-JS port of `vc-dom/scan.ts` from the GAD Visual Context system.
+     * Same logic as the TypeScript module — the TS source is the canonical copy at:
+     *   vendor/get-anything-done/site/components/devid/vc-dom/scan.ts
+     *
+     * A real vanilla app would import the built `@vc/dom` bundle. This inline copy
+     * keeps the demo a single static file with no build step, so you can see how
+     * tiny the portable layer is.
+     */
+
+    function escapeCidSelector(cid) {
+      return typeof CSS !== "undefined" && typeof CSS.escape === "function"
+        ? CSS.escape(cid)
+        : cid.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    }
+
+    function queryByCid(cid) {
+      return document.querySelector(`[data-cid="${escapeCidSelector(cid)}"]`);
+    }
+
+    function readEntryFromElement(node, depth, fallback) {
+      const cid = node.getAttribute("data-cid") || (fallback && fallback.cid) || "";
+      if (!cid) return null;
+      return {
+        cid,
+        label: node.getAttribute("data-cid-label") || (fallback && fallback.label) || cid,
+        depth,
+        componentTag: node.getAttribute("data-cid-component-tag") || (fallback && fallback.componentTag),
+        searchHint: node.getAttribute("data-cid-search") || (fallback && fallback.searchHint),
+      };
+    }
+
+    function collectScopedEntries(scope, options = {}) {
+      if (!scope) return [];
+      const nodes = [
+        ...(options.includeScope ? [scope] : []),
+        ...Array.from(scope.querySelectorAll("[data-cid]")),
+      ];
+      const withDepth = nodes
+        .map((node) => {
+          let depth = 0;
+          let current = node === scope ? null : node.parentElement;
+          while (current) {
+            if (scope.contains(current) && current.hasAttribute("data-cid")) depth += 1;
+            if (current === scope) break;
+            current = current.parentElement;
+          }
+          return readEntryFromElement(
+            node,
+            depth,
+            node === scope ? options.fallbackRoot : undefined,
+          );
+        })
+        .filter(Boolean);
+      const minDepth = withDepth.length ? Math.min(...withDepth.map((e) => e.depth)) : 0;
+      const dedup = new Map();
+      for (const entry of withDepth) {
+        if (!entry.cid || dedup.has(entry.cid)) continue;
+        dedup.set(entry.cid, { ...entry, depth: Math.max(0, entry.depth - minDepth) });
+      }
+      return Array.from(dedup.values());
+    }
+
+    function sortRegistryEntries(entries) {
+      return [...entries]
+        .map((entry, index) => ({ entry, index }))
+        .sort((a, b) => {
+          if (a.entry.depth !== b.entry.depth) return a.entry.depth - b.entry.depth;
+          return a.index - b.index;
+        })
+        .map(({ entry }) => entry);
+    }
+
+    const root = document.querySelector('[data-cid="vanilla-demo-root"]');
+    const entries = sortRegistryEntries(
+      collectScopedEntries(root, { includeScope: true }),
+    );
+
+    const list = document.getElementById("vc-registry-list");
+    const copyBtn = document.getElementById("vc-copy-btn");
+    let activeCid = null;
+
+    for (const entry of entries) {
+      const li = document.createElement("li");
+      li.setAttribute("data-cid-row", entry.cid);
+      li.style.paddingLeft = `${0.6 + entry.depth * 0.8}rem`;
+      li.innerHTML = `${entry.label}<code>${entry.searchHint || entry.cid}</code>`;
+      li.addEventListener("mouseenter", () => queryByCid(entry.cid)?.classList.add("vc-hover"));
+      li.addEventListener("mouseleave", () => queryByCid(entry.cid)?.classList.remove("vc-hover"));
+      li.addEventListener("click", () => {
+        document.querySelectorAll("aside li").forEach((x) => x.removeAttribute("data-active"));
+        document.querySelectorAll("[data-cid]").forEach((x) => x.classList.remove("vc-highlight"));
+        li.setAttribute("data-active", "true");
+        queryByCid(entry.cid)?.classList.add("vc-highlight");
+        activeCid = entry.cid;
+        copyBtn.disabled = false;
+        copyBtn.textContent = `Copy: ${entry.searchHint || entry.cid}`;
+      });
+      list.appendChild(li);
+    }
+
+    copyBtn.addEventListener("click", () => {
+      if (!activeCid) return;
+      const entry = entries.find((e) => e.cid === activeCid);
+      if (!entry) return;
+      navigator.clipboard
+        ?.writeText(entry.searchHint || entry.cid)
+        .then(() => {
+          const original = copyBtn.textContent;
+          copyBtn.textContent = "Copied ✓";
+          setTimeout(() => (copyBtn.textContent = original), 1200);
+        })
+        .catch(() => {});
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.altKey) return;
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+      const landmark = target.closest("[data-cid]");
+      if (!landmark) return;
+      e.preventDefault();
+      const cid = landmark.getAttribute("data-cid");
+      const hint = landmark.getAttribute("data-cid-search") || cid;
+      navigator.clipboard?.writeText(hint).catch(() => {});
+      landmark.classList.add("vc-highlight");
+      setTimeout(() => landmark.classList.remove("vc-highlight"), 800);
+    });
+  </script>
+</body>
+</html>

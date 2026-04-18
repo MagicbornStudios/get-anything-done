@@ -54,6 +54,11 @@ export const REGISTERED_PROJECTS: RegisteredProject[] = [
     "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\claw-code"
   },
   {
+    "id": "llm-from-scratch",
+    "kind": "planning",
+    "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\projects\\llm-from-scratch"
+  },
+  {
     "id": "portfolio-legacy",
     "kind": "evals",
     "path": "C:\\Users\\benja\\Documents\\custom_portfolio\\evals"

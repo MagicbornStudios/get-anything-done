@@ -6,6 +6,7 @@ import type { PromptVerbosity } from "./DevIdPromptTemplates";
 import { DevChromeHoverHint, type VcPanelCorner } from "@/components/devid/DevChromeHoverHint";
 import { DevPanelScreenshotButton } from "./DevPanelScreenshotButton";
 import { Button } from "@/components/ui/button";
+import { usePanelChord } from "./vc-chord";
 
 export const VC_HOVER_FRAMEWORK = (
   <p className="text-muted-foreground">Framework wordmark on this strip.</p>
@@ -107,14 +108,20 @@ export function DevPanelVcHintsFooter(props: {
   );
 }
 
-/** VC panel row: Update / Delete / PNG / Short-Full — shared section + band styling. */
+/**
+ * VC panel row: Update / Delete / PNG / Short-Full — shared section + band styling.
+ *
+ * The row reads chord state via `usePanelChord()` — context-only, no
+ * `useSyncExternalStore` subscription. The DevPanel root subscribes once through
+ * `PanelChordProvider`; this row + the screenshot button + the hover actions + the
+ * position controls all read from that single subscription. Chord transitions commit
+ * once per panel instead of once per leaf.
+ */
 export function DevPanelHandoffActionRow(props: {
   dockCorner: VcPanelCorner;
   size: DevPanelHandoffChromeSize;
   headerCopied: "update" | "delete" | "cid" | null;
   listening: boolean;
-  updateMediaChordShow: boolean;
-  deleteMediaChordShow: boolean;
   handoffDisabled: boolean;
   onUpdateClick: MouseEventHandler<HTMLButtonElement>;
   onDeleteClick: MouseEventHandler<HTMLButtonElement>;
@@ -127,8 +134,6 @@ export function DevPanelHandoffActionRow(props: {
     size,
     headerCopied,
     listening,
-    updateMediaChordShow,
-    deleteMediaChordShow,
     handoffDisabled,
     onUpdateClick,
     onDeleteClick,
@@ -138,6 +143,9 @@ export function DevPanelHandoffActionRow(props: {
   } = props;
   const chrome = ROW_CHROME[size];
   const iz = chrome.icon;
+  const { updMediaShow, delMediaShow } = usePanelChord();
+  const updLabel =
+    headerCopied === "update" || listening ? "Update" : updMediaShow ? "Upd" : "Update";
   const verbosityTitle =
     promptVerbosity === "full" ? "Switch to compact prompt templates" : "Switch to full prompt templates";
 
@@ -157,21 +165,15 @@ export function DevPanelHandoffActionRow(props: {
           ) : listening ? (
             <>
               <MicOff size={iz} aria-hidden />
-              {updateMediaChordShow ? <Images size={iz} className="opacity-90" aria-hidden /> : null}
+              {updMediaShow ? <Images size={iz} className="opacity-90" aria-hidden /> : null}
             </>
           ) : (
             <>
               <Mic size={iz} aria-hidden />
-              {updateMediaChordShow ? <Images size={iz} className="opacity-90" aria-hidden /> : null}
+              {updMediaShow ? <Images size={iz} className="opacity-90" aria-hidden /> : null}
             </>
           )}
-          {headerCopied === "update"
-            ? "Update"
-            : listening
-              ? "Update"
-              : updateMediaChordShow
-                ? "Upd"
-                : "Update"}
+          {updLabel}
         </Button>
       </DevChromeHoverHint>
       <DevChromeHoverHint dockCorner={dockCorner} body={VC_HOVER_DELETE}>
@@ -181,7 +183,7 @@ export function DevPanelHandoffActionRow(props: {
           ) : (
             <>
               <Trash2 size={iz} aria-hidden />
-              {deleteMediaChordShow ? <Images size={iz} className="opacity-90" aria-hidden /> : null}
+              {delMediaShow ? <Images size={iz} className="opacity-90" aria-hidden /> : null}
             </>
           )}
           Delete
