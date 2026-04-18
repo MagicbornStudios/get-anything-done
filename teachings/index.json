@@ -62,6 +62,36 @@
       ]
     },
     {
+      "id": "gad-framework-defensive-aggregation-01",
+      "title": "Defensive aggregation — don't let one bad source 500 the whole view",
+      "category": "gad-framework",
+      "difficulty": "intermediate",
+      "tags": [
+        "error-handling",
+        "filesystem",
+        "dashboards",
+        "server-components",
+        "robustness"
+      ],
+      "source": "static",
+      "date": "2026-04-17",
+      "path": "static/gad-framework/defensive-aggregation-readers.md",
+      "implementation": [
+        "apps/planning-app/lib/projects-data.ts",
+        "apps/planning-app/app/my-projects/SubagentRunHistory.tsx"
+      ],
+      "decisions": [
+        "gad-267"
+      ],
+      "phases": [
+        "get-anything-done:59"
+      ],
+      "related": [
+        "gad-framework-error-cause-preservation-01",
+        "security-fail-closed-01"
+      ]
+    },
+    {
       "id": "gad-framework-error-cause-preservation-01",
       "title": "Error rewrap with .cause — preserve the stack across module boundaries",
       "category": "gad-framework",
