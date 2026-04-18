@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -9,14 +9,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const RELEASE_DIR = join(ROOT, 'dist', 'release');
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
-const NPM_COMMAND = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const CURRENT_TARBALL_NAME = `${pkg.name}-${pkg.version}.tgz`;
-const CURRENT_EXE_RE = new RegExp(`^gad-v${escapeRegExp(pkg.version)}-.+\\.exe$`);
+const CURRENT_EXE_RE = new RegExp(`^gad-v${escapeRegExp(pkg.version)}-(windows|linux|macos)-.+(?:\\.exe)?$`);
 
 export function parseArgs(argv) {
   const parsed = {
@@ -38,7 +36,7 @@ export function getReleaseDir(root = ROOT) {
 }
 
 export function isReleaseArtifactName(name) {
-  return CURRENT_EXE_RE.test(name) || name === 'install-gad-windows.ps1' || name === 'INSTALL.txt' || name === CURRENT_TARBALL_NAME;
+  return CURRENT_EXE_RE.test(name) || name === 'install-gad-windows.ps1' || name === 'INSTALL.txt';
 }
 
 export function getArtifacts(releaseDir = getReleaseDir()) {
@@ -54,57 +52,8 @@ export function getArtifacts(releaseDir = getReleaseDir()) {
   return entries;
 }
 
-export function getPackCommandInvocation({
-  releaseDir,
-  npmCommand = NPM_COMMAND,
-  platform = process.platform,
-  comspec = process.env.ComSpec || 'cmd.exe',
-  npmExecPath = process.env.npm_execpath,
-  nodeCommand = process.execPath,
-} = {}) {
-  if (platform === 'win32') {
-    const bundledNpmCli = join(dirname(nodeCommand), 'node_modules', 'npm', 'bin', 'npm-cli.js');
-    const npmCliPath = npmExecPath && existsSync(npmExecPath)
-      ? npmExecPath
-      : existsSync(bundledNpmCli)
-        ? bundledNpmCli
-        : '';
-    if (npmCliPath) {
-      return {
-        command: nodeCommand,
-        args: [npmCliPath, 'pack', '--pack-destination', releaseDir],
-      };
-    }
-    return {
-      command: comspec,
-      args: ['/d', '/s', '/c', `${npmCommand} pack --pack-destination ${releaseDir}`],
-    };
-  }
-  return {
-    command: npmCommand,
-    args: ['pack', '--pack-destination', releaseDir],
-  };
-}
-
-export function ensureReleaseTarball({
-  root = ROOT,
-  releaseDir = getReleaseDir(root),
-  execFile = execFileSync,
-  npmCommand = NPM_COMMAND,
-  npmExecPath = process.env.npm_execpath,
-  nodeCommand = process.execPath,
-} = {}) {
-  if (!existsSync(releaseDir)) {
-    throw new Error('dist/release does not exist. Run `npm run build:release` first.');
-  }
-  const hasTarball = readdirSync(releaseDir).some((name) => name === CURRENT_TARBALL_NAME);
-  if (hasTarball) return;
-  mkdirSync(releaseDir, { recursive: true });
-  const { command, args } = getPackCommandInvocation({ releaseDir, npmCommand, npmExecPath, nodeCommand });
-  execFile(command, args, {
-    cwd: root,
-    stdio: 'inherit',
-  });
+export function ensureReleaseTarball() {
+  return false;
 }
 
 function hasRelease(tag) {
@@ -119,7 +68,6 @@ function hasRelease(tag) {
 export function main() {
   const args = parseArgs(process.argv.slice(2));
   const releaseDir = getReleaseDir();
-  ensureReleaseTarball({ root: ROOT, releaseDir });
   const artifacts = getArtifacts(releaseDir);
 
   if (!hasRelease(args.tag)) {

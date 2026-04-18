@@ -12325,7 +12325,9 @@ function resolveStartupFrameworkRoot() {
   ];
   for (const candidate of candidates) {
     if (!candidate) continue;
-    const buildScript = path.join(candidate, 'scripts', 'build-release.mjs');
+    const buildScript = fs.existsSync(path.join(candidate, 'scripts', 'build-bun-release.mjs'))
+      ? path.join(candidate, 'scripts', 'build-bun-release.mjs')
+      : path.join(candidate, 'scripts', 'build-release.mjs');
     const installScript = path.join(candidate, 'scripts', 'install-gad-windows.ps1');
     if (fs.existsSync(buildScript) && fs.existsSync(installScript)) {
       return candidate;
@@ -12384,7 +12386,9 @@ function resolveStartupReleaseArtifactPath(frameworkRoot) {
 
 function runStartupSelfRefresh(frameworkRoot, commandLabel = 'gad startup') {
   const { spawnSync } = require('child_process');
-  const buildScript = path.join(frameworkRoot, 'scripts', 'build-release.mjs');
+  const buildScript = fs.existsSync(path.join(frameworkRoot, 'scripts', 'build-bun-release.mjs'))
+    ? path.join(frameworkRoot, 'scripts', 'build-bun-release.mjs')
+    : path.join(frameworkRoot, 'scripts', 'build-release.mjs');
   const installScript = path.join(frameworkRoot, 'scripts', 'install-gad-windows.ps1');
   const nodeCommand = isPackagedExecutableRuntime() ? 'node' : process.execPath;
 
@@ -12593,7 +12597,7 @@ const startupCmd = defineCommand({
 const selfRefreshCmd = defineCommand({
   meta: {
     name: 'refresh',
-    description: 'Build + install the local GAD executable from the framework checkout (dogfood convenience).',
+    description: 'Build + install the local GAD executable from the framework checkout (Bun release path primary; SEA fallback only).',
   },
   run() {
     runDogfoodSelfRefreshOrExit('gad self refresh');

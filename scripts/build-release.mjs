@@ -14,6 +14,9 @@ const SEA_SENTINEL = 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2';
 
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
+console.warn('[deprecated] scripts/build-release.mjs uses the Node SEA pipeline.');
+console.warn('[deprecated] Prefer `node scripts/build-bun-release.mjs` or `npm run build:release` instead.');
+
 function parseArgs(argv) {
   const parsed = {
     platform: process.platform,
