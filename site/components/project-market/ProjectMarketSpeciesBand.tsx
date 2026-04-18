@@ -32,10 +32,12 @@ export function ProjectMarketSpeciesBand({
       className="mt-6 rounded-md border border-border/40 bg-card/30 p-3"
     >
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {/* Task 45-14: text-meta-strong sets a single tone for band titles
+            so they read as section chrome, not headlines. */}
+        <h2 className="text-meta-strong text-muted-foreground">
           Browse by species
         </h2>
-        <span className="text-[10px] text-muted-foreground/60">
+        <span className="text-meta">
           {species.length} published
         </span>
       </div>
@@ -55,14 +57,17 @@ export function ProjectMarketSpeciesBand({
           const tooltip = s.latestPublishedAt
             ? `${s.publishedCount} generation${s.publishedCount === 1 ? "" : "s"} across ${s.projects.length} project${s.projects.length === 1 ? "" : "s"} · latest ${new Date(s.latestPublishedAt).toLocaleDateString()}`
             : `${s.publishedCount} generation${s.publishedCount === 1 ? "" : "s"} across ${s.projects.length} project${s.projects.length === 1 ? "" : "s"}`;
+          // Task 45-14: chips ride on the species level token. Active state
+          // saturates the species hue; idle borrows the neutral border so
+          // the band doesn't compete with the project-grid below it.
           return (
             <span
               key={s.species}
               className={cn(
                 "inline-flex items-stretch overflow-hidden rounded-full border text-[11px] transition-colors",
                 isActive
-                  ? "border-accent/60 bg-accent/15"
-                  : "border-border/50 hover:border-border",
+                  ? "border-[color:color-mix(in_oklch,var(--level-species)_55%,transparent)] bg-[color:color-mix(in_oklch,var(--level-species)_18%,transparent)]"
+                  : "border-border/50 hover:border-[color:color-mix(in_oklch,var(--level-species)_45%,transparent)]",
               )}
             >
               <button
@@ -71,14 +76,18 @@ export function ProjectMarketSpeciesBand({
                 title={`Filter marketplace by ${s.species}`}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-2.5 py-0.5 transition-colors",
-                  isActive ? "text-accent" : "text-muted-foreground hover:text-foreground",
+                  isActive
+                    ? "text-[color:color-mix(in_oklch,var(--level-species)_92%,white)]"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 <span className="font-mono">{s.species}</span>
                 <span
                   className={cn(
                     "tabular-nums text-[10px]",
-                    isActive ? "text-accent/80" : "text-muted-foreground/60",
+                    isActive
+                      ? "text-[color:color-mix(in_oklch,var(--level-species)_75%,white)]"
+                      : "text-muted-foreground/60",
                   )}
                 >
                   {s.publishedCount}
@@ -91,7 +100,7 @@ export function ProjectMarketSpeciesBand({
                 className={cn(
                   "inline-flex items-center border-l px-1.5 py-0.5 text-[10px] transition-colors",
                   isActive
-                    ? "border-accent/40 text-accent/80 hover:text-accent"
+                    ? "border-[color:color-mix(in_oklch,var(--level-species)_35%,transparent)] text-[color:color-mix(in_oklch,var(--level-species)_75%,white)] hover:text-[color:color-mix(in_oklch,var(--level-species)_95%,white)]"
                     : "border-border/40 text-muted-foreground/60 hover:text-foreground",
                 )}
               >

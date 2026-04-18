@@ -28,6 +28,41 @@
   /* Marketing accent gradient (soft tan → muted teal) */
   --gradient-accent: linear-gradient(135deg, #e0b378 0%, #c88d4c 52%, #6f88a3 100%);
 
+  /* ------------------------------------------------------------------------
+   * Task 45-14: type ramp + color palette refresh.
+   *
+   * Taxonomy levels (project > species > generation) get distinct hues so a
+   * scanner can immediately tell which scale of entity they're looking at.
+   * These are typological accents — they sit alongside DOMAIN_TINT (game,
+   * video, etc.) and never compete with the live signal colors (emerald
+   * for playable, amber for featured, destructive for errors).
+   *
+   *   project    — warm amber (inherits the global accent identity)
+   *   species    — muted teal/seafoam (inherits the gradient terminus)
+   *   generation — soft violet (smallest leaf, freshest energy)
+   *
+   * Use via `var(--level-<x>)` directly or the `.chip-level-<x>` helpers
+   * defined in the components layer below.
+   * ------------------------------------------------------------------------ */
+  --level-project: oklch(0.7234 0.1023 71.4318);
+  --level-species: oklch(0.6856 0.0712 198.4);
+  --level-generation: oklch(0.6912 0.1185 295.6);
+
+  /* Growth + evolution gradients — used by score ramps, phylogeny edges,
+   * and any "progress over time" surface. Evolution preserves the existing
+   * marketing gradient terminus; growth runs cool→warm to read as upward.
+   */
+  --gradient-growth: linear-gradient(135deg, oklch(0.66 0.13 165) 0%, oklch(0.72 0.10 71) 100%);
+  --gradient-evolution: var(--gradient-accent);
+
+  /* DNA base-pair palette (forward-prep for evolution-band components).
+   * A/T pair = warm, G/C pair = cool — preserves the canonical mnemonic.
+   */
+  --dna-a: oklch(0.74 0.13 32);
+  --dna-t: oklch(0.78 0.10 84);
+  --dna-g: oklch(0.70 0.12 162);
+  --dna-c: oklch(0.66 0.13 248);
+
   /* Overlay-style scrollbars (see GlobalScrollbarBehavior + base rules below) */
   --scrollbar-thumb: color-mix(in oklch, var(--muted-foreground) 42%, transparent);
   --scrollbar-thumb-strong: color-mix(in oklch, var(--muted-foreground) 58%, transparent);
@@ -151,6 +186,121 @@
 }
 
 @layer components {
+  /* ------------------------------------------------------------------------
+   * Task 45-14: type ramp utilities.
+   *
+   * Formalizes the sizes/weights/tracking that were scattered across cards,
+   * chips, and section headers. Use these instead of free-form `text-xs
+   * uppercase tracking-wider …` so the hierarchy stays consistent as new
+   * surfaces (project/species/generation pages, phylogeny timeline) land.
+   *
+   *   .text-display       hero / page H1
+   *   .text-section-title group H2 (e.g. project group on species page)
+   *   .text-card-title    card H3 (e.g. ProjectCard name)
+   *   .text-meta          chip / badge text  (10–11px UPPERCASE tracked)
+   *   .text-meta-strong   meta with stronger contrast
+   *   .text-data          tabular numerics, monospaced
+   * ------------------------------------------------------------------------ */
+  .text-display {
+    font-size: 1.875rem;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    color: var(--color-foreground);
+  }
+  .text-section-title {
+    font-size: 0.875rem;
+    line-height: 1.3;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: var(--color-foreground);
+  }
+  .text-card-title {
+    font-size: 0.9375rem;
+    line-height: 1.25;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: var(--color-foreground);
+  }
+  .text-meta {
+    font-size: 0.625rem;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted-foreground);
+  }
+  .text-meta-strong {
+    font-size: 0.6875rem;
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-foreground);
+  }
+  .text-data {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    color: var(--color-foreground);
+  }
+
+  /* ------------------------------------------------------------------------
+   * Task 45-14: chip helpers for taxonomy-level tagging. These render a
+   * level-tinted pill — use on a span/Link wherever you need to call out
+   * "this is a project" / "this is a species" / "this is a generation".
+   *
+   * Border + background derive from the level color via color-mix so a
+   * single token swap re-themes every chip.
+   * ------------------------------------------------------------------------ */
+  .chip-level {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+  .chip-level-project {
+    --_lvl: var(--level-project);
+    color: color-mix(in oklch, var(--_lvl) 88%, white);
+    border-color: color-mix(in oklch, var(--_lvl) 45%, transparent);
+    background: color-mix(in oklch, var(--_lvl) 14%, transparent);
+  }
+  .chip-level-species {
+    --_lvl: var(--level-species);
+    color: color-mix(in oklch, var(--_lvl) 88%, white);
+    border-color: color-mix(in oklch, var(--_lvl) 45%, transparent);
+    background: color-mix(in oklch, var(--_lvl) 14%, transparent);
+  }
+  .chip-level-generation {
+    --_lvl: var(--level-generation);
+    color: color-mix(in oklch, var(--_lvl) 88%, white);
+    border-color: color-mix(in oklch, var(--_lvl) 45%, transparent);
+    background: color-mix(in oklch, var(--_lvl) 14%, transparent);
+  }
+
+  /* DNA base-pair dot — forward-prep for the evolution band components.
+   * Variants set --dna via .dna-a / .dna-t / .dna-g / .dna-c.
+   */
+  .dna-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--dna, var(--muted-foreground));
+    box-shadow: 0 0 0 2px color-mix(in oklch, var(--dna, var(--muted-foreground)) 22%, transparent);
+  }
+  .dna-a { --dna: var(--dna-a); }
+  .dna-t { --dna: var(--dna-t); }
+  .dna-g { --dna: var(--dna-g); }
+  .dna-c { --dna: var(--dna-c); }
+
   .prose-content {
     color: var(--color-foreground);
     font-size: 0.95rem;

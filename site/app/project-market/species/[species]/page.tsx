@@ -87,8 +87,17 @@ export default async function SpeciesDetailPage({
           <span className="text-foreground">{decoded}</span>
         </nav>
 
-        <header className="mt-4 flex flex-wrap items-baseline justify-between gap-2 border-b border-border/40 pb-4">
-          <h1 className="font-mono text-2xl">{decoded}</h1>
+        <header className="mt-4 flex flex-wrap items-baseline justify-between gap-3 border-b border-border/40 pb-4">
+          <div className="flex items-baseline gap-3">
+            {/* Task 45-14: level chip makes the taxonomy explicit. */}
+            <span className="chip-level chip-level-species">species</span>
+            <h1
+              className="text-display font-mono"
+              style={{ color: "var(--level-species)" }}
+            >
+              {decoded}
+            </h1>
+          </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground tabular-nums">
             <span>
               {summary.publishedCount} generation
@@ -134,14 +143,19 @@ export default async function SpeciesDetailPage({
             return (
               <section key={projectId}>
                 <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-sm font-semibold text-foreground">
-                    <Link
-                      href={`/project-market?projectid=${encodeURIComponent(projectId)}`}
-                      className="hover:underline"
-                    >
-                      {projectLabel}
-                    </Link>
-                  </h2>
+                  {/* Task 45-14: project-level chip + section-title type
+                      ramp gives every group a consistent header shape. */}
+                  <div className="flex items-baseline gap-2">
+                    <span className="chip-level chip-level-project">project</span>
+                    <h2 className="text-section-title">
+                      <Link
+                        href={`/project-market?projectid=${encodeURIComponent(projectId)}`}
+                        className="hover:underline"
+                      >
+                        {projectLabel}
+                      </Link>
+                    </h2>
+                  </div>
                   <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground tabular-nums">
                     {bestScore && (
                       <span
@@ -177,9 +191,10 @@ export default async function SpeciesDetailPage({
                       className="flex flex-wrap items-center justify-between gap-3 px-3 py-2 text-xs"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-sm text-foreground">
-                          {g.version}
-                        </span>
+                        {/* Task 45-14: leaf entity gets the generation
+                            level chip; version reads as data, not prose. */}
+                        <span className="chip-level chip-level-generation">gen</span>
+                        <span className="text-data">{g.version}</span>
                         <span className="text-muted-foreground tabular-nums">
                           {fmtDate(g.publishedAt)}
                         </span>
