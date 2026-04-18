@@ -16,6 +16,7 @@ description: >-
   is framework-specific; projects have their own skill ecosystems that grow
   and obsolete each other).
 lane: meta
+type: meta-framework
 workflow: workflows/proto-skill-battery.md
 ---
 

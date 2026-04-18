@@ -14,6 +14,7 @@ description: >-
   already exist. See decisions gad-186 + gad-187 and the 2026-04-15
   Visual Context mandatory feedback for the source constraints.
 lane: dev
+type: system-requirements
 status: stable
 workflow: workflows/scaffold-visual-context-surface.md
 ---

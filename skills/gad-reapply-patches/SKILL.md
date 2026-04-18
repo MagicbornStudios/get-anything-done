@@ -2,6 +2,7 @@
 name: gad:reapply-patches
 description: Reapply local modifications after a GAD update
 lane: meta
+type: command-wrapper
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 workflow: workflows/reapply-patches.md
 ---

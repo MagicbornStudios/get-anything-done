@@ -9,6 +9,7 @@ description: >-
   looking at", "we need a dev panel", "hook up the visual context system in
   <new app/game>", or "normalize the ids across <existing app>".
 lane: dev
+type: system-requirements
 source_phase: "44"
 source_evolution: 2026-04-14-001
 status: stable

@@ -10,6 +10,7 @@ description: >-
   primary mechanism for agent-authored methodology. The agent IS the workflow author, and
   skills are how that authorship persists.
 lane: meta
+type: meta-framework
 ---
 
 # create-skill

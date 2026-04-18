@@ -13,6 +13,7 @@ description: >-
   into a skill", "promote this candidate to a skill", or whenever a completed
   task reveals a reusable pattern worth capturing.
 lane: meta
+type: meta-framework
 workflow: workflows/skill-creator.md
 ---
 

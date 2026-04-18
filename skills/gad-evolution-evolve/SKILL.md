@@ -11,6 +11,7 @@ description: >-
   pending proto-skills from a previous evolution still need human review —
   clear the queue first via gad skill promote --framework / gad evolution discard.
 lane: meta
+type: meta-framework
 workflow: workflows/evolution-evolve.md
 ---
 
