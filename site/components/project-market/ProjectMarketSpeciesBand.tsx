@@ -9,6 +9,7 @@
  * prebuild time).
  */
 
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { MarketplaceSpecies } from "@/lib/eval-data";
 
@@ -51,33 +52,52 @@ export function ProjectMarketSpeciesBand({
         )}
         {species.map((s) => {
           const isActive = active === s.species;
+          const tooltip = s.latestPublishedAt
+            ? `${s.publishedCount} generation${s.publishedCount === 1 ? "" : "s"} across ${s.projects.length} project${s.projects.length === 1 ? "" : "s"} · latest ${new Date(s.latestPublishedAt).toLocaleDateString()}`
+            : `${s.publishedCount} generation${s.publishedCount === 1 ? "" : "s"} across ${s.projects.length} project${s.projects.length === 1 ? "" : "s"}`;
           return (
-            <button
+            <span
               key={s.species}
-              type="button"
-              onClick={() => onSelect(isActive ? null : s.species)}
-              title={
-                s.latestPublishedAt
-                  ? `${s.publishedCount} generation${s.publishedCount === 1 ? "" : "s"} across ${s.projects.length} project${s.projects.length === 1 ? "" : "s"} · latest ${new Date(s.latestPublishedAt).toLocaleDateString()}`
-                  : `${s.publishedCount} generation${s.publishedCount === 1 ? "" : "s"} across ${s.projects.length} project${s.projects.length === 1 ? "" : "s"}`
-              }
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] transition-colors",
+                "inline-flex items-stretch overflow-hidden rounded-full border text-[11px] transition-colors",
                 isActive
-                  ? "border-accent/60 bg-accent/15 text-accent"
-                  : "border-border/50 text-muted-foreground hover:border-border hover:text-foreground",
+                  ? "border-accent/60 bg-accent/15"
+                  : "border-border/50 hover:border-border",
               )}
             >
-              <span className="font-mono">{s.species}</span>
-              <span
+              <button
+                type="button"
+                onClick={() => onSelect(isActive ? null : s.species)}
+                title={`Filter marketplace by ${s.species}`}
                 className={cn(
-                  "tabular-nums text-[10px]",
-                  isActive ? "text-accent/80" : "text-muted-foreground/60",
+                  "inline-flex items-center gap-1.5 px-2.5 py-0.5 transition-colors",
+                  isActive ? "text-accent" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {s.publishedCount}
-              </span>
-            </button>
+                <span className="font-mono">{s.species}</span>
+                <span
+                  className={cn(
+                    "tabular-nums text-[10px]",
+                    isActive ? "text-accent/80" : "text-muted-foreground/60",
+                  )}
+                >
+                  {s.publishedCount}
+                </span>
+              </button>
+              <Link
+                href={`/project-market/species/${encodeURIComponent(s.species)}`}
+                title={`View species detail · ${tooltip}`}
+                aria-label={`View ${s.species} species detail`}
+                className={cn(
+                  "inline-flex items-center border-l px-1.5 py-0.5 text-[10px] transition-colors",
+                  isActive
+                    ? "border-accent/40 text-accent/80 hover:text-accent"
+                    : "border-border/40 text-muted-foreground/60 hover:text-foreground",
+                )}
+              >
+                →
+              </Link>
+            </span>
           );
         })}
       </div>
