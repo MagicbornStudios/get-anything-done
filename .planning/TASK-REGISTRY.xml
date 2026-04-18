@@ -1978,9 +1978,9 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
       <depends>60-04</depends>
       <notes>Delivered library-only at lib/openai-client.cjs: createOpenAIClient({store,fetchImpl,env,logger}) + createApiKeyResolver + OpenAIClientError. Resolution policy: bag-first via store.get, env-fallback with deprecation warn that names `gad env set OPENAI_API_KEY --projectid &lt;id&gt;`. Security-critical errors (PASSPHRASE_INVALID, BAG_CORRUPT, KEYCHAIN_LOCKED) propagate and NEVER silently fall back to env. Legacy plain-Error shapes with /no envelope for project/i or /KEY_NOT_FOUND/i also route to fall-through (defensive — matches 60-04 pattern). Chat helper posts to /v1/chat/completions with Bearer auth, error codes HTTP_ERROR (w/ httpStatus + .cause), NETWORK_ERROR (.cause), MALFORMED_RESPONSE. 22/22 tests in tests/openai-client.test.cjs. Refactored scripts/generate-daily-tip.mjs to resolve via the bag using GAD_PROJECT_ID (defaults to `get-anything-done`). bin/gad.cjs consumers (maybeGenerateDailyTip:10549, evolutionImagesGenerate:11635, tipGenerateCmd:14463) left untouched per task split — main session wires them post-59-07 via follow-up todo .planning/todos/2026-04-17-openai-client-bin-gad-wire.md.</notes>
     </task>
-    <task id="60-07" type="site" status="planned">
-      <goal>Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. Calls 'gad env' CLI via dev-server command bridge. Local-dev only — NODE_ENV=development gate.</goal>
-      <depends>60-03</depends>
+    <task id="60-07" type="site" status="done" agent-id="cursor-byok-lane-0001" agent-role="byok-lane" runtime="cursor-composer" model-profile="balanced" resolved-model="composer-2">
+      <goal>Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. Calls 'gad env' CLI via dev-server command bridge. Local-dev only — NODE_ENV=development gate. Shipped 2026-04-18: added 4th left-pane tab (BYOK) to ProjectEditor.tsx + new ByokTab.tsx component. Backend uses dedicated /api/dev/secrets/[projectId] route (GET list/POST set/PUT rotate/DELETE revoke) + /audit + /test sub-routes that import lib/secrets-store.cjs directly via createRequire — bypasses the SSE command-bridge for mutating ops to avoid stdin-pipe plaintext exposure. Also added 'env' to command-bridge ALLOWED_SUBCOMMANDS for any future read-only CLI calls. Provider validators: openai, anthropic, openrouter, groq (HTTP probe with 8s timeout). Last-four redaction via decryptAll() with synchronous plaintext drop. Audit tail surfaces last 20 envset/envrotate/envrevoke/envpurge events. Built clean against next 16.0.8 turbopack. Unblocks 60-08 (cloud BYOK surface, same shapes behind auth).</goal>
+      <depends>60-03,60-10</depends>
     </task>
     <task id="60-08" type="site" status="planned">
       <goal>Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.</goal>
@@ -2016,10 +2016,10 @@ Tag pushed, release published: **https://github.com/MagicbornStudios/get-anythin
     <task id="63-06" type="framework" status="done" agent-id="claude-default-0014" agent-role="default" runtime="claude-code">
       <goal>Gap closed: gad phases add atomically syncs TASK-REGISTRY.xml container, gad tasks update --goal available. DONE 2026-04-18 S20 by claude-opus-4-7. Regex boundary bug in addPhaseToRegistryXml (word-boundary after closing quote) prevented idempotent no-op detection — fixed in lib/task-registry-writer.cjs. All 23 writer tests + phases-add-registry-sync tests pass. Installed gad v1.33.0 still pre-fix — 44-38 rebuild needed for distribution.</goal>
     </task>
-    <task id="63-06a" type="framework" status="in-progress">
+    <task id="63-06a" type="framework" status="done" agent-id="human-default-0001" agent-role="default" runtime="human">
       <goal>Harden gad runtime launch new-shell path using generated temp PowerShell script files and strict argument passing; remove raw -Command one-liners.</goal>
     </task>
-    <task id="63-06b" type="framework" status="in-progress">
+    <task id="63-06b" type="framework" status="done" agent-id="human-default-0002" agent-role="default" runtime="human">
       <goal>Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&gt; --goal CLI path.</goal>
     </task>
   </phase>

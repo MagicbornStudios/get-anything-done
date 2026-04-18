@@ -2000,7 +2000,17 @@ const phasesAddCmd = defineCommand({
       return;
     }
     const root = roots[0];
+    const taskRegistryPath = path.join(baseDir, root.path, root.planningDir, 'TASK-REGISTRY.xml');
+    if (!fs.existsSync(taskRegistryPath)) {
+      outputError(`TASK-REGISTRY.xml not found at ${path.relative(baseDir, taskRegistryPath)}`);
+      process.exit(1);
+      return;
+    }
+    const roadmapPath = path.join(baseDir, root.path, root.planningDir, 'ROADMAP.xml');
+    let roadmapBackup = null;
+    let phaseWritten = false;
     try {
+      roadmapBackup = fs.readFileSync(roadmapPath, 'utf8');
       const result = writePhase(root, baseDir, {
         id: String(args.id),
         title: String(args.title),
@@ -2009,11 +2019,21 @@ const phasesAddCmd = defineCommand({
         depends: String(args.depends || ''),
         milestone: String(args.milestone || ''),
       });
+      phaseWritten = true;
+      const { ensurePhaseInFile } = require('../lib/task-registry-writer.cjs');
+      const registrySync = ensurePhaseInFile({
+        filePath: taskRegistryPath,
+        phaseId: String(args.id),
+      });
       console.log(`Added phase ${args.id}: ${args.title}`);
       console.log(`File:    ${path.relative(baseDir, result.filePath)}`);
       console.log(`Total:   ${result.count} phase(s)`);
+      console.log(`Task registry phase sync: ${registrySync.inserted ? 'inserted' : 'already-present'}`);
       maybeRebuildGraph(baseDir, root);
     } catch (e) {
+      if (phaseWritten && roadmapBackup != null) {
+        try { fs.writeFileSync(roadmapPath, roadmapBackup, 'utf8'); } catch {}
+      }
       outputError(e.message);
       process.exit(1);
     }
@@ -2595,44 +2615,72 @@ function escapePowerShellSingleQuoted(value) {
   return `'${String(value || '').replace(/'/g, "''")}'`;
 }
 
-function launchRuntimeInNewShellWindows({ command, args = [], cwd, runtimeId = 'runtime' }) {
-  const { spawnSync } = require('child_process');
-  const argList = Array.isArray(args) ? args : [];
-  const psArgArray = `@(${argList.map((entry) => escapePowerShellSingleQuoted(entry)).join(', ')})`;
-  const childCommand = [
+function buildPowerShellArrayLiteral(values) {
+  const entries = Array.isArray(values) ? values : [];
+  if (entries.length === 0) return '@()';
+  return `@(\n${entries.map((entry) => `  ${escapePowerShellSingleQuoted(entry)}`).join(',\n')}\n)`;
+}
+
+function writeRuntimeLaunchScriptWindows({ command, args = [], cwd, runtimeId }) {
+  const os = require('os');
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-runtime-launch-'));
+  const scriptPath = path.join(tmpDir, 'launch.ps1');
+  const lines = [
     '$ErrorActionPreference = "Stop"',
     `$host.UI.RawUI.WindowTitle = ${escapePowerShellSingleQuoted(`GAD Runtime: ${runtimeId}`)}`,
     `$wd = ${escapePowerShellSingleQuoted(cwd)}`,
     'Set-Location -LiteralPath $wd',
     `$cmd = ${escapePowerShellSingleQuoted(command)}`,
-    `$argList = ${psArgArray}`,
+    `$argList = ${buildPowerShellArrayLiteral(args)}`,
     'Write-Host ""',
     `Write-Host ${escapePowerShellSingleQuoted(`[gad runtime launch] ${runtimeId}`)} -ForegroundColor Cyan`,
     'Write-Host ""',
-    'if ($argList.Count -gt 0) { & $cmd @argList } else { & $cmd }',
+    'if ($argList.Count -gt 0) {',
+    '  & $cmd @argList',
+    '} else {',
+    '  & $cmd',
+    '}',
     '$exitCode = $LASTEXITCODE',
     'if ($null -ne $exitCode -and $exitCode -ne 0) {',
     '  Write-Host ""',
-    '  Write-Host ("[gad runtime launch] process exited with code {0}" -f $exitCode) -ForegroundColor Yellow',
+    `  Write-Host ${escapePowerShellSingleQuoted('[gad runtime launch] process exited with code')} $exitCode -ForegroundColor Yellow`,
     '}',
-  ].join('; ');
-  const script = [
-    '$ErrorActionPreference = "Stop"',
-    `$wd = ${escapePowerShellSingleQuoted(cwd)}`,
-    `$childCommand = ${escapePowerShellSingleQuoted(childCommand)}`,
-    "Start-Process -FilePath 'powershell' -ArgumentList @('-NoLogo','-NoExit','-ExecutionPolicy','Bypass','-Command',$childCommand) -WorkingDirectory $wd -WindowStyle Normal",
-  ].join('; ');
-  const launched = spawnSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script], {
-    env: process.env,
-    encoding: 'utf8',
-    stdio: ['pipe', 'pipe', 'pipe'],
+    '# Best-effort cleanup of temp launcher artifacts after script execution.',
+    'try {',
+    '  $self = $MyInvocation.MyCommand.Path',
+    '  if ($self -and (Test-Path -LiteralPath $self)) { Remove-Item -LiteralPath $self -Force -ErrorAction SilentlyContinue }',
+    '  $dir = Split-Path -Parent $self',
+    '  if ($dir -and (Test-Path -LiteralPath $dir)) { Remove-Item -LiteralPath $dir -Force -ErrorAction SilentlyContinue }',
+    '} catch {}',
+  ];
+  fs.writeFileSync(scriptPath, `${lines.join('\r\n')}\r\n`, 'utf8');
+  return { scriptPath };
+}
+
+function launchRuntimeInNewShellWindows({ command, args = [], cwd, runtimeId = 'runtime' }) {
+  const { spawn } = require('child_process');
+  const argList = Array.isArray(args) ? args : [];
+  const { scriptPath } = writeRuntimeLaunchScriptWindows({
+    command,
+    args: argList,
+    cwd,
+    runtimeId,
   });
-  if (launched.error) throw launched.error;
-  if (launched.status !== 0) {
-    const stderr = String(launched.stderr || '').trim();
-    const stdout = String(launched.stdout || '').trim();
-    throw new Error(stderr || stdout || `Failed to launch runtime shell for ${command}.`);
+  const child = spawn(
+    'powershell',
+    ['-NoLogo', '-NoExit', '-ExecutionPolicy', 'Bypass', '-File', scriptPath],
+    {
+      cwd,
+      env: process.env,
+      detached: true,
+      windowsHide: false,
+      stdio: 'ignore',
+    },
+  );
+  if (!child || !child.pid) {
+    throw new Error(`Failed to launch runtime shell for ${command}.`);
   }
+  child.unref();
 }
 
 function readFileExcerpt(filePath, maxChars = 2400) {
@@ -10278,14 +10326,81 @@ const tasksPromoteCmd = defineCommand({
   },
 });
 
+const tasksUpdateCmd = defineCommand({
+  meta: {
+    name: 'update',
+    description: 'Update task fields in TASK-REGISTRY.xml (currently supports --goal).',
+  },
+  args: {
+    id: { type: 'positional', description: 'Task id to update (e.g. 63-06)', required: true },
+    projectid: { type: 'string', description: 'Project id whose TASK-REGISTRY.xml to update', required: true },
+    goal: { type: 'string', description: 'Replacement goal text for the task', default: '' },
+    print: { type: 'boolean', description: 'Print the mutated XML to stdout instead of writing the file', default: false },
+  },
+  run({ args }) {
+    if (!String(args.goal || '').trim()) {
+      outputError('tasks update currently requires --goal <text>.');
+      process.exit(1);
+      return;
+    }
+
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const root = config.roots.find((r) => r.id === args.projectid);
+    if (!root) {
+      outputError(`Project not found: ${args.projectid}. Run \`gad ls\` to see registered projects.`);
+      process.exit(1);
+      return;
+    }
+    const xmlPath = path.join(baseDir, root.path, root.planningDir, 'TASK-REGISTRY.xml');
+    if (!fs.existsSync(xmlPath)) {
+      outputError(`TASK-REGISTRY.xml not found at ${xmlPath}`);
+      process.exit(1);
+      return;
+    }
+
+    const {
+      TaskWriterError,
+      updateTaskGoalInXml,
+      updateTaskGoalInFile,
+    } = require('../lib/task-registry-writer.cjs');
+    try {
+      if (args.print) {
+        const xml = fs.readFileSync(xmlPath, 'utf8');
+        const mutated = updateTaskGoalInXml(xml, {
+          id: String(args.id),
+          goal: String(args.goal),
+        });
+        process.stdout.write(mutated);
+        return;
+      }
+      updateTaskGoalInFile({
+        filePath: xmlPath,
+        id: String(args.id),
+        goal: String(args.goal),
+      });
+      console.log(`Updated task ${args.id} goal (${args.projectid}).`);
+      maybeRebuildGraph(baseDir, root);
+    } catch (e) {
+      if (e instanceof TaskWriterError) {
+        outputError(`${e.code}: ${e.message}`);
+        process.exit(1);
+        return;
+      }
+      throw e;
+    }
+  },
+});
+
 const tasksV2Cmd = defineCommand({
-  meta: { name: 'tasks', description: 'Show, claim, release, add, promote, and inspect tasks' },
+  meta: { name: 'tasks', description: 'Show, claim, release, add, update, promote, and inspect tasks' },
   subCommands: {
     list: tasksListCmd,
     claim: tasksClaimCmd,
     release: tasksReleaseCmd,
     active: tasksActiveCmd,
     add: tasksAddCmd,
+    update: tasksUpdateCmd,
     promote: tasksPromoteCmd,
   },
 });

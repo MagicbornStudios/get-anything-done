@@ -15,7 +15,11 @@ const {
   escapeXml,
   buildTaskElement,
   addTaskToXml,
+  addPhaseToRegistryXml,
   appendTaskToFile,
+  ensurePhaseInFile,
+  updateTaskGoalInXml,
+  updateTaskGoalInFile,
 } = require('../lib/task-registry-writer.cjs');
 
 const BASE_XML = `<?xml version="1.0" encoding="UTF-8"?>
@@ -36,6 +40,21 @@ const BASE_XML = `<?xml version="1.0" encoding="UTF-8"?>
   </phase>
 </task-registry>
 `;
+
+function makeFsFake(initial) {
+  const store = { [initial.path]: initial.content };
+  return {
+    store,
+    readFileSync: (p) => {
+      if (!(p in store)) throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+      return store[p];
+    },
+    writeFileSync: (p, data) => { store[p] = data; },
+    renameSync: (a, b) => { store[b] = store[a]; delete store[a]; },
+    unlinkSync: (p) => { delete store[p]; },
+    existsSync: (p) => p in store,
+  };
+}
 
 describe('task-registry-writer: escapeXml', () => {
   test('escapes &, <, >, ", \' in body text', () => {
@@ -160,22 +179,69 @@ describe('task-registry-writer: addTaskToXml failure modes', () => {
   });
 });
 
-describe('task-registry-writer: appendTaskToFile with fs fake', () => {
-  function makeFsFake(initial) {
-    const store = { [initial.path]: initial.content };
-    return {
-      store,
-      readFileSync: (p) => {
-        if (!(p in store)) throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
-        return store[p];
-      },
-      writeFileSync: (p, data) => { store[p] = data; },
-      renameSync: (a, b) => { store[b] = store[a]; delete store[a]; },
-      unlinkSync: (p) => { delete store[p]; },
-      existsSync: (p) => p in store,
-    };
-  }
+describe('task-registry-writer: phase container sync', () => {
+  test('addPhaseToRegistryXml inserts a new empty phase container', () => {
+    const out = addPhaseToRegistryXml(BASE_XML, '03');
+    assert.equal(out.inserted, true);
+    assert.match(out.xml, /<phase id="03">\s*<\/phase>/);
+  });
 
+  test('addPhaseToRegistryXml supports idempotent no-op mode', () => {
+    const out = addPhaseToRegistryXml(BASE_XML, '01', { ifExists: 'noop' });
+    assert.equal(out.inserted, false);
+    assert.equal(out.xml, BASE_XML);
+  });
+
+  test('ensurePhaseInFile writes when missing and no-ops when present', () => {
+    const fake = makeFsFake({ path: '/fake/TASK-REGISTRY.xml', content: BASE_XML });
+    const inserted = ensurePhaseInFile({
+      filePath: '/fake/TASK-REGISTRY.xml',
+      phaseId: '03',
+      fsImpl: fake,
+    });
+    assert.equal(inserted.inserted, true);
+    assert.match(fake.store['/fake/TASK-REGISTRY.xml'], /<phase id="03">\s*<\/phase>/);
+
+    const noop = ensurePhaseInFile({
+      filePath: '/fake/TASK-REGISTRY.xml',
+      phaseId: '03',
+      fsImpl: fake,
+    });
+    assert.equal(noop.inserted, false);
+  });
+});
+
+describe('task-registry-writer: update task goal', () => {
+  test('updateTaskGoalInXml rewrites goal for an existing task', () => {
+    const out = updateTaskGoalInXml(BASE_XML, {
+      id: '01-02',
+      goal: 'Updated phase 01 follow-up goal.',
+    });
+    assert.match(out, /<task id="01-02"[\s\S]*?<goal>Updated phase 01 follow-up goal\.<\/goal>/);
+    assert.doesNotMatch(out, /<goal>Phase 01 follow-up\.<\/goal>/);
+  });
+
+  test('updateTaskGoalInXml throws TASK_NOT_FOUND for unknown id', () => {
+    assert.throws(
+      () => updateTaskGoalInXml(BASE_XML, { id: '99-99', goal: 'x' }),
+      (e) => e instanceof TaskWriterError && e.code === 'TASK_NOT_FOUND',
+    );
+  });
+
+  test('updateTaskGoalInFile writes updated XML atomically', () => {
+    const fake = makeFsFake({ path: '/fake/TASK-REGISTRY.xml', content: BASE_XML });
+    const out = updateTaskGoalInFile({
+      filePath: '/fake/TASK-REGISTRY.xml',
+      id: '02-01',
+      goal: 'Design phase 02 (updated).',
+      fsImpl: fake,
+    });
+    assert.match(out, /<task id="02-01"[\s\S]*?<goal>Design phase 02 \(updated\)\.<\/goal>/);
+    assert.match(fake.store['/fake/TASK-REGISTRY.xml'], /Design phase 02 \(updated\)\./);
+  });
+});
+
+describe('task-registry-writer: appendTaskToFile with fs fake', () => {
   test('happy path writes mutated XML atomically; tmp is cleaned up', () => {
     const fake = makeFsFake({ path: '/fake/TASK-REGISTRY.xml', content: BASE_XML });
     const out = appendTaskToFile({

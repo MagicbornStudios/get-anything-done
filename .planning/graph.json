@@ -4779,7 +4779,7 @@
       "type": "task",
       "id": "task:63-06a",
       "label": "Harden gad runtime launch new-shell path using generated temp PowerShell script files and strict argument passing; remov",
-      "status": "in-progress",
+      "status": "done",
       "goal": "Harden gad runtime launch new-shell path using generated temp PowerShell script files and strict argument passing; remove raw -Command one-liners.",
       "skill": "",
       "taskType": "framework",
@@ -4789,7 +4789,7 @@
       "type": "task",
       "id": "task:63-06b",
       "label": "Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&g",
-      "status": "in-progress",
+      "status": "done",
       "goal": "Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&gt; --goal CLI path.",
       "skill": "",
       "taskType": "framework",
@@ -15190,7 +15190,7 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T17:29:41.897Z",
+    "generated": "2026-04-18T17:31:52.718Z",
     "nodeCount": 990,
     "edgeCount": 1459,
     "nodeTypes": {
