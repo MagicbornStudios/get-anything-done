@@ -183,6 +183,23 @@ const CATALOG_FILE = path.join(SITE_ROOT, "lib", "catalog.generated.ts");
 const PROJECT_CONFIG_FILE = path.join(SITE_ROOT, "lib", "project-config.generated.ts");
 const DEVID_PROMPTS_FILE = path.join(SITE_ROOT, "lib", "devid-prompts.generated.ts");
 
+// Task 42.2-43: planning-graph data pipeline. Surfaces the structural
+// graph emitted by `gad graph build` (task 42.2-45) into `site/data/`
+// so consumers (api routes, future global search) can traverse without
+// re-parsing the .planning/*.xml tree at request time.
+//
+//   PLANNING_GRAPH_SOURCE: input — graph.json under PROJECT_ROOT.
+//   PLANNING_GRAPH_FILE:   output — verbatim copy + envelope metadata.
+//   PLANNING_GRAPH_INDEX:  output — derived inverted index for fast
+//                          token-based lookup ("all nodes mentioning X").
+//
+// The pipeline degrades gracefully: if the source file is missing the
+// outputs are written with `{ available: false }` so the API route
+// always returns a stable shape.
+const PLANNING_GRAPH_SOURCE = path.join(PROJECT_ROOT, ".planning", "graph.json");
+const PLANNING_GRAPH_FILE = path.join(SITE_DATA_DIR, "planning-graph.json");
+const PLANNING_GRAPH_INDEX = path.join(SITE_DATA_DIR, "planning-graph-index.json");
+
 // -------------------------------------------------------------------------
 // Helpers
 // -------------------------------------------------------------------------
@@ -2859,6 +2876,151 @@ function writeDbJson({ pseudoDb, allDecisions, allTasks, allPhases }) {
   console.log(`  [write] ${path.relative(SITE_ROOT, DB_JSON_FILE)} (db viewer payload)`);
 }
 
+// ---------------------------------------------------------------------------
+// Task 42.2-43: planning-graph data emission
+// ---------------------------------------------------------------------------
+
+/**
+ * Tokenise a string into lowercase identifier-ish tokens for the
+ * inverted index. Splits on non-word and small-noise filtering.
+ *
+ * Conservative on stopwords: structural ids (e.g. `phase:01`, `gad-197`)
+ * keep their punctuation as a single token AND get split into pieces so
+ * users searching "197" still match the decision id.
+ */
+function tokenisePlanningGraphValue(value) {
+  if (value == null) return [];
+  const s = String(value).toLowerCase().trim();
+  if (!s) return [];
+  const tokens = new Set();
+  if (s.length <= 64) tokens.add(s);
+  for (const piece of s.split(/[^a-z0-9_-]+/)) {
+    if (!piece) continue;
+    if (piece.length < 2) continue;
+    tokens.add(piece);
+    // Pure-numeric chunks are useful too (decision/task numeric tails).
+    if (/^\d+$/.test(piece) && piece.length >= 2) tokens.add(piece);
+  }
+  return [...tokens];
+}
+
+/**
+ * Build an inverted token → nodeId index from a planning-graph payload.
+ * Each node contributes its id, label, type, status, and goal text.
+ * Returns `{ [token]: nodeId[] }` with arrays sorted + deduped.
+ */
+function buildPlanningGraphIndex(graph) {
+  const inverted = new Map();
+  const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
+  for (const node of nodes) {
+    if (!node || typeof node.id !== "string") continue;
+    const fields = [
+      node.id,
+      node.label,
+      node.type,
+      node.status,
+      node.goal,
+    ];
+    const seen = new Set();
+    for (const field of fields) {
+      for (const tok of tokenisePlanningGraphValue(field)) {
+        if (seen.has(tok)) continue;
+        seen.add(tok);
+        const arr = inverted.get(tok);
+        if (arr) {
+          arr.push(node.id);
+        } else {
+          inverted.set(tok, [node.id]);
+        }
+      }
+    }
+  }
+  // Sort + dedupe per token for stable output.
+  const out = {};
+  for (const [tok, ids] of inverted) {
+    const unique = Array.from(new Set(ids)).sort();
+    out[tok] = unique;
+  }
+  return out;
+}
+
+/**
+ * Copy `<PROJECT_ROOT>/.planning/graph.json` into `site/data/` and
+ * derive a token-inverted index alongside it. Both writes are
+ * deterministic and degrade gracefully when the source is missing
+ * (writes an `{ available: false }` envelope so the API route always
+ * has a stable shape to return).
+ */
+function writePlanningGraphData() {
+  console.log("[2k/4] Writing data/planning-graph.json + planning-graph-index.json");
+  ensureDir(SITE_DATA_DIR);
+
+  if (!fs.existsSync(PLANNING_GRAPH_SOURCE)) {
+    const empty = {
+      available: false,
+      reason: `source not found at ${path.relative(REPO_ROOT, PLANNING_GRAPH_SOURCE)}`,
+      generatedAt: new Date().toISOString(),
+      projectId: PROJECT_ID,
+      nodes: [],
+      edges: [],
+    };
+    fs.writeFileSync(PLANNING_GRAPH_FILE, JSON.stringify(empty, null, 2), "utf8");
+    fs.writeFileSync(PLANNING_GRAPH_INDEX, JSON.stringify({ available: false, tokens: {} }, null, 2), "utf8");
+    console.log(`  [skip] no planning-graph source — wrote stubs`);
+    return;
+  }
+
+  let raw;
+  try {
+    raw = JSON.parse(fs.readFileSync(PLANNING_GRAPH_SOURCE, "utf8"));
+  } catch (err) {
+    console.warn(`  [warn] planning-graph parse failed: ${err.message} — emitting stubs`);
+    const broken = {
+      available: false,
+      reason: `parse failed: ${err.message}`,
+      generatedAt: new Date().toISOString(),
+      projectId: PROJECT_ID,
+      nodes: [],
+      edges: [],
+    };
+    fs.writeFileSync(PLANNING_GRAPH_FILE, JSON.stringify(broken, null, 2), "utf8");
+    fs.writeFileSync(PLANNING_GRAPH_INDEX, JSON.stringify({ available: false, tokens: {} }, null, 2), "utf8");
+    return;
+  }
+
+  const nodes = Array.isArray(raw?.nodes) ? raw.nodes : [];
+  const edges = Array.isArray(raw?.edges) ? raw.edges : [];
+  // Wrap in an envelope so callers can branch on `available` without
+  // probing for nodes/edges length.
+  const envelope = {
+    available: true,
+    generatedAt: new Date().toISOString(),
+    projectId: PROJECT_ID,
+    sourcePath: path.relative(REPO_ROOT, PLANNING_GRAPH_SOURCE),
+    nodeCount: nodes.length,
+    edgeCount: edges.length,
+    nodes,
+    edges,
+  };
+  fs.writeFileSync(PLANNING_GRAPH_FILE, JSON.stringify(envelope, null, 2), "utf8");
+  console.log(
+    `  [write] ${path.relative(SITE_ROOT, PLANNING_GRAPH_FILE)} (${nodes.length} nodes, ${edges.length} edges)`,
+  );
+
+  const tokens = buildPlanningGraphIndex(raw);
+  const indexEnvelope = {
+    available: true,
+    generatedAt: envelope.generatedAt,
+    projectId: PROJECT_ID,
+    tokenCount: Object.keys(tokens).length,
+    tokens,
+  };
+  fs.writeFileSync(PLANNING_GRAPH_INDEX, JSON.stringify(indexEnvelope, null, 2), "utf8");
+  console.log(
+    `  [write] ${path.relative(SITE_ROOT, PLANNING_GRAPH_INDEX)} (${Object.keys(tokens).length} tokens)`,
+  );
+}
+
 /**
  * Aggregate skill invocations across all generations (species x version) per project.
  * Reads TRACE.json `skill_triggers` from every preserved generation and counts
@@ -3823,6 +3985,10 @@ function main() {
   const allTasks = parseAllTasks();
   const allPhases = parseAllPhases();
   writeDbJson({ pseudoDb, allDecisions, allTasks, allPhases });
+  // Task 42.2-43: surface the planning graph so /api/planning/graph
+  // and any future global-search consumer can read it without
+  // re-parsing the .planning/*.xml tree at request time.
+  writePlanningGraphData();
   const taskPressureByVersion = computeTaskPressurePerVersion(currentRequirements);
   const searchIndex = buildSearchIndex({
     decisions: allDecisions,
