@@ -72,6 +72,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
+      - name: Set up Node.js 24
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Download all build artifacts
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
@@ -82,7 +91,32 @@ jobs:
         run: |
           mkdir -p dist/release-upload
           find dist/release-artifacts -type f -exec cp {} dist/release-upload/ \;
+
+      - name: Pack npm tarball
+        # Per gad-274 / 64-C the npm-shape tarball is the canonical install
+        # payload for skills/hooks/agents (workflows/update.md downloads it
+        # via gh release download). prepublishOnly rebuilds dist/gad.cjs +
+        # hooks/dist before npm pack so the tarball matches the package
+        # files allowlist. Without this step the v1.35.0+ releases ship
+        # only Bun binaries and /gad-update fails for every user.
+        shell: bash
+        run: |
+          npm pack --pack-destination dist/release-upload
           ls -la dist/release-upload
+
+      - name: Verify tarball asset present
+        # Lock the contract: every release must ship the npm tarball
+        # alongside the Bun binaries. If npm pack silently failed we want
+        # this job to fail loudly, not the user's /gad-update.
+        shell: bash
+        run: |
+          tarball=$(ls dist/release-upload/get-anything-done-*.tgz 2>/dev/null | head -n 1)
+          if [ -z "$tarball" ]; then
+            echo "ERROR: no get-anything-done-*.tgz found in dist/release-upload" >&2
+            ls -la dist/release-upload >&2
+            exit 1
+          fi
+          echo "Tarball present: $tarball"
 
       - name: Publish GitHub Release
         env:

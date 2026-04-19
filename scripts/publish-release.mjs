@@ -15,6 +15,7 @@ function escapeRegExp(value) {
 }
 
 const CURRENT_EXE_RE = new RegExp(`^gad-v${escapeRegExp(pkg.version)}-(windows|linux|macos)-.+(?:\\.exe)?$`);
+const CURRENT_TARBALL_NAME = `${pkg.name}-${pkg.version}.tgz`;
 
 export function parseArgs(argv) {
   const parsed = {
@@ -36,24 +37,50 @@ export function getReleaseDir(root = ROOT) {
 }
 
 export function isReleaseArtifactName(name) {
-  return CURRENT_EXE_RE.test(name) || name === 'install-gad-windows.ps1' || name === 'INSTALL.txt';
+  return (
+    CURRENT_EXE_RE.test(name) ||
+    name === CURRENT_TARBALL_NAME ||
+    name === 'install-gad-windows.ps1' ||
+    name === 'INSTALL.txt'
+  );
 }
 
 export function getArtifacts(releaseDir = getReleaseDir()) {
   if (!existsSync(releaseDir)) {
     throw new Error('dist/release does not exist. Run `npm run build:release` first.');
   }
+  ensureReleaseTarball(releaseDir);
   const entries = readdirSync(releaseDir)
     .filter((name) => isReleaseArtifactName(name))
     .map((name) => join(releaseDir, name));
   if (entries.length === 0) {
     throw new Error('No release artifacts found in dist/release.');
   }
+  if (!entries.some((entry) => entry.endsWith(CURRENT_TARBALL_NAME))) {
+    throw new Error(
+      `Release tarball ${CURRENT_TARBALL_NAME} missing from ${releaseDir} after npm pack.`,
+    );
+  }
   return entries;
 }
 
-export function ensureReleaseTarball() {
-  return false;
+// Per gad-274 / 64-C the npm-shape tarball is the canonical install
+// payload for skills/hooks/agents (workflows/update.md downloads it via
+// gh release download). Idempotent: skip the pack if the current-version
+// tarball already exists in releaseDir.
+export function ensureReleaseTarball(releaseDir = getReleaseDir(), root = ROOT) {
+  const target = join(releaseDir, CURRENT_TARBALL_NAME);
+  if (existsSync(target)) return target;
+  execFileSync('npm', ['pack', '--pack-destination', releaseDir], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+  if (!existsSync(target)) {
+    throw new Error(
+      `npm pack did not produce ${CURRENT_TARBALL_NAME} in ${releaseDir}.`,
+    );
+  }
+  return target;
 }
 
 function hasRelease(tag) {
