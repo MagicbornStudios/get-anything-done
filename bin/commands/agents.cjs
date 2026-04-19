@@ -26,7 +26,7 @@ function createAgentsCommand(deps) {
     run({ args }) {
       const baseDir = findRepoRoot();
       const {
-        probeRuntimes, readOmxState, readRouterLock, listSubagentRuns, inferLivenessFromTrace, formatAge,
+        probeRuntimes, readOmxState, readRouterLock, listSubagentRuns, inferLivenessFromLogs, formatAge,
       } = require('../../lib/agents-status.cjs');
 
       const daysBack = Math.max(1, parseInt(args['days-back'], 10) || 2);
@@ -34,7 +34,7 @@ function createAgentsCommand(deps) {
       const omx = readOmxState(baseDir);
       const router = readRouterLock(baseDir);
       const subagentRuns = listSubagentRuns(baseDir, { daysBack });
-      const liveness = inferLivenessFromTrace(baseDir);
+      const liveness = inferLivenessFromLogs(baseDir);
 
       const allOpen = listHandoffs({ baseDir, bucket: 'open' });
       const handoffsFor = {};
@@ -90,22 +90,27 @@ function createAgentsCommand(deps) {
       }
       console.log('');
 
-      console.log('-- LIVENESS (inferred from .planning/.trace-events.jsonl) -----');
+      console.log('-- LIVENESS (inferred from gad-log + trace-events) ------------');
       if (liveness.length === 0) {
-        console.log('No recent CLI activity (trace-events.jsonl empty or missing).');
+        console.log('No recent activity in .planning/.gad-log/ or .planning/.trace-events.jsonl.');
       } else {
         const lvRows = liveness.map((l) => ({
           runtime: l.runtime,
           session: l.sessionId ? String(l.sessionId).slice(0, 16) : '-',
-          'last-tool': l.lastTool || '-',
+          'last-activity': l.lastTool || '-',
           age: formatAge(l.ageMs),
           state: l.stale ? 'stale' : 'active',
           events: String(l.eventCount),
+          source: Array.isArray(l.sources) ? l.sources.map((s) => s === 'gad-log' ? 'cli' : 'hook').join('+') : '-',
         }));
-        console.log(render(lvRows, { format: 'table', headers: ['runtime', 'session', 'last-tool', 'age', 'state', 'events'] }));
+        console.log(render(lvRows, { format: 'table', headers: ['runtime', 'session', 'last-activity', 'age', 'state', 'events', 'source'] }));
         const staleCount = liveness.filter((l) => l.stale).length;
         if (staleCount > 0) {
-          console.log(`(${staleCount} stale; last CLI call > 10min ago — session probably ended or idled)`);
+          console.log(`(${staleCount} stale; last activity > 10min ago — session probably ended or idled)`);
+        }
+        const unknowns = liveness.filter((l) => l.runtime === 'unknown');
+        if (unknowns.length > 0) {
+          console.log(`(${unknowns.length} with runtime=unknown — the runtime didn't set fingerprint env vars; add them in lib/runtime-detect.cjs)`);
         }
       }
       console.log('');
