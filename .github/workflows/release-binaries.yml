@@ -48,6 +48,8 @@ jobs:
         run: npm ci
 
       - name: Build Bun release artifact
+        env:
+          GAD_RELEASE_BUILD: '1'
         run: npm run build:release
 
       - name: Upload build outputs

@@ -2126,6 +2126,10 @@ Vendor site `/projects/edit` and `/api/dev/*` routes are deleted in the same cha
       <goal>Deprecate the legacy Node SEA release script now that the Bun release build is green. Keep the SEA path available for one release as an escape hatch, mark it deprecated, and do not touch the npm tarball publish chain per gad-274.</goal>
       <implementation>Marked scripts/build-release.mjs as deprecated as of GAD 1.35.0, kept it for one release, and pointed operators to npm run build:release (Bun compile). Added tests/release-deprecation.test.cjs to lock the release contract: build:release and build:release:bun remain Bun-backed, build:release:sea remains the temporary SEA escape hatch, publish:release and prepublishOnly remain unchanged for the npm tarball/framework install chain. The requested scripts/build-sea-windows.mjs path did not exist in this checkout; the active SEA path is scripts/build-release.mjs.</implementation>
     </task>
+    <task id="64-E" type="pipeline" status="done" skill="repo-planner" agent="default" runtime="codex">
+      <goal>Wire the Bun release CI build path to run with GAD_RELEASE_BUILD=1 so startup/snapshot/hook code paths stay read-only in clean release worktrees.</goal>
+      <implementation>.github/workflows/release-binaries.yml now sets GAD_RELEASE_BUILD=1 on the Build Bun release artifact step before npm run build:release. tests/release-workflow-env.test.cjs locks the workflow contract so release CI keeps the no-side-effects guard.</implementation>
+    </task>
   </phase>
 </task-registry>
 
