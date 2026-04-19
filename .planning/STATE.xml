@@ -46,9 +46,11 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-19T18:05:00.000Z</last-updated>
+  <last-updated>2026-04-19T18:22:18.904Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="opus-claude" at="2026-04-19T18:26:09.769Z" tags="sweep-e,refactor,modular-commands">sweep E shipped: extracted state/note/todos to bin/commands/ (factory pattern). gad.cjs 18437 -&gt; 18181 LOC. Smoke + targeted tests pass. Pattern documented in CLAUDE.md.</entry>
+    <entry agent="opus-claude" at="2026-04-19T18:19:31.671Z" tags="sweep-e">sweep E: extracted state/note/todos to bin/commands/ (factory pattern)</entry>
     <entry agent="opus-claude" at="2026-04-19T18:01:08.888Z" tags="sweep-d,agent-confusion,multi-agent">Sweep D shipped: D-1 .gitattributes (kills phantom CRLF mods), D-2 vendor/CLAUDE.md (which-gad-to-invoke), D-3 gad state log (append-only), D-4 deleted V1 dead snapshotCmd+tasksCmd from gad.cjs (-361 lines, V2 renamed canonical), D-5 gad note add (agent-slug filenames). All smoke-verified on node bin/gad.cjs.</entry>
     <entry agent="opus-claude" at="2026-04-19T18:00:22.094Z" tags="sweep-d">Validated D-3 atomic prepend (newest-first)</entry>
     <entry agent="opus-claude" at="2026-04-19T18:00:21.824Z" tags="diff-noise,sweep-d,agent-confusion">sweep D shipped: gitattributes, vendor CLAUDE.md, V1 dead-code purge, gad note add, gad state log</entry>

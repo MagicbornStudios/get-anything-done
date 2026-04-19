@@ -90,6 +90,54 @@ check the dispatcher** (`grep -nE "^    snapshot:|^    tasks:|^    context:" bin
 to see which is wired before patching. Don't introduce new V2-style dupes
 — refactor the existing one in place.
 
+## Modular commands (post-2026-04-19, sweep E)
+
+`bin/gad.cjs` is being broken up. Sweep E moved 3 small command families
+out of the monolith:
+
+| File | Exports | Family |
+|---|---|---|
+| `bin/commands/state.cjs` | `createStateCommand(deps)` | `gad state show / set-next-action / log` |
+| `bin/commands/note.cjs`  | `createNoteCommand(deps)`  | `gad note list / add` |
+| `bin/commands/todos.cjs` | `createTodosCommand(deps)` | `gad todos list / add` |
+
+**Pattern: factory that receives helpers as deps.** Each module exports
+`function create<Family>Command(deps)` that returns a `defineCommand(...)`
+object. `gad.cjs` imports the factory near the top, then invokes it where
+the original cmd was defined, passing `{ findRepoRoot, gadConfig,
+resolveRoots, outputError, ... }` from local scope.
+
+**Why the factory pattern instead of direct requires of helpers from a
+new `lib/cli-helpers.cjs`?** Because `resolveRoots` calls
+`getActiveSessionProjectId` calls `loadSessions` — extracting that whole
+chain is a 9k-LOC dependency graph. The factory pattern lets us pull
+commands out today without touching helpers; later sweeps can extract the
+helpers and switch the modules to direct requires.
+
+**To extract another command family in your sweep:**
+
+1. Identify a `defineCommand` block (or sibling group + dispatcher) you
+   want to move. Map its dependencies (search for `findRepoRoot`,
+   `gadConfig.load`, `resolveRoots`, `outputError`, `render`,
+   `shouldUseJson`, plus any module-level requires it touches).
+2. Create `bin/commands/<family>.cjs`. Top: `'use strict';`, `const path
+   = require('path'); const fs = require('fs'); const { defineCommand } =
+   require('citty');`. Body: `function create<Family>Command(deps) { const
+   { ... } = deps; const cmdA = defineCommand(...); ... return
+   defineCommand({ subCommands: { ... } }); }`. Bottom:
+   `module.exports = { create<Family>Command };`.
+3. In `bin/gad.cjs`: add `const { create<Family>Command } =
+   require('./commands/<family>.cjs');` near the other command-module
+   imports. Replace the original inline block with `const <family>Cmd =
+   create<Family>Command({ ... });`. Keep the var name so the dispatcher
+   doesn't change.
+4. Smoke: `node bin/gad.cjs <family> --help`, plus a real subcommand
+   call. Then `node --test tests/<related-area>.test.cjs`.
+5. Update this section's table with the new module.
+
+**Don't add to the monolith.** New commands go straight into
+`bin/commands/<family>.cjs`.
+
 ## Test before committing
 
 ```sh
