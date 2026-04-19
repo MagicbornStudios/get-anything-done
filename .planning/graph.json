@@ -453,7 +453,7 @@
       "id": "phase:59",
       "label": "Planning-app split + gad planning serve + gad start daily entry",
       "status": "planned",
-      "goal": "Split planning surfaces from the landing Next app into a dedicated planning-app (decisions gad-261, gad-262). Scope: (1) scaffold apps/planning-app/ (or vendor/get-anything-done/apps/planning-app/) Next 15 workspace entry with shared primitives from packages/ui. (2) Migrate /planning, /projects, my-projects dashboard routes out of landing into planning-app. (3) CLI: 'gad planning serve' spawns planning-app dev server (port detection + reuse if already running). (4) CLI: 'gad start' spawns 'gad planning serve' if needed + opens browser to /my-projects. (5) Deprecate landing-site /planning + /projects over one release cycle — redirect stubs with 'moved to gad planning serve' banner. (6) Subagent-run history render on /my-projects (consumer of todo 2026-04-17-subagent-run-history.md data). (7) daily-subagent dispatch trigger — 'gad start' optionally auto-dispatches pending daily subagent runs if project config has daily-subagent: true (decision gad-258 enforcement mechanism)."
+      "goal": "Split planning surfaces from the landing Next app into a dedicated planning-app (decisions gad-261, gad-262). Scope: (1) scaffold apps/planning-app/ (or vendor/get-anything-done/apps/planning-app/) Next 15 workspace entry with shared primitives from packages/ui. (2) Migrate /planning, /projects, my-projects dashboard routes out of landing into planning-app. (3) CLI: 'gad planning serve' spawns planning-app dev server (port detection + reuse if already running). (4) CLI: 'gad start' spawns 'gad planning serve' if needed + opens browser to /my-projects. (5) Deprecate landing-site /planning + /projects over one release cycle — redirect stubs with 'moved to gad planning serve' banner. (6) Subagent-run history render on /my-projects (consumer of todo 2026-04-17-subagent-run-history.md data). (7) daily-subagent dispatch trigger — 'gad start' optionally auto-dispatches pending daily subagent runs if project config has daily-subagent: true (decision gad-258 enforcement mechanism). (8) Project Editor rehome — `/projects/edit/[id]` route + 4-tab editor (Bestiary, Recipes, BYOK, Inspector) + the entire `/api/dev/*` surface (secrets, env-defaults, scopes, evals/projects/*, gene-states, graph, live, command-bridge) move from `vendor/get-anything-done/site/` to `apps/planning-app/`. Vendor site keeps only the marketing/landing surfaces. Implemented via `@gad-site/*` tsconfig alias for shared eval-data + `apps/planning-app/lib/gad-paths.ts` to resolve vendor lib through createRequire from any cwd. Tracked as task 59-23 (rehome) — landed 2026-04-18 ahead of the planning-serve binary work."
     },
     {
       "type": "phase",
@@ -2340,9 +2340,9 @@
     {
       "type": "task",
       "id": "task:35-07",
-      "label": "Rewrite GAD README to match the completeness and onboarding depth of upstream GSDâ€™s README while preserving GADâ€™s ac",
-      "status": "planned",
-      "goal": "Rewrite GAD README to match the completeness and onboarding depth of upstream GSDâ€™s README while preserving GADâ€™s actual runtime/install/canonical-source truth and avoiding stale command/runtime claims.",
+      "label": "Rewrite GAD README to match the completeness and onboarding depth of upstream GSD&apos;s README while preserving GAD&apo",
+      "status": "done",
+      "goal": "Rewrite GAD README to match the completeness and onboarding depth of upstream GSD&apos;s README while preserving GAD&apos;s actual runtime/install/canonical-source truth and avoiding stale command/runtime advice.",
       "skill": "",
       "taskType": "",
       "keywords": "readme,docs,onboarding,upstream-review"
@@ -2599,9 +2599,9 @@
       "type": "task",
       "id": "task:42.2-05",
       "label": "Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to re",
-      "status": "planned",
+      "status": "cancelled",
       "goal": "Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-169.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "site,findings,whitepapers,copy"
     },
@@ -3004,10 +3004,10 @@
     {
       "type": "task",
       "id": "task:42.2-43",
-      "label": "Site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit ",
-      "status": "planned",
-      "goal": "Site data pipeline extension: emit `site/data/planning-graph.json` on the same cadence as `self-eval.json` (post-commit or nightly). Wire the site's existing command+K global search to layer graph results alongside full-text: \"related to X\", \"decisions citing X\", \"skills depending on X\". No LLM at query time — pure graph traversal. Depends on 42.2-45 (native planning-graph extractor shipping first).",
-      "skill": "",
+      "label": "Part A landed: site data pipeline now emits `site/data/planning-graph.json` (full envelope) + `site/data/planning-graph-",
+      "status": "done",
+      "goal": "Part A landed: site data pipeline now emits `site/data/planning-graph.json` (full envelope) + `site/data/planning-graph-index.json` (token-inverted lookup) on every prebuild via build-site-data.mjs#writePlanningGraphData(). Reader at `site/lib/planning-graph.ts` exposes getPlanningGraph/getPlanningNode/getNeighborhood/searchPlanningGraph with edge-schema normalisation (source/target ↔ from/to), BFS expansion with edgeType + nodeType filters and result cap, and substring-token ranked search. HTTP surface at `GET /api/planning/graph` supports ?related=&radius=&edgeTypes=&nodeTypes=, ?search=&limit=, ?only= for direct node fetch. Smoke-test on the get-anything-done graph: 1019 nodes / 1535 edges; \"byok\"→5 hits (decisions+phase 48); \"197\"→decision:gad-197 ✓. Part B (wire into command+K) deferred — vendor site has no global-search UI yet; backend is ready for it.",
+      "skill": "default",
       "taskType": "site",
       "keywords": "site,command-k,planning-graph,search,traversal"
     },
@@ -3015,8 +3015,8 @@
       "type": "task",
       "id": "task:42.2-44",
       "label": "New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the proj",
-      "status": "planned",
-      "goal": "New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. Every node gets a cid derived from its id so the modal footer CRUD can target nodes. Integrates with the `scaffold-visual-context-surface` skill shipped earlier 2026-04-15. Depends on 42.2-43.",
+      "status": "done",
+      "goal": "New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. Every node gets a cid derived from its id so the modal footer CRUD can target nodes. Integrates with the `scaffold-visual-context-surface` skill shipped earlier 2026-04-15. Depends on 42.2-43. Shipped: apps/planning-app/app/projects/edit/[id]/PlanningGraphPanel.tsx (native column-clustered SVG, type filters, search, click-to-focus 1-hop neighborhood, selected-node detail rail, deterministic data-cid per node via lib/planning-graph.ts nodeCid()), /api/dev/projects/[id]/planning-graph route (per-project graph.json + rebuild=1 hook), replaces the older GAD-only iframe in ProjectEditor canvas mode \"graph\". Lean: zero new deps (no react-flow/d3/dagre).",
       "skill": "",
       "taskType": "site",
       "keywords": "site,vcs,graph-panel,react-flow,cids,visual-context-system"
@@ -3175,9 +3175,9 @@
       "type": "task",
       "id": "task:42.3-13",
       "label": "Noise panel on the /planning Workflows tab â€” separate surface from the signal sections per decision gad-174. Two views",
-      "status": "planned",
+      "status": "cancelled",
       "goal": "Noise panel on the /planning Workflows tab â€” separate surface from the signal sections per decision gad-174. Two views: (a) raw event timeline (filterable by phase, session, event type) for events the emergent detector could not absorb into any candidate, (b) unmatched force-directed graph of the same events. Dense clusters in the noise graph are candidates for \"lower the thresholds\"; sparse clusters are genuine noise. Explicitly deferred â€” ship after 42.3-09 through 42.3-12 prove the signal surfaces are useful.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "workflow,site,noise,visualization,deferred"
     },
@@ -3205,9 +3205,9 @@
       "type": "task",
       "id": "task:42.3-17",
       "label": "Publish /workflows/methodology (or equivalent) on the site documenting how the workflow detector actually works: trace-e",
-      "status": "planned",
+      "status": "done",
       "goal": "Publish /workflows/methodology (or equivalent) on the site documenting how the workflow detector actually works: trace-event schema, scope classification, participant matching for authored workflows, conformance formula (decision gad-173), v1 tool-level emergent mining vs v2 skill-level target (decision gad-178), and the three-section display (authored / emergent / noise). Include small pipeline diagram. This page is load-bearing for making the /planning Workflows tab legible to readers other than the operator â€” right now the methodology lives only in DECISIONS.xml and .planning/workflows/README.md, neither of which are on the site. Ship after the 42.3-16 deep-dive so the doc reflects the real v2 model, not the v1 shortcut.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "workflow,docs,site,methodology,transparency"
     },
@@ -3551,7 +3551,7 @@
       "type": "task",
       "id": "task:43-09",
       "label": "Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/g",
-      "status": "planned",
+      "status": "done",
       "goal": "Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.",
       "skill": "",
       "taskType": "cli",
@@ -3611,9 +3611,9 @@
       "type": "task",
       "id": "task:44-09",
       "label": "Live project-market data sync in dev. Today /project-market is hydrated from site/lib/eval-data.generated.ts which is re",
-      "status": "planned",
+      "status": "done",
       "goal": "Live project-market data sync in dev. Today /project-market is hydrated from site/lib/eval-data.generated.ts which is rebuilt on `predev`/`prebuild` (site/scripts/build-site-data.mjs). A `gad eval run` or `gad eval preserve` invocation between dev-server restarts leaves the catalog stale â€” new generations appear under evals/ but the card grid doesn't know. Fix by either (a) GET /api/dev/projects route handler that re-runs the multi-root eval scan and returns the same shape as EVAL_PROJECTS, fetched by use-project-market when IS_DEV; (b) file-watch based regeneration that kicks build-site-data.mjs when evals/ changes; (c) SSE channel that pushes project delta events after every successful /api/dev/launch-eval exit. Option (a) is simplest and reuses the existing loader helpers added in 44-02. Production mode keeps the static catalog â€” the sync path is dev-only.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-market,live-sync,dev-api,file-watch"
     },
@@ -3650,10 +3650,10 @@
     {
       "type": "task",
       "id": "task:44-11",
-      "label": "In-browser preview of the preserved static-export build on /projects/[id]. Forge now builds to out/ with Next.js static ",
-      "status": "planned",
-      "goal": "In-browser preview of the preserved static-export build on /projects/[id]. Forge now builds to out/ with Next.js static export (task 44-03), and builds are preserved under apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/. BLOCKER: Next.js static exports reference assets at absolute `/_next/...` paths, so iframing the preserved build at /preserved/&lt;project&gt;/&lt;version&gt;/ doesn't resolve its own assets (browser requests /_next/static from the iframe origin â€” the vendor site â€” which returns 404). Three candidate paths: (a) configure forge with `assetPrefix` + `basePath` per-version so the export uses paths like `/preserved/app-forge/v1/_next/...` and can live under any URL; (b) dev-only Next.js rewrite that maps `/preserved/...` to filesystem reads plus an HTML transform to inject matching base; (c) serve the preserved build via a separate dev server on another port and iframe that origin. Option (a) is cleanest â€” requires a forge next.config change + per-version rebuild. Must preserve build correctness: script order, hydration, client JS, user interaction.",
-      "skill": "",
+      "label": "In-browser preview of preserved static-export builds inside the planning-app project editor. Picked option (b) from the ",
+      "status": "done",
+      "goal": "In-browser preview of preserved static-export builds inside the planning-app project editor. Picked option (b) from the spec (dev-only HTML rewriter + filesystem-backed asset route) so existing preserved builds work without rebuild. Implementation: hardened /api/dev/forge-view to rewrite only attribute values that look like Next.js asset paths (avoids stomping on user-content links), srcset support, and a &lt;base href&gt; safety-net inject; forge-view now accepts species+version params alongside the legacy single gen so both 2-level (app-forge/v1/) and 3-level (escape-the-dungeon/&lt;workflow&gt;/v&lt;N&gt;/) on-disk layouts resolve. New GET /api/dev/projects/[id]/preserved enumerates available builds for a project; new PreservedBuildPanel.tsx UI renders a species/version picker + PreviewFrame iframe; ProjectEditor exposes it as a third canvas mode (\"Preview\") plus auto-routes the generation-selection branch through the same panel; InspectorPane \"open in new tab\" now points at forge-view instead of the broken public /playable URL.",
+      "skill": "default",
       "taskType": "site",
       "keywords": "project-market,iframe,preview,static-export,basePath,asset-prefix"
     },
@@ -3661,9 +3661,9 @@
       "type": "task",
       "id": "task:44-12",
       "label": "Persistent server-side process tracker for dev eval runs. Today `/api/dev/launch-eval` spawns a child and streams output",
-      "status": "planned",
+      "status": "done",
       "goal": "Persistent server-side process tracker for dev eval runs. Today `/api/dev/launch-eval` spawns a child and streams output via SSE, but the process state is tied to the request lifetime â€” close the tab or refresh the page and the running eval disappears from the UI (and if the request is aborted, SIGTERM kills the child). Build an in-memory Map&lt;id, {command, startedAt, ringBuffer, exitCode, child}&gt; and expose: (a) POST /api/dev/processes (start; returns id and survives the request), (b) GET /api/dev/processes (list active + recent), (c) GET /api/dev/processes/:id/tail (SSE tail that works after reconnect), (d) DELETE /api/dev/processes/:id (SIGTERM). Refactor /api/dev/launch-eval to delegate through it. ProjectOperator on mount hydrates from GET /api/dev/processes filtered to the current project so refresh preserves visibility. Ring buffer ~2000 lines/process. Dev-only; prod stays 403.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "dev-api,process-tracker,ring-buffer,sse-reconnect,project-operator"
     },
@@ -3893,9 +3893,9 @@
       "type": "task",
       "id": "task:44-16",
       "label": "Normalize remaining sections to the explicit-id pattern across the app: every user-facing SiteSection should have a stab",
-      "status": "planned",
+      "status": "done",
       "goal": "Normalize remaining sections to the explicit-id pattern across the app: every user-facing SiteSection should have a stable literal cid token and any redundant Identified wrappers that only restate the same section identity should be removed. Keep Identified only where extra inner-block targeting is materially useful for prompts.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "site-section,cid,rollout,cleanup,visual-context-panel"
     },
@@ -3923,8 +3923,68 @@
       "type": "task",
       "id": "task:44-38",
       "label": "44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm publ",
-      "status": "planned",
+      "status": "done",
       "goal": "44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm public registry) to GitHub Releases tarball. Discovered 2026-04-18: workflows/update.md step run_update invokes npx -y get-anything-done@latest which dies for every user. Rewrite: (a) hooks/gad-check-update.js polls GitHub Releases API for latest tag, (b) workflows/update.md fetches tarball via gh release download, unpacks, runs bin/install.js, (c) version-compare against git tag not npm, (d) keep backup/reapply-patches flow. Acceptance: gad update works on a clean machine with zero prior vendor checkout. Blocks wider adoption — today every user who runs /gad-update sees 404. Connects to 44-28.B0 (44-31, done).",
+      "skill": "default",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:44-39",
+      "label": "Generation publish status: extend per-generation manifest with status (draft|published|unlisted), publishedAt, published",
+      "status": "done",
+      "goal": "Generation publish status: extend per-generation manifest with status (draft|published|unlisted), publishedAt, publishedBy. Editor publish button writes status; file copy to public/playable/ becomes a side effect of status===published. publish/route.ts gains GET (status), PATCH (set status). Status is source of truth.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:44-40",
+      "label": "Compile marketplace-index.json from per-generation manifests + EVAL_PROJECTS at predev/prebuild. Index shape: { projects",
+      "status": "done",
+      "goal": "Compile marketplace-index.json from per-generation manifests + EVAL_PROJECTS at predev/prebuild. Index shape: { projects: [...], generations: [{projectId, species, version, status, publishedAt, publishedBy, buildPath, score?}] }. /project-market reads index instead of EVAL_PROJECTS.published. ProjectCard shows generation rows with species badge.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:44-41",
+      "label": "Species index view at /project-market — band that lists distinct species with &gt;=1 published generation, click filters",
+      "status": "done",
+      "goal": "Species index view at /project-market — band that lists distinct species with &gt;=1 published generation, click filters marketplace by species. Read from marketplace-index.json.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:44-42",
+      "label": "Shareable marketplace URLs: sync species/project/workflow/round/status filters to /project-market query string. Reading ",
+      "status": "done",
+      "goal": "Shareable marketplace URLs: sync species/project/workflow/round/status filters to /project-market query string. Reading the URL on mount hydrates filter state; URL keeps in sync as filters change. Enables linking directly to a species or workflow view.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:44-43",
+      "label": "Project detail surface renders per-generation publish badge (status + publishedAt + publishedBy) sourced from MARKETPLAC",
+      "status": "done",
+      "goal": "Project detail surface renders per-generation publish badge (status + publishedAt + publishedBy) sourced from MARKETPLACE_INDEX. Drafts and unlisted stay visible on the detail page since it&apos;s the canonical operator project surface.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:44-44",
+      "label": "Species detail page at /project-market/species/[species] in vendor site: lists every published generation for that speci",
+      "status": "done",
+      "goal": "Species detail page at /project-market/species/[species] in vendor site: lists every published generation for that species across projects, sourced from MARKETPLACE_INDEX.species + .generations. Renders project + version + publishedAt + playable link, with a back-link to /project-market and a chip showing total count. ProjectMarketSpeciesBand entries link here.",
       "skill": "",
       "taskType": "framework",
       "keywords": ""
@@ -3997,13 +4057,23 @@
     },
     {
       "type": "task",
-      "id": "task:",
-      "label": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive “any gad",
-      "status": "planned",
-      "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive “any gad/npx” acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety â€” the allow-list is defense in depth.",
-      "skill": "",
-      "taskType": "",
+      "id": "task:44.5-02b",
+      "label": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad",
+      "status": "done",
+      "goal": "Hardening pass for the dev-server command bridge: after 44.5-02 proves the editor works, replace the permissive \"any gad/npx\" acceptance with an explicit allow-list (`gad evolution status|validate|promote|discard`, `gad snapshot`, `gad state`, `gad tasks`, `npx` commands scoped to the eval repo, `pnpm|npm|yarn` install/build/test), add argument sanitization, per-command timeout tuning, and structured error responses. Keep the NODE_ENV=development gate as the primary safety — the allow-list is defense in depth.",
+      "skill": "default",
+      "taskType": "site",
       "keywords": "brood-editor,dev-bridge,security,hardening"
+    },
+    {
+      "type": "task",
+      "id": "task:44.5-03",
+      "label": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species over",
+      "status": "done",
+      "goal": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task — focus on the round-trip (read file → edit in browser → write file → trigger rebuild).",
+      "skill": "default",
+      "taskType": "site",
+      "keywords": "brood-editor,filesystem,local-dev"
     },
     {
       "type": "task",
@@ -4169,7 +4239,7 @@
       "type": "task",
       "id": "task:42.2-46",
       "label": "Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**expr",
-      "status": "planned",
+      "status": "done",
       "goal": "Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent DNA integration) against the three states (**expressed** in `.gad-try/`, **mutation** in `.planning/proto-skills/`, **integrated** in `.claude/skills/` or canonical `skills/`). Map every existing CLI command to its lifecycle role: `gad try`, `gad try cleanup`, `gad evolution install`, `gad evolution promote`, `gad evolution shed`, `gad evolution discard`, `gad skill promote-folder`, `gad install` (local), `gad install --global`. Deprecate `gad install --global` as the default first-encounter path for new skills (route new users through `gad try` + `gad evolution promote` instead). Backward compatible — no CLI changes, docs only. Update `references/skill-shape.md` §1 and AGENTS.md loop section to cite the new lifecycle model. Per decision gad-198.",
       "skill": "",
       "taskType": "docs",
@@ -4199,9 +4269,9 @@
       "type": "task",
       "id": "task:45-03",
       "label": "Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/sy",
-      "status": "planned",
+      "status": "done",
       "goal": "Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/system returning JSON.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "api-routes,planning-data,system-data,rest"
     },
@@ -4229,9 +4299,9 @@
       "type": "task",
       "id": "task:45-06",
       "label": "Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire int",
-      "status": "planned",
+      "status": "done",
       "goal": "Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire into Planning tab.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "component-migration,tasks-tab,project-scoped"
     },
@@ -4259,9 +4329,9 @@
       "type": "task",
       "id": "task:45-09",
       "label": "Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.",
-      "status": "planned",
+      "status": "done",
       "goal": "Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "component-migration,requirements-tab,notes-tab,project-scoped"
     },
@@ -4269,9 +4339,9 @@
       "type": "task",
       "id": "task:45-10",
       "label": "Migrate Evolution tab components — PlanningWorkflowsTab + PlanningSkillCandidatesTab become per-project Evolution tab sh",
-      "status": "planned",
+      "status": "done",
       "goal": "Migrate Evolution tab components — PlanningWorkflowsTab + PlanningSkillCandidatesTab become per-project Evolution tab showing workflow patterns and proto-skills.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "component-migration,evolution-tab,workflows,skill-candidates,project-scoped"
     },
@@ -4279,9 +4349,9 @@
       "type": "task",
       "id": "task:45-11",
       "label": "Migrate System tab components — PlanningSystemStatCards + PlanningSystemRuntimeActivityPanel become per-project System t",
-      "status": "planned",
+      "status": "done",
       "goal": "Migrate System tab components — PlanningSystemStatCards + PlanningSystemRuntimeActivityPanel become per-project System tab fed by self-eval.json and trace data via command bridge.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "component-migration,system-tab,stats,runtime-activity,project-scoped"
     },
@@ -4289,9 +4359,9 @@
       "type": "task",
       "id": "task:45-12",
       "label": "Rewire /planning route — replace monolithic planning page with cross-project dashboard or redirect to /projects. Content",
-      "status": "planned",
+      "status": "done",
       "goal": "Rewire /planning route — replace monolithic planning page with cross-project dashboard or redirect to /projects. Content now lives per-project.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "planning-route,redirect,dashboard,cleanup"
     },
@@ -4309,9 +4379,9 @@
       "type": "task",
       "id": "task:45-14",
       "label": "Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base",
-      "status": "planned",
+      "status": "done",
       "goal": "Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "type-ramp,color-palette,visual-identity,css,gradients"
     },
@@ -4339,9 +4409,9 @@
       "type": "task",
       "id": "task:45-17",
       "label": "Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metad",
-      "status": "planned",
+      "status": "done",
       "goal": "Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metadata references.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "logo,favicon,og-image,visual-identity"
     },
@@ -4359,9 +4429,9 @@
       "type": "task",
       "id": "task:45-19",
       "label": "Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/",
-      "status": "planned",
+      "status": "done",
       "goal": "Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/*.tsx for orphaned files.",
-      "skill": "",
+      "skill": "default",
       "taskType": "cleanup",
       "keywords": "cleanup,dead-imports,planning-route,unused-files"
     },
@@ -4369,9 +4439,9 @@
       "type": "task",
       "id": "task:45-20",
       "label": "Full build + VCS audit — npm run build passes, all new components have data-cid attributes, VCS grep confirms every new ",
-      "status": "planned",
+      "status": "done",
       "goal": "Full build + VCS audit — npm run build passes, all new components have data-cid attributes, VCS grep confirms every new section is discoverable.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "verification,build,vcs-audit,data-cid,type-check"
     },
@@ -4507,6 +4577,96 @@
     },
     {
       "type": "task",
+      "id": "task:51-01",
+      "label": "Clerk skeleton in apps/planning-app: install @clerk/nextjs, mount middleware that protects /api/dev/* and /projects/edit",
+      "status": "done",
+      "goal": "Clerk skeleton in apps/planning-app: install @clerk/nextjs, mount middleware that protects /api/dev/* and /projects/edit/*, render UserButton in header, expose helper that resolves operator id (Clerk userId or &apos;solo-operator&apos; fallback). Stamp publishedBy on the publish PATCH route from auth(). Solo-operator fallback when CLERK_PUBLISHABLE_KEY/CLERK_SECRET_KEY are unset so local dev keeps working without Clerk creds.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:51-02",
+      "label": "Project Editor agent workspace at /project-editor + /project-editor/[project] in apps/planning-app: index lists register",
+      "status": "done",
+      "goal": "Project Editor agent workspace at /project-editor + /project-editor/[project] in apps/planning-app: index lists registered projects with latest published generation chip, detail page renders ProjectTree (file browser via /api/dev/tree), forge-view iframe (latest preserved build via /api/dev/forge-view + /api/dev/forge-asset), and SSE-streamed agent launcher (/api/dev/spawn) with confirm dialog for claude-code/codex/gad-eval-run. Cross-links to /projects/edit/[id] (bestiary/BYOK) + /my-projects drawer. Middleware extends Clerk protection to /project-editor/* since spawn writes to disk.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:51-03",
+      "label": "Subagent attribution: spawn route resolves operator via getOperatorId() and injects OPERATOR_ID + GAD_OPERATOR_ID + GAD_",
+      "status": "done",
+      "goal": "Subagent attribution: spawn route resolves operator via getOperatorId() and injects OPERATOR_ID + GAD_OPERATOR_ID + GAD_AGENT_ID + GAD_AGENT_ROLE + GAD_PROJECT_ID into child env, plus /api/dev/whoami returns the same payload for client-side surfaces. Subagent CLIs (claude-code, codex, gad eval run) can echo identity via env, and a callback into /api/dev/publish from inside a spawned child can pass x-operator-id header so MANIFEST.json publishedBy carries the human operator even when the actual write came from an agent runtime.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:51-04",
+      "label": "/my-published view in apps/planning-app: server reads marketplace-index.generated.json and filters generations where pub",
+      "status": "done",
+      "goal": "/my-published view in apps/planning-app: server reads marketplace-index.generated.json and filters generations where publishedBy === getOperatorId(). Solo-operator mode shows everything publishedBy &apos;solo-operator&apos;; Clerk mode shows the signed-in user&apos;s generations only. Each row links to /projects/edit/[id] (revert/manage) and to the public playable URL. Empty state explains how to publish.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:51-05",
+      "label": "Hot-rebuild marketplace-index.generated.json on publish so /my-published and the public marketplace surface state change",
+      "status": "done",
+      "goal": "Hot-rebuild marketplace-index.generated.json on publish so /my-published and the public marketplace surface state changes without a full vendor-site predev. Avoid re-scanning every TRACE.json — mutate the existing index in place, preserving fields the publish PATCH can&apos;t recompute (score, date, contextFramework).",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:51-06",
+      "label": "Per-project best/latest score chips on /project-market/species/[species] detail page. Operators evaluating a species&apo",
+      "status": "done",
+      "goal": "Per-project best/latest score chips on /project-market/species/[species] detail page. Operators evaluating a species&apos;s portfolio against one project want to see the high-water mark and the most recent scored attempt at a glance, not just the count of generations.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:51-07",
+      "label": "gad publish CLI command with operator attribution. Subagents spawned via /api/dev/spawn inherit OPERATOR_ID/GAD_AGENT_ID",
+      "status": "done",
+      "goal": "gad publish CLI command with operator attribution. Subagents spawned via /api/dev/spawn inherit OPERATOR_ID/GAD_AGENT_ID env vars (task 51-03) but had no CLI consumer that actually threaded them as request headers. Provide one so an agent runtime calling `gad publish escape-the-dungeon --species gad --version v7` from inside a spawned shell stamps MANIFEST.publishedBy with the human operator, not the runtime.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:51-08",
+      "label": "gad publish list — read-only inspection of the marketplace index from the CLI. Operators want to confirm what their iden",
+      "status": "done",
+      "goal": "gad publish list — read-only inspection of the marketplace index from the CLI. Operators want to confirm what their identity has actually shipped without opening /my-published in a browser, and agents want a way to assert published state in scripts without spinning up planning-app.",
+      "skill": "default",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:51-09",
+      "label": "UI publish actions need to be distinguishable from CLI/agent publishes in the audit trail. Without a marker, server logs",
+      "status": "done",
+      "goal": "UI publish actions need to be distinguishable from CLI/agent publishes in the audit trail. Without a marker, server logs show `operator=&lt;id&gt;` for both a Bestiary tab click and a `gad publish` call from an agent, hiding intent.",
+      "skill": "default",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
       "id": "task:59-01",
       "label": "Scaffold apps/planning-app/ as a new Next 15 workspace entry. Minimal shell: layout.tsx with dev-only auth stub, home pa",
       "status": "done",
@@ -4607,6 +4767,16 @@
     },
     {
       "type": "task",
+      "id": "task:59-23",
+      "label": "Project Editor + dev API rehome from vendor/get-anything-done/site/ to apps/planning-app/. Pulls the entire `/projects/e",
+      "status": "done",
+      "goal": "Project Editor + dev API rehome from vendor/get-anything-done/site/ to apps/planning-app/. Pulls the entire `/projects/edit/[id]` tree (19 .tsx files: ProjectEditor, BestiaryTab, RecipesTab, ByokTab, InspectorPane, ProjectCanvas, DiffTree, GenerationRunner, RadarChart, TraitBar, DnaEditor, DnaActionRow, EditableField, InventoryGrid, LiveDataPanel, CommandPalette, PreviewFrame, page.tsx, use-command-bridge.ts) plus the supporting eval-data-runtime.ts loader and 8 of 16 `/api/dev/*` route trees actually used by the editor (command-bridge, env-defaults, evals/projects/*, gene-states, graph, live, scopes, secrets/*) into apps/planning-app. Vendor site keeps only marketing/landing surfaces.\r\n\r\nImplementation: (1) tsconfig path `@gad-site/*` → `../../vendor/get-anything-done/site/*` so the editor still imports `eval-data` + `eval-data.generated` from the vendor site without copying the 19k-line generated file. (2) New apps/planning-app/lib/gad-paths.ts exports GAD_ROOT/GAD_LIB/GAD_BIN/GAD_SITE_DIR resolved via `import.meta.url` walk-up — replaces the original `process.cwd() + \"..\"` pattern that assumed cwd was the site dir. (3) scripts/rewrite-gad-paths.mjs (one-shot) sweeps all 19 copied files and substitutes the path-resolution patterns. (4) SiteSection ported into apps/planning-app/components/site/ as a stripped-down version (no dev-id band Visual Context Panel, no useDevId/BandDevPanel deps) so the public landing site can keep evolving its dev-id machinery without churning planning-app. (5) next.config.mjs sets outputFileTracingRoot to repo root + experimental.externalDir=true so Next traces the @gad-site imports cleanly. (6) Editor + dev API routes deleted from vendor site in the same change. Build verifies: pnpm --filter @portfolio/planning-app build succeeds with all 8 dev API routes + the editor route registered.\r\n\r\nVendor site `/projects/edit` and `/api/dev/*` routes are deleted in the same change. Captures decision-gad-269 boundary: vendor site = marketing/landing only; planning-app = operator surfaces (BYOK, evals, dev tooling).",
+      "skill": "",
+      "taskType": "refactor",
+      "keywords": ""
+    },
+    {
+      "type": "task",
       "id": "task:60-01",
       "label": "Write references/byok-design.md resolving the open questions in phase 60 goal + decision gad-260: (a) crypto primitive —",
       "status": "done",
@@ -4687,11 +4857,21 @@
     },
     {
       "type": "task",
+      "id": "task:60-07b",
+      "label": "Scoped BYOK + non-secret env defaults + dev-server passphrase fix. Per decision gad-268, extend the BYOK surface so keys",
+      "status": "done",
+      "goal": "Scoped BYOK + non-secret env defaults + dev-server passphrase fix. Per decision gad-268, extend the BYOK surface so keys and env defaults resolve along a scope chain: species &gt; eval &gt; planning. Shipped 2026-04-18: (1) lib/secrets-store.cjs — scope arg threaded through get/set/list/rotate/revoke/decryptAll; envelope+audit paths nest under .gad/secrets/&lt;projectId&gt;/&lt;scope-path&gt;.enc; per-scope keychain account (projectId::scope) so each scope&apos;s master key is independent; new listChain/decryptChain walk most-specific→least, marking shadowed parents in shadows[]. Backward-compatible: no-scope = legacy planning bag at .gad/secrets/&lt;projectId&gt;.enc. (2) tests/secrets-store.test.cjs — added scope path resolution + per-scope isolation suites (29 tests pass total). (3) lib/env-defaults-store.cjs — new plain-JSON scoped store at .gad/env/&lt;projectId&gt;[/&lt;scope&gt;].json with CRUD, parent-merge resolveChain, path-traversal safety, auto-gitignore on first write. (4) tests/env-defaults-store.test.cjs — 12 tests round-trip + scope merge + validation + gitignore. (5) lib/env-cli.cjs — --scope/--scope-chain flags on list/get/set/rotate/revoke; renderListTable adds BAG + SHADOWS columns when present; fixed revokeCmd variable shadow that was dropping --scope on the way to store.revoke. (6) lib/keychain/passphrase-fallback.cjs — honor GAD_NO_TTY_PROMPT=1 to refuse interactive prompts in server contexts (Next.js dev server inherits parent TTY → would deadlock HTTP request). (7) lib/secrets-store-errors.cjs — added VALIDATION code shared with env-defaults-store. (8) New API routes /api/dev/env-defaults/[projectId] (list/set/unset, scope+chain) + /api/dev/scopes/[projectId] (walks evals/&lt;eval&gt;/species/&lt;species&gt; for picker source); /api/dev/secrets/[projectId] + /audit + /test now accept scope/scopeChain/scopeBag and decrypt-once per distinct bag for last-four tails. All routes set process.env.GAD_NO_TTY_PROMPT=&quot;1&quot; at module load. (9) ByokTab.tsx — ScopePicker dropdown, BagBadge (active vs inherited), ShadowHint (count of parents hidden), inherited rows go read-only (rotate/revoke disabled), AddKeyForm + RotateForm + TestCallButton thread scopeBag end-to-end, new EnvDefaultsSection mirrors the keys list for non-secret values, AuditList title shows active scope, byokFetch wrapper handles PASSPHRASE_REQUIRED_NO_TTY (423) + PASSPHRASE_INVALID (401) by prompting via window.prompt and caching in tab-lifetime Map. 108/108 BYOK-related tests pass. Note: re-applied after parallel-agent vendor commits clobbered the lib + planning edits — see commit message.",
+      "skill": "",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
       "id": "task:60-08",
       "label": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management ",
-      "status": "planned",
-      "goal": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.",
-      "skill": "",
+      "status": "done",
+      "goal": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 + scope chain from 60-07b but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.",
+      "skill": "default",
       "taskType": "site",
       "keywords": ""
     },
@@ -4717,6 +4897,16 @@
     },
     {
       "type": "task",
+      "id": "task:60-09b",
+      "label": "Read-only handoff queue dashboard in planning-app (/handoffs). Walks vendor/.planning/handoffs/{open,claimed,closed}/, p",
+      "status": "done",
+      "goal": "Read-only handoff queue dashboard in planning-app (/handoffs). Walks vendor/.planning/handoffs/{open,claimed,closed}/, parses YAML frontmatter, renders bucket sections with priority and estimated_context chips. Auth-gated. Highlights operator&apos;s own claims. Writes still flow through gad handoffs CLI until per-file format stabilizes. Adds /handoffs to AppShell + middleware.",
+      "skill": "",
+      "taskType": "code",
+      "keywords": ""
+    },
+    {
+      "type": "task",
       "id": "task:63-01",
       "label": "State+log consolidation audit. Enumerate every write-path: .omx/state/*.json (current-task-baseline, hud-state, notify-h",
       "status": "done",
@@ -4729,8 +4919,8 @@
       "type": "task",
       "id": "task:63-02",
       "label": "Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session",
-      "status": "planned",
-      "goal": "Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session pause writes handoff file, (b) user settings 63-03 stores last-active-projectid, (c) &apos;gad start&apos; or new session auto-invokes gad handoffs list --unclaimed --mine-first + gad snapshot --projectid &lt;last-active&gt;, (d) if exactly one unclaimed handoff matches runtime auto-claim, (e) SessionStart hook surfaces &apos;1 unclaimed handoff — /pickup to resume&apos;. Metrics to beat: 2026-04-18 baseline ~35% of Claude turn on orientation (archaeology + /gsd:update + projectid guessing). Target &lt;1 tool call to restored context.",
+      "status": "done",
+      "goal": "Session continuity contract — &apos;lets continue&apos; zero-cost pickup. Prereq 60-09 handoff queue. (a) Claude session pause writes handoff file, (b) user settings 63-03 stores last-active-projectid, (c) &apos;gad start&apos; or new session auto-invokes gad handoffs list --unclaimed --mine-first + gad snapshot --projectid &lt;last-active&gt;, (d) if exactly one unclaimed handoff matches runtime auto-claim, (e) SessionStart hook surfaces &apos;1 unclaimed handoff — /pickup to resume&apos;. Metrics to beat: 2026-04-18 baseline ~35% of Claude turn on orientation (archaeology + /gsd:update + projectid guessing). Target &lt;1 tool call to restored context. Planning-app side shipped: /pickup page (last-active + mine-first scored handoffs + one-click claim+resume), AppShell PickupHud (header chip with open count), inline claim/complete buttons on /handoffs, last-active stamp on /projects/edit/[id] + /project-editor/[project] visits, vendor bridges for user-settings.cjs + handoffs.cjs (claim/complete via canonical writer, no drift). CLI side (parts c/d/e) remains framework lane.",
       "skill": "",
       "taskType": "framework",
       "keywords": ""
@@ -4793,6 +4983,52 @@
       "goal": "Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&gt; --goal CLI path.",
       "skill": "",
       "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-health-cli",
+      "label": "Machine health CLI — gad health disk, gad health prune, gad health caches. Surface disk pressure + remediate from inside",
+      "status": "done",
+      "goal": "Machine health CLI — gad health disk, gad health prune, gad health caches. Surface disk pressure + remediate from inside the loop so agents can detect OOM/ENOSPC before builds fail. (a) gad health disk reports df + du of known-hot dirs; (b) gad health prune --worktrees safely removes stale registered worktrees with no uncommitted work; (c) gad health caches --dry-run lists reproducible artifacts (build output, npm cache). Motivated by 2026-04-18 incident: cursor site build blocked by ENOSPC (2 GB free of 456 GB); 17 stale agent worktrees in .claude/worktrees/ which gad worktree list does not detect — close that gap. Acceptance: gad health disk runs under 2s on Windows without hanging du, reports top 5 hogs. gad health prune --worktrees detects orphans. gad worktree list sees claude-code agent-* worktrees.",
+      "skill": "default",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:63-graph-task-stale",
+      "label": "Graph cache stale on TASK-REGISTRY.xml mutations. Repro 2026-04-18: (a) edit task status from planned to done in TASK-RE",
+      "status": "done",
+      "goal": "Graph cache stale on TASK-REGISTRY.xml mutations. Repro 2026-04-18: (a) edit task status from planned to done in TASK-REGISTRY.xml, run gad snapshot --projectid get-anything-done, gad query &lt;id&gt; still reports (planned); (b) add a brand-new &lt;task id=...&gt; entry by hand-editing the XML, gad snapshot, gad query &lt;id&gt; returns 0 matches. Phase + decision indexes refresh fine. Root cause likely: graph extractor caches task-status + task-id index without invalidating on TASK-REGISTRY.xml mtime change, OR rebuilds only the structure not the per-task fields. Examples in the wild: 45-14 (status edit not reflected), 51-08 + 51-09 (new tasks not indexed), pre-existing entry around dev-server command bridge hardening shows up in tasks list with empty GAD-T- id. Workaround: always use &apos;gad tasks add&apos; for new tasks and &apos;gad tasks release --done --agentid --skill&apos; for status changes — both write paths apparently DO invalidate. Fix: graph extractor should mtime-watch TASK-REGISTRY.xml or always re-parse it on snapshot. Affects every agent that follows the CLAUDE.md &apos;Update TASK-REGISTRY.xml status=done&apos; workflow literally.\r\n\r\nFIX 2026-04-18: lib/graph-extractor.cjs gains isGraphStale(planDir, jsonPath) which compares graph.json mtime against TASK-REGISTRY/ROADMAP/DECISIONS source XML mtimes, and loadOrBuildGraph(root, baseDir, opts) which is now the single read entry point — checks staleness, rebuilds + writes when stale (or when graph.json missing/corrupt), returns parsed graph. opts.readOnly skips the file-write race so concurrent snapshot agents do not collide. All 5 read sites in bin/gad.cjs (snapshot tasks block, sprint snapshot block, snapshot graph-stats block, gad tasks --graph listing, gad query run) routed through the helper. Smoke: graph.json mtime forced 10s old vs TASK-REGISTRY now → isGraphStale=true → reload rebuilt=true (1019→1023 nodes confirming a hand-edit was picked up) → isGraphStale=false.",
+      "skill": "default",
+      "taskType": "framework",
+      "keywords": ""
+    },
+    {
+      "type": "task",
+      "id": "task:64-C",
+      "label": "Deprecate the legacy Node SEA release script now that the Bun release build is green. Keep the SEA path available for on",
+      "status": "done",
+      "goal": "Deprecate the legacy Node SEA release script now that the Bun release build is green. Keep the SEA path available for one release as an escape hatch, mark it deprecated, and do not touch the npm tarball publish chain per gad-274.",
+      "skill": "repo-planner",
+      "taskType": "pipeline",
+      "keywords": ""
+    },
+    {
+      "type": "skill",
+      "id": "skill:repo-planner",
+      "label": "repo-planner",
+      "source": "task-attribution"
+    },
+    {
+      "type": "task",
+      "id": "task:64-E",
+      "label": "Wire the Bun release CI build path to run with GAD_RELEASE_BUILD=1 so startup/snapshot/hook code paths stay read-only in",
+      "status": "done",
+      "goal": "Wire the Bun release CI build path to run with GAD_RELEASE_BUILD=1 so startup/snapshot/hook code paths stay read-only in clean release worktrees.",
+      "skill": "repo-planner",
+      "taskType": "pipeline",
       "keywords": ""
     },
     {
@@ -6626,10 +6862,40 @@
       "source": "decision-citation"
     },
     {
-      "type": "workflow",
-      "id": "workflow:./workflow.md",
-      "label": "./workflow.md",
-      "source": "skill-ref"
+      "type": "decision",
+      "id": "decision:gad-270",
+      "label": "Per-generation MANIFEST.json is the publish source-of-truth; marketplace reads a generated index",
+      "summary": "The marketplace publish lifecycle moves from an implicit binary state (does `public/playable/&lt;project&gt;/&lt;species&gt;/&lt;version&gt;/index.html` exist?) and a project-wide `EVAL_PROJECTS[i].published` boolean to an explicit per-generation `MANIFEST.json` carrying `{ status: \"draft\" | \"publis"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-269",
+      "label": "vendor/get-anything-done/site is marketing-only; operator surfaces live in apps/planning-app",
+      "summary": "The Project Editor (`/projects/edit/[id]` + 4 tabs) and the entire `/api/dev/*` surface (secrets, env-defaults, scopes, evals/projects, gene-states, graph, live, command-bridge) move out of `vendor/get-anything-done/site/` and into `apps/planning-app/`. The vendor site keeps only the audience-facing"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad-site",
+      "label": "gad-site",
+      "source": "decision-citation"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad-paths",
+      "label": "gad-paths",
+      "source": "decision-citation"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-268",
+      "label": "BYOK keys + non-secret env defaults are scope-resolved across species &gt; eval &gt; planning",
+      "summary": "Both encrypted secrets (BYOK) and non-secret env defaults resolve along an explicit scope chain instead of living in a single per-project bag. Default chain when nothing else is requested: most-specific scope (e.g. evals/&lt;eval&gt;/species/&lt;species&gt;) → evals/&lt;eval&gt; → planning (legacy b"
+    },
+    {
+      "type": "decision",
+      "id": "decision:gad-271",
+      "label": "Clerk for operator auth in apps/planning-app, with solo-operator fallback for zero-config local dev",
+      "summary": "Phase 51 picks Clerk (`@clerk/nextjs` v6) as the operator-auth substrate for `apps/planning-app`. Clerk wraps the layout (`AuthProvider`), the header renders `UserButton` / `SignInButton` (`AuthHeaderSlot`), and a `clerkMiddleware` instance protects `/api/dev/*` and `/projects/edit/*` route trees. I"
     },
     {
       "type": "skill",
@@ -7031,6 +7297,14 @@
     },
     {
       "type": "skill",
+      "id": "skill:gad-handoffs",
+      "label": ">-",
+      "slug": "gad-handoffs",
+      "trigger": "",
+      "source": "canonical"
+    },
+    {
+      "type": "skill",
       "id": "skill:gad:health",
       "label": "Diagnose planning directory health and optionally repair issues",
       "slug": "gad-health",
@@ -7220,16 +7494,10 @@
     {
       "type": "skill",
       "id": "skill:gad:pause-work",
-      "label": "Create context handoff when pausing work mid-phase",
+      "label": ">-",
       "slug": "gad-pause-work",
       "trigger": "",
       "source": "canonical"
-    },
-    {
-      "type": "workflow",
-      "id": "workflow:workflows/pause-work.md",
-      "label": "workflows/pause-work.md",
-      "source": "skill-ref"
     },
     {
       "type": "skill",
@@ -7818,6 +8086,13 @@
       "id": "workflow:workflows/node-repair.md",
       "label": "node-repair.md",
       "file": "workflows/node-repair.md",
+      "source": "top-level"
+    },
+    {
+      "type": "workflow",
+      "id": "workflow:workflows/pause-work.md",
+      "label": "Find most recent phase directory with work",
+      "file": "workflows/pause-work.md",
       "source": "top-level"
     },
     {
@@ -9539,6 +9814,11 @@
     },
     {
       "source": "task:42.2-05",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:42.2-05",
       "target": "decision:gad-169",
       "type": "CITES"
     },
@@ -10079,7 +10359,17 @@
     },
     {
       "source": "task:42.2-43",
-      "target": "task:42.2-45",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:42.2-43",
+      "target": "decision:gad-197",
+      "type": "CITES"
+    },
+    {
+      "source": "task:42.2-43",
+      "target": "phase:48",
       "type": "CITES"
     },
     {
@@ -10294,6 +10584,11 @@
     },
     {
       "source": "task:42.3-13",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:42.3-13",
       "target": "decision:gad-174",
       "type": "CITES"
     },
@@ -10341,6 +10636,11 @@
       "source": "task:42.3-17",
       "target": "phase:42.3",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:42.3-17",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:42.3-17",
@@ -10904,6 +11204,11 @@
     },
     {
       "source": "task:44-09",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44-09",
       "target": "task:44-02",
       "type": "CITES"
     },
@@ -10944,13 +11249,18 @@
     },
     {
       "source": "task:44-11",
-      "target": "task:44-03",
-      "type": "CITES"
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:44-12",
       "target": "phase:44",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-12",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:44-05",
@@ -11298,6 +11608,11 @@
       "type": "BELONGS_TO"
     },
     {
+      "source": "task:44-16",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:44-17",
       "target": "phase:44",
       "type": "BELONGS_TO"
@@ -11339,6 +11654,11 @@
     },
     {
       "source": "task:44-38",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44-38",
       "target": "task:44-28",
       "type": "CITES"
     },
@@ -11351,6 +11671,61 @@
       "source": "task:44-38",
       "target": "task:44-31",
       "type": "CITES"
+    },
+    {
+      "source": "task:44-39",
+      "target": "phase:44",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-40",
+      "target": "phase:44",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-40",
+      "target": "task:44-39",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:44-41",
+      "target": "phase:44",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-41",
+      "target": "task:44-40",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:44-42",
+      "target": "phase:44",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-42",
+      "target": "task:44-41",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:44-43",
+      "target": "phase:44",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-43",
+      "target": "task:44-40",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:44-44",
+      "target": "phase:44",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-44",
+      "target": "task:44-41",
+      "type": "DEPENDS_ON"
     },
     {
       "source": "task:44.5-01",
@@ -11448,22 +11823,32 @@
       "type": "USES_SKILL"
     },
     {
-      "source": "task:",
+      "source": "task:44.5-02b",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
     },
     {
-      "source": "task:",
+      "source": "task:44.5-02b",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-02b",
       "target": "task:44.5-02",
       "type": "CITES"
     },
     {
-      "source": "task:",
+      "source": "task:44.5-03",
       "target": "phase:44.5",
       "type": "BELONGS_TO"
     },
     {
-      "source": "task:",
+      "source": "task:44.5-03",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44.5-03",
       "target": "task:44.5-02",
       "type": "CITES"
     },
@@ -11823,6 +12208,11 @@
       "type": "BELONGS_TO"
     },
     {
+      "source": "task:45-03",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:45-04",
       "target": "phase:45",
       "type": "BELONGS_TO"
@@ -11873,6 +12263,11 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:45-06",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:45-07",
       "target": "phase:45",
       "type": "BELONGS_TO"
@@ -11928,6 +12323,11 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:45-09",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:45-10",
       "target": "phase:45",
       "type": "BELONGS_TO"
@@ -11941,6 +12341,11 @@
       "source": "task:45-10",
       "target": "task:45-02",
       "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-10",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:45-11",
@@ -11956,6 +12361,11 @@
       "source": "task:45-11",
       "target": "task:45-03",
       "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-11",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:45-12",
@@ -11993,6 +12403,11 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:45-12",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:45-13",
       "target": "phase:45",
       "type": "BELONGS_TO"
@@ -12011,6 +12426,11 @@
       "source": "task:45-14",
       "target": "phase:45",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:45-14",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:45-15",
@@ -12053,6 +12473,11 @@
       "type": "BELONGS_TO"
     },
     {
+      "source": "task:45-17",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:45-18",
       "target": "phase:45",
       "type": "BELONGS_TO"
@@ -12078,6 +12503,11 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:45-19",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:45-20",
       "target": "phase:45",
       "type": "BELONGS_TO"
@@ -12086,6 +12516,11 @@
       "source": "task:45-20",
       "target": "task:45-19",
       "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-20",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:45-21",
@@ -12298,6 +12733,121 @@
       "type": "CITES"
     },
     {
+      "source": "task:51-01",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-02",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-02",
+      "target": "task:51-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-03",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-03",
+      "target": "task:51-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-03",
+      "target": "task:51-02",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-04",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-04",
+      "target": "task:51-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-05",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-05",
+      "target": "task:44-40",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-05",
+      "target": "task:51-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-06",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-06",
+      "target": "task:44-44",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-07",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-07",
+      "target": "task:51-03",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-07",
+      "target": "task:51-03",
+      "type": "CITES"
+    },
+    {
+      "source": "task:51-08",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-08",
+      "target": "task:51-07",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-08",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:51-09",
+      "target": "phase:51",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:51-09",
+      "target": "task:51-03",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-09",
+      "target": "task:51-07",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:51-09",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:59-01",
       "target": "phase:59",
       "type": "BELONGS_TO"
@@ -12456,6 +13006,21 @@
       "source": "task:59-10",
       "target": "skill:default",
       "type": "USES_SKILL"
+    },
+    {
+      "source": "task:59-23",
+      "target": "phase:59",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:59-23",
+      "target": "task:59-01",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:59-23",
+      "target": "decision:gad-269",
+      "type": "CITES"
     },
     {
       "source": "task:60-01",
@@ -12618,13 +13183,38 @@
       "type": "CITES"
     },
     {
+      "source": "task:60-07b",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:60-07b",
+      "target": "task:60-07",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-07b",
+      "target": "task:60-10",
+      "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:60-07b",
+      "target": "decision:gad-268",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-07b",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
       "source": "task:60-08",
       "target": "phase:60",
       "type": "BELONGS_TO"
     },
     {
       "source": "task:60-08",
-      "target": "task:60-07",
+      "target": "task:60-07b",
       "type": "DEPENDS_ON"
     },
     {
@@ -12634,12 +13224,22 @@
     },
     {
       "source": "task:60-08",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:60-08",
       "target": "phase:59",
       "type": "CITES"
     },
     {
       "source": "task:60-08",
       "target": "task:60-07",
+      "type": "CITES"
+    },
+    {
+      "source": "task:60-08",
+      "target": "task:60-07b",
       "type": "CITES"
     },
     {
@@ -12691,6 +13291,11 @@
       "source": "task:60-10",
       "target": "task:60-08",
       "type": "CITES"
+    },
+    {
+      "source": "task:60-09b",
+      "target": "phase:60",
+      "type": "BELONGS_TO"
     },
     {
       "source": "task:63-01",
@@ -12806,6 +13411,76 @@
       "source": "task:63-06b",
       "target": "phase:63",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-health-cli",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-health-cli",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:63-health-cli",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-graph-task-stale",
+      "target": "phase:63",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:63-graph-task-stale",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:63-graph-task-stale",
+      "target": "task:2026-04",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-graph-task-stale",
+      "target": "task:45-14",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-graph-task-stale",
+      "target": "task:51-08",
+      "type": "CITES"
+    },
+    {
+      "source": "task:63-graph-task-stale",
+      "target": "task:51-09",
+      "type": "CITES"
+    },
+    {
+      "source": "task:64-C",
+      "target": "phase:64",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:64-C",
+      "target": "skill:repo-planner",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:64-C",
+      "target": "decision:gad-274",
+      "type": "CITES"
+    },
+    {
+      "source": "task:64-E",
+      "target": "phase:64",
+      "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:64-E",
+      "target": "skill:repo-planner",
+      "type": "USES_SKILL"
     },
     {
       "source": "decision:gad-92",
@@ -14808,9 +15483,49 @@
       "type": "REFERENCES"
     },
     {
-      "source": "skill:create-proto-skill",
-      "target": "workflow:./workflow.md",
-      "type": "USES_WORKFLOW"
+      "source": "decision:gad-270",
+      "target": "phase:51",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-269",
+      "target": "task:60-07b",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-269",
+      "target": "task:59-23",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-269",
+      "target": "phase:59",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-269",
+      "target": "phase:60",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-269",
+      "target": "decision:gad-261",
+      "type": "CITES"
+    },
+    {
+      "source": "decision:gad-269",
+      "target": "skill:gad-site",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-269",
+      "target": "skill:gad-paths",
+      "type": "REFERENCES"
+    },
+    {
+      "source": "decision:gad-271",
+      "target": "phase:51",
+      "type": "CITES"
     },
     {
       "source": "skill:gad:add-backlog",
@@ -15028,11 +15743,6 @@
       "type": "USES_WORKFLOW"
     },
     {
-      "source": "skill:gad:pause-work",
-      "target": "workflow:workflows/pause-work.md",
-      "type": "USES_WORKFLOW"
-    },
-    {
       "source": "skill:gad:plan-milestone-gaps",
       "target": "workflow:workflows/plan-milestone-gaps.md",
       "type": "USES_WORKFLOW"
@@ -15205,23 +15915,23 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-18T18:14:05.784Z",
-    "nodeCount": 990,
-    "edgeCount": 1462,
+    "generated": "2026-04-19T03:10:17.573Z",
+    "nodeCount": 1020,
+    "edgeCount": 1549,
     "nodeTypes": {
       "phase": 67,
-      "task": 426,
-      "skill": 131,
-      "decision": 262,
-      "workflow": 104
+      "task": 449,
+      "skill": 135,
+      "decision": 266,
+      "workflow": 103
     },
     "edgeTypes": {
-      "BELONGS_TO": 428,
-      "CITES": 576,
-      "DEPENDS_ON": 89,
-      "USES_SKILL": 201,
-      "REFERENCES": 89,
-      "USES_WORKFLOW": 79
+      "BELONGS_TO": 450,
+      "CITES": 594,
+      "DEPENDS_ON": 108,
+      "USES_SKILL": 229,
+      "REFERENCES": 91,
+      "USES_WORKFLOW": 77
     }
   }
 }
