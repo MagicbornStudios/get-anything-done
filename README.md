@@ -169,21 +169,22 @@ framework’s canonical SDK asset tree:
 - `@agents/...` -> `agents/...`
 - `@hooks/...` -> `hooks/...`
 
-## Evals
+## Generations
 
-GAD evals are controlled implementation runs with preserved artifacts and scoring data.
+A **project** is the umbrella thing you are building. A **species** is one evolutionary branch of that project — a particular ruleset, prompt strategy, or framework mode. A **generation** is one build of a species: a controlled implementation run with preserved artifacts and scoring data.
 
-Each completed run is designed to preserve:
+Each completed generation is designed to preserve:
 
 - `TRACE.json`
-- preserved run code
+- preserved generation code
 - preserved build output when relevant
 - raw `.gad-log` telemetry when available
 - runtime identity for the actual agent/runtime that performed the work
 - human review
 
-New generations also stamp runtime identity and per-run log directories so Claude Code vs Codex
-comparisons remain attributable.
+New generations stamp runtime identity and per-generation log directories so Claude Code vs Codex comparisons remain attributable.
+
+Multi-generation comparisons are written up as articles/whitepapers (the framework's internal name for these is "findings"). See `docs/eval-guide.md` for the full species → spawn → preserve → review → article loop.
 
 ## Planning model
 
@@ -285,7 +286,7 @@ npm run build:hooks
 ## Operator docs
 
 - [Quick Start](docs/quick-start.md)
-- [Eval Guide](docs/eval-guide.md)
+- [Species & Generations Guide](docs/eval-guide.md)
 - [Release Guide](docs/release-guide.md)
 
 ## Development

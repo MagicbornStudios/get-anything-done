@@ -905,9 +905,14 @@ const projectsInit = defineCommand({
     force:     { type: 'boolean', description: 'Overwrite existing files', default: false },
   },
   run({ args }) {
-    const baseDir = findRepoRoot();
+    // Walk up from the target project path, not from the CLI's cwd. When
+    // the operator runs `gad projects init` while cd'd inside a submodule
+    // (e.g. vendor/get-anything-done/), walking from cwd stops at the
+    // submodule's own gad-config.toml and pollutes it instead of the
+    // workspace config that actually owns the new project (task 44-13).
+    const projectPath = path.resolve(args.path || process.cwd());
+    const baseDir = findRepoRoot(projectPath);
     const config = gadConfig.load(baseDir);
-    const projectPath = args.path || process.cwd();
     const projectName = args.name || path.basename(projectPath);
     const projectId   = (args.projectid || projectName).toLowerCase().replace(/[^a-z0-9-]/g, '-');
     const planDir = path.join(projectPath, '.planning');
@@ -978,12 +983,14 @@ const projectsInit = defineCommand({
     console.log(`  Files written (${written.length}):`);
     for (const f of written) console.log(`    ${f}`);
 
-    // Register in config if not already present.
-    const relPath = path.relative(baseDir, projectPath) || '.';
-    if (!config.roots.find(r => normalizePath(r.path) === normalizePath(relPath))) {
+    // Register in config if not already present. Normalize the stored
+    // path to forward slashes so Windows runs don't produce
+    // `..\..\projects\project-editor` entries (task 44-13 second bug).
+    const relPath = normalizePath(path.relative(baseDir, projectPath) || '.');
+    if (!config.roots.find(r => normalizePath(r.path) === relPath)) {
       config.roots.push({ id: projectId, path: relPath, planningDir: '.planning', discover: false });
       writeRootsToToml(baseDir, config.roots, config);
-      console.log(`  Registered as [${projectId}] in gad-config.toml`);
+      console.log(`  Registered as [${projectId}] at path "${relPath}" in ${path.join(baseDir, 'gad-config.toml')}`);
     }
 
     console.log('');

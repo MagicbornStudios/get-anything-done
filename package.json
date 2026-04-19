@@ -69,6 +69,8 @@
     "build:release:sea": "node scripts/build-release.mjs",
     "publish:release": "node scripts/publish-release.mjs",
     "release:check": "node scripts/release-should-build.mjs",
+    "build:site": "cd site && npm run build",
+    "pack:site": "node site/scripts/pack-site-release.cjs",
     "prepublishOnly": "npm run build:hooks && npm run build:cli",
     "test": "node scripts/run-tests.cjs",
     "test:coverage": "c8 --check-coverage --lines 70 --reporter text --exclude 'tests/**' --all node scripts/run-tests.cjs"

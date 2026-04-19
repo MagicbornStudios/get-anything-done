@@ -73,6 +73,63 @@ const hasBoth = args.includes('--both'); // Legacy flag, keeps working
 const hasAll = args.includes('--all');
 const hasUninstall = args.includes('--uninstall') || args.includes('-u');
 
+// 44-28 spine: feature flags for the consumer-facing installer.
+// These are independent of runtime selection — a consumer can install just
+// the planning scaffold + site without picking a coding-agent runtime.
+//   --site             copy a self-contained site tree to <target>/.planning/site/
+//   --planning         scaffold <target>/.planning/ with canonical XML ledgers
+//   --node             opt into portable-Node bootstrap (44-34, stub for now)
+//   --from-release <t> source files from a downloaded GitHub release zip,
+//                      not from the local checkout — required when the
+//                      consumer only has the installer, not the repo
+//
+// Help text + interactive picker reshape live below in the help block and
+// in promptRuntime/promptLocation. References:
+//   references/installer-feature-flags.md
+//   .planning/notes/2026-04-18-44-28-spine-first-cut.md
+const hasSiteFlag = args.includes('--site');
+const hasPlanningFlag = args.includes('--planning');
+const hasNodeFlag = args.includes('--node');
+
+function parseFromReleaseArg() {
+  const idx = args.findIndex((a) => a === '--from-release');
+  if (idx !== -1) {
+    const next = args[idx + 1];
+    if (!next || next.startsWith('-')) {
+      console.error(`  ${yellow}--from-release requires a tag (v1.35.0) or url${reset}`);
+      process.exit(1);
+    }
+    return next;
+  }
+  const eq = args.find((a) => a.startsWith('--from-release='));
+  if (eq) {
+    const value = eq.split('=')[1];
+    if (!value) {
+      console.error(`  ${yellow}--from-release requires a non-empty value${reset}`);
+      process.exit(1);
+    }
+    return value;
+  }
+  return null;
+}
+const fromReleaseSource = parseFromReleaseArg();
+
+function parseTargetArg() {
+  const idx = args.findIndex((a) => a === '--target');
+  if (idx !== -1 && args[idx + 1] && !args[idx + 1].startsWith('-')) {
+    return args[idx + 1];
+  }
+  const eq = args.find((a) => a.startsWith('--target='));
+  if (eq) {
+    const value = eq.split('=')[1];
+    if (value) return value;
+  }
+  return null;
+}
+const explicitTarget = parseTargetArg();
+
+const hasFeatureFlag = hasSiteFlag || hasPlanningFlag || hasNodeFlag;
+
 // Runtime selection - can be set by flags or interactive prompt
 let selectedRuntimes = [];
 if (hasAll) {
@@ -371,7 +428,7 @@ if (hasUninstall) {
 // Show help if requested
 if (hasHelp) {
   console.log(`  ${yellow}Usage:${reset} node bin/install.js [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}--claude${reset}                  Install for Claude Code only\n    ${cyan}--opencode${reset}                Install for OpenCode only\n    ${cyan}--gemini${reset}                  Install for Gemini only\n    ${cyan}--codex${reset}                   Install for Codex only\n    ${cyan}--copilot${reset}                 Install for Copilot only\n    ${cyan}--antigravity${reset}             Install for Antigravity only\n    ${cyan}--cursor${reset}                  Install for Cursor only\n    ${cyan}--windsurf${reset}                Install for Windsurf only
-    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}--sdk${reset}                     Also install GAD SDK CLI (gad-sdk)\n    ${cyan}-u, --uninstall${reset}           Uninstall GAD (remove all GAD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    node bin/install.js\n\n    ${dim}# Install for Claude Code globally${reset}\n    node bin/install.js --claude --global\n\n    ${dim}# Install for Codex globally${reset}\n    node bin/install.js --codex --global\n\n    ${dim}# Install for all runtimes globally${reset}\n    node bin/install.js --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    node bin/install.js --codex --global --config-dir ~/.codex-work\n\n    ${dim}# Uninstall GAD from Cursor globally${reset}\n    node bin/install.js --cursor --global --uninstall\n\n  ${yellow}Notes:${reset}\n    The packaged GitHub Release executable delegates here through ${cyan}gad install all${reset}.\n    The --config-dir option takes priority over CLAUDE_CONFIG_DIR / GEMINI_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR.\n`);
+    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}--sdk${reset}                     Also install GAD SDK CLI (gad-sdk)\n    ${cyan}-u, --uninstall${reset}           Uninstall GAD (remove all GAD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Feature flags (44-28 spine — independent of runtime install):${reset}\n    ${cyan}--planning${reset}                Scaffold canonical .planning/ XML ledgers in --target (or cwd)\n    ${cyan}--site${reset}                    Copy self-contained planning site into <target>/.planning/site/\n    ${cyan}--node${reset}                    Reserve <target>/.planning/.node/ for portable Node bootstrap (44-34 stub)\n    ${cyan}--from-release <tag|url>${reset}  Source files from a downloaded release zip instead of local checkout\n    ${cyan}--target <path>${reset}           Override consumer target directory (default: cwd)\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    node bin/install.js\n\n    ${dim}# Install for Claude Code globally${reset}\n    node bin/install.js --claude --global\n\n    ${dim}# Install for Codex globally${reset}\n    node bin/install.js --codex --global\n\n    ${dim}# Install for all runtimes globally${reset}\n    node bin/install.js --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    node bin/install.js --codex --global --config-dir ~/.codex-work\n\n    ${dim}# Uninstall GAD from Cursor globally${reset}\n    node bin/install.js --cursor --global --uninstall\n\n    ${dim}# Scaffold .planning/ + drop the site bundle in cwd (no runtime install)${reset}\n    node bin/install.js --planning --site\n\n    ${dim}# Same, but pull site bundle from a release tag${reset}\n    node bin/install.js --site --from-release v1.35.0\n\n    ${dim}# Full consumer first-run: planning scaffold + site + Claude runtime${reset}\n    node bin/install.js --planning --site --claude --global\n\n  ${yellow}Notes:${reset}\n    The packaged GitHub Release executable delegates here through ${cyan}gad install all${reset}.\n    The --config-dir option takes priority over CLAUDE_CONFIG_DIR / GEMINI_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR.\n    Feature flags only write to .planning/ on the consumer target; nothing touches the home dir or system PATH.\n`);
   process.exit(0);
 }
 
@@ -6327,6 +6384,242 @@ function installAllRuntimes(runtimes, isGlobal, isInteractive) {
   }
 }
 
+// ----------------------------------------------------------------------
+// 44-28 spine: feature-flag installers (site / planning / node / from-release)
+//
+// These run *before* the runtime install path when --site, --planning, or
+// --node is passed. They write only to .planning/ on the consumer side
+// (the "safe zone" per decision gad-188) and never touch the consumer's
+// home directory or system PATH.
+// ----------------------------------------------------------------------
+
+function resolveTargetDir() {
+  if (explicitTarget) return path.resolve(explicitTarget);
+  return process.cwd();
+}
+
+// Source dir for asset copies (site tree, templates). When --from-release
+// is set, the caller is expected to have already extracted the release zip
+// into a scratch dir and set installerSourceDir to that path; otherwise we
+// resolve relative to this file's location, which works for both the
+// dev checkout and the SEA-packaged executable (which extracts at boot).
+let installerSourceDir = path.resolve(__dirname, '..');
+
+function downloadFromRelease(tagOrUrl) {
+  // Resolve tag → release-zip URL. We pull the source zip GitHub auto-builds
+  // for every tag (zipball_url) which always contains the full repo tree at
+  // that tag, including site/.next standalone if it was committed. For
+  // releases that publish a curated `site-v<tag>.zip` asset (44-33e), prefer
+  // that — but the asset may not exist for older tags, so fall back.
+  const isUrl = /^https?:\/\//i.test(tagOrUrl);
+  const tag = isUrl ? null : tagOrUrl.replace(/^v?/, 'v');
+  const url = isUrl
+    ? tagOrUrl
+    : `https://github.com/MagicbornStudios/get-anything-done/archive/refs/tags/${tag}.zip`;
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-from-release-'));
+  const zipPath = path.join(tmpDir, 'release.zip');
+  console.log(`  ${dim}Downloading ${url}…${reset}`);
+
+  // Use curl on POSIX, PowerShell on Windows — both ship by default.
+  const dlResult = process.platform === 'win32'
+    ? require('node:child_process').spawnSync(
+        'powershell.exe',
+        ['-NoProfile', '-Command', `Invoke-WebRequest -UseBasicParsing -Uri '${url}' -OutFile '${zipPath}'`],
+        { stdio: 'inherit' }
+      )
+    : require('node:child_process').spawnSync('curl', ['-fsSL', '-o', zipPath, url], { stdio: 'inherit' });
+
+  if (dlResult.status !== 0 || !fs.existsSync(zipPath)) {
+    console.error(`  ${yellow}Failed to download ${url}${reset}`);
+    process.exit(1);
+  }
+
+  const extractDir = path.join(tmpDir, 'extracted');
+  fs.mkdirSync(extractDir, { recursive: true });
+  const unzipResult = process.platform === 'win32'
+    ? require('node:child_process').spawnSync(
+        'powershell.exe',
+        ['-NoProfile', '-Command', `Expand-Archive -Path '${zipPath}' -DestinationPath '${extractDir}' -Force`],
+        { stdio: 'inherit' }
+      )
+    : require('node:child_process').spawnSync('unzip', ['-q', zipPath, '-d', extractDir], { stdio: 'inherit' });
+
+  if (unzipResult.status !== 0) {
+    console.error(`  ${yellow}Failed to extract ${zipPath}${reset}`);
+    process.exit(1);
+  }
+
+  // GitHub zipballs nest under a single repo-name-tag/ folder; promote it.
+  const top = fs.readdirSync(extractDir);
+  const root = top.length === 1
+    ? path.join(extractDir, top[0])
+    : extractDir;
+
+  installerSourceDir = root;
+  console.log(`  ${green}✓${reset} Sourced installer from ${dim}${root}${reset}`);
+}
+
+function copyDirRecursive(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirRecursive(s, d);
+    } else if (entry.isSymbolicLink()) {
+      try { fs.symlinkSync(fs.readlinkSync(s), d); }
+      catch { fs.copyFileSync(s, d); }
+    } else {
+      fs.copyFileSync(s, d);
+    }
+  }
+}
+
+function installSiteTree(targetDir) {
+  const dest = path.join(targetDir, '.planning', 'site');
+  // Prefer a pre-packed release asset (site-v<version>/ folder) when present
+  // in the source tree — produced by site/scripts/pack-site-release.cjs.
+  const packedCandidate = path.join(installerSourceDir, 'dist', 'release');
+  let packedDir = null;
+  if (fs.existsSync(packedCandidate)) {
+    const found = fs.readdirSync(packedCandidate).find((n) => /^site-v/.test(n) && fs.statSync(path.join(packedCandidate, n)).isDirectory());
+    if (found) packedDir = path.join(packedCandidate, found);
+  }
+
+  if (packedDir) {
+    console.log(`  ${cyan}→${reset} Installing packed site from ${dim}${packedDir}${reset}`);
+    copyDirRecursive(packedDir, dest);
+    console.log(`  ${green}✓${reset} Site installed at ${dim}${dest}${reset}`);
+    console.log(`     Boot: ${cyan}node "${path.join(dest, 'launcher.cjs')}"${reset}`);
+    return;
+  }
+
+  // Fall back to copying the standalone build directly out of site/.next/standalone/
+  const standalone = path.join(installerSourceDir, 'site', '.next', 'standalone');
+  if (fs.existsSync(standalone)) {
+    console.log(`  ${cyan}→${reset} Installing standalone build from ${dim}site/.next/standalone${reset}`);
+    copyDirRecursive(standalone, dest);
+    const staticDir = path.join(installerSourceDir, 'site', '.next', 'static');
+    if (fs.existsSync(staticDir)) copyDirRecursive(staticDir, path.join(dest, '.next', 'static'));
+    const publicDir = path.join(installerSourceDir, 'site', 'public');
+    if (fs.existsSync(publicDir)) copyDirRecursive(publicDir, path.join(dest, 'public'));
+    const launcher = path.join(installerSourceDir, 'site', 'scripts', 'launcher.cjs');
+    if (fs.existsSync(launcher)) fs.copyFileSync(launcher, path.join(dest, 'launcher.cjs'));
+    console.log(`  ${green}✓${reset} Site installed at ${dim}${dest}${reset}`);
+    console.log(`     Boot: ${cyan}node "${path.join(dest, 'launcher.cjs')}"${reset}`);
+    return;
+  }
+
+  console.log(`  ${yellow}⚠ No site bundle found.${reset}`);
+  console.log(`     Run ${cyan}pnpm build:site && pnpm pack:site${reset} in the GAD repo, or pass ${cyan}--from-release v<tag>${reset} to download a release bundle.`);
+}
+
+// Minimal canonical .planning/ scaffold — mirrors INIT_XML_TEMPLATES in
+// bin/gad.cjs §832 (decision gad-185, task 42.4-08). Re-stated here so the
+// installer can scaffold without depending on a `gad` executable being
+// present (the installer might *be* the first GAD binary on disk).
+function scaffoldPlanning(targetDir) {
+  const planDir = path.join(targetDir, '.planning');
+  if (fs.existsSync(planDir) && fs.readdirSync(planDir).length > 0) {
+    console.log(`  ${dim}→ ${planDir} already exists — leaving it alone${reset}`);
+    return;
+  }
+  fs.mkdirSync(planDir, { recursive: true });
+  const today = new Date().toISOString().slice(0, 10);
+  const projectId = path.basename(targetDir).toLowerCase().replace(/[^a-z0-9-]/g, '-') || 'my-project';
+  const files = {
+    'STATE.xml':
+`<?xml version="1.0" encoding="UTF-8"?>
+<state project="${projectId}" schema="1">
+  <status>active</status>
+  <milestone>v1</milestone>
+  <current-phase></current-phase>
+  <last-activity>${today}</last-activity>
+  <next-action>Project initialized. Define requirements.</next-action>
+</state>
+`,
+    'ROADMAP.xml':
+`<?xml version="1.0" encoding="UTF-8"?>
+<roadmap project="${projectId}" schema="1">
+  <milestone id="v1" status="active">
+    <title>Initial milestone</title>
+    <phase id="00" status="planned">
+      <title>Bootstrap</title>
+      <goal>Define scope</goal>
+    </phase>
+  </milestone>
+</roadmap>
+`,
+    'TASK-REGISTRY.xml':
+`<?xml version="1.0" encoding="UTF-8"?>
+<task-registry project="${projectId}" schema="1">
+  <phase id="00">
+    <!-- <task id="00-01" type="..." status="planned"><goal>...</goal></task> -->
+  </phase>
+</task-registry>
+`,
+    'DECISIONS.xml':
+`<?xml version="1.0" encoding="UTF-8"?>
+<decisions project="${projectId}" schema="1">
+  <!-- <decision id="${projectId}-001"><title>...</title><summary>...</summary><impact>...</impact></decision> -->
+</decisions>
+`,
+    'REQUIREMENTS.xml':
+`<?xml version="1.0" encoding="UTF-8"?>
+<requirements project="${projectId}" schema="1">
+  <!-- TODO: capture initial scope -->
+</requirements>
+`,
+    'ERRORS-AND-ATTEMPTS.xml':
+`<?xml version="1.0" encoding="UTF-8"?>
+<errors-and-attempts project="${projectId}" schema="1">
+</errors-and-attempts>
+`,
+  };
+  for (const [name, body] of Object.entries(files)) {
+    fs.writeFileSync(path.join(planDir, name), body);
+  }
+  console.log(`  ${green}✓${reset} Scaffolded ${dim}${planDir}${reset} (${Object.keys(files).length} XML files, projectid=${cyan}${projectId}${reset})`);
+}
+
+// 44-34 stub — actual portable-Node download lands once the release pipeline
+// publishes a node-<platform>-<arch>.zip asset alongside the gad binary.
+// For now, scaffold the destination dir and print activation guidance.
+function installPortableNodeStub(targetDir) {
+  const nodeDir = path.join(targetDir, '.planning', '.node');
+  fs.mkdirSync(nodeDir, { recursive: true });
+  const cmdDir = path.join(targetDir, '.planning', '.cmd');
+  fs.mkdirSync(cmdDir, { recursive: true });
+  const note = [
+    'Portable Node bootstrap (task 44-34) — RESERVED',
+    '',
+    'When the GAD release pipeline publishes a node-<platform>-<arch>.zip',
+    'asset, this folder will hold the extracted runtime and the launcher',
+    'will prefer it over a system Node. Until then, the launcher uses',
+    'whichever `node` is on PATH.',
+    '',
+    'See references/installer-feature-flags.md.',
+  ].join(os.EOL);
+  fs.writeFileSync(path.join(nodeDir, 'README.txt'), note, 'utf8');
+  console.log(`  ${yellow}⚠${reset} ${cyan}--node${reset} reserved scaffold written to ${dim}${nodeDir}${reset}`);
+  console.log(`     Portable Node download lands once release pipeline ships node zip (44-34 follow-up).`);
+}
+
+function runFeatureInstall() {
+  if (fromReleaseSource) downloadFromRelease(fromReleaseSource);
+  const target = resolveTargetDir();
+  console.log(`\n  ${cyan}Target:${reset} ${dim}${target}${reset}\n`);
+  if (hasPlanningFlag) scaffoldPlanning(target);
+  if (hasSiteFlag)     installSiteTree(target);
+  if (hasNodeFlag)     installPortableNodeStub(target);
+  console.log(`\n  ${green}✓ Feature install complete${reset}`);
+  if (hasSiteFlag) {
+    console.log(`     Open the site: ${cyan}node ${path.join(target, '.planning', 'site', 'launcher.cjs')}${reset}`);
+  }
+  console.log('');
+}
+
 // Test-only exports — skip main logic when loaded as a module for testing
 if (process.env.GAD_TEST_MODE) {
   module.exports = {
@@ -6386,6 +6679,18 @@ if (process.env.GAD_TEST_MODE) {
 } else {
 
 // Main logic
+
+// 44-28 spine: feature flags run first and short-circuit when they're the
+// only thing the operator asked for. Mixing feature flags with runtime
+// flags (e.g. `--site --claude --global`) is allowed: the feature install
+// runs first, then the runtime install proceeds normally.
+if (hasFeatureFlag || fromReleaseSource) {
+  runFeatureInstall();
+  if (selectedRuntimes.length === 0 && !hasGlobal && !hasLocal && !hasUninstall) {
+    process.exit(0);
+  }
+}
+
 if (hasGlobal && hasLocal) {
   console.error(`  ${yellow}Cannot specify both --global and --local${reset}`);
   process.exit(1);

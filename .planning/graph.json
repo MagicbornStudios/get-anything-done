@@ -3813,9 +3813,9 @@
       "type": "task",
       "id": "task:44-32",
       "label": "44-28.B2 — Extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) ",
-      "status": "planned",
+      "status": "done",
       "goal": "44-28.B2 — Extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) with: (a) new `--site` flag that installs a self-contained site tree into `&lt;target&gt;/.planning/site/`; (b) new `--planning` flag that scaffolds `&lt;target&gt;/.planning/` with STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, DECISIONS.xml from a template; (c) new `--node` flag that opts into the portable-node bootstrap branch (44-34); (d) new `--from-release &lt;url|tag&gt;` source mode that downloads the release zip from github.com/MagicbornStudios/get-anything-done releases and extracts into a scratch dir for the installer to source files from — today install.js assumes it's running from inside the GAD repo source tree, which is wrong for a consumer that only has the installer.exe; (e) reshape interactive mode from \"pick one runtime\" to \"pick features {site, skills, planning, node}\" → then runtime picker for the skills branch; (f) gate the skills branch on `gad.exe` + node being detectable on PATH or in `.planning/.node/` — refuse install with a clear error if missing; (g) enforce the local-only install scope (no home-dir writes). Rebuild installer.exe via Node SEA, attach to the next release. Depends on 44-31 (B0) landing first so there's a release to pull from.",
-      "skill": "",
+      "skill": "default",
       "taskType": "framework",
       "keywords": "installer,install-js,site-flag,planning-flag,node-flag,from-release,skills-gating,interactive-mode"
     },
@@ -3823,9 +3823,9 @@
       "type": "task",
       "id": "task:44-33",
       "label": "44-28.B3 — Site packaging for .planning/site/ double-click launch path. Produce a self-contained site tree: (a) Next.js ",
-      "status": "planned",
+      "status": "done",
       "goal": "44-28.B3 — Site packaging for .planning/site/ double-click launch path. Produce a self-contained site tree: (a) Next.js server build output that can run with `node server.js` in place (not `next start` which needs the full next CLI). (b) Bundled Node runtime extracted beside the site (so the launcher doesn't depend on the host having Node installed). (c) `launcher.exe` — tiny Windows exe (bun --compile or Go) that spawns `./.node/node.exe ./site/server.js`, waits for the server to bind a local port, opens the default browser at `http://localhost:&lt;port&gt;`, stays running until the browser window closes or Ctrl+C. (d) The site must read `.planning/*.xml` from its parent dir at request time — already works in dev via build-site-data.mjs but must keep working after packaging. (e) Build target + release artifact: `site-&lt;version&gt;.zip` containing site/ + .node/ + launcher.exe + README.txt. (f) Wire into 44-32's `--site` branch: installer downloads the zip from the release and extracts it to `&lt;target&gt;/.planning/site/`. Depends on 44-31 (release pipeline) + 44-32 (installer --site flag). Decision point during planning: does the packaged site rebuild its lib/catalog.generated.ts against the consumer's planning data on first launch, or does it ship with prebuilt GAD framework data baked in and only read live project data? Recommend: first-launch rebuild against consumer's gad-config.toml.",
-      "skill": "",
+      "skill": "default",
       "taskType": "site",
       "keywords": "site-packaging,launcher-exe,bundled-node,next-server,double-click,release-zip,planning-site"
     },
@@ -3833,9 +3833,9 @@
       "type": "task",
       "id": "task:44-34",
       "label": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the inter",
-      "status": "planned",
+      "status": "in-progress",
       "goal": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned Node zip (current LTS or whatever the site build targets) from our release assets — NOT from nodejs.org — so we own the distribution channel end-to-end; (b) extracts to `&lt;target&gt;/.planning/.node/`; (c) writes a small `.planning/.cmd/gad.cmd` (or equivalent shim) that points at `.planning/.node/node.exe` + the gad.exe location; (d) adds an instruction block in the installer's success message explaining how to activate the portable Node for this shell session. Do NOT touch the consumer's system PATH — this is a fenced install that works by being invoked through the shim. Depends on 44-31 (release pipeline must host the node zip) + 44-32 (installer --node flag wiring). Leave GitHub Actions out.",
-      "skill": "",
+      "skill": "default",
       "taskType": "framework",
       "keywords": "portable-node,node-bootstrap,installer,fenced-install,shim,cmd"
     },
@@ -4449,9 +4449,9 @@
       "type": "task",
       "id": "task:45-21",
       "label": "README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing",
-      "status": "planned",
+      "status": "done",
       "goal": "README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing, treat findings as articles/whitepapers.",
-      "skill": "",
+      "skill": "default",
       "taskType": "docs",
       "keywords": "readme,docs,vocabulary,copy-pass,external-facing"
     },
@@ -11489,6 +11489,11 @@
     },
     {
       "source": "task:44-32",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44-32",
       "target": "task:44-28",
       "type": "CITES"
     },
@@ -11509,6 +11514,11 @@
     },
     {
       "source": "task:44-33",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44-33",
       "target": "task:44-28",
       "type": "CITES"
     },
@@ -11526,6 +11536,11 @@
       "source": "task:44-34",
       "target": "phase:44",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:44-34",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:44-34",
@@ -12536,6 +12551,11 @@
       "source": "task:45-21",
       "target": "task:45-15",
       "type": "DEPENDS_ON"
+    },
+    {
+      "source": "task:45-21",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:46-01",
@@ -15925,9 +15945,9 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-19T03:23:40.498Z",
+    "generated": "2026-04-19T03:45:26.760Z",
     "nodeCount": 1020,
-    "edgeCount": 1551,
+    "edgeCount": 1555,
     "nodeTypes": {
       "phase": 67,
       "task": 449,
@@ -15939,7 +15959,7 @@
       "BELONGS_TO": 450,
       "CITES": 594,
       "DEPENDS_ON": 108,
-      "USES_SKILL": 231,
+      "USES_SKILL": 235,
       "REFERENCES": 91,
       "USES_WORKFLOW": 77
     }
