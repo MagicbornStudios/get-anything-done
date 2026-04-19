@@ -11,11 +11,17 @@ const DIST_DIR = join(ROOT, 'dist');
 const RELEASE_DIR = join(DIST_DIR, 'release');
 const SUPPORT_DIR = join(DIST_DIR, 'release-support');
 const SEA_SENTINEL = 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2';
+const SEA_DEPRECATION = {
+  deprecatedAsOf: '1.35.0',
+  removeAfter: '1.36.0',
+  replacement: 'npm run build:release',
+};
 
 const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
-console.warn('[deprecated] scripts/build-release.mjs uses the Node SEA pipeline.');
-console.warn('[deprecated] Prefer `node scripts/build-bun-release.mjs` or `npm run build:release` instead.');
+console.warn(`[deprecated] scripts/build-release.mjs uses the Node SEA pipeline and is deprecated as of GAD ${SEA_DEPRECATION.deprecatedAsOf}.`);
+console.warn(`[deprecated] It is kept for one release as an escape hatch and may be removed after GAD ${SEA_DEPRECATION.removeAfter}.`);
+console.warn(`[deprecated] Prefer \`${SEA_DEPRECATION.replacement}\` (Bun compile) instead.`);
 
 function parseArgs(argv) {
   const parsed = {
