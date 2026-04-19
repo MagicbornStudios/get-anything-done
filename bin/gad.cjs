@@ -328,6 +328,8 @@ function outputError(msg) {
 }
 
 const RAW_ARGV = process.argv.slice();
+const NO_SIDE_EFFECTS_FLAG = '--no-side-effects';
+const NO_SIDE_EFFECTS_MARKER = '.gad-release-build';
 
 function readRawFlagValue(flagName, argv = RAW_ARGV) {
   const inline = argv.find((arg) => String(arg).startsWith(`${flagName}=`));
@@ -337,6 +339,39 @@ function readRawFlagValue(flagName, argv = RAW_ARGV) {
   const value = argv[idx + 1];
   if (!value || String(value).startsWith('--')) return '';
   return String(value);
+}
+
+function hasRawFlag(flagName, argv = RAW_ARGV) {
+  return argv.includes(flagName) || argv.some((arg) => String(arg).startsWith(`${flagName}=`));
+}
+
+function envFlagEnabled(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized) return false;
+  return !['0', 'false', 'no', 'off'].includes(normalized);
+}
+
+let _sideEffectsModeCache = null;
+
+function resolveSideEffectsMode() {
+  if (_sideEffectsModeCache) return _sideEffectsModeCache;
+  const reasons = [];
+  if (hasRawFlag(NO_SIDE_EFFECTS_FLAG)) reasons.push('flag');
+  if (envFlagEnabled(process.env.GAD_NO_SIDE_EFFECTS)) reasons.push('env:GAD_NO_SIDE_EFFECTS');
+  if (envFlagEnabled(process.env.GAD_RELEASE_BUILD)) reasons.push('env:GAD_RELEASE_BUILD');
+  if (envFlagEnabled(process.env.GAD_NO_SIDE_EFFECTS_ACTIVE)) reasons.push('env:GAD_NO_SIDE_EFFECTS_ACTIVE');
+  try {
+    const repoRoot = findRepoRoot();
+    if (repoRoot && fs.existsSync(path.join(repoRoot, NO_SIDE_EFFECTS_MARKER))) {
+      reasons.push(`marker:${NO_SIDE_EFFECTS_MARKER}`);
+    }
+  } catch { /* non-fatal */ }
+  _sideEffectsModeCache = { enabled: reasons.length > 0, reasons };
+  return _sideEffectsModeCache;
+}
+
+function sideEffectsSuppressed() {
+  return resolveSideEffectsMode().enabled;
 }
 
 // ---------------------------------------------------------------------------
@@ -507,6 +542,7 @@ function ensureEvalRuntimeHooks(runtimeIdentity) {
 }
 
 function getLogDir() {
+  if (sideEffectsSuppressed()) return null;
   if (_logDir) return _logDir;
   if (GAD_LOG_DIR) {
     _logDir = GAD_LOG_DIR;
@@ -5160,10 +5196,8 @@ const siteCmd = defineCommand({
 // ---------------------------------------------------------------------------
 
 const evalList = defineCommand({
-  meta: { name: 'list', description: 'List eval projects and run history' },
+  meta: { name: 'list', description: '[DEPRECATED] List projects with species counts and generation history' },
   run() {
-    const baseDir = findRepoRoot();
-
     let discovered;
     try {
       discovered = listAllEvalProjects();
@@ -5173,49 +5207,77 @@ const evalList = defineCommand({
     }
 
     if (discovered.length === 0) {
-      console.log('No eval projects found. Create evals/<name>/REQUIREMENTS.md to get started.');
+      console.log('No projects found. Create evals/<project>/species/<species>/species.json to get started.');
       return;
     }
 
+    const da = evalDataAccess();
     const projects = discovered.map(({ name, projectDir }) => {
-        const runs = fs.readdirSync(projectDir, { withFileTypes: true })
-          .filter(r => r.isDirectory() && r.name.startsWith('v'))
-          .map(r => r.name)
-          .sort();
-        const latest = runs[runs.length - 1] || '—';
-        let status = '—';
-        if (latest !== '—') {
-          const runMd = path.join(projectDir, latest, 'RUN.md');
+      let speciesCount = 0;
+      let totalGenerations = 0;
+      let latestGeneration = '—';
+      let latestStatus = '—';
+      // Load project defaults + first species via the merge-at-read-time
+      // loader (task 42.4-15, decision gad-184). The project ⊇ species
+      // contract means every reader goes through eval-loader.cjs instead
+      // of hand-merging project.json + species.json.
+      let mode = '—', workflow = '—', domain = '—', techStack = '';
+      try {
+        const summary = da.getProjectSummary(name);
+        const projectCfg = loadEvalProject(projectDir);
+        speciesCount = summary?.speciesCount || 0;
+        totalGenerations = summary?.totalGenerations || 0;
+        if (projectCfg.domain) domain = projectCfg.domain;
+        if (projectCfg.techStack) techStack = projectCfg.techStack;
+        const allResolved = Array.isArray(summary?.species) && summary.species.length > 0
+          ? summary.species
+          : loadAllResolvedSpecies(projectDir);
+        if (allResolved.length > 0) {
+          const first = allResolved[0];
+          if (first.workflow) workflow = first.workflow;
+          if (first.eval_mode) mode = first.eval_mode;
+          if (!domain && first.domain) domain = first.domain;
+          if (!techStack && first.techStack) techStack = first.techStack;
+        }
+        const latestCandidate = allResolved
+          .filter((species) => species && species.latestGeneration)
+          .map((species) => {
+            const versionLabel = String(
+              species.latestGeneration?.version
+              || species.latestGeneration?.id
+              || species.latestGeneration?.name
+              || species.latestGeneration
+            );
+            const match = versionLabel.match(/^v(\d+)$/i);
+            const versionNumber = match ? Number.parseInt(match[1], 10) : -1;
+            return { species: species.species || species.id || '', versionLabel, versionNumber };
+          })
+          .sort((a, b) => b.versionNumber - a.versionNumber || a.species.localeCompare(b.species))[0] || null;
+        if (latestCandidate) {
+          latestGeneration = `${latestCandidate.species}/${latestCandidate.versionLabel}`;
+          const runMd = path.join(projectDir, 'species', latestCandidate.species, latestCandidate.versionLabel, 'RUN.md');
           if (fs.existsSync(runMd)) {
             const m = fs.readFileSync(runMd, 'utf8').match(/status:\s*([\w-]+)/);
-            if (m) status = m[1];
+            if (m) latestStatus = m[1];
           }
         }
-        // Load project defaults + first species via the merge-at-read-time
-        // loader (task 42.4-15, decision gad-184). The project ⊇ species
-        // contract means every reader goes through eval-loader.cjs instead
-        // of hand-merging project.json + species.json.
-        let mode = '—', workflow = '—', domain = '—', techStack = '';
-        try {
-          const projectCfg = loadEvalProject(projectDir);
-          if (projectCfg.domain) domain = projectCfg.domain;
-          if (projectCfg.techStack) techStack = projectCfg.techStack;
-          const allResolved = loadAllResolvedSpecies(projectDir);
-          if (allResolved.length > 0) {
-            const first = allResolved[0];
-            if (first.workflow) workflow = first.workflow;
-            if (first.eval_mode) mode = first.eval_mode;
-            if (!domain && first.domain) domain = first.domain;
-            if (!techStack && first.techStack) techStack = first.techStack;
-          }
-        } catch (err) {
-          // sparse/malformed metadata is non-fatal for `eval list`
-        }
-        return { name, domain, mode, workflow, runs: runs.length, latest, status };
-      });
+      } catch (err) {
+        // sparse/malformed metadata is non-fatal for `eval list`
+      }
+      return {
+        project: name,
+        domain,
+        mode,
+        workflow,
+        species: speciesCount,
+        generations: totalGenerations,
+        'latest-generation': latestGeneration,
+        'latest-status': latestStatus,
+      };
+    });
 
-    output(projects, { title: 'GAD Eval Projects' });
-    console.log(`\n${projects.length} project(s), ${projects.reduce((s, p) => s + p.runs, 0)} total runs`);
+    output(projects, { title: 'GAD Projects / Species / Generations' });
+    console.log(`\n${projects.length} project(s), ${projects.reduce((s, p) => s + p.species, 0)} species, ${projects.reduce((s, p) => s + p.generations, 0)} total generations`);
   },
 });
 
@@ -5295,6 +5357,46 @@ function buildEvalPrompt(projectDir, projectName, runNum, runtimeIdentity, runDi
   sections.push(`This eval is only considered fully attributed if the preserved run includes runtime identity plus raw logs/trace events.`);
 
   return sections.join('\n\n');
+}
+
+function parseProjectSpeciesRef(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return { project: '', species: '', projectRef: '' };
+  const parts = raw.split('/').filter(Boolean);
+  if (parts.length >= 2) {
+    return {
+      project: parts[0],
+      species: parts[1],
+      projectRef: `${parts[0]}/${parts[1]}`,
+    };
+  }
+  return { project: raw, species: '', projectRef: raw };
+}
+
+function normalizeGenerationReference(projectArg, speciesArg, versionArg) {
+  const parsed = parseProjectSpeciesRef(projectArg);
+  let species = String(speciesArg || '').trim();
+  let version = String(versionArg || '').trim();
+  if (!version && /^v\d+$/i.test(species)) {
+    version = species;
+    species = '';
+  }
+  if (!parsed.species && species) {
+    parsed.species = species;
+    parsed.projectRef = `${parsed.project}/${species}`;
+  }
+  return {
+    project: parsed.project,
+    species: parsed.species,
+    projectRef: parsed.projectRef,
+    version,
+  };
+}
+
+function formatGenerationPreserveCommand(projectRef, version) {
+  const parsed = parseProjectSpeciesRef(projectRef);
+  if (parsed.species) return `gad generation preserve ${parsed.project} ${parsed.species} ${version}`;
+  return `gad generation preserve ${parsed.project} ${version}`;
 }
 
 /** Build skills provenance snapshot for eval run (decision gad-120) */
@@ -5530,7 +5632,7 @@ const evalRun = defineCommand({
           `After the agent completes:`,
           `1. Update TRACE.json timing.ended + timing.duration_minutes + token_usage from agent result`,
           `1b. Verify runtime identity / trace files were captured for ${evalRuntime.id}`,
-          `2. Run: gad generation preserve ${args.project} v${runNum} --from <worktree-path>`,
+          `2. Run: ${formatGenerationPreserveCommand(args.project, `v${runNum}`)} --from <worktree-path>`,
           `3. Regenerate site data: cd site && node scripts/build-site-data.mjs`,
           `4. Build + commit + push`,
         ],
@@ -5551,7 +5653,7 @@ const evalRun = defineCommand({
       console.log(`  4. Set env: GAD_LOG_DIR=${path.join(runDir, '.gad-log')}`);
       console.log(`  5. Spawn an Agent with isolation: "worktree" using the prompt`);
       console.log(`  6. On completion: update TRACE.json with timing + tokens`);
-      console.log(`  7. Run: gad generation preserve ${args.project} v${runNum} --from <worktree>`);
+      console.log(`  7. Run: ${formatGenerationPreserveCommand(args.project, `v${runNum}`)} --from <worktree>`);
       console.log(`  8. Regenerate site data + push`);
 
       // Output JSON to stdout for machine parsing
@@ -5574,7 +5676,7 @@ const evalRun = defineCommand({
       console.log(`  ${prompt.length} chars, ~${Math.ceil(prompt.length / 4)} tokens`);
       console.log(`\nAgent should work in: ${worktreePath}`);
       console.log(`After agent completes, run:`);
-      console.log(`  gad generation preserve ${args.project} v${runNum} --from ${worktreePath}`);
+      console.log(`  ${formatGenerationPreserveCommand(args.project, `v${runNum}`)} --from ${worktreePath}`);
     } finally {
       try {
         execSync(`git worktree remove --force "${worktreePath}"`, { stdio: 'pipe' });
@@ -7195,18 +7297,33 @@ const evalReport = defineCommand({
 // This is MANDATORY after every eval run. Without this, outputs can be lost
 // when worktrees are cleaned up or overwritten.
 const evalPreserve = defineCommand({
-  meta: { name: 'preserve', description: 'Preserve agent eval outputs (code + build + logs) to canonical per-version paths — MANDATORY after every run' },
+  meta: { name: 'preserve', description: 'Preserve generation outputs (code + build + logs) to canonical project/species/version paths — MANDATORY after every run' },
   args: {
-    project: { type: 'positional', description: 'Eval project name', required: true },
-    version: { type: 'positional', description: 'Version (e.g. v5)', required: true },
+    project: { type: 'positional', description: 'Project id', required: true },
+    species: { type: 'positional', description: 'Species id (preferred generation syntax)', default: '' },
+    version: { type: 'positional', description: 'Generation version (e.g. v5)', default: '' },
     from: { type: 'string', description: 'Source path (agent worktree root)', default: '' },
     'game-subdir': { type: 'string', description: 'Subdir containing the game (default: game)', default: 'game' },
   },
   run({ args }) {
     const gadDir = path.join(__dirname, '..');
     const repoRoot = findRepoRoot();
-    const projectDir = resolveOrDefaultEvalProjectDir(args.project);
-    const runDir = path.join(projectDir, args.version);
+    const target = normalizeGenerationReference(args.project, args.species, args.version);
+    if (!target.version) {
+      outputError(
+        'Usage: gad generation preserve <project> <species> <version> --from <worktree-path>\n' +
+        'Legacy alias still accepted: gad eval preserve <project> <version> --from <worktree-path>'
+      );
+      return;
+    }
+    const projectBaseDir = resolveOrDefaultEvalProjectDir(target.project);
+    const projectDir = target.species
+      ? path.join(projectBaseDir, 'species', target.species)
+      : projectBaseDir;
+    const runDir = path.join(projectDir, target.version);
+    const runPathLabel = target.species
+      ? `evals/${target.project}/species/${target.species}/${target.version}`
+      : `evals/${target.project}/${target.version}`;
 
     if (!args.from) {
       outputError('--from <worktree-path> is required');
@@ -7301,7 +7418,7 @@ const evalPreserve = defineCommand({
     }
     let buildPreserved = false;
     if (distSrc) {
-      const buildTarget = path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, args.version);
+      const buildTarget = path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', target.projectRef, target.version);
       if (fs.existsSync(buildTarget)) {
         fs.rmSync(buildTarget, { recursive: true, force: true });
       }
@@ -7343,8 +7460,8 @@ const evalPreserve = defineCommand({
       }
     }
 
-    console.log(`\n✓ Preserved ${args.project} ${args.version}`);
-    console.log(`  Project tree:    ${copiedCount} top-level entries → evals/${args.project}/${args.version}/run/`);
+    console.log(`\n✓ Preserved ${target.projectRef} ${target.version}`);
+    console.log(`  Project tree:    ${copiedCount} top-level entries → ${runPathLabel}/run/`);
     if (rootExtrasCopied > 0) {
       console.log(`  Root extras:     ${rootExtrasCopied} agent-created files → run/_worktree_root_extras/`);
     }
@@ -7456,7 +7573,7 @@ const evalPreserve = defineCommand({
         const srcDir = path.join(runTargetDir, 'src');
         const sourceSizeBytes = fs.existsSync(srcDir) ? dirSizeBytes(srcDir) : 0;
         // Build size: preserved build in public/evals/ or run/dist/
-        const buildTarget = path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', args.project, args.version);
+        const buildTarget = path.join(repoRoot, 'apps', 'portfolio', 'public', 'evals', target.projectRef, target.version);
         let buildSizeBytes = 0;
         if (buildPreserved && fs.existsSync(buildTarget)) {
           buildSizeBytes = dirSizeBytes(buildTarget);
@@ -7476,11 +7593,11 @@ const evalPreserve = defineCommand({
 
     // Update RUN.md
     const runMdPath = path.join(runDir, 'RUN.md');
-    const runMdLine = `preserved: ${new Date().toISOString()} (from ${from})\n`;
+    const runMdLine = `preserved: ${new Date().toISOString()} (from ${from})\nproject_ref: ${target.projectRef}\n`;
     if (fs.existsSync(runMdPath)) {
       fs.appendFileSync(runMdPath, runMdLine);
     } else {
-      fs.writeFileSync(runMdPath, `# Eval Run ${args.version}\n\nproject: ${args.project}\n${runMdLine}`);
+      fs.writeFileSync(runMdPath, `# Eval Run ${target.version}\n\nproject: ${target.project}\nspecies: ${target.species || ''}\n${runMdLine}`);
     }
   },
 });
@@ -8713,6 +8830,7 @@ function loadSessions(baseDir, roots) {
 }
 
 function writeSession(session) {
+  if (sideEffectsSuppressed()) return;
   session.updatedAt = new Date().toISOString();
   fs.writeFileSync(session._file, JSON.stringify(
     (({ _root, _file, ...rest }) => rest)(session), null, 2
@@ -8721,6 +8839,7 @@ function writeSession(session) {
 
 /** Write ISO timestamp to <last-updated> in STATE.xml (creates tag if absent). */
 function touchStateXml(root, baseDir) {
+  if (sideEffectsSuppressed()) return;
   const planDir = path.join(baseDir, root.path, root.planningDir);
   const stateXml = path.join(planDir, 'STATE.xml');
   if (!fs.existsSync(stateXml)) return;
@@ -9178,6 +9297,7 @@ const snapshotCmd = defineCommand({
     const planDir = path.join(baseDir, root.path, root.planningDir);
     const sprintSize = config.sprintSize || 5;
     const useFull = args.full;
+    const readOnlySnapshot = sideEffectsSuppressed();
     const sdkAssetAliases = {
       '@skills': 'skills',
       '@workflows': 'workflows',
@@ -9456,6 +9576,7 @@ const snapshotV2Cmd = defineCommand({
     session: { type: 'string', description: 'Session ID. When provided, auto-downgrades to mode=active if static context was already delivered in this session. Env fallback: GAD_SESSION_ID.', default: '' },
     sessionid: { type: 'string', description: 'Session ID alias for --session (runtime command compatibility).', default: '' },
     format: { type: 'string', description: 'compact (default) | xml — "compact" strips XML envelope tokens (prolog, outer tags, per-item tag pairs) while preserving content. "xml" dumps raw file content (legacy). Decision gad-241.', default: 'compact' },
+    'no-side-effects': { type: 'boolean', description: 'Read-only snapshot: suppress session/lane/log/graph writes.', default: false },
   },
   run({ args }) {
     const baseDir = findRepoRoot();
@@ -9483,6 +9604,7 @@ const snapshotV2Cmd = defineCommand({
     const planDir = path.join(baseDir, root.path, root.planningDir);
     const sprintSize = config.sprintSize || 5;
     const useFull = args.full;
+    const readOnlySnapshot = sideEffectsSuppressed();
 
     // Session-aware mode resolution: auto-downgrade to active when session
     // has already received static context, unless --mode was explicitly passed.
@@ -9544,7 +9666,7 @@ const snapshotV2Cmd = defineCommand({
       humanFallback: Boolean(scopedPhaseId || scopedTaskId || agentInputs.parentAgentId || args.role || args.agentid),
     });
     let agentBootstrap = null;
-    if (shouldAutoRegister && runtimeIdentity.id !== 'unknown') {
+    if (!readOnlySnapshot && shouldAutoRegister && runtimeIdentity.id !== 'unknown') {
       try {
         agentBootstrap = ensureAgentLane(planDir, {
           requestedAgentId: agentInputs.requestedAgentId,
@@ -9565,7 +9687,7 @@ const snapshotV2Cmd = defineCommand({
         ? laneListing.activeAgents.find((agent) => agent.agentId === agentInputs.requestedAgentId) || null
         : null);
 
-    if (currentAgent) {
+    if (!readOnlySnapshot && currentAgent) {
       touchAgentLane(planDir, currentAgent.agentId, {
         runtime: runtimeIdentity.id,
         runtimeSessionId: detectRuntimeSessionId() || currentAgent.runtimeSessionId || null,
@@ -10056,39 +10178,44 @@ const snapshotV2Cmd = defineCommand({
     if (sprintUseGraph) {
       const sprintJsonPath = path.join(planDir, 'graph.json');
       const gadDir = path.resolve(__dirname, '..');
-      if (!fs.existsSync(sprintJsonPath)) {
+      if (!fs.existsSync(sprintJsonPath) && !readOnlySnapshot) {
         const g = graphExtractor.buildGraph(root, baseDir, { gadDir });
         fs.writeFileSync(sprintJsonPath, JSON.stringify(g, null, 2));
       }
-      const sprintGraph = JSON.parse(fs.readFileSync(sprintJsonPath, 'utf8'));
-      const sprintAllResult = graphExtractor.queryGraph(sprintGraph, { type: 'task' });
-      const sprintAllMatches = sprintAllResult.matches || [];
-      const sprintOpenMatches = sprintAllMatches.filter(m => m.status !== 'done' && m.status !== 'cancelled');
-      sprintDoneCount = sprintAllMatches.filter(m => m.status === 'done').length;
-      const inSprintOpenMatches = sprintOpenMatches.filter(m => {
-        const taskPhase = m.id.replace(/^task:/, '').split('-')[0];
-        return isSprintPhase(taskPhase);
-      });
-      outOfSprintOpenCount = sprintOpenMatches.length - inSprintOpenMatches.length;
-      if (inSprintOpenMatches.length > 0) {
-        let currentTaskPhase = '';
-        for (const m of inSprintOpenMatches) {
-          const taskId = m.id.replace(/^task:/, '');
-          const taskPhase = taskId.split('-')[0];
-          if (taskPhase !== currentTaskPhase) {
-            currentTaskPhase = taskPhase;
-            sprintTasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
+      if (fs.existsSync(sprintJsonPath)) {
+        const sprintGraph = JSON.parse(fs.readFileSync(sprintJsonPath, 'utf8'));
+        const sprintAllResult = graphExtractor.queryGraph(sprintGraph, { type: 'task' });
+        const sprintAllMatches = sprintAllResult.matches || [];
+        const sprintOpenMatches = sprintAllMatches.filter(m => m.status !== 'done' && m.status !== 'cancelled');
+        sprintDoneCount = sprintAllMatches.filter(m => m.status === 'done').length;
+        const inSprintOpenMatches = sprintOpenMatches.filter(m => {
+          const taskPhase = m.id.replace(/^task:/, '').split('-')[0];
+          return isSprintPhase(taskPhase);
+        });
+        outOfSprintOpenCount = sprintOpenMatches.length - inSprintOpenMatches.length;
+        if (inSprintOpenMatches.length > 0) {
+          let currentTaskPhase = '';
+          for (const m of inSprintOpenMatches) {
+            const taskId = m.id.replace(/^task:/, '');
+            const taskPhase = taskId.split('-')[0];
+            if (taskPhase !== currentTaskPhase) {
+              currentTaskPhase = taskPhase;
+              sprintTasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
+            }
+            const goalText = (m.goal || m.label || '').slice(0, 120);
+            const extraAttrs = [
+              m.skill ? `skill="${m.skill}"` : '',
+              m.type ? `type="${m.type}"` : '',
+            ].filter(Boolean).join(' ');
+            const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
+            sprintTasksSection += `    <task id="${taskId}" status="${m.status}"${attrStr}>${goalText}</task>\n`;
           }
-          const goalText = (m.goal || m.label || '').slice(0, 120);
-          const extraAttrs = [
-            m.skill ? `skill="${m.skill}"` : '',
-            m.type ? `type="${m.type}"` : '',
-          ].filter(Boolean).join(' ');
-          const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
-          sprintTasksSection += `    <task id="${taskId}" status="${m.status}"${attrStr}>${goalText}</task>\n`;
         }
+        sprintOpenTasks = inSprintOpenMatches;
+      } else {
+        sprintDoneCount = allTasks.filter(t => t.status === 'done').length;
+        sprintOpenTasks = [];
       }
-      sprintOpenTasks = inSprintOpenMatches;
     } else {
       const allOpenTasks = allTasks.filter((task) => task.status !== 'done' && task.status !== 'cancelled');
       const inSprintOpenTasks = allOpenTasks.filter((task) => {
@@ -10167,7 +10294,7 @@ const snapshotV2Cmd = defineCommand({
         if (fs.existsSync(jsonPath)) {
           try { graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8')); } catch {}
         }
-        if (!graph) {
+        if (!graph && !readOnlySnapshot) {
           // Auto-build if missing
           const gadDir = path.resolve(__dirname, '..');
           graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
@@ -10204,7 +10331,7 @@ const snapshotV2Cmd = defineCommand({
     }
 
     // Stamp session after building sections, before output.
-    if (snapshotSession) {
+    if (snapshotSession && !readOnlySnapshot) {
       const now = new Date().toISOString();
       snapshotSession.lastSnapshotAt = now;
       if (!isActiveMode) snapshotSession.staticLoadedAt = now;
@@ -12451,22 +12578,26 @@ function runDogfoodSelfRefreshOrExit(commandLabel) {
   }
 }
 
-function runStartupSnapshot(projectId, sessionArg = []) {
+function runStartupSnapshot(projectId, sessionArg = [], extraArgs = []) {
   const { spawnSync } = require('child_process');
   const packagedRuntime = isPackagedExecutableRuntime();
   const command = packagedRuntime
     ? (process.env[STARTUP_PRIMARY_EXECUTABLE_ENV] || getPackagedExecutablePath())
     : process.execPath;
   const commandArgs = packagedRuntime
-    ? ['snapshot', '--projectid', projectId, ...sessionArg]
-    : [__filename, 'snapshot', '--projectid', projectId, ...sessionArg];
-  return spawnSync(command, commandArgs, { stdio: 'inherit', env: process.env });
+    ? ['snapshot', '--projectid', projectId, ...sessionArg, ...extraArgs]
+    : [__filename, 'snapshot', '--projectid', projectId, ...sessionArg, ...extraArgs];
+  const env = sideEffectsSuppressed()
+    ? { ...process.env, GAD_NO_SIDE_EFFECTS_ACTIVE: '1' }
+    : process.env;
+  return spawnSync(command, commandArgs, { stdio: 'inherit', env });
 }
 
 const startupCmd = defineCommand({
   meta: { name: 'startup', description: 'Print the GAD session-start contract. One-shot answer to "how do I begin working on this project?" (task 42.2-22, fixes chicken-and-egg identified by subagent battery findings 2026-04-15).' },
   args: {
     projectid: { type: 'string', description: 'Project id to snapshot against (default: first root)', default: '' },
+    'no-side-effects': { type: 'boolean', description: 'Read-only startup: suppress .planning/ writes, user-setting stamps, and session creation.', default: false },
   },
   run({ args }) {
     const lines = [
@@ -12514,6 +12645,11 @@ const startupCmd = defineCommand({
     lines.push('');
     lines.push('Single most important command: `gad snapshot --projectid <id>`.');
     lines.push('Everything else is optional until you have that context.');
+    const sideEffectsMode = resolveSideEffectsMode();
+    if (sideEffectsMode.enabled) {
+      lines.push('');
+      lines.push(`Side effects suppressed: ${sideEffectsMode.reasons.join(', ')}`);
+    }
     console.log(lines.join('\n'));
 
     let resolvedProjectid = String(args.projectid || '').trim();
@@ -12544,49 +12680,57 @@ const startupCmd = defineCommand({
       // subsequent calls with --session auto-downgrade to active mode.
       let sessionArg = [];
       try {
-        if (!startupConfig) startupConfig = gadConfig.load(startupBaseDir);
-        const startupRoots = startupConfig.roots.filter(r => r.id === resolvedProjectid);
-        if (startupRoots.length > 0) {
-          const startupRoot = startupRoots[0];
-          const sDir = sessionsDir(startupBaseDir, startupRoot);
-          fs.mkdirSync(sDir, { recursive: true });
-          const state = readState(startupRoot, startupBaseDir);
-          const newSession = {
-            id: generateSessionId(),
-            projectId: startupRoot.id,
-            contextMode: 'loaded',
-            position: { phase: state.currentPhase || null, plan: null, task: null },
-            status: SESSION_STATUS.ACTIVE,
-            refs: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            _root: startupRoot,
-            _file: path.join(sDir, `${generateSessionId()}.json`),
-          };
-          // Re-derive file path with the correct id
-          newSession._file = path.join(sDir, `${newSession.id}.json`);
-          newSession.refs = buildContextRefs(startupRoot, startupBaseDir, newSession);
-          writeSession(newSession);
-          sessionArg = ['--session', newSession.id];
-          console.log(`Session created: ${newSession.id}`);
+        if (!sideEffectsSuppressed()) {
+          if (!startupConfig) startupConfig = gadConfig.load(startupBaseDir);
+          const startupRoots = startupConfig.roots.filter(r => r.id === resolvedProjectid);
+          if (startupRoots.length > 0) {
+            const startupRoot = startupRoots[0];
+            const sDir = sessionsDir(startupBaseDir, startupRoot);
+            fs.mkdirSync(sDir, { recursive: true });
+            const state = readState(startupRoot, startupBaseDir);
+            const newSession = {
+              id: generateSessionId(),
+              projectId: startupRoot.id,
+              contextMode: 'loaded',
+              position: { phase: state.currentPhase || null, plan: null, task: null },
+              status: SESSION_STATUS.ACTIVE,
+              refs: [],
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              _root: startupRoot,
+              _file: path.join(sDir, `${generateSessionId()}.json`),
+            };
+            // Re-derive file path with the correct id
+            newSession._file = path.join(sDir, `${newSession.id}.json`);
+            newSession.refs = buildContextRefs(startupRoot, startupBaseDir, newSession);
+            writeSession(newSession);
+            sessionArg = ['--session', newSession.id];
+            console.log(`Session created: ${newSession.id}`);
+          }
         }
       } catch { /* non-fatal — snapshot still works without session */ }
 
       // Daily routine — generate today's tip if OPENAI_API_KEY set and tip missing.
-      try { maybeGenerateDailyTip(); } catch (e) { /* non-fatal */ }
+      if (!sideEffectsSuppressed()) {
+        try { maybeGenerateDailyTip(); } catch (e) { /* non-fatal */ }
+      }
 
       console.log(`Running snapshot now for projectid=${resolvedProjectid}...`);
       console.log('');
       try {
-        if (startupConfig && Array.isArray(startupConfig.roots)) {
+        if (!sideEffectsSuppressed() && startupConfig && Array.isArray(startupConfig.roots)) {
           const startupRoot = startupConfig.roots.find((candidate) => candidate.id === resolvedProjectid);
           if (startupRoot) writeEvolutionScan(startupRoot, startupBaseDir, path.resolve(__dirname, '..'));
         }
       } catch { /* non-fatal */ }
       // Delegate to snapshot by re-invoking the process — simplest path.
-      const result = runStartupSnapshot(resolvedProjectid, sessionArg);
+      const result = runStartupSnapshot(
+        resolvedProjectid,
+        sessionArg,
+        sideEffectsSuppressed() ? [NO_SIDE_EFFECTS_FLAG] : [],
+      );
       const exitCode = result.status || (result.error ? 1 : 0);
-      if (exitCode === 0) {
+      if (exitCode === 0 && !sideEffectsSuppressed()) {
         try { setLastActiveProjectid(resolvedProjectid); } catch { /* non-fatal */ }
       }
       process.exit(exitCode);
@@ -13551,6 +13695,7 @@ function evolutionScanFilePath(root, baseDir) {
 }
 
 function writeEvolutionScan(root, baseDir, repoRoot) {
+  if (sideEffectsSuppressed()) return { scan: null, filePath: evolutionScanFilePath(root, baseDir) };
   const scan = buildEvolutionScan(root, baseDir, repoRoot);
   const filePath = evolutionScanFilePath(root, baseDir);
   fs.writeFileSync(filePath, `${JSON.stringify(scan, null, 2)}\n`, 'utf8');

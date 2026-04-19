@@ -38,6 +38,9 @@
 const fs = require('fs');
 const path = require('path');
 
+const NO_SIDE_EFFECTS_FLAG = '--no-side-effects';
+const NO_SIDE_EFFECTS_MARKER = '.gad-release-build';
+
 const {
   makeToolUseEvent,
   makeSkillInvocationEvent,
@@ -59,6 +62,36 @@ function findProjectRoot(startDir) {
     dir = path.dirname(dir);
   }
   return startDir;
+}
+
+function envFlagEnabled(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (!normalized) return false;
+  return !['0', 'false', 'no', 'off'].includes(normalized);
+}
+
+function commandContainsNoSideEffectsFlag(payload) {
+  const input = payload && payload.tool_input;
+  if (!input || typeof input !== 'object') return false;
+  const candidates = [
+    input.command,
+    input.cmd,
+    input.script,
+    Array.isArray(input.args) ? input.args.join(' ') : '',
+  ];
+  return candidates.some((candidate) => String(candidate || '').includes(NO_SIDE_EFFECTS_FLAG));
+}
+
+function sideEffectsSuppressed(projectRoot, payload) {
+  if (envFlagEnabled(process.env.GAD_NO_SIDE_EFFECTS)) return true;
+  if (envFlagEnabled(process.env.GAD_RELEASE_BUILD)) return true;
+  if (envFlagEnabled(process.env.GAD_NO_SIDE_EFFECTS_ACTIVE)) return true;
+  if (commandContainsNoSideEffectsFlag(payload)) return true;
+  try {
+    return fs.existsSync(path.join(projectRoot, NO_SIDE_EFFECTS_MARKER));
+  } catch {
+    return false;
+  }
 }
 
 function getTraceFile(projectRoot) {
@@ -422,6 +455,8 @@ async function main() {
 
   const cwd = payload.cwd || process.cwd();
   const projectRoot = findProjectRoot(cwd);
+  if (sideEffectsSuppressed(projectRoot, payload)) return;
+
   const runtime = detectRuntime(payload);
   const agent = detectAgentContext(payload);
   const hookEvent = payload.hook_event_name || '';
