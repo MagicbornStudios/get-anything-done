@@ -288,161 +288,89 @@ const {
 
 const evalDataAccess = (() => {
   let _mod;
-  return () => {
-    if (!_mod) _mod = require('../lib/eval-data-access.cjs');
-    return _mod;
-  };
+  return () => (_mod ||= require('../lib/eval-data-access.cjs'));
 })();
 
-// projects/workspace/ls: bin/commands/projects.cjs
-const { createProjectsCommands } = require('./commands/projects.cjs');
-const { projectsCmd, workspaceCmd, lsCmd } = createProjectsCommands({
-  findRepoRoot, gadConfig, resolveTomlPath,
-  output, shouldUseJson, readState, evalDataAccess,
-});
-
-// species: bin/commands/species.cjs
-const { createSpeciesCommand } = require('./commands/species.cjs');
-const speciesCmd = createSpeciesCommand({ evalDataAccess });
-
-// recipes: bin/commands/recipes.cjs
-const { createRecipesCommand } = require('./commands/recipes.cjs');
-const recipesCmd = createRecipesCommand({ evalDataAccess });
-
-// generation (salvage etc.) → bin/commands/generation.cjs
-const { createGenerationCommands } = require('./commands/generation.cjs');
-const { generationSalvage, generationCmd } = createGenerationCommands({ outputError, evalDataAccess });
-
-// state / phases / decisions / todos / note / handoffs — sweep E/F extractions.
-const stateCmd = createStateCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError,
-  render, shouldUseJson, readState, graphExtractor, maybeRebuildGraph,
-});
-const phasesCmd = createPhasesCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError,
-  render, shouldUseJson, readPhases, writePhase, maybeRebuildGraph,
-});
-const decisionsCmd = createDecisionsCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError,
-  render, shouldUseJson, readDecisions, writeDecision, formatId, maybeRebuildGraph,
-});
-const todosCmd = createTodosCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError,
-  render, shouldUseJson, listTodos, writeTodo,
-});
-const noteCmd = createNoteCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError,
-  writeNote, listNotes, listNoteQuestions,
-});
-
 const { listHandoffs, countHandoffs, createHandoff } = require('../lib/handoffs.cjs');
-const handoffsCmd = createHandoffsCommand({
-  findRepoRoot, outputError, render, shouldUseJson, detectRuntimeIdentity,
-});
 
-// section helpers (printSection, buildHandoffsSection, resolveDetectedRuntimeId)
-// → lib/section-helpers.cjs (used by snapshot/sprint/startup code paths)
+// section helpers used by snapshot/sprint/startup → lib/section-helpers.cjs
 const __sectionHelpers = require('../lib/section-helpers.cjs');
 const { resolveDetectedRuntimeId, printSection } = __sectionHelpers;
 function buildHandoffsSection(opts = {}) {
   return __sectionHelpers.buildHandoffsSection(opts, { render });
 }
 
-// env (BYOK per-project secrets) → bin/commands/env.cjs
-const envCmd = require('./commands/env.cjs').createEnvCommand();
-
-// runtime → bin/commands/runtime.cjs (lazy: deps SESSION_STATUS / loadSessions
-// / buildContextRefs come from session.cjs which is wired further down)
+// runtime → bin/commands/runtime.cjs (deps SESSION_STATUS / loadSessions /
+// buildContextRefs come from session.cjs further down — late-bound)
 const { createRuntimeCommand, getRuntimeArg } = require('./commands/runtime.cjs');
 let runtimeCmd;
 
-// requirements / errors / blockers → bin/commands/readers.cjs
-const requirementsCmd = createRequirementsCommand({
-  findRepoRoot, gadConfig, resolveRoots,
-  render, shouldUseJson, readRequirements, readDocFlow,
-});
-const errorsCmd = createErrorsCommand({
-  findRepoRoot, gadConfig, resolveRoots, render, shouldUseJson, readErrors,
-});
-const blockersCmd = createBlockersCommand({
-  findRepoRoot, gadConfig, resolveRoots, render, shouldUseJson, readBlockers,
-});
-
-// refs → bin/commands/refs.cjs (sweep F)
-const refsCmd = createRefsCommand({
-  findRepoRoot, gadConfig, resolveRoots,
-  render, shouldUseJson,
-  readDecisions, readRequirements, readPhases, readDocFlow, readDocsMap,
-  planningRefVerify, outputError,
-});
-
-// task-checkpoint → bin/commands/task-checkpoint.cjs
-const taskCheckpoint = require('./commands/task-checkpoint.cjs').createTaskCheckpointCommand({
-  findRepoRoot, gadConfig, resolveRoots, readTasks, readXmlFile,
-});
-
-// ---------------------------------------------------------------------------
-// docs subcommands
-// ---------------------------------------------------------------------------
-
-// docs: bin/commands/docs.cjs
-const { createDocsCommand } = require("./commands/docs.cjs");
-const docsCmd = createDocsCommand({ findRepoRoot, gadConfig, resolveRoots, outputError, compileDocs, readDocsMap, render, shouldUseJson });
-
-
-// planning (MD→XML hydration; inverse of `gad docs compile`) → bin/commands/planning.cjs
-const planningCmd = require('./commands/planning.cjs').createPlanningCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError,
-});
-
-const narrativeCmd = createNarrativeCommand();
-const startCmd = createStartCommand({ findRepoRoot, outputError });
-const subagentsCmd = createSubagentsCommand({ findRepoRoot, outputError, render });
-const agentsCmd = createAgentsCommand({
-  findRepoRoot, render, detectRuntimeIdentity, detectRuntimeSessionId, listHandoffs,
-});
-const siteCmd = createSiteCommand({ outputError });
-
-// eval subcommands — broken across info / run / trace / suite / artifacts /
-// preview / skill modules under bin/commands/eval-*.cjs
-const { evalList, evalScore, evalDiff, evalStatus, evalRuns, evalShow, evalScores, evalVersion }
-  = require('./commands/eval-info.cjs').createEvalInfoCommands({
-    listAllEvalProjects, listEvalProjectsHint, resolveOrDefaultEvalProjectDir,
-    outputError, output, evalDataAccess, loadEvalProject, loadAllResolvedSpecies,
-    findRepoRoot, gadConfig, pkg,
-  });
-
-const { normalizeGenerationReference, buildEvalPrompt } = require('../lib/eval-helpers.cjs');
-
-const { evalRun } = require('./commands/eval-run.cjs').createEvalRunCommand({
-  listEvalProjectsHint, resolveEvalProject, outputError, normalizeEvalRuntime,
-  ensureEvalRuntimeHooks, buildEvalPrompt, summarizeAgentLineage,
-});
-
-const { evalTraceCmd } = require('./commands/eval-trace.cjs').createEvalTraceCommand({
+// Shared dependency bag used by most command factories. Each factory
+// destructures the keys it needs; extras are ignored. Spread into per-call
+// overrides as `{ ...common, extra }` when a single binding needs more.
+const repoRoot = path.resolve(__dirname, '..');
+const common = {
+  findRepoRoot, gadConfig, resolveRoots, resolveTomlPath, repoRoot, pkg,
+  outputError, output, render, shouldUseJson,
+  readState, readPhases, readTasks, readDecisions, readRequirements,
+  readErrors, readBlockers, readDocFlow, readDocsMap, readXmlFile,
+  writePhase, writeDecision, writeTodo, listTodos,
+  writeNote, listNotes, listNoteQuestions,
+  detectRuntimeIdentity, detectRuntimeSessionId,
+  graphExtractor, maybeRebuildGraph, formatId, evalDataAccess,
+  planningRefVerify, compileDocs, getLogDir,
+  listHandoffs, countHandoffs, createHandoff,
+  resolveDetectedRuntimeId, printSection, buildHandoffsSection,
+  // eval surface
   listAllEvalProjects, listEvalProjectsHint, resolveOrDefaultEvalProjectDir,
-  outputError, output, shouldUseJson, summarizeAgentLineage, detectRuntimeIdentity,
-  readXmlFile, findRepoRoot, pkg,
-});
+  resolveEvalProject, defaultEvalsDir, loadEvalProject, loadAllResolvedSpecies,
+  parseTraceEventsJsonl, summarizeAgentLineage,
+};
 
+// projects (projects/workspace/ls), species, recipes, generation, env
+const { projectsCmd, workspaceCmd, lsCmd }
+  = require('./commands/projects.cjs').createProjectsCommands(common);
+const speciesCmd = require('./commands/species.cjs').createSpeciesCommand(common);
+const recipesCmd = require('./commands/recipes.cjs').createRecipesCommand(common);
+const { generationSalvage, generationCmd }
+  = require('./commands/generation.cjs').createGenerationCommands(common);
+const envCmd = require('./commands/env.cjs').createEnvCommand();
+
+// state / phases / decisions / todos / note / handoffs / refs (sweep E/F)
+const stateCmd = createStateCommand(common);
+const phasesCmd = createPhasesCommand(common);
+const decisionsCmd = createDecisionsCommand(common);
+const todosCmd = createTodosCommand(common);
+const noteCmd = createNoteCommand(common);
+const handoffsCmd = createHandoffsCommand(common);
+const refsCmd = createRefsCommand(common);
+const requirementsCmd = createRequirementsCommand(common);
+const errorsCmd = createErrorsCommand(common);
+const blockersCmd = createBlockersCommand(common);
+const taskCheckpoint = require('./commands/task-checkpoint.cjs').createTaskCheckpointCommand(common);
+
+const docsCmd = require('./commands/docs.cjs').createDocsCommand(common);
+const planningCmd = require('./commands/planning.cjs').createPlanningCommand(common);
+const narrativeCmd = createNarrativeCommand();
+const startCmd = createStartCommand(common);
+const subagentsCmd = createSubagentsCommand(common);
+const agentsCmd = createAgentsCommand(common);
+const siteCmd = createSiteCommand(common);
+
+// eval surface — split across eval-{info,run,trace,suite,artifacts,preview,skill}.cjs
+const { normalizeGenerationReference, buildEvalPrompt } = require('../lib/eval-helpers.cjs');
+const evalCommonExtras = { buildEvalPrompt, normalizeEvalRuntime, ensureEvalRuntimeHooks };
+const { evalList, evalScore, evalDiff, evalStatus, evalRuns, evalShow, evalScores, evalVersion }
+  = require('./commands/eval-info.cjs').createEvalInfoCommands(common);
+const { evalRun } = require('./commands/eval-run.cjs').createEvalRunCommand({ ...common, ...evalCommonExtras });
+const { evalTraceCmd } = require('./commands/eval-trace.cjs').createEvalTraceCommand(common);
 const { evalSetup, evalSuite, evalReport, evalReadme, evalInheritSkills }
-  = require('./commands/eval-suite.cjs').createEvalSuiteCommands({
-    resolveOrDefaultEvalProjectDir, listAllEvalProjects, defaultEvalsDir,
-    outputError, output, buildEvalPrompt, loadEvalProject, loadAllResolvedSpecies,
-  });
-
-const { evalPreserve, evalVerify } = require('./commands/eval-artifacts.cjs').createEvalArtifactsCommands({
-  findRepoRoot, resolveOrDefaultEvalProjectDir,
-  outputError, parseTraceEventsJsonl, summarizeAgentLineage,
-  listAllEvalProjects, defaultEvalsDir,
-});
-
+  = require('./commands/eval-suite.cjs').createEvalSuiteCommands({ ...common, ...evalCommonExtras });
+const { evalPreserve, evalVerify }
+  = require('./commands/eval-artifacts.cjs').createEvalArtifactsCommands(common);
 const { servePreservedGenerationBuildArtifact, evalOpen, evalReview }
-  = require('./commands/eval-preview.cjs').createEvalPreviewSurfaces({
-    resolveOrDefaultEvalProjectDir, outputError, findRepoRoot, loadAllResolvedSpecies,
-  });
-
-const { evalSkillCmd } = require('./commands/eval-skill.cjs').createEvalSkillCommands({ outputError });
+  = require('./commands/eval-preview.cjs').createEvalPreviewSurfaces(common);
+const { evalSkillCmd } = require('./commands/eval-skill.cjs').createEvalSkillCommands(common);
 
 // Decision gad-212: promote selected eval subcommands into species / generation
 // (the user-visible vocabulary). `gad eval` stays as a deprecated alias.
@@ -461,11 +389,8 @@ const evalCmd = defineCommand({
 });
 
 // session/context/pause-work + helpers → bin/commands/session.cjs
-// (sessions are JSON files in .planning/sessions/<id>.json — see session.cjs)
 const _sessionMod = require('./commands/session.cjs').createSessionCommands({
-  findRepoRoot, gadConfig, resolveRoots, readState, readTasks,
-  render, output, outputError, shouldUseJson, sideEffectsSuppressed,
-  createHandoff, resolveDetectedRuntimeId,
+  ...common, sideEffectsSuppressed,
   getLastActiveProjectid, setLastActiveProjectid,
 });
 const { sessionCmd, pauseWorkCmd, contextCmd } = _sessionMod;
@@ -473,10 +398,8 @@ const { SESSION_STATUS, loadSessions, buildContextRefs } = _sessionMod.helpers;
 __loadSessionsRef = loadSessions; // late-bind for scope-helpers (resolveRoots)
 const { writeSession } = require('./commands/session.cjs');
 
-// runtime: bind now that session helpers exist (declared as `let` above)
 runtimeCmd = createRuntimeCommand({
-  findRepoRoot, gadConfig, resolveRoots, loadSessions, SESSION_STATUS,
-  readState, buildContextRefs, output, outputError, shouldUseJson,
+  ...common, loadSessions, SESSION_STATUS, buildContextRefs,
 });
 
 // Install / sink helpers → lib/install-helpers.cjs
@@ -492,113 +415,79 @@ function maybeGenerateDailyTip() {
   });
 }
 
-let snapshotCmd; // populated below once all deps exist
-
-// tasks → bin/commands/tasks.cjs (runTasksListView + resolveSingleTaskRoot inside)
 const tasksCmd = require('./commands/tasks.cjs').createTasksCommand({
-  outputError, readTasks,
+  ...common,
   resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
-  detectRuntimeSessionId, claimTask, addTaskClaim, nowIso, maybeRebuildGraph,
-  shouldUseJson, releaseTask, removeTaskClaim, RAW_ARGV, getRuntimeArg,
-  readRawFlagValue, SENTINEL_SKILL_VALUES, findRepoRoot, gadConfig,
-  resolveRoots, listAgentLanes, simplifyAgentLane, render,
-  formatId, graphExtractor, repoRoot: path.resolve(__dirname, '..'),
+  claimTask, addTaskClaim, nowIso, releaseTask, removeTaskClaim,
+  RAW_ARGV, getRuntimeArg, readRawFlagValue, SENTINEL_SKILL_VALUES,
+  listAgentLanes, simplifyAgentLane,
 });
 
-const migrateSchema = require('./commands/migrate-schema.cjs').createMigrateSchemaCommand({ findRepoRoot });
-
-const packCmd = require('./commands/pack.cjs').createPackCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError,
-  readState, readPhases, readTasks, readDecisions, readRequirements,
-  readErrors, readBlockers, readDocsMap,
-});
-const sinkCmd = require('./commands/sink.cjs').createSinkCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError, output, stampSinkCompileNote,
-});
-
-const verifyCmd = require('./commands/verify.cjs').createVerifyCommand({
-  findRepoRoot, gadConfig, resolveRoots, outputError, readPhases, readXmlFile, readTasks,
-});
+const migrateSchema = require('./commands/migrate-schema.cjs').createMigrateSchemaCommand(common);
+const packCmd = require('./commands/pack.cjs').createPackCommand(common);
+const sinkCmd = require('./commands/sink.cjs').createSinkCommand({ ...common, stampSinkCompileNote });
+const verifyCmd = require('./commands/verify.cjs').createVerifyCommand(common);
 const { createSprintCommand, getSprintPhaseIds, getCurrentSprintIndex } = require('./commands/sprint.cjs');
-const sprintCmd = createSprintCommand({
-  findRepoRoot, gadConfig, resolveRoots, readPhases, readTasks, readXmlFile, shouldUseJson,
-});
-const devCmd = require('./commands/dev.cjs').createDevCommand({ findRepoRoot });
-const logCmd = require('./commands/log.cjs').createLogCommand({
-  getLogDir, resolveOrDefaultEvalProjectDir,
-});
+const sprintCmd = createSprintCommand(common);
+const devCmd = require('./commands/dev.cjs').createDevCommand(common);
+const logCmd = require('./commands/log.cjs').createLogCommand(common);
 
-// worktree helpers → lib/worktree-helpers.cjs; command → bin/commands/worktree.cjs
+// worktree helpers → lib/worktree-helpers.cjs
 const { listAllWorktrees, worktreeInfo, findWorktreeByPartial } = require('../lib/worktree-helpers.cjs');
-const worktreeCmd = require('./commands/worktree.cjs').createWorktreeCommand({
-  outputError, listAllWorktrees, worktreeInfo, findWorktreeByPartial, listAllEvalProjects,
-});
-const healthCmd = require('./commands/health.cjs').createHealthCommand({
-  findRepoRoot, outputError, listAllWorktrees, worktreeInfo,
-});
+const worktreeExtras = { listAllWorktrees, worktreeInfo, findWorktreeByPartial };
+const worktreeCmd = require('./commands/worktree.cjs').createWorktreeCommand({ ...common, ...worktreeExtras });
+const healthCmd = require('./commands/health.cjs').createHealthCommand({ ...common, ...worktreeExtras });
 
 const { getFrameworkVersion } = require('../lib/framework-version.cjs');
 const discoveryTestCmd = require('./commands/discovery-test.cjs').createDiscoveryTestCommand();
 const versionCmd = require('./commands/version.cjs').createVersionCommand({ getFrameworkVersion });
 
-// startup → bin/commands/startup.cjs (decision gad-59 pins the trace-hook
-// handler at vendor/get-anything-done/bin/gad-trace-hook.cjs; install/uninstall
-// merge that into ~/.claude/settings.json without clobbering existing hooks).
+// startup → bin/commands/startup.cjs (decision gad-59: trace-hook handler at
+// bin/gad-trace-hook.cjs is merged into ~/.claude/settings.json by install).
 const { createStartupCommand, runDogfoodSelfRefreshOrExit } = require('./commands/startup.cjs');
 const startupCmd = createStartupCommand({
-  findRepoRoot, gadConfig, render,
+  ...common,
   sideEffectsSuppressed, resolveSideEffectsMode, NO_SIDE_EFFECTS_FLAG,
   getPackagedExecutablePath, isPackagedExecutableRuntime, getDefaultSelfInstallDir,
-  detectRuntimeIdentity, buildHandoffsSection, printSection, ensureGraphFresh,
-  readState, writeEvolutionScan, maybeGenerateDailyTip,
+  ensureGraphFresh, writeEvolutionScan, maybeGenerateDailyTip,
   getLastActiveProjectid, setLastActiveProjectid,
   sessionHelpers: {
     sessionsDir: require('./commands/session.cjs').sessionsDir,
     generateSessionId: require('./commands/session.cjs').generateSessionId,
-    SESSION_STATUS,
-    buildContextRefs,
-    writeSession,
+    SESSION_STATUS, buildContextRefs, writeSession,
   },
 });
 
-// self / self-eval → bin/commands/self.cjs (self depends on runDogfoodSelfRefreshOrExit from startup.cjs)
 const { createSelfCommand, createSelfEvalCommand } = require('./commands/self.cjs');
 const selfCmd = createSelfCommand({ runDogfoodSelfRefreshOrExit });
-const selfEvalCmd = createSelfEvalCommand({ outputError });
+const selfEvalCmd = createSelfEvalCommand(common);
 
-// install / uninstall → bin/commands/install.cjs
-const { install: installCmd, uninstall: uninstallCmd } = require('./commands/install.cjs').createInstallCommand({
-  getClaudeSettingsPath, readJsonSafe, writeJsonPretty, GAD_HOOK_MARKER,
-  isPackagedExecutableRuntime, getPackagedExecutablePath,
-  getDefaultSelfInstallDir, updateWindowsUserPath,
-});
+const { install: installCmd, uninstall: uninstallCmd }
+  = require('./commands/install.cjs').createInstallCommand({
+    getClaudeSettingsPath, readJsonSafe, writeJsonPretty, GAD_HOOK_MARKER,
+    isPackagedExecutableRuntime, getPackagedExecutablePath,
+    getDefaultSelfInstallDir, updateWindowsUserPath,
+  });
 
-const dataCmd = require('./commands/data.cjs').createDataCommand({ outputError });
-const roundsCmd = require('./commands/rounds.cjs').createRoundsCommand({
-  outputError, resolveOrDefaultEvalProjectDir, defaultEvalsDir,
-});
+const dataCmd = require('./commands/data.cjs').createDataCommand(common);
+const roundsCmd = require('./commands/rounds.cjs').createRoundsCommand(common);
 
-// evolution images + evolution (phase 42 — validate/promote/discard/status of
-// proto-skills produced by gad-evolution-evolve and create-proto-skill)
+// evolution images + evolution: validate/promote/discard/status proto-skills
 const evolutionImagesCmd = require('./commands/evolution-images.cjs').createEvolutionImagesCommand({
   splitCsvList, getProtoSkillGlobalDir, listSkillDirs, readSkillFrontmatter,
 });
 const { evolutionCmd, evolutionPromote, evolutionInstall }
   = require('./commands/evolution.cjs').createEvolutionCommands({
-    repoRoot: path.resolve(__dirname, '..'),
-    findRepoRoot, gadConfig, resolveRoots,
-    outputError, shouldUseJson,
+    ...common,
     evolutionPaths, resolveProtoSkillInstallRuntimes, installProtoSkillToRuntime,
     protoSkillRelativePath, writeEvolutionScan, readEvolutionScan,
     evolutionImagesCmd,
   });
 
-// skill (44-36): unified skill ops. `promote --framework` moves a proto-skill
-// into the canonical skills/ tree (gated to the canonical clone); `--project`
-// installs it into the current project's runtime skill dirs.
+// skill (44-36): unified skill ops. promote --framework moves into canonical
+// skills/ tree; --project installs into current project's runtime skill dirs.
 const { skillCmd } = require('./commands/skill.cjs').createSkillCommands({
-  repoRoot: path.resolve(__dirname, '..'),
-  findRepoRoot, outputError, shouldUseJson,
+  ...common,
   evolutionPaths, resolveSkillRoots, listSkillDirs, readSkillFrontmatter,
   validateSkillLaneFilter, skillMatchesLane, resolveSkillWorkflowPath,
   normalizeSkillLaneValues, lintSkill, summarizeLint, lintAllSkills,
@@ -609,47 +498,25 @@ const { skillCmd } = require('./commands/skill.cjs').createSkillCommands({
 const bundleCmd = require('./commands/bundle.cjs').createBundleCommand({ readSkillFrontmatter });
 const workflowCmd = require('./commands/workflow.cjs').createWorkflowCommand();
 const modelsCmd = require('./commands/models.cjs').createModelsCommand();
-
-// graph + query: typed-node/typed-edge planning graph generator + structural
-// queries against .planning/graph.json (LLM-free; see `gad query`).
-const graphCmd = require('./commands/graph.cjs').createGraphCommand({
-  findRepoRoot, gadConfig, resolveRoots, graphExtractor,
-});
-const queryCmd = require('./commands/query.cjs').createQueryCommand({
-  findRepoRoot, gadConfig, resolveRoots, graphExtractor,
-});
-
+const graphCmd = require('./commands/graph.cjs').createGraphCommand(common);
+const queryCmd = require('./commands/query.cjs').createQueryCommand(common);
 const { tryCmd } = require('./commands/try.cjs').createTryCommand();
-const { generateCmd } = require('./commands/generate.cjs').createGenerateCommand({ outputError });
-// shortcuts (gad-219): spawn / breed / play
+const { generateCmd } = require('./commands/generate.cjs').createGenerateCommand(common);
 const { spawnCmd, breedCmd, playCmd } = require('./commands/shortcuts.cjs').createShortcutCommands({
-  outputError, evalRun, evalDataAccess, servePreservedGenerationBuildArtifact,
+  ...common, evalRun, servePreservedGenerationBuildArtifact,
 });
-const tipCmd = require('./commands/tip.cjs').createTipCommand({
-  teachings, findRepoRoot, gadConfig, outputError,
-});
-
-// `gad next` — cross-project priority hotlist. Tiers: in-progress with
-// attribution > in-progress without > first planned per project (earliest
-// sprint phase). Defaults to session/cwd scope (--all for every project).
-const nextCmd = require('./commands/next.cjs').createNextCommand({
-  findRepoRoot, gadConfig, resolveRoots, readTasks, formatId, render,
-});
-
+const tipCmd = require('./commands/tip.cjs').createTipCommand({ ...common, teachings });
+const nextCmd = require('./commands/next.cjs').createNextCommand(common);
 const publishCmd = require('./commands/publish.cjs').createPublishCommand();
 
-snapshotCmd = require('./commands/snapshot.cjs').createSnapshotCommand({
-  repoRoot: path.resolve(__dirname, '..'),
-  findRepoRoot, gadConfig, outputError, sideEffectsSuppressed,
-  ensureGraphFresh, loadSessions, writeSession,
-  readPhases, readXmlFile, readTasks,
-  resolveSnapshotAgentInputs, detectRuntimeIdentity, detectRuntimeSessionId,
-  resolveSnapshotRuntime, ensureAgentLane, listAgentLanes, touchAgentLane,
+const snapshotCmd = require('./commands/snapshot.cjs').createSnapshotCommand({
+  ...common,
+  sideEffectsSuppressed, ensureGraphFresh, loadSessions, writeSession,
+  resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
+  listAgentLanes, touchAgentLane,
   buildAssignmentsView, compactStateXml, compactRoadmapSection, compactTasksSection,
-  buildHandoffsSection, resolveDetectedRuntimeId, buildEvolutionSection,
-  listSkillDirs, readSkillFrontmatter,
+  buildEvolutionSection, listSkillDirs, readSkillFrontmatter,
   getCurrentSprintIndex, getSprintPhaseIds,
-  graphExtractor, shouldUseJson,
 });
 
 const main = defineCommand({
