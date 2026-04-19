@@ -26,7 +26,7 @@ function createAgentsCommand(deps) {
     run({ args }) {
       const baseDir = findRepoRoot();
       const {
-        probeRuntimes, readOmxState, readRouterLock, listSubagentRuns, listHeartbeats, formatAge,
+        probeRuntimes, readOmxState, readRouterLock, listSubagentRuns, inferLivenessFromTrace, formatAge,
       } = require('../../lib/agents-status.cjs');
 
       const daysBack = Math.max(1, parseInt(args['days-back'], 10) || 2);
@@ -34,7 +34,7 @@ function createAgentsCommand(deps) {
       const omx = readOmxState(baseDir);
       const router = readRouterLock(baseDir);
       const subagentRuns = listSubagentRuns(baseDir, { daysBack });
-      const heartbeats = listHeartbeats ? listHeartbeats(baseDir) : [];
+      const liveness = inferLivenessFromTrace(baseDir);
 
       const allOpen = listHandoffs({ baseDir, bucket: 'open' });
       const handoffsFor = {};
@@ -51,7 +51,7 @@ function createAgentsCommand(deps) {
           runtimes,
           omx,
           router,
-          heartbeats,
+          liveness,
           subagentRuns,
           handoffsOpen: { total: allOpen.length, byRuntime: handoffsFor },
           generatedAt: new Date().toISOString(),
@@ -90,21 +90,22 @@ function createAgentsCommand(deps) {
       }
       console.log('');
 
-      console.log('-- HEARTBEATS (real-time liveness) ----------------------------');
-      if (heartbeats.length === 0) {
-        console.log('No heartbeats (callers opt in via `gad agents heartbeat`).');
+      console.log('-- LIVENESS (inferred from .planning/.trace-events.jsonl) -----');
+      if (liveness.length === 0) {
+        console.log('No recent CLI activity (trace-events.jsonl empty or missing).');
       } else {
-        const hbRows = heartbeats.map((h) => ({
-          runtime: h.runtime,
-          session: h.sessionId ? String(h.sessionId).slice(0, 16) : '-',
-          pid: h.pid == null ? '-' : String(h.pid),
-          age: formatAge(h.ageMs),
-          state: h.stale ? 'STALE' : 'alive',
+        const lvRows = liveness.map((l) => ({
+          runtime: l.runtime,
+          session: l.sessionId ? String(l.sessionId).slice(0, 16) : '-',
+          'last-tool': l.lastTool || '-',
+          age: formatAge(l.ageMs),
+          state: l.stale ? 'stale' : 'active',
+          events: String(l.eventCount),
         }));
-        console.log(render(hbRows, { format: 'table', headers: ['runtime', 'session', 'pid', 'age', 'state'] }));
-        const aliveCount = heartbeats.filter((h) => !h.stale).length;
-        if (aliveCount < heartbeats.length) {
-          console.log(`(${heartbeats.length - aliveCount} stale; last_seen_at > 90s old — probably crashed or exited uncleanly)`);
+        console.log(render(lvRows, { format: 'table', headers: ['runtime', 'session', 'last-tool', 'age', 'state', 'events'] }));
+        const staleCount = liveness.filter((l) => l.stale).length;
+        if (staleCount > 0) {
+          console.log(`(${staleCount} stale; last CLI call > 10min ago — session probably ended or idled)`);
         }
       }
       console.log('');
@@ -151,34 +152,9 @@ function createAgentsCommand(deps) {
     },
   });
 
-  const agentsHeartbeatCmd = defineCommand({
-    meta: {
-      name: 'heartbeat',
-      description: 'Write a liveness heartbeat for the current runtime/session at .gad/heartbeats/<runtime>-<session>.json. Callers should invoke periodically (e.g. every 30–60s).',
-    },
-    args: {
-      runtime: { type: 'string', description: 'Runtime id (default: detected)', default: '' },
-      session: { type: 'string', description: 'Session id (default: detected env or pid)', default: '' },
-      json: { type: 'boolean', description: 'JSON output', default: false },
-    },
-    run({ args }) {
-      const baseDir = findRepoRoot();
-      const { writeHeartbeat } = require('../../lib/agents-status.cjs');
-      const runtime = (args.runtime || (detectRuntimeIdentity && detectRuntimeIdentity().id) || 'unknown').trim();
-      const sessionId = (args.session || (detectRuntimeSessionId && detectRuntimeSessionId()) || '').trim();
-      const result = writeHeartbeat(baseDir, { runtime, sessionId, cwd: process.cwd() });
-      if (args.json) {
-        console.log(JSON.stringify({ ...result.data, path: path.relative(baseDir, result.path) }, null, 2));
-      } else {
-        console.log(`Heartbeat: ${runtime}${sessionId ? '/' + sessionId : ''} @ ${result.data.last_seen_at}`);
-        console.log(`  path: ${path.relative(baseDir, result.path)}`);
-      }
-    },
-  });
-
   return defineCommand({
-    meta: { name: 'agents', description: 'Agent / runtime visibility. Read-only inspection; write-only for heartbeats.' },
-    subCommands: { status: agentsStatusCmd, heartbeat: agentsHeartbeatCmd },
+    meta: { name: 'agents', description: 'Agent / runtime visibility. Read-only. Liveness inferred from CLI trace logs (no explicit heartbeats).' },
+    subCommands: { status: agentsStatusCmd },
   });
 }
 
