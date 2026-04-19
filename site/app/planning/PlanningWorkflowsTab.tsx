@@ -111,6 +111,16 @@ function MethodologyCallout() {
         <p>
           Human workflows live under <code className="text-foreground/80">.planning/human-workflows/*.md</code>. Discovery surfaces the subagent discovery battery outputs.
         </p>
+        <p>
+          Full methodology — trace schema, scope classification, conformance
+          formula, skill-level v2 detector, three-section display:{" "}
+          <a
+            className="text-accent underline-offset-2 hover:underline"
+            href="/workflows/methodology"
+          >
+            /workflows/methodology →
+          </a>
+        </p>
       </div>
     </details>
   );
