@@ -3681,9 +3681,9 @@
       "type": "task",
       "id": "task:44-13",
       "label": "Fix `gad projects init` config-write location: today it registers the new planning root into \"the nearest gad-config.tom",
-      "status": "planned",
+      "status": "done",
       "goal": "Fix `gad projects init` config-write location: today it registers the new planning root into \"the nearest gad-config.toml\" relative to the CLI binary, which when the CLI runs from `vendor/get-anything-done/bin/gad.cjs` resolves to the submodule's own `vendor/get-anything-done/.planning/gad-config.toml` instead of the workspace root's `gad-config.toml`. That pollutes the submodule and hides the new root from the outer workspace. Fix: `projects init` should walk upward from `process.cwd()` (NOT from __dirname) to find the first parent with a `gad-config.toml` or `.planning/gad-config.toml` and write there. Also make the path stored in the registration relative to THAT config file's dir, not to wherever the CLI binary lives (the current entry used backslash-escaped `..\\..\\projects\\project-editor` which is a second bug). Surfaced 2026-04-14 by the project-editor scaffold workflow; manually corrected both the main-repo config and reverted the submodule pollution after init.",
-      "skill": "",
+      "skill": "default",
       "taskType": "cli",
       "keywords": "cli,projects-init,config-resolution,bugfix"
     },
@@ -11284,6 +11284,11 @@
     },
     {
       "source": "task:44-13",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:44-13",
       "target": "task:2026-04",
       "type": "CITES"
     },
@@ -15945,9 +15950,9 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-19T03:45:26.760Z",
+    "generated": "2026-04-19T03:48:52.981Z",
     "nodeCount": 1020,
-    "edgeCount": 1555,
+    "edgeCount": 1556,
     "nodeTypes": {
       "phase": 67,
       "task": 449,
@@ -15959,7 +15964,7 @@
       "BELONGS_TO": 450,
       "CITES": 594,
       "DEPENDS_ON": 108,
-      "USES_SKILL": 235,
+      "USES_SKILL": 236,
       "REFERENCES": 91,
       "USES_WORKFLOW": 77
     }
