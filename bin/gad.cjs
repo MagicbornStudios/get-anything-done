@@ -5305,14 +5305,96 @@ const subagentsDispatchCmd = defineCommand({
   },
 });
 
+const subagentsStatusCmd = defineCommand({
+  meta: {
+    name: 'status',
+    description: "Show today's daily-subagent runs (pending / completed) across all projects with dailySubagent = true.",
+  },
+  args: {
+    projectid: { type: 'string', description: 'Filter to one project id', default: '' },
+    date: { type: 'string', description: 'YYYY-MM-DD (default: today, local tz)', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const { listTodaysRuns } = require('../lib/subagent-dispatch.cjs');
+    const runs = listTodaysRuns({ baseDir, date: args.date || undefined });
+    const filtered = args.projectid ? runs.filter((r) => r.projectId === args.projectid) : runs;
+    if (args.json) {
+      console.log(JSON.stringify(filtered, null, 2));
+      return;
+    }
+    if (filtered.length === 0) {
+      console.log(args.projectid
+        ? `No subagent runs for project=${args.projectid} on ${args.date || 'today'}.`
+        : `No subagent runs for ${args.date || 'today'}.`);
+      return;
+    }
+    const rows = filtered.map((r) => ({
+      project: r.projectId,
+      task: r.taskId || '-',
+      status: r.status,
+      started: r.startedAt ? r.startedAt.slice(11, 19) : '-',
+      ended: r.endedAt ? r.endedAt.slice(11, 19) : '-',
+      prompt: r.promptPath || '-',
+    }));
+    console.log(render(rows, { format: 'table', headers: ['project', 'task', 'status', 'started', 'ended', 'prompt'] }));
+    const pending = filtered.filter((r) => r.status !== 'completed');
+    if (pending.length > 0) {
+      console.log('');
+      console.log(`${pending.length} pending. After your subagent completes:`);
+      for (const p of pending) {
+        const taskFlag = p.taskId ? ` --task-id ${p.taskId}` : '';
+        console.log(`  gad subagents mark-completed --projectid ${p.projectId}${taskFlag} --commit <sha>`);
+      }
+    }
+  },
+});
+
+const subagentsMarkCompletedCmd = defineCommand({
+  meta: {
+    name: 'mark-completed',
+    description: 'Mark a daily-subagent run as completed. Call this from the orchestrator after the subagent commits its work.',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Project id', required: true },
+    'task-id': { type: 'string', description: 'Task id (required if multiple pending runs for today)', default: '' },
+    date: { type: 'string', description: 'YYYY-MM-DD (default: today, local tz)', default: '' },
+    commit: { type: 'string', description: 'Commit sha landing the work (recorded on the run)', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const { markCompleted } = require('../lib/subagent-dispatch.cjs');
+    try {
+      const updated = markCompleted({
+        baseDir,
+        projectId: String(args.projectid),
+        taskId: args['task-id'] || undefined,
+        date: args.date || undefined,
+        commit: args.commit || undefined,
+      });
+      for (const r of updated) {
+        console.log(`Marked completed: ${r.projectId}:${r.taskId || '-'} (${r.date})`);
+        if (r.commit) console.log(`  commit: ${r.commit}`);
+        if (r.endedAt) console.log(`  endedAt: ${r.endedAt}`);
+      }
+    } catch (e) {
+      outputError(e.message);
+      process.exit(1);
+    }
+  },
+});
+
 const subagentsCmd = defineCommand({
   meta: {
     name: 'subagents',
     description:
-      'Subagent dispatch + run-history CLI family (decision gad-258). Subcommand: dispatch.',
+      'Subagent dispatch + run-history CLI family (decision gad-258). Subcommands: dispatch, status, mark-completed.',
   },
   subCommands: {
     dispatch: subagentsDispatchCmd,
+    status: subagentsStatusCmd,
+    'mark-completed': subagentsMarkCompletedCmd,
   },
 });
 
@@ -13215,6 +13297,34 @@ const startupCmd = defineCommand({
         }
       }
     } catch { /* non-fatal — snapshot still runs without handoffs section */ }
+
+    // DAILY SUBAGENTS — surface today's pending subagent dispatches so the
+    // orchestrator knows to spawn them. (Part of D(mod): startup-driven
+    // daily-subagent dispatch, 2026-04-19. No scheduler; agent spawns via
+    // their runtime's subagent tool.)
+    try {
+      const { listTodaysRuns } = require('../lib/subagent-dispatch.cjs');
+      const runs = listTodaysRuns({ baseDir: startupBaseDir });
+      const pending = runs.filter((r) => r.status !== 'completed');
+      if (pending.length > 0) {
+        console.log('');
+        console.log(`-- DAILY SUBAGENTS PENDING (${pending.length}) ${'-'.repeat(Math.max(0, 38 - String(pending.length).length))}`);
+        const rows = pending.map((r) => ({
+          project: r.projectId,
+          task: r.taskId || '-',
+          status: r.status,
+          prompt: r.promptPath ? path.relative(startupBaseDir, path.join(startupBaseDir, r.promptPath)) : '-',
+        }));
+        console.log(render(rows, { format: 'table', headers: ['project', 'task', 'status', 'prompt'] }));
+        console.log('');
+        console.log('Orchestrator action: spawn a subagent (Sonnet/Haiku for mechanical work) with the prompt file, then:');
+        for (const p of pending) {
+          const taskFlag = p.taskId ? ` --task-id ${p.taskId}` : '';
+          console.log(`  gad subagents mark-completed --projectid ${p.projectId}${taskFlag} --commit <sha>`);
+        }
+        console.log('');
+      }
+    } catch { /* non-fatal — startup still runs without the daily-subagents section */ }
 
     let resolvedProjectid = String(args.projectid || '').trim();
     let resolvedSource = resolvedProjectid ? 'arg' : '';
