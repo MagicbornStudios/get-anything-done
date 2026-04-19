@@ -9399,14 +9399,12 @@ const snapshotCmd = defineCommand({
     const snapshotUseGraph = graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path));
     let allTasks, openTasks, tasksSection = '', doneCount;
     if (snapshotUseGraph) {
-      const planDir = path.join(baseDir, root.path, root.planningDir);
-      const jsonPath = path.join(planDir, 'graph.json');
+      // Task 63-graph-task-stale: route through loadOrBuildGraph so a
+      // hand-edited TASK-REGISTRY.xml (status flip, new task entry)
+      // invalidates the on-disk graph.json instead of being silently
+      // ignored until someone runs `gad graph build` manually.
       const gadDir = path.resolve(__dirname, '..');
-      if (!fs.existsSync(jsonPath)) {
-        const g = graphExtractor.buildGraph(root, baseDir, { gadDir });
-        fs.writeFileSync(jsonPath, JSON.stringify(g, null, 2));
-      }
-      const graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      const { graph } = graphExtractor.loadOrBuildGraph(root, baseDir, { gadDir });
       const allResult = graphExtractor.queryGraph(graph, { type: 'task' });
       const allMatches = allResult.matches || [];
       const openMatches = allMatches.filter(m => m.status !== 'done');
@@ -10176,14 +10174,16 @@ const snapshotV2Cmd = defineCommand({
     let sprintOpenTasks, sprintTasksSection = '', sprintDoneCount;
     let outOfSprintOpenCount = 0;
     if (sprintUseGraph) {
-      const sprintJsonPath = path.join(planDir, 'graph.json');
+      // Task 63-graph-task-stale: invalidate on TASK-REGISTRY.xml mtime,
+      // honouring readOnlySnapshot so concurrent agents don't race on
+      // the file write. When read-only and the cache is missing/stale,
+      // the helper still returns a freshly-built graph in memory.
       const gadDir = path.resolve(__dirname, '..');
-      if (!fs.existsSync(sprintJsonPath) && !readOnlySnapshot) {
-        const g = graphExtractor.buildGraph(root, baseDir, { gadDir });
-        fs.writeFileSync(sprintJsonPath, JSON.stringify(g, null, 2));
-      }
-      if (fs.existsSync(sprintJsonPath)) {
-        const sprintGraph = JSON.parse(fs.readFileSync(sprintJsonPath, 'utf8'));
+      const { graph: sprintGraph } = graphExtractor.loadOrBuildGraph(root, baseDir, {
+        gadDir,
+        readOnly: readOnlySnapshot,
+      });
+      if (sprintGraph) {
         const sprintAllResult = graphExtractor.queryGraph(sprintGraph, { type: 'task' });
         const sprintAllMatches = sprintAllResult.matches || [];
         const sprintOpenMatches = sprintAllMatches.filter(m => m.status !== 'done' && m.status !== 'cancelled');
@@ -10287,19 +10287,13 @@ const snapshotV2Cmd = defineCommand({
       const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
       if (docsMapXml) sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
 
-      // Graph stats section (decision gad-201)
+      // Graph stats section (decision gad-201, freshness via 63-graph-task-stale)
       if (graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path))) {
-        const jsonPath = path.join(planDir, 'graph.json');
-        let graph;
-        if (fs.existsSync(jsonPath)) {
-          try { graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8')); } catch {}
-        }
-        if (!graph && !readOnlySnapshot) {
-          // Auto-build if missing
-          const gadDir = path.resolve(__dirname, '..');
-          graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
-          fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2));
-        }
+        const gadDir = path.resolve(__dirname, '..');
+        const { graph } = graphExtractor.loadOrBuildGraph(root, baseDir, {
+          gadDir,
+          readOnly: readOnlySnapshot,
+        });
         if (graph && graph.meta) {
           const lines = [];
           lines.push(`${graph.meta.nodeCount} nodes, ${graph.meta.edgeCount} edges`);
@@ -10398,18 +10392,11 @@ function runTasksListView(args) {
   const rows = [];
   for (const root of roots) {
     if (useGraph) {
-      // Graph-backed task listing
-      const planDir = path.join(baseDir, root.path, root.planningDir);
-      const jsonPath = path.join(planDir, 'graph.json');
+      // Graph-backed task listing — 63-graph-task-stale: pick up
+      // hand-edited TASK-REGISTRY.xml entries by checking source mtimes
+      // before trusting the on-disk cache.
       const gadDir = path.resolve(__dirname, '..');
-
-      // Auto-build graph if missing
-      if (!fs.existsSync(jsonPath)) {
-        const graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
-        fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2));
-      }
-
-      const graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      const { graph } = graphExtractor.loadOrBuildGraph(root, baseDir, { gadDir });
       const query = { type: 'task' };
       if (filter.status) query.status = filter.status;
       if (filter.phase) query.phase = filter.phase;
@@ -16190,19 +16177,25 @@ const queryRunCmd = defineCommand({
     const gadDir = path.resolve(__dirname, '..');
 
     for (const root of roots) {
-      const planDir = path.join(baseDir, root.path, root.planningDir);
-      const jsonPath = path.join(planDir, 'graph.json');
-
-      // Auto-build if missing or --rebuild
-      if (!fs.existsSync(jsonPath) || args.rebuild) {
-        const graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
-        fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2));
-        if (!args.json) {
-          console.error(`Graph built: ${graph.meta.nodeCount} nodes, ${graph.meta.edgeCount} edges`);
-        }
+      // Task 63-graph-task-stale: --rebuild forces a build, otherwise
+      // loadOrBuildGraph invalidates the cache when the source XMLs
+      // are newer than graph.json (the original bug — `gad query`
+      // returned stale task statuses after hand-edits to TASK-REGISTRY).
+      let graph;
+      let rebuilt = false;
+      if (args.rebuild) {
+        graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
+        const jsonPath = path.join(baseDir, root.path, root.planningDir, 'graph.json');
+        try { fs.writeFileSync(jsonPath, JSON.stringify(graph, null, 2)); } catch {}
+        rebuilt = true;
+      } else {
+        const result = graphExtractor.loadOrBuildGraph(root, baseDir, { gadDir });
+        graph = result.graph;
+        rebuilt = result.rebuilt;
       }
-
-      const graph = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      if (rebuilt && !args.json) {
+        console.error(`Graph built: ${graph.meta.nodeCount} nodes, ${graph.meta.edgeCount} edges`);
+      }
 
       // Build query from args — natural language or structured
       let query = {};
