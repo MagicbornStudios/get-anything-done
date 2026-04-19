@@ -2621,8 +2621,93 @@ const handoffsCreateCmd = defineCommand({
   },
 });
 
+const handoffsCreateCloseoutCmd = defineCommand({
+  meta: {
+    name: 'create-closeout',
+    description:
+      'Create a closeout handoff: evidence that a task in another lane was completed by you. Receiving lane sweeps + marks the task done in TASK-REGISTRY.',
+  },
+  args: {
+    projectid: { type: 'string', description: 'Project id owning the task', required: true },
+    phase: { type: 'string', description: 'Phase id (e.g. 44)', required: true },
+    'task-id': { type: 'string', description: 'Task id being closed', required: true },
+    commit: { type: 'string', description: 'Commit sha landing the work', required: true },
+    files: { type: 'string', description: 'Comma-separated list of files touched', default: '' },
+    resolution: { type: 'string', description: 'One-line human resolution', required: true },
+    'runtime-preference': { type: 'string', description: 'Receiving lane runtime (the one that owns the task)', default: '' },
+    priority: { type: 'string', description: 'low | normal | high', default: 'normal' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const files = String(args.files || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const body = [
+      '## Closeout evidence',
+      '',
+      `- **Task:** \`${args['task-id']}\` (project: ${args.projectid}, phase: ${args.phase})`,
+      `- **Commit:** \`${args.commit}\``,
+      files.length > 0 ? `- **Files:**\n${files.map((f) => `  - \`${f}\``).join('\n')}` : '- **Files:** (none listed)',
+      `- **Resolution:** ${args.resolution}`,
+      '',
+      '## Receiving-lane action',
+      '',
+      `Verify the commit exists and touches the listed files, then update \`${args.projectid}/.planning/TASK-REGISTRY.xml\` for task \`${args['task-id']}\`:`,
+      '- `status="done"`',
+      `- add/update attribution attributes pointing to commit \`${args.commit}\``,
+      '',
+      `Then complete this handoff: \`gad handoffs complete <this-id>\`.`,
+    ].join('\n');
+
+    try {
+      const result = createHandoff({
+        baseDir,
+        projectid: String(args.projectid),
+        phase: String(args.phase),
+        taskId: String(args['task-id']),
+        priority: String(args.priority || 'normal'),
+        estimatedContext: 'mechanical',
+        body,
+        createdBy: process.env.GAD_AGENT || detectRuntimeIdentity().id || 'unknown',
+        runtimePreference: args['runtime-preference'] || undefined,
+      });
+
+      // Augment with closeout-specific frontmatter fields for clarity + future
+      // sweep automation. We rewrite the file in place to preserve the handoff
+      // queue's atomic-rename semantics (still in open/ at this point).
+      try {
+        const text = fs.readFileSync(result.filePath, 'utf8');
+        const headerMatch = text.match(/^(---\r?\n[\s\S]*?\r?\n---\r?\n)([\s\S]*)$/);
+        if (headerMatch) {
+          const header = headerMatch[1];
+          const rest = headerMatch[2];
+          // Inject `type: closeout`, `closeout_commit`, `closeout_task` before the closing ---
+          const extra = `type: closeout\ncloseout_commit: ${args.commit}\ncloseout_files: ${files.join(';')}\n`;
+          const updated = header.replace(/\r?\n---\r?\n$/, (m) => `\n${extra.trimEnd()}\n---\n`) + rest;
+          fs.writeFileSync(result.filePath, updated);
+        }
+      } catch (e) { /* non-fatal; body already has the evidence */ }
+
+      console.log(`Created closeout: ${result.id}`);
+      console.log(`Task:    ${args['task-id']} (${args.projectid}:${args.phase})`);
+      console.log(`Commit:  ${args.commit}`);
+      console.log(`Path:    ${path.relative(baseDir, result.filePath)}`);
+      console.log('');
+      console.log(`Receiving lane sweep: \`gad handoffs list --projectid ${args.projectid}\``);
+    } catch (e) {
+      if (e instanceof HandoffError) {
+        outputError(e.message);
+        process.exit(1);
+      }
+      throw e;
+    }
+  },
+});
+
 const handoffsCmd = defineCommand({
-  meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, complete, create' },
+  meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, complete, create, create-closeout' },
   subCommands: {
     list: handoffsListCmd,
     show: handoffsShowCmd,
@@ -2630,6 +2715,7 @@ const handoffsCmd = defineCommand({
     'claim-next': handoffsClaimNextCmd,
     complete: handoffsCompleteCmd,
     create: handoffsCreateCmd,
+    'create-closeout': handoffsCreateCloseoutCmd,
   },
 });
 
