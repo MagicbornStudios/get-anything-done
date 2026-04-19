@@ -10,7 +10,7 @@ const path = require('path');
 const { defineCommand } = require('citty');
 
 function createAgentsCommand(deps) {
-  const { findRepoRoot, render, detectRuntimeIdentity, listHandoffs } = deps;
+  const { findRepoRoot, render, detectRuntimeIdentity, listHandoffs, detectRuntimeSessionId } = deps;
 
   const agentsStatusCmd = defineCommand({
     meta: {
@@ -26,7 +26,7 @@ function createAgentsCommand(deps) {
     run({ args }) {
       const baseDir = findRepoRoot();
       const {
-        probeRuntimes, readOmxState, readRouterLock, listSubagentRuns, formatAge,
+        probeRuntimes, readOmxState, readRouterLock, listSubagentRuns, listHeartbeats, formatAge,
       } = require('../../lib/agents-status.cjs');
 
       const daysBack = Math.max(1, parseInt(args['days-back'], 10) || 2);
@@ -34,6 +34,7 @@ function createAgentsCommand(deps) {
       const omx = readOmxState(baseDir);
       const router = readRouterLock(baseDir);
       const subagentRuns = listSubagentRuns(baseDir, { daysBack });
+      const heartbeats = listHeartbeats ? listHeartbeats(baseDir) : [];
 
       const allOpen = listHandoffs({ baseDir, bucket: 'open' });
       const handoffsFor = {};
@@ -50,6 +51,7 @@ function createAgentsCommand(deps) {
           runtimes,
           omx,
           router,
+          heartbeats,
           subagentRuns,
           handoffsOpen: { total: allOpen.length, byRuntime: handoffsFor },
           generatedAt: new Date().toISOString(),
@@ -84,6 +86,25 @@ function createAgentsCommand(deps) {
         console.log(`  iteration:    ${omx.iteration == null ? '-' : omx.iteration}`);
         if (omx.ageMs != null && omx.ageMs > 30 * 60 * 1000) {
           console.log(`  note:         stale (>${Math.floor(omx.ageMs / 60000)}min); Codex may have crashed or idled.`);
+        }
+      }
+      console.log('');
+
+      console.log('-- HEARTBEATS (real-time liveness) ----------------------------');
+      if (heartbeats.length === 0) {
+        console.log('No heartbeats (callers opt in via `gad agents heartbeat`).');
+      } else {
+        const hbRows = heartbeats.map((h) => ({
+          runtime: h.runtime,
+          session: h.sessionId ? String(h.sessionId).slice(0, 16) : '-',
+          pid: h.pid == null ? '-' : String(h.pid),
+          age: formatAge(h.ageMs),
+          state: h.stale ? 'STALE' : 'alive',
+        }));
+        console.log(render(hbRows, { format: 'table', headers: ['runtime', 'session', 'pid', 'age', 'state'] }));
+        const aliveCount = heartbeats.filter((h) => !h.stale).length;
+        if (aliveCount < heartbeats.length) {
+          console.log(`(${heartbeats.length - aliveCount} stale; last_seen_at > 90s old — probably crashed or exited uncleanly)`);
         }
       }
       console.log('');
@@ -130,9 +151,34 @@ function createAgentsCommand(deps) {
     },
   });
 
+  const agentsHeartbeatCmd = defineCommand({
+    meta: {
+      name: 'heartbeat',
+      description: 'Write a liveness heartbeat for the current runtime/session at .gad/heartbeats/<runtime>-<session>.json. Callers should invoke periodically (e.g. every 30–60s).',
+    },
+    args: {
+      runtime: { type: 'string', description: 'Runtime id (default: detected)', default: '' },
+      session: { type: 'string', description: 'Session id (default: detected env or pid)', default: '' },
+      json: { type: 'boolean', description: 'JSON output', default: false },
+    },
+    run({ args }) {
+      const baseDir = findRepoRoot();
+      const { writeHeartbeat } = require('../../lib/agents-status.cjs');
+      const runtime = (args.runtime || (detectRuntimeIdentity && detectRuntimeIdentity().id) || 'unknown').trim();
+      const sessionId = (args.session || (detectRuntimeSessionId && detectRuntimeSessionId()) || '').trim();
+      const result = writeHeartbeat(baseDir, { runtime, sessionId, cwd: process.cwd() });
+      if (args.json) {
+        console.log(JSON.stringify({ ...result.data, path: path.relative(baseDir, result.path) }, null, 2));
+      } else {
+        console.log(`Heartbeat: ${runtime}${sessionId ? '/' + sessionId : ''} @ ${result.data.last_seen_at}`);
+        console.log(`  path: ${path.relative(baseDir, result.path)}`);
+      }
+    },
+  });
+
   return defineCommand({
-    meta: { name: 'agents', description: 'Agent / runtime visibility. Read-only inspection; does not spawn.' },
-    subCommands: { status: agentsStatusCmd },
+    meta: { name: 'agents', description: 'Agent / runtime visibility. Read-only inspection; write-only for heartbeats.' },
+    subCommands: { status: agentsStatusCmd, heartbeat: agentsHeartbeatCmd },
   });
 }
 
