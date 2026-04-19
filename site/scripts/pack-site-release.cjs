@@ -235,9 +235,28 @@ function ensureFrameworkGraph() {
   }
 }
 
+function warnIfTraceMissing() {
+  // Post-2026-04-19: .planning/.trace-events.jsonl + .planning/.gad-log/
+  // are gitignored (per-CLI-call append-only logs that caused 95+ commits/
+  // 60d of pure noise and guaranteed multi-agent merge conflicts). The
+  // site build's compute-self-eval.mjs reads them to derive site/data/
+  // self-eval.json — when missing, self-eval just degrades to an empty
+  // stub. Surface a non-fatal warning so packagers know the release will
+  // ship with empty self-eval data rather than the framework's actual
+  // self-evaluation history.
+  const trace = path.join(REPO_ROOT, ".planning", ".trace-events.jsonl");
+  const gadLog = path.join(REPO_ROOT, ".planning", ".gad-log");
+  const hasTrace = fs.existsSync(trace);
+  const hasLog = fs.existsSync(gadLog) && fs.readdirSync(gadLog).some((f) => f.endsWith(".jsonl"));
+  if (!hasTrace && !hasLog) {
+    console.warn(`[pack-site-release] no .trace-events.jsonl or .gad-log/ found — site/data/self-eval.json will ship as empty stub (this is fine for CLI-only contributors who haven't run gad locally)`);
+  }
+}
+
 function main() {
   checkPrereqs();
   ensureFrameworkGraph();
+  warnIfTraceMissing();
   console.log(`[pack-site-release] staging ${STAGE_DIR}`);
   stage();
   console.log(`[pack-site-release] zipping → ${ZIP_PATH}`);
