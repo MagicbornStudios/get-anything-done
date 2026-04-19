@@ -17543,13 +17543,51 @@ function renderTipFull(tip) {
   return body + backrefBlock;
 }
 
+/**
+ * Resolve the category scope for tip selection.
+ *
+ * Precedence (highest first):
+ *   1. --category CLI flag (comma-separated)
+ *   2. GAD_TIP_CATEGORIES env var (comma-separated)
+ *   3. gad-config.toml [teachings] categories = [...]
+ *   4. null (no filter — all categories in rotation)
+ *
+ * Pass "all" at any level to explicitly disable filtering.
+ */
+function resolveTipCategories(flagValue) {
+  const parse = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
+  const isAll = arr => arr.length === 1 && arr[0].toLowerCase() === 'all';
+
+  if (flagValue) {
+    const arr = parse(flagValue);
+    return isAll(arr) ? null : arr;
+  }
+  if (process.env.GAD_TIP_CATEGORIES) {
+    const arr = parse(process.env.GAD_TIP_CATEGORIES);
+    return isAll(arr) ? null : arr;
+  }
+  try {
+    const baseDir = findRepoRoot();
+    if (baseDir) {
+      const cfg = gadConfig.load(baseDir);
+      if (cfg && cfg.teachings && Array.isArray(cfg.teachings.categories)) {
+        const arr = cfg.teachings.categories.filter(Boolean);
+        if (arr.length > 0) return isAll(arr) ? null : arr;
+      }
+    }
+  } catch (_) {}
+  return null;
+}
+
 const tipTodayCmd = defineCommand({
   meta: { name: 'today', description: "Print today's teaching tip (deterministic pick, zero API cost)" },
   args: {
     headers: { type: 'boolean', description: 'Only print the title + metadata, not the body', default: false },
+    category: { type: 'string', description: 'Restrict rotation to categories (comma-separated, or "all"). Overrides GAD_TIP_CATEGORIES + config.', default: '' },
   },
   run({ args }) {
-    const tip = teachings.pickToday();
+    const categories = resolveTipCategories(args.category);
+    const tip = teachings.pickToday(undefined, { categories });
     console.log(args.headers ? renderTipHeader(tip) : renderTipFull(tip));
   },
 });
@@ -17558,9 +17596,11 @@ const tipRandomCmd = defineCommand({
   meta: { name: 'random', description: 'Print a random tip from the catalog' },
   args: {
     headers: { type: 'boolean', description: 'Only print the title + metadata, not the body', default: false },
+    category: { type: 'string', description: 'Restrict pool to categories (comma-separated, or "all"). Overrides GAD_TIP_CATEGORIES + config.', default: '' },
   },
   run({ args }) {
-    const tip = teachings.pickRandom();
+    const categories = resolveTipCategories(args.category);
+    const tip = teachings.pickRandom({ categories });
     console.log(args.headers ? renderTipHeader(tip) : renderTipFull(tip));
   },
 });

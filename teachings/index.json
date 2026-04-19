@@ -32,6 +32,81 @@
       ]
     },
     {
+      "id": "context-engineering-snapshot-compaction-02",
+      "title": "Three levers that cut snapshot tokens 29% with zero data hidden",
+      "category": "context-engineering",
+      "difficulty": "intermediate",
+      "tags": [
+        "snapshot",
+        "tokens",
+        "compaction",
+        "cost",
+        "orientation"
+      ],
+      "source": "static",
+      "date": "2026-04-19",
+      "path": "static/context-engineering/02-snapshot-token-cuts.md",
+      "implementation": [
+        "vendor/get-anything-done/lib/snapshot-compact.cjs",
+        "vendor/get-anything-done/bin/gad.cjs"
+      ],
+      "decisions": [
+        "gad-241",
+        "gad-195"
+      ],
+      "phases": [],
+      "related": [
+        "context-engineering-snapshot-compaction-01",
+        "llm-internals-tokens-01"
+      ]
+    },
+    {
+      "id": "context-engineering-surgical-tests-01",
+      "title": "Surgical test runs beat full-suite noise when parallel agents are editing",
+      "category": "context-engineering",
+      "difficulty": "intermediate",
+      "tags": [
+        "tests",
+        "parallel-agents",
+        "noise",
+        "context-hygiene",
+        "signal"
+      ],
+      "source": "static",
+      "date": "2026-04-19",
+      "path": "static/context-engineering/03-surgical-test-runs.md",
+      "implementation": [],
+      "decisions": [],
+      "phases": [],
+      "related": [
+        "multi-agent-commit-fast-01",
+        "multi-agent-handoff-queue-01"
+      ]
+    },
+    {
+      "id": "context-engineering-brevity-discipline-01",
+      "title": "Military-brevity responses are a token-efficiency tool, not a style choice",
+      "category": "context-engineering",
+      "difficulty": "intro",
+      "tags": [
+        "response-format",
+        "tokens",
+        "sitrep",
+        "discipline",
+        "compaction"
+      ],
+      "source": "static",
+      "date": "2026-04-19",
+      "path": "static/context-engineering/04-brevity-as-token-discipline.md",
+      "implementation": [],
+      "decisions": [],
+      "phases": [],
+      "related": [
+        "context-engineering-snapshot-compaction-02",
+        "context-engineering-surgical-tests-01"
+      ]
+    },
+    {
       "id": "gad-framework-pressure-01",
       "title": "Pressure is the only ontology",
       "category": "gad-framework",
@@ -375,6 +450,78 @@
       ],
       "related": [
         "llm-internals-tokens-01"
+      ]
+    },
+    {
+      "id": "multi-agent-handoff-queue-01",
+      "title": "A filesystem handoff queue is the canonical channel for cross-lane work",
+      "category": "multi-agent",
+      "difficulty": "intermediate",
+      "tags": [
+        "handoff",
+        "coordination",
+        "lanes",
+        "filesystem",
+        "durability"
+      ],
+      "source": "static",
+      "date": "2026-04-19",
+      "path": "static/multi-agent/01-handoff-queue-canonical-channel.md",
+      "implementation": [
+        "vendor/get-anything-done/bin/gad.cjs",
+        ".planning/handoffs/"
+      ],
+      "decisions": [],
+      "phases": [],
+      "related": [
+        "multi-agent-commit-fast-01",
+        "multi-agent-offload-cheaper-01"
+      ]
+    },
+    {
+      "id": "multi-agent-commit-fast-01",
+      "title": "When parallel agents share one tree, commit each cohesive edit immediately",
+      "category": "multi-agent",
+      "difficulty": "intro",
+      "tags": [
+        "git",
+        "parallel-agents",
+        "commits",
+        "work-preservation",
+        "stash"
+      ],
+      "source": "static",
+      "date": "2026-04-19",
+      "path": "static/multi-agent/02-commit-fast-parallel-agents.md",
+      "implementation": [],
+      "decisions": [],
+      "phases": [],
+      "related": [
+        "multi-agent-handoff-queue-01",
+        "context-engineering-surgical-tests-01"
+      ]
+    },
+    {
+      "id": "multi-agent-offload-cheaper-01",
+      "title": "Opus is for reasoning; Haiku and Sonnet do the mechanical work",
+      "category": "multi-agent",
+      "difficulty": "intro",
+      "tags": [
+        "models",
+        "cost",
+        "subagents",
+        "token-efficiency",
+        "dispatch"
+      ],
+      "source": "static",
+      "date": "2026-04-19",
+      "path": "static/multi-agent/03-offload-to-cheaper-models.md",
+      "implementation": [],
+      "decisions": [],
+      "phases": [],
+      "related": [
+        "multi-agent-handoff-queue-01",
+        "context-engineering-snapshot-compaction-02"
       ]
     },
     {
