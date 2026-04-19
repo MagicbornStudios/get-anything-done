@@ -2371,11 +2371,11 @@
       "type": "task",
       "id": "task:35-10",
       "label": "Review the inherited SDK context-engine and phase-hydration model now that `gad-config.toml`, `framework_compliance`, an",
-      "status": "planned",
+      "status": "done",
       "goal": "Review the inherited SDK context-engine and phase-hydration model now that `gad-config.toml`, `framework_compliance`, and hydration are canonical. Decide whether phase prompts should stay on a fixed file manifest or move to scoped/query-driven hydration, and whether execute should receive relevant decisions or plan-linked refs instead of file-name-based context only.",
-      "skill": "",
+      "skill": "default",
       "taskType": "framework",
-      "keywords": "sdk,context-engine,hydration,decisions,requirements,query-layer"
+      "keywords": "sdk,context-engine,hydration,decisions,requirements,query-layer,matrix-integration"
     },
     {
       "type": "task",
@@ -3833,7 +3833,7 @@
       "type": "task",
       "id": "task:44-34",
       "label": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the inter",
-      "status": "in-progress",
+      "status": "cancelled",
       "goal": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned Node zip (current LTS or whatever the site build targets) from our release assets — NOT from nodejs.org — so we own the distribution channel end-to-end; (b) extracts to `&lt;target&gt;/.planning/.node/`; (c) writes a small `.planning/.cmd/gad.cmd` (or equivalent shim) that points at `.planning/.node/node.exe` + the gad.exe location; (d) adds an instruction block in the installer's success message explaining how to activate the portable Node for this shell session. Do NOT touch the consumer's system PATH — this is a fenced install that works by being invoked through the shim. Depends on 44-31 (release pipeline must host the node zip) + 44-32 (installer --node flag wiring). Leave GitHub Actions out.",
       "skill": "default",
       "taskType": "framework",
@@ -5329,7 +5329,7 @@
       "type": "decision",
       "id": "decision:gad-18",
       "label": "The GAD loop is simple: snapshot â†’ work â†’ update docs â†’ commit",
-      "summary": "The canonical GAD loop for any agent, any coding tool:\r\n1. `gad snapshot --projectid &lt;id&gt;` â€” one command, full context. No reading 15 files manually.\r\n2. Pick one task from TASK-REGISTRY.xml (status=planned).\r\n3. Implement it.\r\n4. Update TASK-REGISTRY.xml (mark done), STATE.xml (next-action)"
+      "summary": "The canonical GAD loop for any agent, any coding tool:\n1. `gad snapshot --projectid &lt;id&gt;` â€” one command, full context. No reading 15 files manually.\n2. Pick one task from TASK-REGISTRY.xml (status=planned).\n3. Implement it.\n4. Update TASK-REGISTRY.xml (mark done), STATE.xml (next-action), DE"
     },
     {
       "type": "decision",
@@ -6337,7 +6337,7 @@
       "type": "decision",
       "id": "decision:gad-189",
       "label": "Phase 44.5 vocabulary + draft/published model: recipe / species / generation / brood / bestiary — and projects default to draft, /project-market filters to published",
-      "summary": "Discuss-phase 2026-04-15 for phase 44.5 (Brood Editor + Project Editor split) locked the vocabulary and the draft/published model before any plan-phase work starts.\r\n\r\n**Vocabulary**:\r\n- **Recipe**: reusable template that describes how to produce a species. Lives inside project data (not framework-l"
+      "summary": "Discuss-phase 2026-04-15 for phase 44.5 (Brood Editor + Project Editor split) locked the vocabulary and the draft/published model before any plan-phase work starts.\n\n**Vocabulary**:\n- **Recipe**: reusable template that describes how to produce a species. Lives inside project data (not framework-leve"
     },
     {
       "type": "decision",
@@ -6409,7 +6409,7 @@
       "type": "decision",
       "id": "decision:gad-198",
       "label": "Skills are the genes in the DNA — install/try/proto/shed/promote collapse into one lifecycle, surfaced as the DNA Editor inside the Project Editor",
-      "summary": "Operator (2026-04-15) made the biological metaphor explicit and the scattered commands suddenly line up:\r\n\r\n**Genes = skills.** A skill (SKILL.md + workflow) is the atomic hereditary unit. The project's `.claude/skills/` dir is the DNA — the permanent, integrated set of genes the organism expresses "
+      "summary": "Operator (2026-04-15) made the biological metaphor explicit and the scattered commands suddenly line up:\n\n**Genes = skills.** A skill (SKILL.md + workflow) is the atomic hereditary unit. The project's `.claude/skills/` dir is the DNA — the permanent, integrated set of genes the organism expresses by"
     },
     {
       "type": "decision",
@@ -6625,7 +6625,7 @@
       "type": "decision",
       "id": "decision:gad-232",
       "label": "VCS live showcase on landing — three scripted demos, deterministic, client-side, no server",
-      "summary": "The \"VCS showcase\" deferred from task 45-13 (see `2026-04-16-45-13-followup-workflow-vcs-showcase.md`) is scoped to **three specific demos**, each playing a scripted interaction that is deterministic, client-side only, and needs no backend:\r\n\r\n**Demo 1 — Character on a tileset** (only if easy and cl"
+      "summary": "The \"VCS showcase\" deferred from task 45-13 (see `2026-04-16-45-13-followup-workflow-vcs-showcase.md`) is scoped to **three specific demos**, each playing a scripted interaction that is deterministic, client-side only, and needs no backend:\n\n**Demo 1 — Character on a tileset** (only if easy and clie"
     },
     {
       "type": "decision",
@@ -6896,6 +6896,12 @@
       "id": "decision:gad-271",
       "label": "Clerk for operator auth in apps/planning-app, with solo-operator fallback for zero-config local dev",
       "summary": "Phase 51 picks Clerk (`@clerk/nextjs` v6) as the operator-auth substrate for `apps/planning-app`. Clerk wraps the layout (`AuthProvider`), the header renders `UserButton` / `SignInButton` (`AuthHeaderSlot`), and a `clerkMiddleware` instance protects `/api/dev/*` and `/projects/edit/*` route trees. I"
+    },
+    {
+      "type": "workflow",
+      "id": "workflow:./workflow.md",
+      "label": "./workflow.md",
+      "source": "skill-ref"
     },
     {
       "type": "skill",
@@ -7392,6 +7398,14 @@
       "id": "workflow:workflows/gad-map-codebase.md",
       "label": "workflows/gad-map-codebase.md",
       "source": "skill-ref"
+    },
+    {
+      "type": "skill",
+      "id": "skill:gad:merge-skill",
+      "label": ">-",
+      "slug": "gad-merge-skill",
+      "trigger": "",
+      "source": "canonical"
     },
     {
       "type": "skill",
@@ -9626,6 +9640,11 @@
       "source": "task:35-10",
       "target": "phase:35",
       "type": "BELONGS_TO"
+    },
+    {
+      "source": "task:35-10",
+      "target": "skill:default",
+      "type": "USES_SKILL"
     },
     {
       "source": "task:42.1-01",
@@ -15563,6 +15582,11 @@
       "type": "CITES"
     },
     {
+      "source": "skill:create-proto-skill",
+      "target": "workflow:./workflow.md",
+      "type": "USES_WORKFLOW"
+    },
+    {
       "source": "skill:gad:add-backlog",
       "target": "workflow:workflows/add-backlog.md",
       "type": "USES_WORKFLOW"
@@ -15950,23 +15974,23 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-19T03:48:52.981Z",
-    "nodeCount": 1020,
-    "edgeCount": 1556,
+    "generated": "2026-04-19T16:46:26.891Z",
+    "nodeCount": 1022,
+    "edgeCount": 1558,
     "nodeTypes": {
       "phase": 67,
       "task": 449,
-      "skill": 135,
+      "skill": 136,
       "decision": 266,
-      "workflow": 103
+      "workflow": 104
     },
     "edgeTypes": {
       "BELONGS_TO": 450,
       "CITES": 594,
       "DEPENDS_ON": 108,
-      "USES_SKILL": 236,
+      "USES_SKILL": 237,
       "REFERENCES": 91,
-      "USES_WORKFLOW": 77
+      "USES_WORKFLOW": 78
     }
   }
 }

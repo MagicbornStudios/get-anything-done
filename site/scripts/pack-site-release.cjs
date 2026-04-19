@@ -100,6 +100,12 @@ function stage() {
 
   // 4. Launcher + README
   fs.copyFileSync(LAUNCHER, path.join(STAGE_DIR, "launcher.cjs"));
+
+  // 4b. Optional Bun --compile'd launcher.exe (44-33c — replaces the
+  //     cancelled portable-Node bootstrap from 44-34). When Bun is
+  //     available at pack time, produce per-platform compiled launchers
+  //     so end users with no Node on PATH can still double-click.
+  compileBunLauncher();
   const readme = [
     "GAD planning site — self-contained release",
     `version: ${VERSION}`,
@@ -122,6 +128,57 @@ function stage() {
     "",
   ].join(os.EOL);
   fs.writeFileSync(path.join(STAGE_DIR, "README.txt"), readme, "utf8");
+}
+
+function detectBun() {
+  const probe = spawnSync("bun", ["--version"], { stdio: "pipe", encoding: "utf8" });
+  if (probe.status === 0) {
+    const ver = (probe.stdout || "").trim();
+    return { available: true, version: ver };
+  }
+  return { available: false };
+}
+
+// Compile launcher.cjs into platform-native binaries with `bun build --compile`.
+// Defaults to the current host platform; pass GAD_LAUNCHER_TARGETS env to
+// force a list (comma-separated, e.g. "bun-windows-x64,bun-linux-x64,bun-darwin-x64").
+// Failures are non-fatal: launcher.cjs (Node-shim) is always shipped, so a
+// missing .exe just degrades to "consumer needs node on PATH".
+function compileBunLauncher() {
+  const bun = detectBun();
+  if (!bun.available) {
+    console.log(`[pack-site-release] Bun not detected — skipping launcher.exe compile (launcher.cjs Node-shim still ships)`);
+    return;
+  }
+  console.log(`[pack-site-release] Bun ${bun.version} detected — compiling launcher.exe`);
+
+  const explicit = (process.env.GAD_LAUNCHER_TARGETS || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const targets = explicit.length > 0 ? explicit : [hostBunTarget()];
+
+  for (const target of targets) {
+    const ext = target.startsWith("bun-windows") ? ".exe" : "";
+    const outname = `launcher-${target.replace(/^bun-/, "")}${ext}`;
+    const outpath = path.join(STAGE_DIR, outname);
+    console.log(`  → ${target} → ${outname}`);
+    const result = spawnSync(
+      "bun",
+      ["build", "--compile", `--target=${target}`, LAUNCHER, "--outfile", outpath],
+      { stdio: "inherit" }
+    );
+    if (result.status !== 0 || !fs.existsSync(outpath)) {
+      console.warn(`  ⚠ bun --compile failed for ${target} (non-fatal — Node-shim launcher.cjs still ships)`);
+      continue;
+    }
+    const sz = fs.statSync(outpath).size;
+    console.log(`  ✓ ${outname} · ${(sz / 1024 / 1024).toFixed(2)} MB`);
+  }
+}
+
+function hostBunTarget() {
+  const arch = process.arch === "arm64" ? "arm64" : "x64";
+  if (process.platform === "win32") return `bun-windows-${arch}`;
+  if (process.platform === "darwin") return `bun-darwin-${arch}`;
+  return `bun-linux-${arch}`;
 }
 
 function makeZip() {

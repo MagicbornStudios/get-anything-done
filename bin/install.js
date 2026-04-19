@@ -78,18 +78,22 @@ const hasUninstall = args.includes('--uninstall') || args.includes('-u');
 // the planning scaffold + site without picking a coding-agent runtime.
 //   --site             copy a self-contained site tree to <target>/.planning/site/
 //   --planning         scaffold <target>/.planning/ with canonical XML ledgers
-//   --node             opt into portable-Node bootstrap (44-34, stub for now)
 //   --from-release <t> source files from a downloaded GitHub release zip,
 //                      not from the local checkout — required when the
 //                      consumer only has the installer, not the repo
 //
-// Help text + interactive picker reshape live below in the help block and
-// in promptRuntime/promptLocation. References:
+// Note: `--node` (portable Node bootstrap) was cancelled as task 44-34
+// in 2026-04 — see references/installer-feature-flags.md "Cancelled". The
+// flag is silently accepted for one release window and prints a deprecation
+// notice so existing scripted callers don't break, then it's removed.
+//
+// Help text + interactive picker live below in the help block and in
+// promptFeaturesAndRuntime. References:
 //   references/installer-feature-flags.md
 //   .planning/notes/2026-04-18-44-28-spine-first-cut.md
 const hasSiteFlag = args.includes('--site');
 const hasPlanningFlag = args.includes('--planning');
-const hasNodeFlag = args.includes('--node');
+const hasNodeFlag = args.includes('--node'); // deprecated — see 44-34 cancellation
 
 function parseFromReleaseArg() {
   const idx = args.findIndex((a) => a === '--from-release');
@@ -428,7 +432,7 @@ if (hasUninstall) {
 // Show help if requested
 if (hasHelp) {
   console.log(`  ${yellow}Usage:${reset} node bin/install.js [options]\n\n  ${yellow}Options:${reset}\n    ${cyan}-g, --global${reset}              Install globally (to config directory)\n    ${cyan}-l, --local${reset}               Install locally (to current directory)\n    ${cyan}--claude${reset}                  Install for Claude Code only\n    ${cyan}--opencode${reset}                Install for OpenCode only\n    ${cyan}--gemini${reset}                  Install for Gemini only\n    ${cyan}--codex${reset}                   Install for Codex only\n    ${cyan}--copilot${reset}                 Install for Copilot only\n    ${cyan}--antigravity${reset}             Install for Antigravity only\n    ${cyan}--cursor${reset}                  Install for Cursor only\n    ${cyan}--windsurf${reset}                Install for Windsurf only
-    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}--sdk${reset}                     Also install GAD SDK CLI (gad-sdk)\n    ${cyan}-u, --uninstall${reset}           Uninstall GAD (remove all GAD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Feature flags (44-28 spine — independent of runtime install):${reset}\n    ${cyan}--planning${reset}                Scaffold canonical .planning/ XML ledgers in --target (or cwd)\n    ${cyan}--site${reset}                    Copy self-contained planning site into <target>/.planning/site/\n    ${cyan}--node${reset}                    Reserve <target>/.planning/.node/ for portable Node bootstrap (44-34 stub)\n    ${cyan}--from-release <tag|url>${reset}  Source files from a downloaded release zip instead of local checkout\n    ${cyan}--target <path>${reset}           Override consumer target directory (default: cwd)\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    node bin/install.js\n\n    ${dim}# Install for Claude Code globally${reset}\n    node bin/install.js --claude --global\n\n    ${dim}# Install for Codex globally${reset}\n    node bin/install.js --codex --global\n\n    ${dim}# Install for all runtimes globally${reset}\n    node bin/install.js --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    node bin/install.js --codex --global --config-dir ~/.codex-work\n\n    ${dim}# Uninstall GAD from Cursor globally${reset}\n    node bin/install.js --cursor --global --uninstall\n\n    ${dim}# Scaffold .planning/ + drop the site bundle in cwd (no runtime install)${reset}\n    node bin/install.js --planning --site\n\n    ${dim}# Same, but pull site bundle from a release tag${reset}\n    node bin/install.js --site --from-release v1.35.0\n\n    ${dim}# Full consumer first-run: planning scaffold + site + Claude runtime${reset}\n    node bin/install.js --planning --site --claude --global\n\n  ${yellow}Notes:${reset}\n    The packaged GitHub Release executable delegates here through ${cyan}gad install all${reset}.\n    The --config-dir option takes priority over CLAUDE_CONFIG_DIR / GEMINI_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR.\n    Feature flags only write to .planning/ on the consumer target; nothing touches the home dir or system PATH.\n`);
+    ${cyan}--augment${reset}                 Install for Augment only\n    ${cyan}--all${reset}                     Install for all runtimes\n    ${cyan}--sdk${reset}                     Also install GAD SDK CLI (gad-sdk)\n    ${cyan}-u, --uninstall${reset}           Uninstall GAD (remove all GAD files)\n    ${cyan}-c, --config-dir <path>${reset}   Specify custom config directory\n    ${cyan}-h, --help${reset}                Show this help message\n    ${cyan}--force-statusline${reset}        Replace existing statusline config\n\n  ${yellow}Feature flags (44-28 spine — independent of runtime install):${reset}\n    ${cyan}--planning${reset}                Scaffold canonical .planning/ XML ledgers in --target (or cwd)\n    ${cyan}--site${reset}                    Copy self-contained planning site into <target>/.planning/site/\n    ${cyan}--from-release <tag|url>${reset}  Source files from a downloaded release zip instead of local checkout\n    ${cyan}--target <path>${reset}           Override consumer target directory (default: cwd)\n    ${dim}--node${reset}                    ${dim}deprecated, no-op (task 44-34 cancelled — superseded by Bun launcher.exe)${reset}\n\n  ${yellow}Examples:${reset}\n    ${dim}# Interactive install (prompts for runtime and location)${reset}\n    node bin/install.js\n\n    ${dim}# Install for Claude Code globally${reset}\n    node bin/install.js --claude --global\n\n    ${dim}# Install for Codex globally${reset}\n    node bin/install.js --codex --global\n\n    ${dim}# Install for all runtimes globally${reset}\n    node bin/install.js --all --global\n\n    ${dim}# Install to custom config directory${reset}\n    node bin/install.js --codex --global --config-dir ~/.codex-work\n\n    ${dim}# Uninstall GAD from Cursor globally${reset}\n    node bin/install.js --cursor --global --uninstall\n\n    ${dim}# Scaffold .planning/ + drop the site bundle in cwd (no runtime install)${reset}\n    node bin/install.js --planning --site\n\n    ${dim}# Same, but pull site bundle from a release tag${reset}\n    node bin/install.js --site --from-release v1.35.0\n\n    ${dim}# Full consumer first-run: planning scaffold + site + Claude runtime${reset}\n    node bin/install.js --planning --site --claude --global\n\n  ${yellow}Notes:${reset}\n    The packaged GitHub Release executable delegates here through ${cyan}gad install all${reset}.\n    The --config-dir option takes priority over CLAUDE_CONFIG_DIR / GEMINI_CONFIG_DIR / CODEX_HOME / COPILOT_CONFIG_DIR / ANTIGRAVITY_CONFIG_DIR / CURSOR_CONFIG_DIR / WINDSURF_CONFIG_DIR / AUGMENT_CONFIG_DIR.\n    Feature flags only write to .planning/ on the consumer target; nothing touches the home dir or system PATH.\n`);
   process.exit(0);
 }
 
@@ -6583,41 +6587,76 @@ function scaffoldPlanning(targetDir) {
   console.log(`  ${green}✓${reset} Scaffolded ${dim}${planDir}${reset} (${Object.keys(files).length} XML files, projectid=${cyan}${projectId}${reset})`);
 }
 
-// 44-34 stub — actual portable-Node download lands once the release pipeline
-// publishes a node-<platform>-<arch>.zip asset alongside the gad binary.
-// For now, scaffold the destination dir and print activation guidance.
-function installPortableNodeStub(targetDir) {
-  const nodeDir = path.join(targetDir, '.planning', '.node');
-  fs.mkdirSync(nodeDir, { recursive: true });
-  const cmdDir = path.join(targetDir, '.planning', '.cmd');
-  fs.mkdirSync(cmdDir, { recursive: true });
-  const note = [
-    'Portable Node bootstrap (task 44-34) — RESERVED',
-    '',
-    'When the GAD release pipeline publishes a node-<platform>-<arch>.zip',
-    'asset, this folder will hold the extracted runtime and the launcher',
-    'will prefer it over a system Node. Until then, the launcher uses',
-    'whichever `node` is on PATH.',
-    '',
-    'See references/installer-feature-flags.md.',
-  ].join(os.EOL);
-  fs.writeFileSync(path.join(nodeDir, 'README.txt'), note, 'utf8');
-  console.log(`  ${yellow}⚠${reset} ${cyan}--node${reset} reserved scaffold written to ${dim}${nodeDir}${reset}`);
-  console.log(`     Portable Node download lands once release pipeline ships node zip (44-34 follow-up).`);
+// --node was cancelled as task 44-34 (see references/installer-feature-flags.md
+// "Cancelled"). The portable-Node bootstrap concept was abandoned: shipping
+// our own node-<platform>-<arch>.zip alongside every release for the sole
+// purpose of running the planning site duplicates work the SEA Bun-compiled
+// launcher.exe (44-33c follow-up) does cleanly. The flag prints a deprecation
+// notice and is otherwise a no-op for one release window, then will be
+// removed entirely.
+function warnNodeFlagDeprecated() {
+  console.log(`  ${yellow}⚠${reset} ${cyan}--node${reset} flag is deprecated and a no-op (task 44-34 cancelled).`);
+  console.log(`     The portable-Node bootstrap was superseded by the Bun-compiled launcher.exe`);
+  console.log(`     packaged inside the site release zip. See references/installer-feature-flags.md.`);
 }
 
-function runFeatureInstall() {
+function runFeatureInstall(featureOverrides) {
   if (fromReleaseSource) downloadFromRelease(fromReleaseSource);
   const target = resolveTargetDir();
+  const wantsPlanning = featureOverrides ? featureOverrides.planning : hasPlanningFlag;
+  const wantsSite     = featureOverrides ? featureOverrides.site     : hasSiteFlag;
+  const wantsNode     = featureOverrides ? featureOverrides.node     : hasNodeFlag;
   console.log(`\n  ${cyan}Target:${reset} ${dim}${target}${reset}\n`);
-  if (hasPlanningFlag) scaffoldPlanning(target);
-  if (hasSiteFlag)     installSiteTree(target);
-  if (hasNodeFlag)     installPortableNodeStub(target);
+  if (wantsPlanning) scaffoldPlanning(target);
+  if (wantsSite)     installSiteTree(target);
+  if (wantsNode)     warnNodeFlagDeprecated();
   console.log(`\n  ${green}✓ Feature install complete${reset}`);
-  if (hasSiteFlag) {
+  if (wantsSite) {
     console.log(`     Open the site: ${cyan}node ${path.join(target, '.planning', 'site', 'launcher.cjs')}${reset}`);
   }
   console.log('');
+}
+
+// 44-32e — interactive feature picker. Runs before promptRuntime when the
+// operator launched install.js with no flags at all. Picks zero or more
+// features {planning, site, skills} (skills is "do you also want to install
+// for a coding-agent runtime?" — yes routes through promptRuntime, no
+// finishes after the feature install). Returns via callback so the caller
+// can either short-circuit or chain into promptRuntime/promptLocation.
+function promptFeatures(callback) {
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  let answered = false;
+  rl.on('close', () => {
+    if (!answered) {
+      answered = true;
+      console.log(`\n  ${yellow}Installation cancelled${reset}\n`);
+      process.exit(0);
+    }
+  });
+
+  console.log(`  ${yellow}What would you like to install?${reset}
+
+  ${cyan}1${reset}) Planning scaffold  ${dim}(.planning/ XML ledgers — STATE, ROADMAP, TASK-REGISTRY, ...)${reset}
+  ${cyan}2${reset}) Planning site      ${dim}(self-contained Next.js dashboard at .planning/site/)${reset}
+  ${cyan}3${reset}) Coding-agent skills ${dim}(install GAD into Claude/Codex/Cursor/etc — picks runtime next)${reset}
+  ${cyan}4${reset}) All of the above
+
+  ${dim}Select multiple: 1,2 or 1 3 — empty/Enter accepts default${reset}
+`);
+
+  rl.question(`  Choice ${dim}[4]${reset}: `, (answer) => {
+    answered = true;
+    rl.close();
+    const input = (answer.trim() || '4');
+    const wantAll = input === '4';
+    const picks = wantAll ? new Set(['1', '2', '3']) : new Set(input.split(/[\s,]+/).filter(Boolean));
+    callback({
+      planning: picks.has('1'),
+      site:     picks.has('2'),
+      skills:   picks.has('3'),
+      node:     false,
+    });
+  });
 }
 
 // Test-only exports — skip main logic when loaded as a module for testing
@@ -6729,13 +6768,31 @@ if (hasGlobal && hasLocal) {
   // Default to Claude if no runtime specified but location is
   installAllRuntimes(['claude'], hasGlobal, false);
 } else {
-  // Interactive
+  // Interactive (44-32e): start with the feature picker
+  // {planning, site, skills}. If skills is selected, chain into runtime +
+  // location prompts; otherwise just run the feature install and exit.
   if (!process.stdin.isTTY) {
     console.log(`  ${yellow}Non-interactive terminal detected, defaulting to Claude Code global install${reset}\n`);
     installAllRuntimes(['claude'], true, false);
   } else {
-    promptRuntime((runtimes) => {
-      promptLocation(runtimes);
+    promptFeatures((features) => {
+      const runFeaturesIfAny = () => {
+        if (features.planning || features.site) {
+          runFeatureInstall(features);
+        }
+      };
+      if (!features.skills) {
+        runFeaturesIfAny();
+        if (!features.planning && !features.site) {
+          console.log(`  ${yellow}Nothing selected — exiting${reset}\n`);
+        }
+        return;
+      }
+      // skills selected: run feature install first (if any) then runtime prompt
+      runFeaturesIfAny();
+      promptRuntime((runtimes) => {
+        promptLocation(runtimes);
+      });
     });
   }
 }

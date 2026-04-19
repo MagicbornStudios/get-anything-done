@@ -16,6 +16,7 @@ function escapeRegExp(value) {
 
 const CURRENT_EXE_RE = new RegExp(`^gad-v${escapeRegExp(pkg.version)}-(windows|linux|macos)-.+(?:\\.exe)?$`);
 const CURRENT_TARBALL_NAME = `${pkg.name}-${pkg.version}.tgz`;
+const CURRENT_SITE_ZIP_NAME = `site-v${pkg.version}.zip`;
 
 export function parseArgs(argv) {
   const parsed = {
@@ -40,8 +41,28 @@ export function isReleaseArtifactName(name) {
   return (
     CURRENT_EXE_RE.test(name) ||
     name === CURRENT_TARBALL_NAME ||
+    name === CURRENT_SITE_ZIP_NAME ||
     name === 'install-gad-windows.ps1' ||
     name === 'INSTALL.txt'
+  );
+}
+
+// 44-32/44-33 follow-up: when a release is meant to ship the planning
+// site bundle (consumer-facing `gad install --site --from-release vX.Y.Z`),
+// fail loudly if the zip is missing instead of silently shipping a release
+// where `--from-release` resolves to 404. Same pattern as the npm-tarball
+// regression guard added in 44-38.
+//
+// Opt out with GAD_SKIP_SITE_ZIP_GUARD=1 for releases that intentionally
+// don't bundle the site (e.g. CLI-only patch releases).
+export function ensureSiteZipIfRequired(releaseDir = getReleaseDir()) {
+  if (process.env.GAD_SKIP_SITE_ZIP_GUARD === '1') return;
+  const target = join(releaseDir, CURRENT_SITE_ZIP_NAME);
+  if (existsSync(target)) return target;
+  throw new Error(
+    `Site bundle ${CURRENT_SITE_ZIP_NAME} missing from ${releaseDir}.\n` +
+    `Run \`pnpm build:site && pnpm pack:site\` before publishing.\n` +
+    `If this release intentionally ships without a site, set GAD_SKIP_SITE_ZIP_GUARD=1.`,
   );
 }
 
@@ -50,6 +71,7 @@ export function getArtifacts(releaseDir = getReleaseDir()) {
     throw new Error('dist/release does not exist. Run `npm run build:release` first.');
   }
   ensureReleaseTarball(releaseDir);
+  ensureSiteZipIfRequired(releaseDir);
   const entries = readdirSync(releaseDir)
     .filter((name) => isReleaseArtifactName(name))
     .map((name) => join(releaseDir, name));
