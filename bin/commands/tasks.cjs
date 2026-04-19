@@ -1,13 +1,6 @@
 'use strict';
 /**
  * gad tasks — show, claim, release, add, update, promote, and inspect tasks
- *
- * Required deps: outputError, resolveSingleTaskRoot, readTasks,
- *   resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
- *   detectRuntimeSessionId, claimTask, addTaskClaim, nowIso, maybeRebuildGraph,
- *   shouldUseJson, releaseTask, removeTaskClaim, RAW_ARGV, getRuntimeArg,
- *   readRawFlagValue, SENTINEL_SKILL_VALUES, findRepoRoot, gadConfig,
- *   resolveRoots, listAgentLanes, simplifyAgentLane, render, runTasksListView
  */
 
 const path = require('path');
@@ -16,13 +9,113 @@ const { defineCommand } = require('citty');
 
 function createTasksCommand(deps) {
   const {
-    outputError, resolveSingleTaskRoot, readTasks,
+    outputError, readTasks,
     resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
     detectRuntimeSessionId, claimTask, addTaskClaim, nowIso, maybeRebuildGraph,
     shouldUseJson, releaseTask, removeTaskClaim, RAW_ARGV, getRuntimeArg,
     readRawFlagValue, SENTINEL_SKILL_VALUES, findRepoRoot, gadConfig,
-    resolveRoots, listAgentLanes, simplifyAgentLane, render, runTasksListView,
+    resolveRoots, listAgentLanes, simplifyAgentLane, render,
+    formatId, graphExtractor, repoRoot,
   } = deps;
+
+  function resolveSingleTaskRoot(projectid) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid }, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No projects configured. Run `gad projects sync` first.');
+    }
+    return { baseDir, config, root: roots[0] };
+  }
+
+  function runTasksListView(args) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+
+    let roots = config.roots;
+    if (args.projectid) {
+      roots = roots.filter((root) => root.id === args.projectid);
+      if (roots.length === 0) {
+        const ids = config.roots.map((root) => root.id);
+        console.error(`\nProject not found: ${args.projectid}\n\nAvailable projects:\n`);
+        for (const id of ids) console.error(`  ${id}`);
+        console.error(`\nRerun with: --projectid ${ids[0]}`);
+        process.exit(1);
+      }
+    }
+
+    const filter = {};
+    if (args.status) filter.status = args.status;
+    if (args.phase) filter.phase = args.phase;
+
+    const useGraph = args.graph || roots.some(r => graphExtractor.isGraphQueryEnabled(path.join(baseDir, r.path)));
+
+    const rows = [];
+    for (const root of roots) {
+      if (useGraph) {
+        const { graph } = graphExtractor.loadOrBuildGraph(root, baseDir, { gadDir: repoRoot });
+        const query = { type: 'task' };
+        if (filter.status) query.status = filter.status;
+        if (filter.phase) query.phase = filter.phase;
+        const result = graphExtractor.queryGraph(graph, query);
+
+        for (const m of result.matches) {
+          const taskId = m.id.replace(/^task:/, '');
+          const limit = args.full ? Infinity : 200;
+          const goalText = m.goal || m.label || '';
+          rows.push({
+            project: root.id,
+            id: formatId(root.id, 'T', taskId),
+            'legacy-id': taskId,
+            goal: goalText.length > limit ? goalText.slice(0, limit - 1) + '…' : goalText,
+            status: m.status || '',
+            phase: taskId.replace(/-\d+$/, ''),
+            'agent-id': '',
+            'agent-role': '',
+            runtime: '',
+          });
+        }
+      } else {
+        const tasks = readTasks(root, baseDir, filter);
+        for (const task of tasks) {
+          const limit = args.full ? Infinity : 200;
+          rows.push({
+            project: root.id,
+            id: formatId(root.id, 'T', task.id),
+            'legacy-id': task.id,
+            goal: task.goal.length > limit ? task.goal.slice(0, limit - 1) + '…' : task.goal,
+            status: task.status,
+            phase: task.phase,
+            'agent-id': task.agentId || '',
+            'agent-role': task.agentRole || '',
+            runtime: task.runtime || '',
+          });
+        }
+      }
+    }
+
+    let filteredRows = rows;
+    if (args.stalled) {
+      filteredRows = rows.filter((r) => {
+        const attributed = Boolean(
+          (r['agent-id'] && String(r['agent-id']).trim()) ||
+          (r['agent-role'] && String(r['agent-role']).trim()) ||
+          (r.runtime && String(r.runtime).trim()),
+        );
+        return r.status === 'in-progress' && !attributed;
+      });
+    }
+
+    if (filteredRows.length === 0) {
+      console.log(args.stalled ? 'No stalled tasks.' : 'No tasks found.');
+      return;
+    }
+
+    const fmt = args.json ? 'json' : 'table';
+    const modeLabel = useGraph ? ' (graph)' : '';
+    const stalledLabel = args.stalled ? ' stalled' : '';
+    console.log(render(filteredRows, { format: fmt, title: `Tasks${stalledLabel}${modeLabel} (${filteredRows.length})` }));
+  }
 
   const claim = defineCommand({
     meta: { name: 'claim', description: 'Claim a task for an active agent lane' },

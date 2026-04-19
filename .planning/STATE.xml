@@ -46,7 +46,7 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-19T21:41:49.875Z</last-updated>
+  <last-updated>2026-04-19T23:29:47.641Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
     <entry agent="opus-claude" at="2026-04-19T18:50:52.968Z">sweep F (post-failure-callout): extracted 9 cmd families (phases, decisions, handoffs, readers, refs, narrative, start, subagents, agents, site). bin/gad.cjs 18181 to 16689 (-1492 LOC, factory pattern). all smokes + targeted tests pass.</entry>

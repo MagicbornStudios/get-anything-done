@@ -1,16 +1,15 @@
 'use strict';
 /**
  * `gad eval run` (a.k.a. `gad species run`). Extracted from bin/gad.cjs.
- *
- * Required deps:
- *   listEvalProjectsHint, resolveEvalProject, outputError, normalizeEvalRuntime,
- *   ensureEvalRuntimeHooks, buildEvalPrompt, summarizeAgentLineage,
- *   buildSkillsProvenance, formatGenerationPreserveCommand.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
+const {
+  buildSkillsProvenance,
+  formatGenerationPreserveCommand,
+} = require('../../lib/eval-helpers.cjs');
 
 function createEvalRunCommand(deps) {
   const {
@@ -21,8 +20,6 @@ function createEvalRunCommand(deps) {
     ensureEvalRuntimeHooks,
     buildEvalPrompt,
     summarizeAgentLineage,
-    buildSkillsProvenance,
-    formatGenerationPreserveCommand,
   } = deps;
 
   const gadDir = path.join(__dirname, '..', '..');

@@ -1,17 +1,12 @@
 'use strict';
 /**
- * `gad generation preserve` and `gad generation verify` (legacy `gad eval preserve` /
- * `gad eval verify`). Extracted from bin/gad.cjs.
- *
- * Required deps:
- *   findRepoRoot, normalizeGenerationReference, resolveOrDefaultEvalProjectDir,
- *   outputError, parseTraceEventsJsonl, summarizeAgentLineage,
- *   listAllEvalProjects, defaultEvalsDir.
+ * `gad generation preserve` and `gad generation verify`. Extracted from bin/gad.cjs.
  */
 
 const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
+const { normalizeGenerationReference } = require('../../lib/eval-helpers.cjs');
 
 function copyRecursive(src, dst, flatten = false) {
   const stat = fs.statSync(src);
@@ -42,7 +37,6 @@ function dirSizeBytes(dirPath) {
 function createEvalArtifactsCommands(deps) {
   const {
     findRepoRoot,
-    normalizeGenerationReference,
     resolveOrDefaultEvalProjectDir,
     outputError,
     parseTraceEventsJsonl,
