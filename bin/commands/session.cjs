@@ -512,4 +512,6 @@ module.exports = {
   buildContextRefs,
   touchStateXml,
   writeSession,
+  sessionsDir,
+  generateSessionId,
 };
