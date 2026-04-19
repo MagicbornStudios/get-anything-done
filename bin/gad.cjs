@@ -2446,6 +2446,84 @@ const handoffsCompleteCmd = defineCommand({
   },
 });
 
+const handoffsClaimNextCmd = defineCommand({
+  meta: {
+    name: 'claim-next',
+    description: 'Claim the best-matching open handoff for the current runtime. Respects runtime_preference + priority, then FIFO. Prints the handoff body so the caller can dispatch it.',
+  },
+  args: {
+    runtime: { type: 'string', description: 'Override runtime detection (e.g. claude-code, codex, cursor). Defaults to detected runtime.', default: '' },
+    agent: { type: 'string', description: 'Agent name to record as claimer (default: env GAD_AGENT or detected runtime)', default: '' },
+    projectid: { type: 'string', description: 'Restrict to a single project id', default: '' },
+    'max-priority': { type: 'string', description: 'Ignore handoffs above this priority (low|normal|high|critical)', default: 'critical' },
+    'dry-run': { type: 'boolean', description: 'Show what would be claimed; do not claim', default: false },
+    json: { type: 'boolean', description: 'Emit JSON { id, frontmatter, body, bucket }; no stdout chrome', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const { sortHandoffsForPickup, isHandoffCompatible, priorityRank } = require('../lib/agent-detect.cjs');
+    const runtime = (args.runtime || detectRuntimeIdentity().id || process.env.GAD_AGENT || '').trim();
+    if (!runtime || runtime === 'unknown') {
+      outputError('Could not detect runtime. Pass --runtime <id> or set GAD_RUNTIME.');
+      process.exit(1);
+    }
+    const maxRank = priorityRank(args['max-priority']);
+    const all = listHandoffs({
+      baseDir,
+      bucket: 'open',
+      projectid: args.projectid || undefined,
+    });
+    const compatible = all.filter((h) =>
+      isHandoffCompatible(h.frontmatter && h.frontmatter.runtime_preference, runtime)
+      && priorityRank(h.frontmatter && h.frontmatter.priority) <= maxRank,
+    );
+    if (compatible.length === 0) {
+      if (args.json) {
+        console.log(JSON.stringify({ claimed: false, reason: 'no-match', runtime, total: all.length }));
+      } else {
+        console.log(`No open handoffs match runtime=${runtime} (total open: ${all.length}).`);
+      }
+      process.exit(all.length === 0 ? 0 : 2);
+    }
+    const sorted = sortHandoffsForPickup(compatible, runtime);
+    const pick = sorted[0];
+    if (args['dry-run']) {
+      if (args.json) {
+        console.log(JSON.stringify({ claimed: false, dryRun: true, pick: { id: pick.id, frontmatter: pick.frontmatter } }));
+      } else {
+        console.log(`Would claim: ${pick.id} (priority=${pick.frontmatter.priority}, runtime_preference=${pick.frontmatter.runtime_preference || 'any'})`);
+      }
+      return;
+    }
+    try {
+      const destPath = claimHandoff({
+        baseDir,
+        id: pick.id,
+        agent: args.agent || process.env.GAD_AGENT || runtime,
+        runtime,
+      });
+      const { body, frontmatter } = readHandoff({ baseDir, id: pick.id });
+      if (args.json) {
+        console.log(JSON.stringify({ claimed: true, id: pick.id, frontmatter, body, path: path.relative(baseDir, destPath) }));
+        return;
+      }
+      console.log(`Claimed: ${pick.id}`);
+      console.log(`Runtime: ${runtime} · priority: ${frontmatter.priority} · project: ${frontmatter.projectid}`);
+      console.log(`Path:    ${path.relative(baseDir, destPath)}`);
+      console.log('');
+      console.log('-- handoff body --');
+      console.log(body.trim());
+      console.log('-- end --');
+    } catch (e) {
+      if (e instanceof HandoffError) {
+        outputError(e.message);
+        process.exit(1);
+      }
+      throw e;
+    }
+  },
+});
+
 const handoffsCreateCmd = defineCommand({
   meta: { name: 'create', description: 'Create a new handoff in open/' },
   args: {
@@ -2484,11 +2562,12 @@ const handoffsCreateCmd = defineCommand({
 });
 
 const handoffsCmd = defineCommand({
-  meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, complete, create' },
+  meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, complete, create' },
   subCommands: {
     list: handoffsListCmd,
     show: handoffsShowCmd,
     claim: handoffsClaimCmd,
+    'claim-next': handoffsClaimNextCmd,
     complete: handoffsCompleteCmd,
     create: handoffsCreateCmd,
   },
@@ -13095,6 +13174,28 @@ const startupCmd = defineCommand({
       lines.push(`Side effects suppressed: ${sideEffectsMode.reasons.join(', ')}`);
     }
     console.log(lines.join('\n'));
+
+    // HANDOFFS FOR YOU — surface open handoffs matching the detected
+    // runtime so this session can auto-pick up work waiting for it.
+    // (Part of B: cross-lane auto-pickup, 2026-04-19.)
+    try {
+      const detectedRuntime = detectRuntimeIdentity().id;
+      const handoffSection = buildHandoffsSection({
+        baseDir: startupBaseDir,
+        runtime: detectedRuntime && detectedRuntime !== 'unknown' ? detectedRuntime : undefined,
+        mineFirst: !!detectedRuntime && detectedRuntime !== 'unknown',
+        limit: 5,
+      });
+      if (handoffSection) {
+        console.log('');
+        printSection(handoffSection);
+        if (detectedRuntime && detectedRuntime !== 'unknown') {
+          console.log(`Auto-claim the best match for your runtime: \`gad handoffs claim-next --runtime ${detectedRuntime}\``);
+        } else {
+          console.log('Runtime not auto-detected — pass `--runtime <id>` to `gad handoffs claim-next` to pick up.');
+        }
+      }
+    } catch { /* non-fatal — snapshot still runs without handoffs section */ }
 
     let resolvedProjectid = String(args.projectid || '').trim();
     let resolvedSource = resolvedProjectid ? 'arg' : '';
