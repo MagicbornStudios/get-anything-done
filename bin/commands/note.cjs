@@ -14,7 +14,7 @@ const path = require('path');
 const { defineCommand } = require('citty');
 
 function createNoteCommand(deps) {
-  const { findRepoRoot, gadConfig, resolveRoots, outputError, writeNote, listNotes } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, outputError, writeNote, listNotes, listNoteQuestions } = deps;
 
   const noteAddCmd = defineCommand({
     meta: { name: 'add', description: 'Create a new note in .planning/notes/. Filename includes agent slug from --agent or $GAD_AGENT_NAME.' },
@@ -93,15 +93,67 @@ function createNoteCommand(deps) {
     },
   });
 
+  const noteQuestionsCmd = defineCommand({
+    meta: {
+      name: 'questions',
+      description: 'Surface "## Open questions" sections from recent notes — CLI path to operator action items buried in planning docs.',
+    },
+    args: {
+      projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+      since: { type: 'string', description: 'Only include notes dated >= YYYY-MM-DD', default: '' },
+      slug: { type: 'string', description: 'Substring filter on note filename', default: '' },
+      json: { type: 'boolean', description: 'JSON output', default: false },
+    },
+    run({ args }) {
+      if (!listNoteQuestions) {
+        outputError('listNoteQuestions helper not wired; upgrade lib/notes-writer.cjs.');
+        return;
+      }
+      const baseDir = findRepoRoot();
+      const config = gadConfig.load(baseDir);
+      const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+      if (roots.length === 0) {
+        outputError('No project resolved. Pass --projectid <id> or run from a project root.');
+        return;
+      }
+      const all = [];
+      for (const root of roots) {
+        const hits = listNoteQuestions(root, baseDir, {
+          sinceDate: args.since || undefined,
+          slugFilter: args.slug || undefined,
+        });
+        for (const h of hits) {
+          all.push({ project: root.id, filename: h.filename, questions: h.questions });
+        }
+      }
+      all.sort((a, b) => a.filename.localeCompare(b.filename));
+      if (args.json) {
+        console.log(JSON.stringify(all, null, 2));
+        return;
+      }
+      if (all.length === 0) {
+        console.log('No notes with `## Open questions` sections found.');
+        return;
+      }
+      for (const h of all) {
+        console.log(`─── ${h.project}/${h.filename} ───`);
+        console.log(h.questions);
+        console.log('');
+      }
+      console.log(`${all.length} note(s) with open questions.`);
+    },
+  });
+
   return defineCommand({
-    meta: { name: 'note', description: 'Manage ad-hoc notes in .planning/notes/ — list (default), add' },
+    meta: { name: 'note', description: 'Manage ad-hoc notes in .planning/notes/ — list, add, questions' },
     subCommands: {
       list: noteListCmd,
       add: noteAddCmd,
+      questions: noteQuestionsCmd,
     },
-    run({ args, rawArgs }) {
-      return noteListCmd.run({ args, rawArgs });
-    },
+    // NOTE: no fallback `run` here — citty was running both the matched
+    // subcommand AND this callback, producing duplicate output. Let citty
+    // print help when no subcommand matches.
   });
 }
 
