@@ -428,5 +428,12 @@
     <depends>60</depends>
   </phase>
 
+  <phase id="65">
+    <title>2026-04-19 multi-agent sprint — 27-item TUI curation + runtime orchestration hygiene</title>
+    <goal>Ship operator's curated 27 TUI features (Slices A-G across Tracks 1-10) via 5 parallel Sonnet subagents, plus cross-cutting CLI infrastructure: cross-lane handoff protocol (claim-next, create-closeout, daily-subagent startup surface), gad agents status with log-inferred liveness (9-runtime detection), shell-profile installer, self-resume handoff CLI, tip category filter + 6 new tips, gad note questions, runtime-detect expansion. File-size discipline (≤250 LOC per new file) validated; 5-parallel subagent pattern validated via tsc self-coordination.</goal>
+    <status>done</status>
+    <depends>63</depends>
+  </phase>
+
 </roadmap>
 

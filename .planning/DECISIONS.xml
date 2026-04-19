@@ -2031,5 +2031,62 @@ Operator priority statement: "I just need it working right now. If we can put it
     <impact>New deps: `@clerk/nextjs@^6.39.1` in `apps/planning-app/package.json`. New surfaces: `apps/planning-app/{middleware.ts, lib/operator-id.ts, components/auth/AuthProvider.tsx, components/auth/AuthHeaderSlot.tsx}`. Modified: `apps/planning-app/app/layout.tsx` (wrap in `AuthProvider`), `apps/planning-app/components/AppShell.tsx` (mount `AuthHeaderSlot` next to local-dev pill), `apps/planning-app/app/api/dev/evals/projects/[id]/species/[name]/generations/[version]/publish/route.ts` (PATCH/POST/DELETE call `getOperatorId()` and pass `publishedBy` to `setGenerationStatus`). Marketplace `MARKETPLACE_INDEX.generations[].publishedBy` now tracks the operator (Clerk userId or `"solo-operator"`) instead of the prior `null`/`"anonymous"` placeholder.</impact>
   </decision>
 
+  <decision id="gad-272">
+    <title>Liveness inferred from gad-log + trace-events; no explicit heartbeats</title>
+    <date>2026-04-19</date>
+    <summary>Every gad CLI invocation already emits a trace event (via bin/gad-trace-hook.cjs for Claude Code + gad.cjs logCall() for every runtime). Adding a separate heartbeat command is pure overhead — operator rejected. gad agents status reads .planning/.gad-log/&lt;today&gt;.jsonl + .planning/.trace-events.jsonl, unions by (runtime.id, runtime.session_id), tags sources [cli|hook], shows stale &gt;10min. Zero new polling, zero new write paths.</summary>
+    <impact>Removes heartbeat CLI + .gad/heartbeats/ dir; LIVENESS panel in gad agents status replaces HEARTBEATS; works for ANY runtime that sets fingerprint env vars (cursor/codex/gemini/opencode/+5 added today).</impact>
+    <references>
+      <file path="vendor/get-anything-done/lib/agents-status.cjs"/>
+      <file path="vendor/get-anything-done/lib/runtime-detect.cjs"/>
+    </references>
+  </decision>
+
+  <decision id="gad-273">
+    <title>5-parallel Sonnet subagents + ≤250 LOC file discipline + tsc self-coordination</title>
+    <date>2026-04-19</date>
+    <summary>Validated 2026-04-19: 5 concurrent Sonnet subagents editing same packages/gad-tui/ tree shipped 38 items in one day. Enabling pattern: file-size discipline (each new file ≤250 LOC; components split into src/components/&lt;feature&gt;/&lt;part&gt;.tsx), surgical App.tsx touches (one import, one state, one slash register, one overlay branch per slice), scope-fenced prompts (explicit DO-NOT-TOUCH for other slices' files), commit-fast per-item (1 task → 1 commit). Typecheck acts as self-coordination protocol — when one subagent's concurrent App.tsx edits broke another's tsc, the broken subagent added missing SlashContext fields to fix its own error, implicitly merging with the other.</summary>
+    <impact>Pattern replicable. Don't dispatch subagents with 'do all 5 items' — blast radius on App.tsx too big. Don't edit monolith files in parallel. Do include collision-report field in subagent prompts so they self-detect.</impact>
+    <references>
+      <file path=".planning/notes/2026-04-19-tui-requirements-discovery.md"/>
+      <file path="packages/gad-tui/HANDOVER.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-274">
+    <title>Self-resume handoffs as primary pattern; cross-lane secondary</title>
+    <date>2026-04-19</date>
+    <summary>Operator feedback 2026-04-19: handoffs are primarily same-agent context-break recovery ('I was working on task X, here's where I stopped' — next session picks up). Cross-lane is the secondary use. Body schema: Resume context (task_id, phase, last_commit, stopped_at, what's done, what's left, blockers). Frontmatter: type=self-resume + resume_task + resume_phase. Full bi-directional TASK-REGISTRY auto-close-on-commit deferred; current: pause creates handoff, resume claims it, operator reconciles TASK-REGISTRY manually.</summary>
+    <impact>lib/handoffs.cjs gains createSelfResumeHandoff + findSelfResumeHandoffs. scripts/handoffs-pause-resume.cjs = standalone CLI (collision-safe with live bin/gad.cjs refactor). gad handoffs pause/resume wiring deferred to post-refactor.</impact>
+    <references>
+      <file path="vendor/get-anything-done/lib/handoffs.cjs"/>
+      <file path="vendor/get-anything-done/scripts/handoffs-pause-resume.cjs"/>
+      <file path=".planning/notes/2026-04-19-task-handoff-phase-unified-model.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-275">
+    <title>Shell-profile installer as today-scale runtime detection fix; per-runtime hooks deferred</title>
+    <date>2026-04-19</date>
+    <summary>Operator wants cursor/codex/gemini/opencode to show up in gad agents status LIVENESS. Full fix = per-runtime hook installers (each runtime's native hook system emitting events in a compatible schema) — week-scale. Today-scale fix: shell-profile snippet sets GAD_RUNTIME=&lt;id&gt; at shell start based on env-var fingerprints (CURSOR_TRACE_ID → cursor, CODEX_SESSION_ID → codex, etc.). After install + shell restart, every gad call from any runtime tags itself. Idempotent install/uninstall/status via BEGIN/END markers; bash/zsh/pwsh.</summary>
+    <impact>lib/shell-profile-snippet.cjs + scripts/install-shell-profile.cjs shipped as new files (collision-safe with live install.js refactor). Precedence: most-specific runtimes first (Cursor/Codex/etc.) so inherited CLAUDECODE from parent Claude Code session doesn't mask narrower runtime. Claude Code last in the chain.</impact>
+    <references>
+      <file path="vendor/get-anything-done/lib/shell-profile-snippet.cjs"/>
+      <file path="vendor/get-anything-done/scripts/install-shell-profile.cjs"/>
+      <file path=".planning/notes/2026-04-19-opus-claude-per-runtime-hooks-detection.md"/>
+    </references>
+  </decision>
+
+  <decision id="gad-276">
+    <title>Daily subagent auto-spawn default-on; opt out via config or env</title>
+    <date>2026-04-19</date>
+    <summary>gad startup DAILY SUBAGENTS PENDING section is now default-imperative ('spawn NOW via your runtime's Agent / subprocess-spawn mechanism') rather than passive. Operator confirmed default-on preference 2026-04-19. Opt out: gad-config.toml [subagents] autoSpawn = false, OR env GAD_DAILY_AUTOSPAWN=off.</summary>
+    <impact>Orchestrator agents (Claude Code main thread, etc.) are directed to spawn the daily subagent on startup; previous pattern was passive informational. Post-spawn, the orchestrator calls gad subagents mark-completed --projectid &lt;id&gt; [--task-id] --commit &lt;sha&gt; to close the run.</impact>
+    <references>
+      <file path="vendor/get-anything-done/lib/subagent-dispatch.cjs"/>
+      <file path="vendor/get-anything-done/bin/gad.cjs"/>
+    </references>
+  </decision>
+
 </decisions>
 

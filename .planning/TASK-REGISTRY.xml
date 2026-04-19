@@ -2163,6 +2163,48 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <implementation>.github/workflows/release-binaries.yml now sets GAD_RELEASE_BUILD=1 on the Build Bun release artifact step before npm run build:release. tests/release-workflow-env.test.cjs locks the workflow contract so release CI keeps the no-side-effects guard.</implementation>
     </task>
   </phase>
+
+  <phase id="65">
+    <task id="65-A" type="code" status="done" agent-id="claude-sonnet-codex-lane-a" agent-role="codex-lane" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="scaffold-visual-context-surface">
+      <goal>Slice A — Track 1 transcript/rendering: R1.1 animated thinking/tool-call phase indicator in StatusBar; R1.2 code-block syntax highlighting (9 languages, zero new deps); R1.3 ANSI stdout/stderr normalizer (stripAnsi + ansiToInk); R1.4 timestamp toggle (T key); R1.5 collapsible transcript blocks; R1.7 compaction reminder banner; R1.8 completed tool-call file-tree with Ctrl+O expand. Commits: 9efc49b, 295d90a, 1982827, 71a3b3b, 66f77a0, c03a54d, 906a11e.</goal>
+    </task>
+    <task id="65-B" type="code" status="done" agent-id="claude-sonnet-codex-lane-b" agent-role="codex-lane" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="scaffold-visual-context-surface">
+      <goal>Slice B — Track 2 prompt input: 2.1 multi-line editor (Ctrl+J); 2.2 @ mention autocomplete (files/tasks/handoffs/skills/sessions with kind prefixes); 2.3 slash command arg hints; 2.4 paste detection + code-fence auto-wrap; 2.5 history ghost text. Commits: eee6c5d, be32e91, 7183817, 6ffeca1, c861741, a3d36ff.</goal>
+    </task>
+    <task id="65-C" type="code" status="done" agent-id="claude-sonnet-codex-lane-c" agent-role="codex-lane" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="scaffold-visual-context-surface">
+      <goal>Slice C — Track 3 runtime/session control: 3.1 runtime state strip in StatusBar (project id, cost, session); 3.2 cross-runtime thread switcher (Ctrl+\ keybind, ThreadSwitcher component); 3.3 /fleet panel full-screen overlay. Commits: 8b81f41, 7e90e20, 0b2b190.</goal>
+    </task>
+    <task id="65-D" type="code" status="done" agent-id="claude-sonnet-codex-lane-d" agent-role="codex-lane" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="scaffold-visual-context-surface">
+      <goal>Slice D — Track 4 tasks+handoffs: 4.1 resume handoffs on startup banner; 4.2 /tasks panel; 4.3 task tree mode (T toggle); 4.4 /handoff new wizard (6-step form); 4.5 /review queue (unified overlay). Commit: 9c914dc.</goal>
+    </task>
+    <task id="65-E" type="code" status="done" agent-id="claude-sonnet-codex-lane-e" agent-role="codex-lane" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="scaffold-visual-context-surface">
+      <goal>Slice E — Track 5 context engineering: 5.1 /snapshot renderer (collapsible sections); 5.2 /context payload inspector overlay; 5.3 token-per-turn sparkline; 5.4 cache hit-rate meter (data layer closed in 7a9c19b); 5.5 /cost teardown with pricing table + top-5 expensive events. Commits: 0b2b190, 7a9c19b.</goal>
+    </task>
+    <task id="65-F" type="code" status="done" agent-id="claude-sonnet-codex-lane-f" agent-role="codex-lane" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="scaffold-visual-context-surface">
+      <goal>Slice F — Tracks 6+7+10 skills/observability/integrations: 6.1 /skills picker; 6.2 /skill find; 6.3 /skill candidates; 7.1 /events viewer; 7.2 tool intent breadcrumb (closed in 7a9c19b — Transcript.tsx integration); 7.3 trace replay (beta); 10.1 /eval inline; 10.2 /health panel; 10.3 GadCommandPanel generic runner. Commits: c083c49, c7b4bb8, b939614, 7a9c19b.</goal>
+    </task>
+    <task id="65-G" type="code" status="done" agent-id="claude-sonnet-codex-lane-g" agent-role="codex-lane" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="scaffold-visual-context-surface">
+      <goal>Slice G — Tracks 8+9 server+watcher+workflow: 8.1 local TUI HTTP server (TuiServer.ts, opt-in); 8.2 file watcher with 500ms debounce + ignore globs; 8.3 change attribution via agents status poll; 8.4 /changes panel with inline DiffBlock; 9.1 slash aliases (.gad/tui-state.json); 9.2 session save/load with autosave recovery; 9.3 keyboard macros (stub — experimental). Merged into commit b939614 alongside Slice F.</goal>
+    </task>
+    <task id="65-B2" type="framework" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="gad-handoffs">
+      <goal>Cross-lane handoff protocol (CLI — my lane): B — gad handoffs claim-next + startup HANDOFFS section (b6a6d3d6); A — gad handoffs create-closeout + type:closeout frontmatter (2a175b53); D(mod) — gad subagents status + mark-completed + startup DAILY SUBAGENTS PENDING section with auto-spawn opt-out (d9568567). lib/agent-detect.cjs sortHandoffsForPickup + isHandoffCompatible helpers.</goal>
+    </task>
+    <task id="65-AS" type="framework" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="gad-handoffs">
+      <goal>gad agents status — unified runtime visibility (13e18b1c) + heartbeat→log-inference pivot (1adc70e0) + runtime-detect expansion to cursor/gemini/opencode/+5 runtimes (1f86f54e). inferLivenessFromLogs reads both .planning/.gad-log + .planning/.trace-events, tags sources [cli|hook], 10-min stale threshold. lib/agents-status.cjs + bin/commands/agents.cjs factory (extracted by sweep).</goal>
+    </task>
+    <task id="65-SP" type="framework" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="framework-upgrade">
+      <goal>Shell-profile installer (new files only — collision-safe with live bin/gad.cjs refactor). lib/shell-profile-snippet.cjs: idempotent BEGIN/END block generator for bash/zsh/pwsh, 9 runtimes. scripts/install-shell-profile.cjs: standalone CLI (install/uninstall/status/show). Precedence: cursor/codex/gemini/opencode first so inherited CLAUDECODE from parent Claude Code session doesn&apos;t mask narrower runtime. Commit: 1f86f54e + parent b7f51de.</goal>
+    </task>
+    <task id="65-SR" type="framework" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="gad-handoffs">
+      <goal>Self-resume handoff CLI (unified-model lite). lib/handoffs.cjs: createSelfResumeHandoff + findSelfResumeHandoffs. scripts/handoffs-pause-resume.cjs: standalone pause/resume/list CLI. Body carries Resume context schema (task_id, phase, last_commit, stopped_at, what&apos;s done, what&apos;s left, blockers); frontmatter type=self-resume + resume_task. Bi-directional TASK-REGISTRY auto-close deferred. Commit: 70f31297 + parent 494d603.</goal>
+    </task>
+    <task id="65-TT" type="teachings" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="gad-note">
+      <goal>Teachings + note questions. tip category filter (--category flag + env GAD_TIP_CATEGORIES + gad-config.toml [teachings] categories) — commit on earlier vendor bump; 6 new tips: context-engineering (3: snapshot token cuts, surgical test runs, brevity discipline) + multi-agent (3: handoff queue canonical channel, commit-fast parallel agents, offload to cheaper models). gad note questions — surface ## Open questions sections from planning notes (item-1 regex bug closed in 219377df).</goal>
+    </task>
+    <task id="65-PN" type="docs" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="gad-note">
+      <goal>Planning notes (durable discussion docs): tui-requirements.md (5 tracks 17 specs); tui-requirements-discovery.md (28-item operator curation); skills-on-demand.md (3 options, recommendation Option B); a2a-research.md (subagent↔main comms, per-runtime pricing tiers); task-handoff-phase-unified-model.md (self-resume primary, bi-directional task linkage); llm-from-scratch-purpose.md (3 roles: runtime classifier, complexity scorer, SITREP summarizer); cross-lane-build-plan.md (A+B+D-mod scope); daily-routine-a2a-windows-hud-consolidated.md (OMX HUD lessons, Windows Git-Bash trick, daily routine); per-runtime-hooks-detection.md (runtime hook gap + 3-timescale path).</goal>
+    </task>
+  </phase>
 </task-registry>
 
 
