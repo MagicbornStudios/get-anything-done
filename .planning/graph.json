@@ -1469,11 +1469,17 @@
       "type": "task",
       "id": "task:21-23b",
       "label": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaff",
-      "status": "planned",
+      "status": "cancelled",
       "goal": "Retry GAD greenfield v11 after HTTP 529 investigation. First attempt at v10 (tool_uses=55) completed phases 01+02 (scaffold + data layer) before Anthropic API returned overloaded_error. Previous attempt crashed earlier at tool_uses=18. Pattern suggests GAD's setup-heavy phases (snapshot + planning XML writes) spend proportionally more time in server-dependent states during peak load periods. Investigation needed: (1) check Anthropic status page for correlation with our crash timestamps; (2) test whether spreading the snapshot + plan calls across shorter API invocations reduces 529 exposure; (3) consider a retry-with-backoff wrapper in the eval runner for 529 specifically (not for rate limits). Only retry GAD v11 after investigation produces a mitigation or explicit \"try again, the API was just overloaded that hour\" conclusion.",
-      "skill": "",
-      "taskType": "",
+      "skill": "default",
+      "taskType": "eval",
       "keywords": "round-4,gad-retry,529-investigation,api-overload"
+    },
+    {
+      "type": "skill",
+      "id": "skill:default",
+      "label": "default",
+      "source": "task-attribution"
     },
     {
       "type": "task",
@@ -2330,12 +2336,6 @@
       "skill": "default",
       "taskType": "docs",
       "keywords": "upstream-review,get-shit-done,tmp,security,sdk,workstreams"
-    },
-    {
-      "type": "skill",
-      "id": "skill:default",
-      "label": "default",
-      "source": "task-attribution"
     },
     {
       "type": "task",
@@ -4559,11 +4559,11 @@
       "type": "task",
       "id": "task:46-15",
       "label": "Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each:",
-      "status": "planned",
+      "status": "done",
       "goal": "Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each: last commit upstream vs. ours, production usage vs. dead references, whether still needed as submodule or should be pulled in-tree / deleted. Initial scan 2026-04-18: mb-cli-framework has 103 live references (packages/magicborn-cli tests + docs + vendor-registry + ink-tui) — KEEP. grime-time-site / repub-builder / claw-code status unknown, user suspects unused now that PayloadCMS pivot was dropped. Deliverable: references/submodule-audit-2026-04.md with KEEP/INLINE/DROP recommendation per submodule. Follow-up tasks for any DROP + gitmodules cleanup.",
-      "skill": "",
+      "skill": "default",
       "taskType": "cleanup",
-      "keywords": ""
+      "keywords": "submodules,audit,cleanup,vendor"
     },
     {
       "type": "task",
@@ -8818,6 +8818,11 @@
       "type": "DEPENDS_ON"
     },
     {
+      "source": "task:21-23b",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
       "source": "task:21-24",
       "target": "phase:21",
       "type": "BELONGS_TO"
@@ -12709,6 +12714,11 @@
     },
     {
       "source": "task:46-15",
+      "target": "skill:default",
+      "type": "USES_SKILL"
+    },
+    {
+      "source": "task:46-15",
       "target": "task:2026-04",
       "type": "CITES"
     },
@@ -15915,9 +15925,9 @@
   ],
   "meta": {
     "project": "get-anything-done",
-    "generated": "2026-04-19T03:10:17.573Z",
+    "generated": "2026-04-19T03:23:40.498Z",
     "nodeCount": 1020,
-    "edgeCount": 1549,
+    "edgeCount": 1551,
     "nodeTypes": {
       "phase": 67,
       "task": 449,
@@ -15929,7 +15939,7 @@
       "BELONGS_TO": 450,
       "CITES": 594,
       "DEPENDS_ON": 108,
-      "USES_SKILL": 229,
+      "USES_SKILL": 231,
       "REFERENCES": 91,
       "USES_WORKFLOW": 77
     }
