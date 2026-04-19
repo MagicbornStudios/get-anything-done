@@ -111,20 +111,27 @@ function stage() {
     `version: ${VERSION}`,
     "",
     "Quick start:",
-    "  node launcher.cjs",
+    "  Windows:    .\\launcher-windows-x64.exe   (no Node required)",
+    "  macOS:      ./launcher-darwin-x64        (no Node required)",
+    "  Linux:      ./launcher-linux-x64         (no Node required)",
+    "  Anywhere:   node launcher.cjs            (Node-shim fallback)",
     "",
-    "The launcher boots the standalone Next.js server from this folder,",
-    "binds a free port in 5560–5599, and opens your default browser.",
+    "The .exe variants bundle a self-contained Bun runtime, so you can",
+    "double-click them with no Node install. They are larger (~110 MB).",
+    "If Node is already on your PATH, prefer the lightweight launcher.cjs.",
+    "",
+    "The launcher binds a free port in 5560–5599 and opens your default",
+    "browser at http://127.0.0.1:<port>/.",
     "",
     "Env knobs:",
     "  GAD_SITE_PORT=<n>           pin a port",
     "  GAD_SITE_HOST=<addr>        bind host (default 127.0.0.1)",
     "  GAD_SITE_NO_BROWSER=1       skip auto-open",
     "  GAD_PLANNING_DIR=<abs>      override which .planning/ the site reads",
+    "  GAD_LAUNCHER_FORCE_SPAWN=1  force Node-subprocess mode from .exe",
     "",
-    "If you do not have Node installed, the GAD installer can drop a portable",
-    "Node runtime alongside this folder; see references/installer-feature-flags.md",
-    "in the get-anything-done repo.",
+    "See references/installer-feature-flags.md in the get-anything-done",
+    "repo for the full reference.",
     "",
   ].join(os.EOL);
   fs.writeFileSync(path.join(STAGE_DIR, "README.txt"), readme, "utf8");
@@ -208,8 +215,29 @@ function makeZip() {
   die(`no working zip tool found (tried: ${candidates.map(c => c.cmd).join(", ")})`);
 }
 
+function ensureFrameworkGraph() {
+  // Post-2026-04-19: .planning/graph.{json,html} are gitignored. The site
+  // build (build-site-data.mjs) reads .planning/graph.json to populate
+  // site/data/planning-graph.json — if the framework's graph is missing
+  // when pack:site runs, the baked-in graph is an empty stub. Call the
+  // local CLI to rebuild before the consumer ever runs `next build`.
+  // Non-fatal: build-site-data.mjs degrades gracefully to a stub.
+  const planningGraph = path.join(REPO_ROOT, ".planning", "graph.json");
+  if (fs.existsSync(planningGraph)) return;
+  console.log(`[pack-site-release] .planning/graph.json missing — rebuilding via gad graph build`);
+  const cli = path.join(REPO_ROOT, "bin", "gad.cjs");
+  const result = spawnSync(process.execPath, [cli, "graph", "build", "--projectid", "get-anything-done"], {
+    cwd: REPO_ROOT,
+    stdio: "inherit",
+  });
+  if (result.status !== 0) {
+    console.warn(`[pack-site-release] gad graph build exited with status ${result.status} — site bundle will ship with stub graph`);
+  }
+}
+
 function main() {
   checkPrereqs();
+  ensureFrameworkGraph();
   console.log(`[pack-site-release] staging ${STAGE_DIR}`);
   stage();
   console.log(`[pack-site-release] zipping → ${ZIP_PATH}`);

@@ -74,3 +74,11 @@ tmp/
 # gad models cache — per-project embedding model downloads (never committed)
 .gad/models/
 .gad/
+
+# Planning graph cache — derived from .planning/*.xml ledgers via
+# `gad graph build` (auto-rebuilt on stale by `gad snapshot`/`gad startup`
+# and by site/scripts/pack-site-release.cjs before producing the release
+# zip). Tracking these produces noisy diffs on every task-status change
+# and guaranteed parallel-agent merge conflicts that are never meaningful.
+.planning/graph.json
+.planning/graph.html

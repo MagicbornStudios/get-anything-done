@@ -9305,6 +9305,14 @@ const snapshotCmd = defineCommand({
     const sprintSize = config.sprintSize || 5;
     const useFull = args.full;
     const readOnlySnapshot = sideEffectsSuppressed();
+    // Auto-rebuild graph cache if stale or missing (post-2026-04-19 model:
+    // .planning/graph.{json,html} are gitignored, regenerated on demand).
+    // Closes 63-graph-task-stale. Silent unless rebuild happened, then a
+    // single info line so the operator knows the cache moved under them.
+    if (!readOnlySnapshot) {
+      const r = ensureGraphFresh(baseDir, root);
+      if (r.rebuilt) console.error(`[snapshot] graph cache rebuilt (${r.reason})`);
+    }
     const sdkAssetAliases = {
       '@skills': 'skills',
       '@workflows': 'workflows',
@@ -9610,6 +9618,15 @@ const snapshotV2Cmd = defineCommand({
     const sprintSize = config.sprintSize || 5;
     const useFull = args.full;
     const readOnlySnapshot = sideEffectsSuppressed();
+
+    // Auto-rebuild graph cache if stale or missing (post-2026-04-19 model:
+    // .planning/graph.{json,html} are gitignored, regenerated on demand).
+    // Closes 63-graph-task-stale at the snapshot read point. Silent unless
+    // a rebuild happened, then a single stderr info line.
+    if (!readOnlySnapshot) {
+      const r = ensureGraphFresh(baseDir, root);
+      if (r.rebuilt) console.error(`[snapshot] graph cache rebuilt (${r.reason})`);
+    }
 
     // Session-aware mode resolution: auto-downgrade to active when session
     // has already received static context, unless --mode was explicitly passed.
@@ -13103,6 +13120,19 @@ const startupCmd = defineCommand({
       } else if (resolvedSource === 'first-root') {
         console.log(`Resolved projectid from first configured root: ${resolvedProjectid}`);
       }
+      // Auto-rebuild graph cache if stale or missing for the resolved
+      // project (post-2026-04-19: graph.{json,html} are gitignored, regen
+      // on demand). Closes 63-graph-task-stale at the session-start point.
+      try {
+        if (!sideEffectsSuppressed()) {
+          if (!startupConfig) startupConfig = gadConfig.load(startupBaseDir);
+          const startupRoot = (startupConfig.roots || []).find(r => r.id === resolvedProjectid);
+          if (startupRoot) {
+            const r = ensureGraphFresh(startupBaseDir, startupRoot);
+            if (r.rebuilt) console.log(`Graph cache rebuilt (${r.reason})`);
+          }
+        }
+      } catch { /* non-fatal */ }
       // Auto-create a session so the snapshot stamps staticLoadedAt and
       // subsequent calls with --session auto-downgrade to active mode.
       let sessionArg = [];
@@ -16501,8 +16531,38 @@ function maybeRebuildGraph(baseDir, root) {
     const planDir = path.join(baseDir, root.path, root.planningDir);
     const graph = graphExtractor.buildGraph(root, baseDir, { gadDir });
     fs.writeFileSync(path.join(planDir, 'graph.json'), JSON.stringify(graph, null, 2));
+    fs.writeFileSync(path.join(planDir, 'graph.html'), graphExtractor.generateHtml(graph));
   } catch {
     // Silent — graph rebuild is best-effort, never blocks the primary operation.
+  }
+}
+
+/**
+ * Ensure .planning/graph.{json,html} are fresh — read-side helper for
+ * snapshot/startup. Delegates to graphExtractor.loadOrBuildGraph for the
+ * actual cache-vs-rebuild decision (it uses STALENESS_SOURCES =
+ * TASK-REGISTRY/ROADMAP/DECISIONS mtimes), and writes graph.html alongside
+ * when a rebuild happens or when html is missing while json is fresh.
+ *
+ * Closes 63-graph-task-stale at read points: post-2026-04-19 the graph
+ * artifacts are gitignored, so a fresh checkout has no graph until the
+ * first snapshot/startup/query rebuilds it.
+ *
+ * Returns { rebuilt: boolean, reason: string|null }. Silent by default.
+ */
+function ensureGraphFresh(baseDir, root) {
+  try {
+    if (!graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path))) return { rebuilt: false, reason: 'disabled' };
+    const gadDir = path.resolve(__dirname, '..');
+    const result = graphExtractor.loadOrBuildGraph(root, baseDir, { gadDir });
+    const planDir = path.join(baseDir, root.path, root.planningDir);
+    const htmlPath = path.join(planDir, 'graph.html');
+    if (result.rebuilt || !fs.existsSync(htmlPath)) {
+      try { fs.writeFileSync(htmlPath, graphExtractor.generateHtml(result.graph)); } catch { /* best-effort */ }
+    }
+    return { rebuilt: result.rebuilt, reason: result.reason };
+  } catch {
+    return { rebuilt: false, reason: 'error' };
   }
 }
 
