@@ -1,0 +1,69 @@
+# Normalize line endings across platforms.
+#
+# Without this file, Windows + `core.autocrlf=true` causes every text file
+# Git touches to appear modified after a checkout, producing 16+ phantom
+# `M` entries in `git status` that have zero content diff. Agents then
+# can't tell their own changes from leftover noise.
+#
+# After committing this file, run once:
+#   git add --renormalize .
+#   git commit -m "normalize line endings"
+# All future checkouts will land with LF endings tracked, EOL converted
+# only on display (CRLF on Windows working copy, LF in the index).
+
+* text=auto eol=lf
+
+# Source code, configs, docs — always LF in the index.
+*.cjs    text eol=lf
+*.mjs    text eol=lf
+*.js     text eol=lf
+*.ts     text eol=lf
+*.tsx    text eol=lf
+*.jsx    text eol=lf
+*.json   text eol=lf
+*.jsonc  text eol=lf
+*.json5  text eol=lf
+*.md     text eol=lf
+*.mdx    text eol=lf
+*.xml    text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.toml   text eol=lf
+*.css    text eol=lf
+*.scss   text eol=lf
+*.html   text eol=lf
+*.svg    text eol=lf
+*.txt    text eol=lf
+*.sh     text eol=lf
+.gitignore       text eol=lf
+.gitattributes   text eol=lf
+.editorconfig    text eol=lf
+
+# Windows-only files keep CRLF (PowerShell, batch).
+*.ps1    text eol=crlf
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+
+# Binary assets — never normalize.
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.zip    binary
+*.tgz    binary
+*.gz     binary
+*.7z     binary
+*.exe    binary
+*.dll    binary
+*.so     binary
+*.dylib  binary
+*.pdf    binary
+*.mp4    binary
+*.webm   binary
+*.mp3    binary
+*.wav    binary
+*.onnx   binary
+*.bin    binary
+*.epub   binary

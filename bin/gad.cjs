@@ -41,6 +41,7 @@ const { writePhase } = require('../lib/roadmap-writer.cjs');
 const { readDecisions } = require('../lib/decisions-reader.cjs');
 const { writeDecision } = require('../lib/decisions-writer.cjs');
 const { writeTodo, listTodos } = require('../lib/todos-writer.cjs');
+const { writeNote, listNotes } = require('../lib/notes-writer.cjs');
 const {
   compactStateXml,
   compactRoadmapSection,
@@ -1949,11 +1950,70 @@ const stateSetNextActionCmd = defineCommand({
   },
 });
 
+// state log — append-only entries to STATE.xml (post-2026-04-19, sweep D-3).
+//
+// The single <next-action> essay block was being rewritten wholesale by
+// every agent (166 commits / 14d), losing prior context every time. This
+// adds a sibling <state-log> with newest-first <entry agent="X" at="ISO">
+// elements that any agent can append to atomically. <next-action> is now
+// reserved for "what should the next agent do RIGHT NOW" — short and
+// current — while <state-log> carries the running journal.
+const stateLogCmd = defineCommand({
+  meta: { name: 'log', description: 'Append a one-line entry to <state-log> in STATE.xml. Append-only — never overwrites prior entries.' },
+  args: {
+    message: { type: 'positional', description: 'One-line summary of what just happened', required: true },
+    tags: { type: 'string', description: 'Comma-separated tags (e.g. diff-noise,sweep-d)', default: '' },
+    agent: { type: 'string', description: 'Agent slug (defaults to $GAD_AGENT_NAME)', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No project resolved. Pass --projectid <id> or run from a project root.');
+      return;
+    }
+    if (roots.length > 1) {
+      outputError('state log requires a single project. Pass --projectid <id>.');
+      return;
+    }
+    const root = roots[0];
+    const stateXml = path.join(baseDir, root.path, root.planningDir, 'STATE.xml');
+    if (!fs.existsSync(stateXml)) {
+      outputError(`STATE.xml not found at ${stateXml}`);
+      process.exit(1);
+      return;
+    }
+
+    const agent = String(args.agent || process.env.GAD_AGENT_NAME || 'unknown');
+    const tags = String(args.tags || '');
+    const at = new Date().toISOString();
+    const message = String(args.message);
+
+    const escape = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const escAttr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    const tagsAttr = tags ? ` tags="${escAttr(tags)}"` : '';
+    const entry = `    <entry agent="${escAttr(agent)}" at="${at}"${tagsAttr}>${escape(message)}</entry>\n`;
+
+    let xml = fs.readFileSync(stateXml, 'utf8');
+    if (/<state-log>/.test(xml)) {
+      xml = xml.replace(/<state-log>\s*\n/, (m) => m + entry);
+    } else {
+      xml = xml.replace(/<\/state>/, `  <state-log>\n${entry}  </state-log>\n</state>`);
+    }
+    fs.writeFileSync(stateXml, xml);
+    console.log(`Logged: [${agent}] ${message}`);
+    console.log(`File:   ${path.relative(baseDir, stateXml)}`);
+  },
+});
+
 const stateCmd = defineCommand({
-  meta: { name: 'state', description: 'Show or update STATE.xml (show / set-next-action)' },
+  meta: { name: 'state', description: 'Show or update STATE.xml (show / set-next-action / log)' },
   subCommands: {
     show: stateShowCmd,
     'set-next-action': stateSetNextActionCmd,
+    log: stateLogCmd,
   },
 });
 
@@ -2649,6 +2709,102 @@ const todosCmd = defineCommand({
   subCommands: {
     list: todosListCmd,
     add: todosAddCmd,
+  },
+});
+
+// ---------------------------------------------------------------------------
+// note command — ad-hoc notes in .planning/notes/ with agent-slug filenames
+// ---------------------------------------------------------------------------
+//
+// Filename format: YYYY-MM-DD[-<agent>]-<slug>.md
+// Agent slug is auto-filled from $GAD_AGENT_NAME or --agent flag.
+// Prevents same-date filename collisions across parallel agents.
+
+const noteAddCmd = defineCommand({
+  meta: { name: 'add', description: 'Create a new note in .planning/notes/. Filename includes agent slug from --agent or $GAD_AGENT_NAME.' },
+  args: {
+    slug: { type: 'positional', description: 'Short slug (e.g. context-surgery-findings)', required: true },
+    title: { type: 'string', description: 'Optional H1 title', default: '' },
+    body: { type: 'string', description: 'Note body (markdown). If absent, just creates the shell.', default: '' },
+    source: { type: 'string', description: 'Provenance line', default: '' },
+    agent: { type: 'string', description: 'Agent slug (defaults to $GAD_AGENT_NAME)', default: '' },
+    date: { type: 'string', description: 'Date stamp YYYY-MM-DD (defaults to today)', default: '' },
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No project resolved. Pass --projectid <id> or run from a project root.');
+      return;
+    }
+    if (roots.length > 1) {
+      outputError('note add requires a single project. Pass --projectid <id>.');
+      return;
+    }
+    const root = roots[0];
+    try {
+      const result = writeNote(root, baseDir, {
+        slug: String(args.slug),
+        title: String(args.title || ''),
+        body: String(args.body || ''),
+        source: String(args.source || ''),
+        agent: String(args.agent || ''),
+        date: String(args.date || ''),
+      });
+      console.log(`Added note: ${result.filename}`);
+      console.log(`File:    ${path.relative(baseDir, result.filePath)}`);
+    } catch (e) {
+      outputError(e.message);
+      process.exit(1);
+    }
+  },
+});
+
+const noteListCmd = defineCommand({
+  meta: { name: 'list', description: 'List notes in .planning/notes/' },
+  args: {
+    projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+    json: { type: 'boolean', description: 'JSON output', default: false },
+  },
+  run({ args }) {
+    const baseDir = findRepoRoot();
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
+    if (roots.length === 0) {
+      outputError('No project resolved. Pass --projectid <id> or run from a project root.');
+      return;
+    }
+    const all = [];
+    for (const root of roots) {
+      for (const n of listNotes(root, baseDir)) {
+        all.push({ project: root.id, ...n });
+      }
+    }
+    all.sort((a, b) => a.filename.localeCompare(b.filename));
+    if (args.json) {
+      console.log(JSON.stringify(all, null, 2));
+      return;
+    }
+    if (all.length === 0) {
+      console.log('No notes found.');
+      return;
+    }
+    for (const n of all) {
+      console.log(`  ${n.project}/${n.filename}`);
+    }
+  },
+});
+
+const noteCmd = defineCommand({
+  meta: { name: 'note', description: 'Manage ad-hoc notes in .planning/notes/ — list (default), add' },
+  subCommands: {
+    list: noteListCmd,
+    add: noteAddCmd,
+  },
+  run({ args, rawArgs }) {
+    return noteListCmd.run({ args, rawArgs });
   },
 });
 
@@ -4361,65 +4517,6 @@ const refsCmd = defineCommand({
     verify: refsVerifyCmd,
     migrate: refsMigrateCmd,
     watch: refsWatchCmd,
-  },
-});
-
-// ---------------------------------------------------------------------------
-// tasks command (read-only — CRUD via slash commands)
-// ---------------------------------------------------------------------------
-
-const tasksCmd = defineCommand({
-  meta: { name: 'tasks', description: 'Show tasks from TASK-REGISTRY.xml (falls back to STATE.md)' },
-  args: {
-    projectid: { type: 'string', description: 'Scope to one project', default: '' },
-    status: { type: 'string', description: 'Filter by status (e.g. in-progress, planned)', default: '' },
-    phase: { type: 'string', description: 'Filter by phase id (e.g. 03)', default: '' },
-    full: { type: 'boolean', description: 'Show full goal text (no truncation)', default: false },
-    json: { type: 'boolean', description: 'JSON output', default: false },
-  },
-  run({ args }) {
-    const baseDir = findRepoRoot();
-    const config = gadConfig.load(baseDir);
-
-    let roots = config.roots;
-    if (args.projectid) {
-      roots = roots.filter(r => r.id === args.projectid);
-      if (roots.length === 0) {
-        const ids = config.roots.map(r => r.id);
-        console.error(`\nProject not found: ${args.projectid}\n\nAvailable projects:\n`);
-        for (const id of ids) console.error(`  ${id}`);
-        console.error(`\nRerun with: --projectid ${ids[0]}`);
-        process.exit(1);
-      }
-    }
-
-    const filter = {};
-    if (args.status) filter.status = args.status;
-    if (args.phase) filter.phase = args.phase;
-
-    const rows = [];
-    for (const root of roots) {
-      const tasks = readTasks(root, baseDir, filter);
-      for (const t of tasks) {
-        const limit = args.full ? Infinity : 200;
-        rows.push({
-          project: root.id,
-          id: formatId(root.id, 'T', t.id),
-          'legacy-id': t.id,
-          goal: t.goal.length > limit ? t.goal.slice(0, limit - 1) + '…' : t.goal,
-          status: t.status,
-          phase: t.phase,
-        });
-      }
-    }
-
-    if (rows.length === 0) {
-      console.log('No tasks found.');
-      return;
-    }
-
-    const fmt = args.json ? 'json' : 'table';
-    console.log(render(rows, { format: fmt, title: `Tasks (${rows.length})` }));
   },
 });
 
@@ -9346,309 +9443,7 @@ const contextCmd = defineCommand({
   },
 });
 
-// ---------------------------------------------------------------------------
-// snapshot command
-// ---------------------------------------------------------------------------
-//
-// Inlines every planning file for a project in one shot — the fastest way
-// to hand an agent the full project context.
-
 const snapshotCmd = defineCommand({
-  meta: { name: 'snapshot', description: 'Print all planning files inlined for a project' },
-  args: {
-    projectid: { type: 'string', description: 'Project ID (default: first root)', default: '' },
-    project: { type: 'string', description: 'Project ID (alias for --projectid)', default: '' },
-    full: { type: 'boolean', description: 'Full dump (no sprint filtering)', default: false },
-    json: { type: 'boolean', description: 'JSON output', default: false },
-  },
-  run({ args }) {
-    const baseDir = findRepoRoot();
-    const config = gadConfig.load(baseDir);
-    let roots = config.roots;
-    const projectId = args.projectid || args.project;
-
-    if (projectId) {
-      roots = roots.filter(r => r.id === projectId);
-      if (roots.length === 0) {
-        const ids = config.roots.map(r => r.id);
-        console.error(`\nProject not found: ${projectId}\n\nAvailable projects:\n`);
-        for (const id of ids) console.error(`  ${id}`);
-        console.error(`\nRerun with: --projectid ${ids[0]}`);
-        process.exit(1);
-      }
-    }
-
-    if (roots.length === 0) { outputError('No projects configured. Run `gad projects sync` first.'); return; }
-    const root = roots[0];
-    const planDir = path.join(baseDir, root.path, root.planningDir);
-    const sprintSize = config.sprintSize || 5;
-    const useFull = args.full;
-    const readOnlySnapshot = sideEffectsSuppressed();
-    // Auto-rebuild graph cache if stale or missing (post-2026-04-19 model:
-    // .planning/graph.{json,html} are gitignored, regenerated on demand).
-    // Closes 63-graph-task-stale. Silent unless rebuild happened, then a
-    // single info line so the operator knows the cache moved under them.
-    if (!readOnlySnapshot) {
-      const r = ensureGraphFresh(baseDir, root);
-      if (r.rebuilt) console.error(`[snapshot] graph cache rebuilt (${r.reason})`);
-    }
-    const sdkAssetAliases = {
-      '@skills': 'skills',
-      '@workflows': 'workflows',
-      '@templates': 'templates',
-      '@references': 'references',
-      '@agents': 'agents',
-      '@hooks': 'hooks',
-    };
-
-    if (useFull) {
-      // Full dump — original behavior
-      const allFiles = [];
-      const PRIORITY = ['AGENTS.md', 'STATE.md', 'STATE.xml', 'ROADMAP.md', 'ROADMAP.xml',
-        'REQUIREMENTS.md', 'REQUIREMENTS.xml', 'DECISIONS.xml', 'TASK-REGISTRY.xml',
-        'session.md', 'ERRORS-AND-ATTEMPTS.xml'];
-      function collectDir(dir, relBase) {
-        if (!fs.existsSync(dir)) return;
-        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-          const rel = relBase ? `${relBase}/${entry.name}` : entry.name;
-          if (entry.isDirectory()) {
-            if (entry.name === 'archive' || entry.name === 'sessions' || entry.name === 'node_modules') continue;
-            collectDir(path.join(dir, entry.name), rel);
-          } else if (entry.isFile()) {
-            allFiles.push(rel);
-          }
-        }
-      }
-      collectDir(planDir, '');
-      allFiles.sort((a, b) => {
-        const aIdx = PRIORITY.indexOf(path.basename(a));
-        const bIdx = PRIORITY.indexOf(path.basename(b));
-        if (aIdx !== -1 && bIdx === -1) return -1;
-        if (bIdx !== -1 && aIdx === -1) return 1;
-        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-        return a.localeCompare(b);
-      });
-
-      if (args.json || shouldUseJson()) {
-        const files = allFiles.map(rel => {
-          let content = null;
-          try { content = fs.readFileSync(path.join(planDir, rel), 'utf8'); } catch {}
-          return { path: `${root.planningDir}/${rel}`, content };
-        });
-        console.log(JSON.stringify({ project: root.id, mode: 'full', planningDir: root.planningDir, sdkAssetAliases, files }, null, 2));
-        return;
-      }
-      console.log(`\nSnapshot (full): ${root.id}  —  ${allFiles.length} files\n`);
-      console.log('SDK asset aliases:');
-      for (const [alias, relPath] of Object.entries(sdkAssetAliases)) {
-        console.log(`- ${alias}/... -> ${relPath}/...`);
-      }
-      console.log('');
-      for (const rel of allFiles) {
-        console.log(`${'═'.repeat(70)}`);
-        console.log(`## ${root.planningDir}/${rel}`);
-        console.log(`${'═'.repeat(70)}`);
-        try { console.log(fs.readFileSync(path.join(planDir, rel), 'utf8')); } catch { console.log('(unreadable)'); }
-        console.log('');
-      }
-      console.log(`═══ end snapshot (${allFiles.length} files) ═══`);
-      return;
-    }
-
-    // Sprint-scoped snapshot (default)
-    const phases = readPhases(root, baseDir);
-    const stateXml = readXmlFile(path.join(planDir, 'STATE.xml'));
-    const currentPhase = stateXml ? (stateXml.match(/<current-phase>([\s\S]*?)<\/current-phase>/) || [])[1]?.trim() || '' : '';
-    const k = getCurrentSprintIndex(phases, sprintSize, currentPhase);
-    const sprintPhaseIds = getSprintPhaseIds(phases, sprintSize, k);
-
-    const sections = [];
-    sections.push({
-      title: 'SDK ASSET ALIASES',
-      content: Object.entries(sdkAssetAliases)
-        .map(([alias, relPath]) => `${alias}/... -> ${relPath}/...`)
-        .join('\n'),
-    });
-
-    // 1. STATE.xml — full (compact already)
-    if (stateXml) {
-      sections.push({ title: 'STATE.xml', content: stateXml.trim() });
-    }
-
-    // 2. ROADMAP.xml — sprint-scoped
-    let roadmapSection = '';
-    for (const p of phases) {
-      if (sprintPhaseIds.includes(p.id)) {
-        // Full detail for sprint phases
-        roadmapSection += `<phase id="${p.id}">\n  <title>${p.title || ''}</title>\n  <goal>${p.goal || ''}</goal>\n  <status>${p.status}</status>\n  <depends>${p.depends || ''}</depends>\n</phase>\n`;
-      } else {
-        // One-liner for non-sprint phases
-        roadmapSection += `${p.id} | ${(p.title || '').slice(0, 60)} | ${p.status}\n`;
-      }
-    }
-    sections.push({ title: `ROADMAP (sprint ${k}, phases ${sprintPhaseIds.join(',')})`, content: roadmapSection.trim() });
-
-    // 3. TASK-REGISTRY.xml — open tasks only
-    // Graph-backed path when useGraphQuery=true (decision gad-201, gad-202)
-    const snapshotUseGraph = graphExtractor.isGraphQueryEnabled(path.join(baseDir, root.path));
-    let allTasks, openTasks, tasksSection = '', doneCount;
-    if (snapshotUseGraph) {
-      // Task 63-graph-task-stale: route through loadOrBuildGraph so a
-      // hand-edited TASK-REGISTRY.xml (status flip, new task entry)
-      // invalidates the on-disk graph.json instead of being silently
-      // ignored until someone runs `gad graph build` manually.
-      const gadDir = path.resolve(__dirname, '..');
-      const { graph } = graphExtractor.loadOrBuildGraph(root, baseDir, { gadDir });
-      const allResult = graphExtractor.queryGraph(graph, { type: 'task' });
-      const allMatches = allResult.matches || [];
-      const openMatches = allMatches.filter(m => m.status !== 'done');
-      doneCount = allMatches.length - openMatches.length;
-      if (openMatches.length > 0) {
-        let currentTaskPhase = '';
-        for (const m of openMatches) {
-          const taskId = m.id.replace(/^task:/, '');
-          const taskPhase = taskId.split('-')[0];
-          if (taskPhase !== currentTaskPhase) {
-            currentTaskPhase = taskPhase;
-            tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
-          }
-          const goalText = (m.goal || m.label || '').slice(0, 200);
-          const extraAttrs = [
-            m.skill ? `skill="${m.skill}"` : '',
-            m.type ? `type="${m.type}"` : '',
-          ].filter(Boolean).join(' ');
-          const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
-          tasksSection += `    <task id="${taskId}" status="${m.status}"${attrStr}>${goalText}</task>\n`;
-        }
-      }
-      openTasks = openMatches;
-    } else {
-      allTasks = readTasks(root, baseDir, {});
-      openTasks = allTasks.filter(t => t.status !== 'done');
-      if (openTasks.length > 0) {
-        let currentTaskPhase = '';
-        for (const t of openTasks) {
-          const taskPhase = t.id ? t.id.split('-')[0] : '';
-          if (taskPhase !== currentTaskPhase) {
-            currentTaskPhase = taskPhase;
-            tasksSection += `\n  <phase id="${taskPhase.padStart(2, '0')}">\n`;
-          }
-          const goalText = (t.goal || '').slice(0, 200);
-          const extraAttrs = [
-            t.skill ? `skill="${t.skill}"` : '',
-            t.type ? `type="${t.type}"` : '',
-            t.agentId ? `agent-id="${t.agentId}"` : '',
-          ].filter(Boolean).join(' ');
-          const attrStr = extraAttrs ? ` ${extraAttrs}` : '';
-          tasksSection += `    <task id="${t.id}" status="${t.status}"${attrStr}><goal>${goalText}</goal></task>\n`;
-        }
-      }
-      doneCount = allTasks.length - openTasks.length;
-    }
-    sections.push({ title: `TASKS (${openTasks.length} open, ${doneCount} done)`, content: tasksSection.trim() || '(no open tasks)' });
-
-    // 4. DECISIONS.xml — only decisions relevant to sprint phases
-    const decisionsXml = readXmlFile(path.join(planDir, 'DECISIONS.xml'));
-    if (decisionsXml) {
-      // Always include gad-04, gad-17, gad-18 (core loop decisions)
-      const ALWAYS_INCLUDE = ['gad-04', 'gad-17', 'gad-18'];
-      const decisionRe = /<decision\s+id="([^"]*)">([\s\S]*?)<\/decision>/g;
-      let dm;
-      let decSection = '';
-      let decCount = 0;
-      let totalDec = 0;
-      while ((dm = decisionRe.exec(decisionsXml)) !== null) {
-        totalDec++;
-        const decId = dm[1];
-        const decInner = dm[2];
-        const titleMatch = decInner.match(/<title>([\s\S]*?)<\/title>/);
-        const title = titleMatch ? titleMatch[1].trim() : '';
-        // All decisions: title-only one-liner. Full bodies via `gad decisions show <id>`.
-        // Core loop directives (gad-04, gad-17, gad-18) are already duplicated in
-        // CLAUDE.md / AGENTS.md — inlining them here wastes ~400 tokens per snapshot.
-        const marker = ALWAYS_INCLUDE.includes(decId) ? '★' : ' ';
-        decSection += `${marker} ${decId}: ${title.slice(0, 96)}\n`;
-        decCount++;
-      }
-      sections.push({ title: `DECISIONS (${totalDec} total, ★=core loop — see CLAUDE.md; full body via \`gad decisions show <id>\`)`, content: decSection.trim() });
-    }
-
-    // 5. File refs — recent git log scoped to project path
-    let fileRefs = '';
-    try {
-      const { execSync } = require('child_process');
-      const projectPath = root.path === '.' ? '' : root.path;
-      const gitCmd = projectPath
-        ? `git log --oneline -5 -- "${projectPath}"`
-        : `git log --oneline -5`;
-      const gitLog = execSync(gitCmd, { cwd: baseDir, encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
-      if (gitLog) fileRefs += `Recent commits:\n${gitLog}\n`;
-
-      // Files changed in last 3 commits
-      const filesCmd = projectPath
-        ? `git log --name-only --pretty=format: -3 -- "${projectPath}"`
-        : `git log --name-only --pretty=format: -3`;
-      const changedFiles = execSync(filesCmd, { cwd: baseDir, encoding: 'utf8', timeout: 5000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
-      if (changedFiles) fileRefs += `\nRecently changed files:\n${changedFiles}`;
-    } catch { /* git not available or too few commits */ }
-    if (fileRefs) {
-      sections.push({ title: 'FILE REFS (git)', content: fileRefs.trim() });
-    }
-
-    // 6. Conventions — project-scoped, then global fallback
-    let conventions = '';
-    // a) Project-level CONVENTIONS.md in .planning/
-    const projConventions = readXmlFile(path.join(planDir, 'CONVENTIONS.md'));
-    if (projConventions) {
-      conventions += projConventions.trim();
-    }
-    // b) Project AGENTS.md conventions section (extract if present)
-    const projAgentsMd = readXmlFile(path.join(baseDir, root.path, 'AGENTS.md'));
-    if (projAgentsMd) {
-      // Extract conventions/style sections from AGENTS.md
-      const convMatch = projAgentsMd.match(/##\s*(Conventions|Style|Coding\s+conventions|Code\s+style)[^\n]*\n([\s\S]*?)(?=\n##\s|\n═|$)/i);
-      if (convMatch) {
-        conventions += (conventions ? '\n\n' : '') + `## ${convMatch[1].trim()}\n${convMatch[2].trim()}`;
-      }
-    }
-    // c) Global conventions fallback (root AGENTS.md conventions section)
-    if (!conventions && root.path !== '.') {
-      const rootAgentsMd = readXmlFile(path.join(baseDir, 'AGENTS.md'));
-      if (rootAgentsMd) {
-        const globalConv = rootAgentsMd.match(/##\s*(Conventions|Public site copy)[^\n]*\n([\s\S]*?)(?=\n##\s[A-Z]|\n═|$)/i);
-        if (globalConv) {
-          conventions += `## ${globalConv[1].trim()} (global)\n${globalConv[2].trim()}`;
-        }
-      }
-    }
-    if (conventions) {
-      sections.push({ title: 'CONVENTIONS', content: conventions.trim() });
-    }
-
-    // 7. DOCS-MAP.xml — full (compact)
-    const docsMapXml = readXmlFile(path.join(planDir, 'DOCS-MAP.xml'));
-    if (docsMapXml) {
-      sections.push({ title: 'DOCS-MAP.xml', content: docsMapXml.trim() });
-    }
-
-    // Output
-    if (args.json || shouldUseJson()) {
-      console.log(JSON.stringify({ project: root.id, mode: 'sprint', sprintIndex: k, sprintPhaseIds, sections: sections.map(s => ({ title: s.title, content: s.content })) }, null, 2));
-      return;
-    }
-
-    console.log(`\nSnapshot (sprint ${k}): ${root.id}  —  phases ${sprintPhaseIds.join(', ')}\n`);
-    for (const s of sections) {
-      console.log(`── ${s.title} ${'─'.repeat(Math.max(0, 60 - s.title.length))}`);
-      console.log(s.content);
-      console.log('');
-    }
-    const totalChars = sections.reduce((sum, s) => sum + s.content.length, 0);
-    console.log(`── end snapshot (~${Math.round(totalChars / 4)} tokens) ──`);
-  },
-});
-
-const snapshotV2Cmd = defineCommand({
   meta: { name: 'snapshot', description: 'Print all planning files inlined for a project' },
   args: {
     projectid: { type: 'string', description: 'Project ID (default: first root)', default: '' },
@@ -11036,7 +10831,7 @@ const tasksUpdateCmd = defineCommand({
   },
 });
 
-const tasksV2Cmd = defineCommand({
+const tasksCmd = defineCommand({
   meta: { name: 'tasks', description: 'Show, claim, release, add, update, promote, and inspect tasks' },
   subCommands: {
     list: tasksListCmd,
@@ -18148,12 +17943,14 @@ const main = defineCommand({
     context: contextCmd,
     state: stateCmd,
     phases: phasesCmd,
-    tasks: tasksV2Cmd,
+    tasks: tasksCmd,
     'task-checkpoint': taskCheckpoint,
     next: nextCmd,
     decisions: decisionsCmd,
     handoffs: handoffsCmd,
     todos: todosCmd,
+    note: noteCmd,
+    notes: noteCmd,
     requirements: requirementsCmd,
     errors: errorsCmd,
     blockers: blockersCmd,
@@ -18175,7 +17972,7 @@ const main = defineCommand({
     workflow: workflowCmd,
     rounds: roundsCmd,
     verify: verifyCmd,
-    snapshot: snapshotV2Cmd,
+    snapshot: snapshotCmd,
     start: startCmd,
     dashboard: startCmd,
     subagents: subagentsCmd,

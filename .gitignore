@@ -7,7 +7,9 @@ skills/proto-skills/*/skill-creator-workspace/
 skills/candidates/*/skill-creator-workspace/
 
 TO-DOS.md
-CLAUDE.md
+# CLAUDE.md is now tracked (post-2026-04-19) — short submodule-specific
+# agent guide that complements AGENTS.md. The previous ignore was a
+# leftover from when it held user-private notes.
 /research.claude/
 commands.html
 
