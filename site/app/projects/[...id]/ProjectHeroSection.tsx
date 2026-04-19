@@ -24,9 +24,13 @@ export function ProjectHeroSection({
   planning: PlanningZip;
   template: TemplateZip;
 }) {
+  // Task 44-16: dropped the outermost <Identified as="ProjectHero">
+  // that just restated the SiteSection cid. Inner Identified blocks
+  // (BackLink, Badges, TitleBlock, Description, Actions) are kept —
+  // each addresses a distinct intra-section affordance worth pinning
+  // for prompt-time targeting.
   return (
     <SiteSection cid="project-hero-section-site-section">
-      <Identified as="ProjectHero">
         <Identified as="ProjectHeroBackLink">
           <Button
             variant="ghost"
@@ -127,7 +131,6 @@ export function ProjectHeroSection({
             </Button>
           )}
         </Identified>
-      </Identified>
     </SiteSection>
   );
 }

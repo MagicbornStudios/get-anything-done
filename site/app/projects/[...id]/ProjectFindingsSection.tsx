@@ -1,5 +1,4 @@
-﻿import { FINDINGS, type Finding } from "@/lib/catalog.generated";
-import { Identified } from "@/components/devid/Identified";
+import { FINDINGS, type Finding } from "@/lib/catalog.generated";
 import { ProjectFindingArticle } from "./ProjectFindingArticle";
 import { SiteSection } from "@/components/site";
 
@@ -10,9 +9,10 @@ export function ProjectFindingsSection({ projectId }: { projectId: string }) {
 
   if (findings.length === 0) return null;
 
+  // Task 44-16: SiteSection cid is the searchable handle; the outer
+  // Identified wrapper that just restated "ProjectFindings" was removed.
   return (
     <SiteSection id="findings" cid="findings-site-section" className="border-t border-border/60">
-      <Identified as="ProjectFindings">
       <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Findings</h2>
       <p className="mt-3 max-w-3xl text-base leading-7 text-muted-foreground">
         Per-round writeups that reference this project. Each finding is stamped with the GAD
@@ -24,7 +24,6 @@ export function ProjectFindingsSection({ projectId }: { projectId: string }) {
           <ProjectFindingArticle key={f.slug} finding={f} />
         ))}
       </div>
-      </Identified>
     </SiteSection>
   );
 }

@@ -1,20 +1,18 @@
 import type { EvalRunRecord } from "@/lib/eval-data";
-import { Identified } from "@/components/devid/Identified";
 import { ProjectRunsGrid } from "./ProjectRunsGrid";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ProjectRunsSection({ runs }: { runs: EvalRunRecord[] }) {
   if (runs.length === 0) return null;
+  // Task 44-16: SiteSection cid alone identifies this surface.
   return (
     <SiteSection cid="project-runs-section-site-section">
-      <Identified as="ProjectRuns">
-        <SiteSectionHeading
-          kicker="Runs"
-          preset="section"
-          title={`${runs.length} recorded run${runs.length === 1 ? "" : "s"}`}
-        />
-        <ProjectRunsGrid runs={runs} />
-      </Identified>
+      <SiteSectionHeading
+        kicker="Runs"
+        preset="section"
+        title={`${runs.length} recorded run${runs.length === 1 ? "" : "s"}`}
+      />
+      <ProjectRunsGrid runs={runs} />
     </SiteSection>
   );
 }

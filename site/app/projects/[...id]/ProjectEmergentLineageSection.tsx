@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { Identified } from "@/components/devid/Identified";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import { PRODUCED_ARTIFACTS, type EvalRunRecord } from "@/lib/eval-data";
 
 export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] }) {
   if (runs.length === 0) return null;
+  // Task 44-16: dropped the redundant <Identified as="ProjectEmergentLineage">
+  // wrapper — SiteSection cid is already the canonical token.
   return (
     <SiteSection cid="project-emergent-lineage-section-site-section">
-      <Identified as="ProjectEmergentLineage">
       <SiteSectionHeading
         kicker="Skill inheritance lineage"
         preset="section"
@@ -118,7 +118,6 @@ export function ProjectEmergentLineageSection({ runs }: { runs: EvalRunRecord[] 
           </span>
         </SiteProse>
       </>
-      </Identified>
     </SiteSection>
   );
 }

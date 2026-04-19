@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { REQUIREMENTS_HISTORY } from "@/lib/catalog.generated";
-import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ProjectRequirementsSection({ projectId: _projectId }: { projectId: string }) {
@@ -18,9 +17,11 @@ export function ProjectRequirementsSection({ projectId: _projectId }: { projectI
   const current = versions[currentIdx];
   const prev = currentIdx > 0 ? versions[currentIdx - 1] : null;
 
+  // Task 44-16: SiteSection cid is the canonical search handle; the
+  // outer Identified wrapper that just restated "ProjectRequirements"
+  // was removed.
   return (
     <SiteSection cid="project-requirements-section-site-section" className="border-b-0 border-t border-border/60">
-      <Identified as="ProjectRequirements">
       <SiteSectionHeading
         kicker="Requirements history"
         preset="section"
@@ -110,7 +111,6 @@ export function ProjectRequirementsSection({ projectId: _projectId }: { projectI
           )}
         </div>
       </div>
-      </Identified>
     </SiteSection>
   );
 }

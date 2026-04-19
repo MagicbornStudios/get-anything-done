@@ -4,7 +4,7 @@
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
   <status>active</status>
-  <next-action>Phase 63 near-complete. Done: 63-01 (Haiku audit), 63-03 (user-settings lib), 63-04 (agent-lanes), 63-05 (SessionStart hook), 63-06 (regex idempotency fix), 60-09 (handoff CLI, Sonnet). 63-02 claude-side done (hook handoff nudge + --json empty fix); codex-side filed as handoff h-2026-04-18T18-17-59 covering gad startup extension + gad pause-work + integration test. Skill-lane frontmatter rollout (Haiku) in flight. Snapshot integration deferred to .planning/notes/2026-04-18-handoff-snapshot-integration.md.</next-action>
+  <next-action>Site lane sweep 2026-04-18: closed Phase 45 migration set (45-06, 45-09, 45-10, 45-11, 45-12) — every Planning sub-tab + Evolution + System surface lives under /projects/[...id] in project-scoped form. Cleanup pair landed: 45-19 deletes 31 orphan files from site/app/planning/ leaving only the static redirect stub; 45-20 records the post-sweep tsc + build + cid audit. 44-16 audit removed the redundant outer Identified wrappers from 7 Project*Section files (kept inner blocks where they pin distinct affordances). Next high-impact site lane: nothing planned — remaining site work is 42.2-05 (skipped, findings docs-only per user) and 42.3-13 (deferred noise panel, skipped per user). Move to framework lane: 44-38 (npx 404 → tarball) is the highest-impact small-surface task left in my queue.</next-action>
   <references>
     <reference>.planning/ROADMAP.xml (phases 42.1, 42.2, 42.3, 44.5)</reference>
     <reference>.planning/TASK-REGISTRY.xml (includes 42.4-20 site vs play)</reference>

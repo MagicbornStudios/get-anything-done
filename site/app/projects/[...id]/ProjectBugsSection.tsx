@@ -1,4 +1,3 @@
-import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionHeading } from "@/components/site";
 import { BUGS } from "@/lib/eval-data";
 import { ProjectBugRow } from "./ProjectBugRow";
@@ -11,9 +10,10 @@ export function ProjectBugsSection({ projectId }: { projectId: string }) {
 
   if (bugs.length === 0) return null;
 
+  // Task 44-16: SiteSection cid is the canonical handle; the outer Identified
+  // wrapper that just restated "ProjectBugs" was removed.
   return (
     <SiteSection cid="project-bugs-section-site-section" className="border-b-0 border-t border-border/60">
-      <Identified as="ProjectBugs">
       <SiteSectionHeading
         kicker="Known bugs"
         preset="section"
@@ -25,7 +25,6 @@ export function ProjectBugsSection({ projectId }: { projectId: string }) {
           <ProjectBugRow key={b.id} bug={b} />
         ))}
       </div>
-      </Identified>
     </SiteSection>
   );
 }
