@@ -5,6 +5,7 @@
  * Workers also self-claim on idle, so this is optional pre-queuing.
  */
 
+const path = require('path');
 const { defineCommand } = require('citty');
 const { readConfig } = require('../../../lib/team/config.cjs');
 const { listWorkerIds } = require('../../../lib/team/status.cjs');
@@ -13,12 +14,23 @@ const { matchesLane } = require('../../../lib/team/lanes.cjs');
 const { workerSpec } = require('../../../lib/team/config.cjs');
 
 function createDispatchCommand(deps) {
-  const { findRepoRoot, outputError } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
+
+  function resolveTeamBaseDir(args) {
+    const repoRoot = findRepoRoot();
+    const config = gadConfig.load(repoRoot);
+    const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+    const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
+    const root = roots[0];
+    if (!root) return repoRoot;
+    return path.join(repoRoot, root.path);
+  }
+
   return defineCommand({
     meta: { name: 'dispatch', description: 'One-shot: scan open gad handoffs, enqueue any not yet in a mailbox. Workers self-claim on idle too, so this is optional.' },
-    args: { projectid: { type: 'string', default: '' } },
-    run() {
-      const baseDir = findRepoRoot();
+    args: { projectid: { type: 'string', default: '', description: 'Target project id (resolves .planning/team/ path)' } },
+    run({ args }) {
+      const baseDir = resolveTeamBaseDir(args);
       const ids = listWorkerIds(baseDir);
       if (ids.length === 0) { outputError('No workers configured. Run `gad team start` first.'); process.exit(1); }
       const cfg = readConfig(baseDir) || {};

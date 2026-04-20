@@ -16,12 +16,25 @@ const { supervisorLog } = require('../../../lib/team/paths.cjs');
 const { appendJsonl } = require('../../../lib/team/io.cjs');
 
 function createDispatcherCommand(deps) {
-  const { findRepoRoot, outputError } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
+
+  function resolveTeamBaseDir(args) {
+    const repoRoot = findRepoRoot();
+    const config = gadConfig.load(repoRoot);
+    const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+    const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
+    const root = roots[0];
+    if (!root) return repoRoot;
+    return path.join(repoRoot, root.path);
+  }
+
+  const PROJECTID_ARG = { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' };
 
   const startCmd = defineCommand({
     meta: { name: 'start', description: 'Spawn a detached dispatcher daemon that watches .planning/handoffs/open/ and routes new handoffs into worker mailboxes.' },
-    run() {
-      const baseDir = findRepoRoot();
+    args: { projectid: PROJECTID_ARG },
+    run({ args }) {
+      const baseDir = resolveTeamBaseDir(args);
       if (!readConfig(baseDir)) { outputError('No team configured. Run `gad team start` first.'); process.exit(1); }
       const current = readPid(baseDir);
       if (current && pidAlive(current.pid)) {
@@ -52,8 +65,9 @@ function createDispatcherCommand(deps) {
 
   const stopCmd = defineCommand({
     meta: { name: 'stop', description: 'Signal the dispatcher daemon to exit.' },
-    run() {
-      const baseDir = findRepoRoot();
+    args: { projectid: PROJECTID_ARG },
+    run({ args }) {
+      const baseDir = resolveTeamBaseDir(args);
       const current = readPid(baseDir);
       if (!current) { console.log('Dispatcher not running (no pid file).'); return; }
       if (!pidAlive(current.pid)) {
@@ -70,9 +84,12 @@ function createDispatcherCommand(deps) {
 
   const statusCmd = defineCommand({
     meta: { name: 'status', description: 'Report whether the dispatcher daemon is alive.' },
-    args: { json: { type: 'boolean', default: false } },
+    args: {
+      projectid: PROJECTID_ARG,
+      json: { type: 'boolean', default: false },
+    },
     run({ args }) {
-      const baseDir = findRepoRoot();
+      const baseDir = resolveTeamBaseDir(args);
       const current = readPid(baseDir);
       const alive = current && pidAlive(current.pid);
       if (args.json) {
@@ -87,8 +104,9 @@ function createDispatcherCommand(deps) {
 
   const runCmd = defineCommand({
     meta: { name: 'run', description: 'Internal: daemon loop entry. Invoked by `dispatcher start` as a detached subprocess.' },
-    async run() {
-      const baseDir = findRepoRoot();
+    args: { projectid: PROJECTID_ARG },
+    async run({ args }) {
+      const baseDir = resolveTeamBaseDir(args);
       await runDaemon(baseDir);
     },
   });

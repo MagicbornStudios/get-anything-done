@@ -4,24 +4,36 @@
  * Use for priority overrides. Self-claim handles the common case.
  */
 
+const path = require('path');
 const { defineCommand } = require('citty');
 const { listWorkerIds } = require('../../../lib/team/status.cjs');
 const { mailboxDepth, enqueueMessage } = require('../../../lib/team/mailbox.cjs');
 
 function createEnqueueCommand(deps) {
-  const { findRepoRoot, outputError } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
+
+  function resolveTeamBaseDir(args) {
+    const repoRoot = findRepoRoot();
+    const config = gadConfig.load(repoRoot);
+    const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+    const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
+    const root = roots[0];
+    if (!root) return repoRoot;
+    return path.join(repoRoot, root.path);
+  }
+
   return defineCommand({
     meta: { name: 'enqueue', description: 'Drop a task or handoff into a worker mailbox. Use when you want a SPECIFIC worker to pick up a SPECIFIC item regardless of priority.' },
     args: {
       task: { type: 'string', default: '' },
       handoff: { type: 'string', default: '' },
       'worker-id': { type: 'string', default: '' },
-      projectid: { type: 'string', default: '' },
+      projectid: { type: 'string', default: '', description: 'Target project id (resolves .planning/team/ path)' },
       priority: { type: 'string', default: 'normal' },
       'runtime-preference': { type: 'string', default: '' },
     },
     run({ args }) {
-      const baseDir = findRepoRoot();
+      const baseDir = resolveTeamBaseDir(args);
       if (!args.task && !args.handoff) { outputError('Pass --task <id> or --handoff <id>.'); process.exit(1); }
       if (args.task && args.handoff) { outputError('Pass exactly one of --task / --handoff.'); process.exit(1); }
       const ids = listWorkerIds(baseDir);

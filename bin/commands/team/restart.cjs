@@ -13,15 +13,27 @@ const { spawnWorker } = require('../../../lib/team/spawn.cjs');
 const { stopFlagPath, supervisorLog, workerDir } = require('../../../lib/team/paths.cjs');
 
 function createRestartCommand(deps) {
-  const { findRepoRoot, outputError } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
+
+  function resolveTeamBaseDir(args) {
+    const repoRoot = findRepoRoot();
+    const config = gadConfig.load(repoRoot);
+    const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+    const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
+    const root = roots[0];
+    if (!root) return repoRoot;
+    return path.join(repoRoot, root.path);
+  }
+
   return defineCommand({
     meta: { name: 'restart', description: 'Stop a worker (stop.flag + wait) and respawn it with the same id.' },
     args: {
+      projectid: { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' },
       'worker-id': { type: 'string', required: true },
       'wait-ms': { type: 'string', default: '10000' },
     },
     async run({ args }) {
-      const baseDir = findRepoRoot();
+      const baseDir = resolveTeamBaseDir(args);
       const id = String(args['worker-id']);
       if (!readConfig(baseDir)) { outputError('No team configured.'); process.exit(1); }
       if (!fs.existsSync(workerDir(baseDir, id))) { outputError(`Unknown worker: ${id}`); process.exit(1); }

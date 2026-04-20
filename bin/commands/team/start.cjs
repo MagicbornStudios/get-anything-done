@@ -15,10 +15,22 @@ const { appendJsonl } = require('../../../lib/team/io.cjs');
 const { readProfile, profileToConfig, listProfiles } = require('../../../lib/team/profiles.cjs');
 
 function createStartCommand(deps) {
-  const { findRepoRoot, outputError } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
+
+  function resolveTeamBaseDir(args) {
+    const repoRoot = findRepoRoot();
+    const config = gadConfig.load(repoRoot);
+    const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+    const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
+    const root = roots[0];
+    if (!root) return repoRoot;
+    return path.join(repoRoot, root.path);
+  }
+
   return defineCommand({
     meta: { name: 'start', description: 'Create team config + spawn N detached worker subprocesses. Idempotent: refuses if team already running.' },
     args: {
+      projectid: { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' },
       n: { type: 'string', description: 'Number of workers (default 2). Ignored when --profile is given.', default: '2' },
       roles: { type: 'string', description: 'Comma-separated roles (default: executor for each). Ignored with --profile.', default: '' },
       runtime: { type: 'string', description: 'Team-default runtime (claude-code | codex-cli | gemini-cli)', default: 'claude-code' },
@@ -27,7 +39,7 @@ function createStartCommand(deps) {
       'no-spawn': { type: 'boolean', description: 'Write config only, do not spawn (for debug)', default: false },
     },
     run({ args }) {
-      const baseDir = findRepoRoot();
+      const baseDir = resolveTeamBaseDir(args);
       if (readConfig(baseDir)) {
         console.log(`Team already configured under ${path.relative(baseDir, teamRoot(baseDir))}.`);
         console.log(`Run \`gad team stop --all\` and remove ${path.relative(baseDir, configPath(baseDir))} before starting a new team.`);

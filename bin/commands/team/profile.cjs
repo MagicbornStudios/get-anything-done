@@ -7,22 +7,42 @@
  * loads one.
  */
 
+const path = require('path');
 const { defineCommand } = require('citty');
 const { readProfile, writeProfile, listProfiles } = require('../../../lib/team/profiles.cjs');
 
 function createProfileCommand(deps) {
-  const { findRepoRoot, outputError } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
+
+  /**
+   * Resolve the project-specific base dir for .planning/team/ operations.
+   * Fallback order: (a) --projectid flag; (b) active session projectid via
+   * resolveRoots session logic; (c) getLastActiveProjectid(); (d) cwd autodetect.
+   */
+  function resolveTeamBaseDir(args) {
+    const repoRoot = findRepoRoot();
+    const config = gadConfig.load(repoRoot);
+    // Pass projectid if present; resolveRoots handles session + cwd fallbacks.
+    const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+    const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
+    const root = roots[0];
+    if (!root) return repoRoot;
+    return path.join(repoRoot, root.path);
+  }
+
+  const PROJECTID_ARG = { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' };
 
   const save = defineCommand({
     meta: { name: 'save', description: 'Save a team profile from an inline spec.' },
     args: {
+      projectid: PROJECTID_ARG,
       name: { type: 'string', required: true },
       description: { type: 'string', default: '' },
       spec: { type: 'string', description: 'JSON workers_spec array, e.g. \'[{"id":"w1","role":"executor","lane":"frontend","runtime":"codex-cli"}]\'', required: true },
       runtime: { type: 'string', description: 'Team-default runtime when a spec entry omits its own', default: 'claude-code' },
     },
     run({ args }) {
-      const baseDir = findRepoRoot();
+      const baseDir = resolveTeamBaseDir(args);
       let workers_spec;
       try { workers_spec = JSON.parse(String(args.spec)); }
       catch (e) { outputError(`Invalid --spec JSON: ${e.message}`); process.exit(1); }
@@ -43,8 +63,9 @@ function createProfileCommand(deps) {
 
   const list = defineCommand({
     meta: { name: 'list', description: 'List saved team profiles.' },
-    run() {
-      const baseDir = findRepoRoot();
+    args: { projectid: PROJECTID_ARG },
+    run({ args }) {
+      const baseDir = resolveTeamBaseDir(args);
       const names = listProfiles(baseDir);
       if (names.length === 0) { console.log('No profiles saved yet.'); return; }
       console.log(`Profiles (${names.length}):`);
@@ -58,9 +79,12 @@ function createProfileCommand(deps) {
 
   const show = defineCommand({
     meta: { name: 'show', description: 'Print one profile as JSON.' },
-    args: { name: { type: 'string', required: true } },
+    args: {
+      projectid: PROJECTID_ARG,
+      name: { type: 'string', required: true },
+    },
     run({ args }) {
-      const baseDir = findRepoRoot();
+      const baseDir = resolveTeamBaseDir(args);
       const p = readProfile(baseDir, String(args.name));
       if (!p) { outputError(`Profile not found: ${args.name}`); process.exit(1); }
       console.log(JSON.stringify(p, null, 2));

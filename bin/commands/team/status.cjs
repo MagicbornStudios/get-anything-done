@@ -3,18 +3,33 @@
  * gad team status — table or JSON view of every worker.
  */
 
+const path = require('path');
 const { defineCommand } = require('citty');
 const { readConfig } = require('../../../lib/team/config.cjs');
 const { listWorkerIds, readStatus } = require('../../../lib/team/status.cjs');
 const { mailboxDepth } = require('../../../lib/team/mailbox.cjs');
 
 function createStatusCommand(deps) {
-  const { findRepoRoot } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid } = deps;
+
+  function resolveTeamBaseDir(args) {
+    const repoRoot = findRepoRoot();
+    const config = gadConfig.load(repoRoot);
+    const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+    const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
+    const root = roots[0];
+    if (!root) return repoRoot;
+    return path.join(repoRoot, root.path);
+  }
+
   return defineCommand({
     meta: { name: 'status', description: 'Show state of every worker (table or JSON).' },
-    args: { json: { type: 'boolean', default: false } },
+    args: {
+      projectid: { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' },
+      json: { type: 'boolean', default: false },
+    },
     run({ args }) {
-      const baseDir = findRepoRoot();
+      const baseDir = resolveTeamBaseDir(args);
       const cfg = readConfig(baseDir);
       if (!cfg) { console.log('No team configured. Run `gad team start --n <N>` first.'); return; }
       const rows = listWorkerIds(baseDir).map(id => {

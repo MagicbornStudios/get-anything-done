@@ -24,16 +24,28 @@ function printLogLine(line) {
 }
 
 function createTailCommand(deps) {
-  const { findRepoRoot, outputError } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
+
+  function resolveTeamBaseDir(args) {
+    const repoRoot = findRepoRoot();
+    const config = gadConfig.load(repoRoot);
+    const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+    const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
+    const root = roots[0];
+    if (!root) return repoRoot;
+    return require('path').join(repoRoot, root.path);
+  }
+
   return defineCommand({
     meta: { name: 'tail', description: 'Stream a worker log as pretty JSONL. Ctrl-C to stop.' },
     args: {
+      projectid: { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' },
       'worker-id': { type: 'string', required: true },
       n: { type: 'string', default: '20', description: 'Last N lines to print before following' },
       follow: { type: 'boolean', default: true },
     },
     async run({ args }) {
-      const baseDir = findRepoRoot();
+      const baseDir = resolveTeamBaseDir(args);
       const id = String(args['worker-id']);
       const p = workerLog(baseDir, id);
       if (!fs.existsSync(p)) { outputError(`No log file yet: ${p}`); process.exit(1); }
