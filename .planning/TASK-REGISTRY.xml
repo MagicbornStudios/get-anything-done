@@ -2231,17 +2231,34 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
     <task id="52-01" type="feature" status="done" skill="scaffold" agent="claude-sonnet-4-6">
       <goal>Scaffold packages/editor-core with package.json, tsconfig, src/index.ts exports. Peer deps on React 19. Turborepo workspace entry. Initial exports are placeholder components — 52-02 and 52-04 fill them in. Consumer smoke test: apps/planning-app imports from &apos;@repo/editor-core&apos; without error.</goal>
     </task>
-    <task id="52-02" type="site" status="planned">
+    <task id="52-02" type="feature" status="done" skill="default" agent="claude-sonnet-4-6">
       <goal>Design VirtualFileFolder primitive per decision gad-254. Interface: DataSourceAdapter { listChildren(path): Entry[]; readFile(path): string; stat(path): Stat }. Component accepts adapter prop, renders tree view with expand/collapse, file-click callback. Read-only per gad-246. TypeScript interfaces exported.</goal>
       <depends>52-01</depends>
+      <resolution>
+        Implemented DataSourceAdapter interface + FileEntry type in packages/editor-core/src/types.ts.
+        VirtualFileFolder in packages/editor-core/src/VirtualFileFolder.tsx: lazy listChildren on expand,
+        per-dir loading states, inline error rendering, keyboard navigation (Enter/Space), initialExpanded
+        auto-load on mount, onFileClick callback for files only. No writes, no drag-drop (v1, gad-254).
+        Tests: 10 cases in src/__tests__/VirtualFileFolder.test.tsx (mock adapter, expand/collapse,
+        error, loading indicator, memoize, initialExpanded). All 30 tests pass.
+      </resolution>
     </task>
     <task id="52-03" type="site" status="planned">
       <goal>Implement LocalFileSystemAdapter using node:fs for desktop use. Also a Web-safe browser adapter for planning-app using fetch() against a dev-server endpoint. Two adapters, same DataSourceAdapter interface from 52-02.</goal>
       <depends>52-02</depends>
     </task>
-    <task id="52-04" type="site" status="planned">
+    <task id="52-04" type="feature" status="done" skill="default" agent="claude-sonnet-4-6">
       <goal>Read-only CodeView component per decision gad-246. Syntax highlighting via shiki or prism (decide). Props: path, content, language (optional, auto-detect from extension). No editing handles. Consumed by Bestiary + Project Editor.</goal>
       <depends>52-01</depends>
+      <resolution>
+        Highlighter: shiki 1.29.2 (already hoisted in workspace from apps/portfolio; ~170 KB gzipped;
+        TextMate grammars; async init; server-safe; prismjs rejected — not in workspace, maintenance mode).
+        CodeView in packages/editor-core/src/CodeView.tsx: lazy shiki init (once per JS context),
+        plain-pre fallback while loading/on error, line-number injection into shiki HTML, wrap support,
+        language auto-detect from path via language-detect.ts. No editing handles, no resize (gad-246).
+        Tests: 8 cases in src/__tests__/CodeView.test.tsx (shiki mocked). language-detect.ts: 12 tests.
+        typecheck clean, build clean (dist/ 48 KB), 30/30 tests pass.
+      </resolution>
     </task>
     <task id="52-05" type="test" status="planned">
       <goal>Unit tests for VirtualFileFolder adapter contract + expand/collapse state. vitest (match repo convention). Validates adapter interface stability before downstream consumers depend.</goal>
@@ -2365,9 +2382,17 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
     <task id="69-01" type="code" status="done" skill="supabase-schema" agent="claude-sonnet-4-6">
       <goal>Write initial Supabase schema migrations under supabase/migrations/. Target project: dqsdfwcuhiiiztryrkwc (GAD). Tables: (1) users — Clerk-mirrored { clerk_user_id PK, email, display_name, created_at }. (2) projects — { id PK, owner_user_id FK, name, slug unique-per-owner, description, visibility enum(private/public/unlisted), created_at, updated_at }. (3) species — { id PK, project_id FK, name, slug, kind, dna_summary jsonb, created_at, updated_at }. (4) generations — { id PK, species_id FK, version_number, manifest jsonb, build_artifact_url, trace_url, review_score numeric(3,1), created_at }. (5) publishes — { id PK, generation_id FK, published_by_user_id FK, published_at, marketplace_status enum, scraped_metadata jsonb }. (6) assets — { id PK, project_id FK, species_id nullable FK, generation_id nullable FK, storage_path, bucket_name, mime_type, size_bytes, labels text[], created_at } — storage refs filled in phase 71. RLS: owner_user_id reads/writes own rows; public projects readable by anyone. Apply locally via &apos;pnpm supabase db push&apos; — operator confirms remote apply. Include seed data for a test project row so platform can render against real DB.</goal>
     </task>
+    <task id="69-02" type="code" status="done" skill="supabase-clerk-integration" agent="claude-sonnet-4-6">
+      <goal>Wire @supabase/supabase-js in apps/platform. Provide browser (createBrowserClient) and server (createServerClient, createServiceClient) factories under apps/platform/lib/supabase/. Thread Clerk JWT via getToken({ template: &apos;supabase&apos; }) so RLS sub claim matches clerk_user_id. Replace file-based marketplace-index read in /my-published with Supabase publishes query; short-circuit back to file read when NEXT_PUBLIC_SUPABASE_URL is missing. Scaffold .env.example. Document Clerk JWT template setup in apps/platform/docs/SUPABASE.md.</goal>
+      <resolution>Created apps/platform/lib/supabase/{client.ts,server.ts,index.ts}, apps/platform/.env.example, apps/platform/docs/SUPABASE.md. Refactored /my-published to query publishes table with Supabase-first / file-fallback strategy. Used explicit PublishRow type cast to work around supabase-js never inference on nested relational selects (no FK metadata in database.types.ts skeleton). Typecheck passes.</resolution>
+    </task>
   </phase>
 
   <phase id="70">
+    <task id="70-01" type="code" status="done" skill="code" agent="claude-sonnet-4-6" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-sonnet-4-6">
+      <goal>Move /project-market marketplace UI from vendor/get-anything-done/site/ to apps/platform/app/marketplace/. 12 files moved: page.tsx + 11 components/project-market/* → apps/platform/app/marketplace/ + apps/platform/components/marketplace/. Import rewrites: @/components/site → @gad-site/components/site, @/lib/eval-data → @gad-site/lib/eval-data, @/lib/project-config → @gad-site/lib/project-config, sibling @/components/project-market/* → @/components/marketplace/*, SiteSection → @portfolio/visual-context, cn → @/lib/cn. DevCatalogBanner dropped (vendor-site-specific dev API). AppShell nav: Marketplace entry added. PlayableTeaser CTA retargeted to http://localhost:3002/marketplace with TODO for NEXT_PUBLIC_PLATFORM_URL. Middleware: /marketplace is public by default (not in isProtected list). TASK-REGISTRY updated.</goal>
+      <resolution>Shipped 2026-04-20. 12 files copied to apps/platform/ with all @gad-site/* alias rewrites applied. platform typecheck verified. Vendor-site typecheck has expected errors (route gone; stub in 70-02).</resolution>
+    </task>
   </phase>
 
   <phase id="71">
