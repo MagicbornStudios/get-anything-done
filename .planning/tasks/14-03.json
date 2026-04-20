@@ -1,0 +1,23 @@
+{
+  "id": "14-03",
+  "phase": "14",
+  "status": "done",
+  "goal": "Define the eval trace format for real implementations: track which gad commands were called, which gad skills were triggered, arguments passed, token counts, time-to-completion. Extend TRACE.json schema beyond the current unit-coverage model to include tool_calls[] and skill_triggers[].",
+  "type": "",
+  "keywords": "eval,trace,format,schema",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.097Z",
+  "updated_at": "2026-04-20T03:05:18.097Z"
+}

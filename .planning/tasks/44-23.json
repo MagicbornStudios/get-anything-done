@@ -1,0 +1,23 @@
+{
+  "id": "44-23",
+  "phase": "44",
+  "status": "done",
+  "goal": "Author two workflows under `.planning/workflows/` so they surface on the compact Workflows tab (44-20): `gad-evolution.md` (the self-eval → pressure analysis → candidates → proto-skills → merge → promote loop) and `gad-visual-context-identity.md` (the UI development workflow where every component gets an explicit `SiteSection cid` / `Identified as=\"...\"` literal so the Dev Panel → copy → agent-prompt handoff path works). User ask: \"the Evolution workflow and the visual context identity workflow that we have here which is where I go into I have the UI up the sign up and then I go to a page and then when I have the visual context panel up I can select identified components things that are going to be in place that are static that is a part of our UI workflow that we do when we develop components they must be a part of this system.\" Both need trigger + participants + Mermaid source + related decisions. Authors: human, dogfooded against the Visual Context Panel.",
+  "type": "content",
+  "keywords": "authored-workflows,evolution,visual-context-identity,skill-loop,ui-development",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.084Z",
+  "updated_at": "2026-04-20T03:05:19.084Z"
+}

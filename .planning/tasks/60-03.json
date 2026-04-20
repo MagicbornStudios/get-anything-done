@@ -1,0 +1,25 @@
+{
+  "id": "60-03",
+  "phase": "60",
+  "status": "done",
+  "goal": "CLI family: 'gad env get &lt;KEY&gt; --projectid', 'gad env set &lt;KEY&gt; --projectid' (reads value from prompt, not argv, to avoid shell history), 'gad env list --projectid' (keys + metadata, never values), 'gad env rotate &lt;KEY&gt; --projectid', 'gad env revoke &lt;KEY&gt; --projectid'. All operations require master-key unlock.",
+  "type": "cli",
+  "keywords": "",
+  "depends": [
+    "60-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.453Z",
+  "updated_at": "2026-04-20T03:05:19.453Z"
+}

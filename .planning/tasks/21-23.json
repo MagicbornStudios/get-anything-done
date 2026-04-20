@@ -1,0 +1,29 @@
+{
+  "id": "21-23",
+  "phase": "21",
+  "status": "done",
+  "goal": "Run round 4 greenfield with v4 requirements. Three conditions: GAD, Bare, Emergent. All with pressure-oriented gates.",
+  "type": "eval",
+  "keywords": "round-4,greenfield,bare-v5,emergent-v4,gad-v10-partial",
+  "depends": [
+    "21-22",
+    "21-25",
+    "21-26",
+    "21-27",
+    "22-10"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "eval-run",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.303Z",
+  "updated_at": "2026-04-20T03:05:18.303Z"
+}

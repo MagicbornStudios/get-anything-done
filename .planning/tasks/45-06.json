@@ -1,0 +1,26 @@
+{
+  "id": "45-06",
+  "phase": "45",
+  "status": "done",
+  "goal": "Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire into Planning tab.",
+  "type": "site",
+  "keywords": "component-migration,tasks-tab,project-scoped",
+  "depends": [
+    "45-01",
+    "45-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-default-0025",
+  "agent_role": "default",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.288Z",
+  "updated_at": "2026-04-20T03:05:19.288Z"
+}

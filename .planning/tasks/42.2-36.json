@@ -1,0 +1,23 @@
+{
+  "id": "42.2-36",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Extend Flow C of the consumer-init-install test across more runtimes than just `--claude` to catch per-runtime install regressions, and tighten the test to make install failures hard fails instead of silent skips.",
+  "type": "eval",
+  "keywords": "eval,integration,install,runtimes,codex,bug-fix,test-hardening",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.786Z",
+  "updated_at": "2026-04-20T03:05:18.786Z"
+}

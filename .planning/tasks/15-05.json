@@ -1,0 +1,23 @@
+{
+  "id": "15-05",
+  "phase": "15",
+  "status": "done",
+  "goal": "Delete get-shit-done/ directory entirely (bin/, lib/, workflows/, templates/, references/). gsd-tools.cjs replaced by gad-tools.cjs. Verify no remaining references.",
+  "type": "",
+  "keywords": "migration,delete,cleanup",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.151Z",
+  "updated_at": "2026-04-20T03:05:18.151Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "44-05",
+  "phase": "44",
+  "status": "done",
+  "goal": "Collapse the site back to one maintained dev-panel surface: the compact panel becomes the canonical UI for both section scans and page/band panels, with the same sticky in-section positioning controls and the same rich source-searchable identifiers. Remove the old long-form section panel divergence so users always see one list format, one header, and one copy/handoff behavior while scanning large sections.",
+  "type": "site",
+  "keywords": "dev-panel,ux,sticky,compact,section-scan",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.070Z",
+  "updated_at": "2026-04-20T03:05:19.070Z"
+}

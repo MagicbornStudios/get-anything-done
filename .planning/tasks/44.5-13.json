@@ -1,0 +1,23 @@
+{
+  "id": "44.5-13",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "DNA Editor action row wiring via the 44.5-02 dev bridge. Each gene state gets state-appropriate buttons that spawn the corresponding CLI command and stream output via SSE: **Try** (run `gad try &lt;ref&gt;` for a URL/slug/path input form), **Promote** (run `gad evolution promote &lt;slug&gt;` on a mutation), **Shed** (run `gad evolution shed &lt;slug&gt;` or `discard`), **Cleanup** (run `gad try cleanup &lt;slug&gt;` on an expressed trial), **Copy prompt** (read ENTRY.md + use the existing clipboard helper from 42.2-40.a), **Preview** (load the trial artifact into the right-pane iframe — 44.5-14's scope). Every button is a `SiteSection` with a deterministic cid (`dna-editor-action-&lt;verb&gt;-&lt;slug&gt;-site-section`). Depends on 44.5-11 (scaffold), 44.5-12 (list population), 44.5-02 (dev bridge). Per decision gad-198.",
+  "type": "site",
+  "keywords": "dna-editor,dev-bridge,actions,cli-spawn,project-editor,gad-198",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.243Z",
+  "updated_at": "2026-04-20T03:05:19.243Z"
+}

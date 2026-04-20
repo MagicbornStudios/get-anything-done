@@ -1,0 +1,23 @@
+{
+  "id": "20-03",
+  "phase": "20",
+  "status": "done",
+  "goal": "Add evals/tooling-watch-baseline (or equivalent): fixed fixture repo with known good/bad paths, automated Node harness that starts watcher, performs scripted edits, asserts correctness + latency percentiles, writes evals/&lt;project&gt;/vN/TRACE.json with eval_type tooling. Runnable in CI without an LLM.",
+  "type": "",
+  "keywords": "tooling-eval,fixture,harness,ci,regression",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.216Z",
+  "updated_at": "2026-04-20T03:05:18.216Z"
+}

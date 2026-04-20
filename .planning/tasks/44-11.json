@@ -1,0 +1,23 @@
+{
+  "id": "44-11",
+  "phase": "44",
+  "status": "done",
+  "goal": "In-browser preview of preserved static-export builds inside the planning-app project editor. Picked option (b) from the spec (dev-only HTML rewriter + filesystem-backed asset route) so existing preserved builds work without rebuild. Implementation: hardened /api/dev/forge-view to rewrite only attribute values that look like Next.js asset paths (avoids stomping on user-content links), srcset support, and a &lt;base href&gt; safety-net inject; forge-view now accepts species+version params alongside the legacy single gen so both 2-level (app-forge/v1/) and 3-level (escape-the-dungeon/&lt;workflow&gt;/v&lt;N&gt;/) on-disk layouts resolve. New GET /api/dev/projects/[id]/preserved enumerates available builds for a project; new PreservedBuildPanel.tsx UI renders a species/version picker + PreviewFrame iframe; ProjectEditor exposes it as a third canvas mode (\"Preview\") plus auto-routes the generation-selection branch through the same panel; InspectorPane \"open in new tab\" now points at forge-view instead of the broken public /playable URL.",
+  "type": "site",
+  "keywords": "project-market,iframe,preview,static-export,basePath,asset-prefix",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.063Z",
+  "updated_at": "2026-04-20T03:05:19.063Z"
+}

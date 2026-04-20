@@ -1,0 +1,23 @@
+{
+  "id": "42.3-17",
+  "phase": "42.3",
+  "status": "done",
+  "goal": "Publish /workflows/methodology (or equivalent) on the site documenting how the workflow detector actually works: trace-event schema, scope classification, participant matching for authored workflows, conformance formula (decision gad-173), v1 tool-level emergent mining vs v2 skill-level target (decision gad-178), and the three-section display (authored / emergent / noise). Include small pipeline diagram. This page is load-bearing for making the /planning Workflows tab legible to readers other than the operator â€” right now the methodology lives only in DECISIONS.xml and .planning/workflows/README.md, neither of which are on the site. Ship after the 42.3-16 deep-dive so the doc reflects the real v2 model, not the v1 shortcut.",
+  "type": "site",
+  "keywords": "workflow,docs,site,methodology,transparency",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.891Z",
+  "updated_at": "2026-04-20T03:05:18.891Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "22-23",
+  "phase": "22",
+  "status": "done",
+  "goal": "Per-project detail pages at /projects/[id]. Shows: project description + mode + workflow, the catalog scope for that project (framework GAD = full catalog, bare = 2 bootstrap skills, emergent = 2 bootstrap + inherited), all runs with inline scores, \"what the agent built for itself\" per run (scan run/.planning/skills/*.md and similar).",
+  "type": "",
+  "keywords": "projects,per-project,catalog-scope,produced-artifacts",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.393Z",
+  "updated_at": "2026-04-20T03:05:18.393Z"
+}

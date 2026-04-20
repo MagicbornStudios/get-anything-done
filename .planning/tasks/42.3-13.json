@@ -1,0 +1,23 @@
+{
+  "id": "42.3-13",
+  "phase": "42.3",
+  "status": "cancelled",
+  "goal": "Noise panel on the /planning Workflows tab â€” separate surface from the signal sections per decision gad-174. Two views: (a) raw event timeline (filterable by phase, session, event type) for events the emergent detector could not absorb into any candidate, (b) unmatched force-directed graph of the same events. Dense clusters in the noise graph are candidates for \"lower the thresholds\"; sparse clusters are genuine noise. Explicitly deferred â€” ship after 42.3-09 through 42.3-12 prove the signal surfaces are useful.",
+  "type": "site",
+  "keywords": "workflow,site,noise,visualization,deferred",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-default-0026",
+  "agent_role": "default",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.881Z",
+  "updated_at": "2026-04-20T03:05:18.881Z"
+}

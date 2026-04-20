@@ -1,0 +1,23 @@
+{
+  "id": "42.2-15",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Migrate legacy `skills/candidates/` to `.planning/candidates/` per decision gad-183.",
+  "type": "cleanup",
+  "keywords": "cleanup,candidates,planning,evolution",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.721Z",
+  "updated_at": "2026-04-20T03:05:18.721Z"
+}

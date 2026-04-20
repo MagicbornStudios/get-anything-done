@@ -1,0 +1,25 @@
+{
+  "id": "22-50",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "Extract thinking blocks from session.jsonl into TRACE.json derived.reasoning_trace (gad-84, GAPS G13). Post-hoc offline enrichment â€” no new hooks required. Walk a run's session.jsonl, pull every thinking block and inter-tool message text, attach to TRACE.json with timestamps tying thoughts to subsequent tool uses. First exploratory analysis: thought-to-action interval, thought length distribution, keyword presence (exploration vs execution), thought-before-action vs thought-after-action ordering. This is the highest-leverage way to get \"agent reasoning\" signal without Claude Code exposing new hook surfaces.",
+  "type": "site",
+  "keywords": "thinking-blocks,session-jsonl,reasoning-trace,post-hoc",
+  "depends": [
+    "gad-84"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.489Z",
+  "updated_at": "2026-04-20T03:05:18.489Z"
+}

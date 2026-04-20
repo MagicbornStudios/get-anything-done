@@ -1,0 +1,23 @@
+{
+  "id": "44-08",
+  "phase": "44",
+  "status": "done",
+  "goal": "Marketplace polish pass on /project-market ProjectCard. (a) Fix launch bug: EVAL_PROJECTS.id is a composite `project/species` (e.g. `app-forge/gad`) but the CLI wants the parent project name â€” handler now sends `project.project ?? project.id.split(\"/\")[0]`. (b) Deterministic gradient hero strip (aspect 16/9) keyed off project.id hash + domain lightness, with large monospace initials as a placeholder-image stand-in until real cardImage assets are dropped under public/projects/. (c) Featured star and species badge move onto the hero strip with backdrop blur. (d) Run count + playable badge overlay in the hero corner. (e) Tag row expanded: domain, techStack (sky), contextFramework (purple), workflow â€” deduplicated so we don't repeat gad/gad/gad. (f) Card body restructured into flex col so descriptions of uneven length align properly. Verified launch button now POSTs projectId=app-forge (not app-forge/gad) and the CLI accepts it. No new CLI flag needed â€” --species isn't a valid gad eval run arg today.",
+  "type": "site",
+  "keywords": "project-market,ui,card,gradient,launch-bug-fix",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.046Z",
+  "updated_at": "2026-04-20T03:05:19.046Z"
+}

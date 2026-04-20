@@ -1,0 +1,23 @@
+{
+  "id": "44.5-05",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Minecraft-style inventory grid primitive for config editing. Reusable React component that renders an object (gad.json / species.json / recipe config) as a grid of slots where each slot represents one config key. Features: drag-and-drop between slots, typed slot variants (string/number/boolean/enum/nested-object → opens sub-grid), hover tooltip showing current value + source path, click-to-edit inline or modal editor for complex values, visual \"crafting\" animation when a recipe combination is recognized. Every slot has a deterministic cid derived from the config key path so slots are individually grep-able (`inventory-slot-gad-json-sprint-size-site-section`). Primary surface for 44.5-03 file-system round-trip. Prototype first in Storybook-equivalent isolation before wiring to real data.",
+  "type": "site",
+  "keywords": "project-editor,inventory-grid,config-editor,primitive,gamified,cid",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.219Z",
+  "updated_at": "2026-04-20T03:05:19.219Z"
+}

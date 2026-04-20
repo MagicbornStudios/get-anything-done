@@ -1,0 +1,23 @@
+{
+  "id": "45-03",
+  "phase": "45",
+  "status": "done",
+  "goal": "Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/system returning JSON.",
+  "type": "site",
+  "keywords": "api-routes,planning-data,system-data,rest",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "default",
+  "runtime": "human",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.280Z",
+  "updated_at": "2026-04-20T03:05:19.280Z"
+}

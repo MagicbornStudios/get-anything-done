@@ -1,0 +1,25 @@
+{
+  "id": "59-23",
+  "phase": "59",
+  "status": "done",
+  "goal": "Project Editor + dev API rehome from vendor/get-anything-done/site/ to apps/planning-app/. Pulls the entire `/projects/edit/[id]` tree (19 .tsx files: ProjectEditor, BestiaryTab, RecipesTab, ByokTab, InspectorPane, ProjectCanvas, DiffTree, GenerationRunner, RadarChart, TraitBar, DnaEditor, DnaActionRow, EditableField, InventoryGrid, LiveDataPanel, CommandPalette, PreviewFrame, page.tsx, use-command-bridge.ts) plus the supporting eval-data-runtime.ts loader and 8 of 16 `/api/dev/*` route trees actually used by the editor (command-bridge, env-defaults, evals/projects/*, gene-states, graph, live, scopes, secrets/*) into apps/planning-app. Vendor site keeps only marketing/landing surfaces.\r\n\r\nImplementation: (1) tsconfig path `@gad-site/*` → `../../vendor/get-anything-done/site/*` so the editor still imports `eval-data` + `eval-data.generated` from the vendor site without copying the 19k-line generated file. (2) New apps/planning-app/lib/gad-paths.ts exports GAD_ROOT/GAD_LIB/GAD_BIN/GAD_SITE_DIR resolved via `import.meta.url` walk-up — replaces the original `process.cwd() + \"..\"` pattern that assumed cwd was the site dir. (3) scripts/rewrite-gad-paths.mjs (one-shot) sweeps all 19 copied files and substitutes the path-resolution patterns. (4) SiteSection ported into apps/planning-app/components/site/ as a stripped-down version (no dev-id band Visual Context Panel, no useDevId/BandDevPanel deps) so the public landing site can keep evolving its dev-id machinery without churning planning-app. (5) next.config.mjs sets outputFileTracingRoot to repo root + experimental.externalDir=true so Next traces the @gad-site imports cleanly. (6) Editor + dev API routes deleted from vendor site in the same change. Build verifies: pnpm --filter @portfolio/planning-app build succeeds with all 8 dev API routes + the editor route registered.\r\n\r\nVendor site `/projects/edit` and `/api/dev/*` routes are deleted in the same change. Captures decision-gad-269 boundary: vendor site = marketing/landing only; planning-app = operator surfaces (BYOK, evals, dev tooling).",
+  "type": "refactor",
+  "keywords": "",
+  "depends": [
+    "59-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-byok-lane-0003",
+  "agent_role": "byok-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.442Z",
+  "updated_at": "2026-04-20T03:05:19.442Z"
+}

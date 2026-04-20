@@ -1,0 +1,23 @@
+{
+  "id": "65-AS",
+  "phase": "65",
+  "status": "done",
+  "goal": "gad agents status — unified runtime visibility (13e18b1c) + heartbeat→log-inference pivot (1adc70e0) + runtime-detect expansion to cursor/gemini/opencode/+5 runtimes (1f86f54e). inferLivenessFromLogs reads both .planning/.gad-log + .planning/.trace-events, tags sources [cli|hook], 10-min stale threshold. lib/agents-status.cjs + bin/commands/agents.cjs factory (extracted by sweep).",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "opus-claude",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-opus-4-7",
+  "skill": "gad-handoffs",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.580Z",
+  "updated_at": "2026-04-20T03:05:19.580Z"
+}

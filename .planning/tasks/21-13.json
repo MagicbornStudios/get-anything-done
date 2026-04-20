@@ -1,0 +1,23 @@
+{
+  "id": "21-13",
+  "phase": "21",
+  "status": "done",
+  "goal": "Document the freedom hypothesis finding: GAD framework constraint correlates inversely with creative output quality on greenfield game implementation. Capture in FINDINGS doc and decision.",
+  "type": "",
+  "keywords": "findings,freedom-hypothesis,gad-36",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.267Z",
+  "updated_at": "2026-04-20T03:05:18.267Z"
+}

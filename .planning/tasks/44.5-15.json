@@ -1,0 +1,23 @@
+{
+  "id": "44.5-15",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "DNA Editor command+K shortcuts. Integrates with 42.2-43's command+K global search to add gene-lifecycle shortcuts: typing \"try &lt;ref&gt;\" triggers the same flow as the Try button; \"promote &lt;slug&gt;\" runs evolution promote; \"shed &lt;slug&gt;\" runs evolution shed; \"preview &lt;slug&gt;\" loads the trial artifact into the iframe. Autocompletes slug names from the current DNA Editor's enumerated genes. Depends on 44.5-13 (action wiring) and 42.2-43 (command+K infrastructure). Per decision gad-198.",
+  "type": "site",
+  "keywords": "dna-editor,command-k,shortcuts,search,project-editor,gad-198",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.250Z",
+  "updated_at": "2026-04-20T03:05:19.250Z"
+}

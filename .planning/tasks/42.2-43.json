@@ -1,0 +1,23 @@
+{
+  "id": "42.2-43",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Part A landed: site data pipeline now emits `site/data/planning-graph.json` (full envelope) + `site/data/planning-graph-index.json` (token-inverted lookup) on every prebuild via build-site-data.mjs#writePlanningGraphData(). Reader at `site/lib/planning-graph.ts` exposes getPlanningGraph/getPlanningNode/getNeighborhood/searchPlanningGraph with edge-schema normalisation (source/target ↔ from/to), BFS expansion with edgeType + nodeType filters and result cap, and substring-token ranked search. HTTP surface at `GET /api/planning/graph` supports ?related=&radius=&edgeTypes=&nodeTypes=, ?search=&limit=, ?only= for direct node fetch. Smoke-test on the get-anything-done graph: 1019 nodes / 1535 edges; \"byok\"→5 hits (decisions+phase 48); \"197\"→decision:gad-197 ✓. Part B (wire into command+K) deferred — vendor site has no global-search UI yet; backend is ready for it.",
+  "type": "site",
+  "keywords": "site,command-k,planning-graph,search,traversal",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.818Z",
+  "updated_at": "2026-04-20T03:05:18.818Z"
+}

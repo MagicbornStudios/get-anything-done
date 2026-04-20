@@ -1,0 +1,23 @@
+{
+  "id": "39-01",
+  "phase": "39",
+  "status": "done",
+  "goal": "Merge duplicate Round4 pressure callouts: replace ResultsRound4Callout and RoundResultsDefaultCallout with one shared component (single file + imports from Results and RoundResults). Verify tsc and visual parity.",
+  "type": "site",
+  "keywords": "site,dry,dedup,callout",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.647Z",
+  "updated_at": "2026-04-20T03:05:18.647Z"
+}

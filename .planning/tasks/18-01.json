@@ -1,0 +1,23 @@
+{
+  "id": "18-01",
+  "phase": "18",
+  "status": "done",
+  "goal": "Replace the stub in `gad eval run` with a prompt generator: read the eval template (AGENTS.md, REQUIREMENTS.xml, DECISIONS.xml, CONVENTIONS.md, ROADMAP.xml, STATE.xml), construct a full bootstrap prompt, and output it to stdout + eval-output.txt. The user/agent copies this prompt into their AI tool. Agent-agnostic per gad-01.",
+  "type": "",
+  "keywords": "eval,run,prompt-generator,agent-agnostic",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.189Z",
+  "updated_at": "2026-04-20T03:05:18.189Z"
+}

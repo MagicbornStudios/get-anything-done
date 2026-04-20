@@ -1,0 +1,23 @@
+{
+  "id": "44-24",
+  "phase": "44",
+  "status": "done",
+  "goal": "Skill evolution pass for the monorepo's daily-driver agent (root-of-monorepo work, not get-anything-done-only). Steps: (1) run `gad self-eval` or equivalent pressure-analysis to surface high-pressure phases + skill gaps, (2) invoke `create-skill` or `gad-create-skill` on the candidates, (3) drop outputs as proto-skills under `.planning/proto-skills/`, (4) verify coding agents can SEE proto-skills (via `gad evolution install` surface — per task 42.4-07 they should already be installable at runtime), (5) run `merge-skill` on any redundant proto-skills, (6) promote the stable ones to canonical `skills/`. User explicitly called out: \"we dont need to do evals for our skills like we have been or the rigorous skill-creator suite. we pull in quite a bit of context for creating the skills with the candidates.\" Goal is a lean evolution loop that runs from the monorepo root and makes the results immediately available to the next coding agent session. Also review gaps/confusion in existing create-skill and merge-skill skills while we're in there.",
+  "type": "skill",
+  "keywords": "skill-evolution,self-eval,proto-skills,create-skill,merge-skill,daily-driver",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "gad-evolution-evolve",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.087Z",
+  "updated_at": "2026-04-20T03:05:19.087Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "42.1-05",
+  "phase": "42.1",
+  "status": "done",
+  "goal": "Document the first-class framework comparison matrix for official evals: bare vs GSD vs GAD vs emergent vs custom. Define when a species remains canonical vs becomes custom (skills/content installed), retire GAD+emergent as a standalone matrix condition, and keep Escape the Dungeon as the official comparison target.",
+  "type": "eval",
+  "keywords": "eval,matrix,bare,gsd,gad,emergent,custom,escape-the-dungeon",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "default",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "objective-eval-design",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.619Z",
+  "updated_at": "2026-04-20T03:05:18.619Z"
+}

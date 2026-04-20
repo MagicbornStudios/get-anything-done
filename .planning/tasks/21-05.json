@@ -1,0 +1,23 @@
+{
+  "id": "21-05",
+  "phase": "21",
+  "status": "done",
+  "goal": "Add gad eval review CLI command to record human review scores that get folded into the composite with the v3 weights.",
+  "type": "",
+  "keywords": "eval-review,human-review,cli",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.244Z",
+  "updated_at": "2026-04-20T03:05:18.244Z"
+}

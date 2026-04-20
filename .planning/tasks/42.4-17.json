@@ -1,0 +1,26 @@
+{
+  "id": "42.4-17",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Implement `gad planning hydrate` â€” the MD â†’ XML inverse of `gad docs compile`. Closes the follow-up flagged by task 42.4-10's audit (references/sink-md-xml-audit.md Â§6). Subcommand walks configured planning roots (or `--projectid`/`--all`), reads sibling markdown for each canonical slot (STATE, ROADMAP, DECISIONS, TASK-REGISTRY, REQUIREMENTS), and writes canonical XML into the root's `.planning/` directory. Supports `--from &lt;dir&gt;` to read MD from an external source dir (default is the planning dir itself), `--dry-run` to print the generated XML without writing, and `--force` to overwrite existing XML (prior XML is archived under `.planning/archive/xml/&lt;ts&gt;/` first). Non-force runs skip slots where the XML already exists, preserving the \"XML is authoritative\" invariant from decision 42.4-10.",
+  "type": "cli",
+  "keywords": "cli,planning,hydrate,md-to-xml,docs-compiler,42.4-10-followup,sink-md-xml-audit",
+  "depends": [],
+  "commands": [
+    "node vendor/get-anything-done/bin/gad.cjs planning hydrate --help",
+    "node vendor/get-anything-done/bin/gad.cjs planning hydrate --projectid &lt;id&gt; --dry-run"
+  ],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.951Z",
+  "updated_at": "2026-04-20T03:05:18.951Z"
+}

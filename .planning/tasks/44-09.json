@@ -1,0 +1,23 @@
+{
+  "id": "44-09",
+  "phase": "44",
+  "status": "done",
+  "goal": "Live project-market data sync in dev. Today /project-market is hydrated from site/lib/eval-data.generated.ts which is rebuilt on `predev`/`prebuild` (site/scripts/build-site-data.mjs). A `gad eval run` or `gad eval preserve` invocation between dev-server restarts leaves the catalog stale â€” new generations appear under evals/ but the card grid doesn't know. Fix by either (a) GET /api/dev/projects route handler that re-runs the multi-root eval scan and returns the same shape as EVAL_PROJECTS, fetched by use-project-market when IS_DEV; (b) file-watch based regeneration that kicks build-site-data.mjs when evals/ changes; (c) SSE channel that pushes project delta events after every successful /api/dev/launch-eval exit. Option (a) is simplest and reuses the existing loader helpers added in 44-02. Production mode keeps the static catalog â€” the sync path is dev-only.",
+  "type": "site",
+  "keywords": "project-market,live-sync,dev-api,file-watch",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.050Z",
+  "updated_at": "2026-04-20T03:05:19.050Z"
+}

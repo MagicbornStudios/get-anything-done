@@ -1,0 +1,23 @@
+{
+  "id": "59-10",
+  "phase": "59",
+  "status": "done",
+  "goal": "CLI efficiency gap cluster: land task-registry writer + gad tasks add + gad tasks promote + gad tasks --stalled + gad next. Closes the hand-editing loop that forced agents to edit TASK-REGISTRY.xml by hand to register new tasks (root cause of the 45-todo backlog in vendor/get-anything-done/.planning/todos/ never becoming real tasks). New lib/task-registry-writer.cjs: pure addTaskToXml + atomic appendTaskToFile, fs-injectable for tests, stable error codes (TASK_ID_EXISTS, PHASE_NOT_FOUND, VALIDATION_FAILED, MALFORMED_XML, WRITE_FAILED). CLI subcommands under tasksV2Cmd: add (register by id/phase/goal), promote (lift a .planning/todos/*.md file into a task — filename derives id, first prose line becomes goal, todo moves to todos/promoted/ unless --keep). tasks list gains --stalled flag (in-progress tasks with no agent/skill/runtime attribution). New top-level gad next command: cross-project priority hotlist (tiers: active → stalled → next planned → idle). Tests: 16/16 in tests/task-registry-writer.test.cjs, all fs-injected, no real XML parser, no real disk. Also: operator-local gsd-* hooks deleted (gsd-check-update, gsd-context-monitor, gsd-prompt-guard, gsd-statusline, gsd-workflow-guard) + stale gsd-update-check.json cache + gsd-file-manifest.json — they were orphaned and surfacing /gsd:update prompts. Settings.json already points at gad-* siblings.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.438Z",
+  "updated_at": "2026-04-20T03:05:19.438Z"
+}

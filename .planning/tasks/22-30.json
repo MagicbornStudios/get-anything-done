@@ -1,0 +1,23 @@
+{
+  "id": "22-30",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "Agent Runtimes comparison table on /methodology showing which coding agents can produce trace v4 data (Claude Code âœ“ via hooks, Aider âœ“ via Python callbacks, Continue.dev âœ“ via extension API, Cursor âœ—, vanilla Codex CLI âœ— stream-only). Published alongside decision gad-53 explicit note that agents without hook runtimes are unsupported for GAD evaluation.",
+  "type": "site",
+  "keywords": "agent-runtimes,hooks,methodology,decision-gad-53",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.419Z",
+  "updated_at": "2026-04-20T03:05:18.419Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "44-14",
+  "phase": "44",
+  "status": "done",
+  "goal": "Register `projects/project-editor` as an `[[evals.roots]]` entry once phase 00 of that project has produced a species/generation shape. Today it's registered only as a `[[planning.roots]]` entry â€” project-editor is a meta-project and doesn't yet have species. When phase 01 of project-editor lands (integrating app-forge v1 as the initial species), project-editor will have at least one species and should become discoverable via `gad eval list` and /project-market alongside the other eval projects. Low effort: one toml append + a species.json stub pointing at app-forge v1 as the inherited baseline.",
+  "type": "cleanup",
+  "keywords": "eval-roots,project-editor,registration,multi-root,scaffold,baseline,inheritance",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.139Z",
+  "updated_at": "2026-04-20T03:05:19.139Z"
+}

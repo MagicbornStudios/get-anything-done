@@ -1,0 +1,23 @@
+{
+  "id": "44.5-16",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Build lib/eval-data-access.cjs — unified CRUD module for eval projects, species, and generations (decision gad-203). Filesystem-as-database: JSON files on disk are the database. Single shared Node module provides read (delegating to eval-loader.cjs for merge semantics) and write (create/update/archive for projects and species) operations. REST API routes at /api/dev/evals/projects/*, /api/dev/evals/projects/[id]/species/*, and /api/dev/evals/projects/[id]/species/[name]/generations. CLI commands: gad projects create/edit/archive, gad species list/create/edit/clone/archive. Editor server components rewired from static eval-data.generated.ts imports to runtime eval-data-access.cjs via eval-data-runtime.ts adapter. All type-safe, zero new type errors.",
+  "type": "framework",
+  "keywords": "eval-data-access,crud,data-layer,api-routes,cli,gad-203,filesystem-database",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.265Z",
+  "updated_at": "2026-04-20T03:05:19.265Z"
+}

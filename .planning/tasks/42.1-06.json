@@ -1,0 +1,23 @@
+{
+  "id": "42.1-06",
+  "phase": "42.1",
+  "status": "done",
+  "goal": "Capture the follow-up idea for a local-first project-market/project-editor surface that can edit eval folders, run local commands/builds, and act as an interactive brood editor or playground without requiring full page recompiles for every iteration.",
+  "type": "site",
+  "keywords": "project-market,editor,playground,local-dev,brood-editor,backlog",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "default",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "gad-add-backlog",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.623Z",
+  "updated_at": "2026-04-20T03:05:18.623Z"
+}

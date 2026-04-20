@@ -1,0 +1,26 @@
+{
+  "id": "45-07",
+  "phase": "45",
+  "status": "done",
+  "goal": "Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.",
+  "type": "site",
+  "keywords": "component-migration,decisions-tab,project-scoped,45-01-consumer,45-02-consumer",
+  "depends": [
+    "45-01",
+    "45-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.290Z",
+  "updated_at": "2026-04-20T03:05:19.290Z"
+}

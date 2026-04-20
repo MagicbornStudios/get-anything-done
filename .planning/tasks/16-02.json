@@ -1,0 +1,23 @@
+{
+  "id": "16-02",
+  "phase": "16",
+  "status": "done",
+  "goal": "Add sprint concept to GAD: configurable sprint size in planning-config.toml (default 5 phases). Add gad sprint show (list sprint boundaries) and gad sprint context (sprint-scoped paths + summary) commands to gad.cjs.",
+  "type": "",
+  "keywords": "sprint,cli,commands",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.161Z",
+  "updated_at": "2026-04-20T03:05:18.161Z"
+}

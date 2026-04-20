@@ -1,0 +1,23 @@
+{
+  "id": "35-06",
+  "phase": "35",
+  "status": "done",
+  "goal": "Maintain an always-current upstream `get-shit-done` mirror in `tmp/get-shit-done` and preserve periodic review notes comparing upstream workstreams, security, SDK structure, and docs against GAD before adopting any ideas.",
+  "type": "docs",
+  "keywords": "upstream-review,get-shit-done,tmp,security,sdk,workstreams",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.591Z",
+  "updated_at": "2026-04-20T03:05:18.591Z"
+}

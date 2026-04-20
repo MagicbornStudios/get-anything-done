@@ -1,0 +1,26 @@
+{
+  "id": "42.4-04",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Patch `gad snapshot` lane bootstrap so plain project snapshots do not auto-register idle agent lanes, and prune stale unclaimed default lanes that were leaked by the old behavior. Capture the skill-catalog consolidation rule for duplicate public skill names.",
+  "type": "framework",
+  "keywords": "snapshot,agent-lanes,cleanup,skills,consolidation",
+  "depends": [],
+  "commands": [
+    "node vendor/get-anything-done/bin/gad.cjs snapshot --projectid get-anything-done --json",
+    "node vendor/get-anything-done/bin/gad.cjs tasks active --projectid get-anything-done --json"
+  ],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.904Z",
+  "updated_at": "2026-04-20T03:05:18.904Z"
+}

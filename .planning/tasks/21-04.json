@@ -1,0 +1,23 @@
+{
+  "id": "21-04",
+  "phase": "21",
+  "status": "done",
+  "goal": "Clean skill_accuracy: remove methodology behaviors (decisions-captured, multi-phase-planning, phase-completion, task-lifecycle) from expected_triggers. Only actual /gad:* skill invocations count.",
+  "type": "",
+  "keywords": "skill-accuracy,cleanup,methodology-behaviors",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.242Z",
+  "updated_at": "2026-04-20T03:05:18.242Z"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "22-16",
+  "phase": "22",
+  "status": "done",
+  "goal": "Findings routes at /findings and /findings/[slug].",
+  "type": "",
+  "keywords": "findings,routes,ssg",
+  "depends": [
+    "22-12"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.371Z",
+  "updated_at": "2026-04-20T03:05:18.371Z"
+}

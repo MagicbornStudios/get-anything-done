@@ -1,0 +1,23 @@
+{
+  "id": "43-02",
+  "phase": "43",
+  "status": "done",
+  "goal": "Physical merge of escape-the-dungeon family (gad/bare/emergent) into one parent dir with species/ subdirs (D-09, D-26). Same merge for gad-explainer-video family (D-25). Use git mv via temp-rename intermediate so directory history is preserved. After this lands, evals/escape-the-dungeon/species/{gad,bare,emergent}/ contains the old sibling generations.",
+  "type": "cleanup",
+  "keywords": "schema,merge,git-mv,evals",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.005Z",
+  "updated_at": "2026-04-20T03:05:19.005Z"
+}

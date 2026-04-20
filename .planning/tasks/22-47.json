@@ -1,0 +1,23 @@
+{
+  "id": "22-47",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "Build a /standards page on the site citing both the Anthropic skills guide (resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf) and agentskills.io. Link from /skills, /security, /methodology, /gad. The page must summarize: (a) SKILL.md format + required frontmatter, (b) progressive disclosure three-tier loading, (c) name collision handling, (d) the per-skill evaluation methodology (with_skill vs without_skill baseline per agentskills.io/skill-creation/evaluating-skills). This becomes the reference page every skill-related section of the site cites instead of repeating the content inline.",
+  "type": "site",
+  "keywords": "standards,documentation,citations,skills-page",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.480Z",
+  "updated_at": "2026-04-20T03:05:18.480Z"
+}

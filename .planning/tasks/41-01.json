@@ -1,0 +1,23 @@
+{
+  "id": "41-01",
+  "phase": "41",
+  "status": "done",
+  "goal": "Design and ship the first GAD query-oriented SDK slice under `sdk/src/query/`: state, roadmap, tasks, scoped snapshot context assembly, and task assignment handlers. The CLI should begin consuming these handlers instead of treating subprocess `gad-tools` calls as the canonical implementation.",
+  "type": "sdk",
+  "keywords": "sdk,query,architecture,cli",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "default",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "framework-upgrade",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.628Z",
+  "updated_at": "2026-04-20T03:05:18.628Z"
+}

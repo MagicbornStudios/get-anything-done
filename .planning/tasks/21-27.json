@@ -1,0 +1,25 @@
+{
+  "id": "21-27",
+  "phase": "21",
+  "status": "done",
+  "goal": "Create gad:find-sprites skill (skills/find-sprites/SKILL.md) that documents the asset sourcing workflow: web search for free/open-license sprites and icons, preference order (npm packs â†’ web search â†’ generated â†’ geometric fallback), integration tips, license verification. Referenced by v4 AGENTS.md for all 3 greenfield conditions.",
+  "type": "",
+  "keywords": "sprite-sourcing,skill,web-search,assets",
+  "depends": [
+    "21-22"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.298Z",
+  "updated_at": "2026-04-20T03:05:18.298Z"
+}

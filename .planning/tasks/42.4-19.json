@@ -1,0 +1,25 @@
+{
+  "id": "42.4-19",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Normalize species.json keys to camelCase (decision gad-184, follow-up to task 42.4-15). The project âŠ‡ species inheritance loader (`lib/eval-loader.cjs`) does literal key matching via `applyLayer`, so when `project.json` declares `techStack` (camelCase) and a species declares `tech_stack` (snake_case), the species override silently fails and both keys end up on the merged shape. Per gad-184 contract, camelCase is canonical. Rename `tech_stack`, `build_requirement`, `human_review_rubric`, and `context_framework` to camelCase across every species.json under `evals/escape-the-dungeon/species/*/` and `evals/gad-explainer-video/species/*/`; confirm the eval loader needs no special-casing (it does not â€” literal-match is the point); update all consumers reading those snake_case keys.",
+  "type": "framework",
+  "keywords": "framework,eval-loader,inheritance,camelcase,snake-case,species-json,gad-184,42.4-15-followup",
+  "depends": [],
+  "commands": [
+    "node vendor/get-anything-done/bin/gad.cjs eval list"
+  ],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.972Z",
+  "updated_at": "2026-04-20T03:05:18.972Z"
+}

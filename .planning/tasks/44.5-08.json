@@ -1,0 +1,23 @@
+{
+  "id": "44.5-08",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Animated trait bar + radar chart primitives. (a) Trait bar: horizontal bar per trait, animates on mount from 0 to current value, color-coded by trait category, tooltip shows trait source (species.json field or derived metric). Reusable as both a standalone component and a row inside a bestiary card. (b) Radar chart: 6-8 axes showing the species's trait vector, with the ability to overlay multiple species for comparison. Prototype first — operator has not seen one yet and will give feedback after live. Both primitives get cids and a modal-footer-editable representation. Prototype in isolation before wiring to real species data.",
+  "type": "site",
+  "keywords": "project-editor,trait-bar,radar-chart,primitive,animation,site",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.228Z",
+  "updated_at": "2026-04-20T03:05:19.228Z"
+}

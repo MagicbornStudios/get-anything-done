@@ -1,0 +1,23 @@
+{
+  "id": "42.3-05",
+  "phase": "42.3",
+  "status": "done",
+  "goal": "Workflows tab on /planning with authored (Mermaid) + live (React Flow) + emergent sections. Decisions gad-172 + gad-174.",
+  "type": "site",
+  "keywords": "workflow,site,planning,mermaid,react-flow,tab",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.855Z",
+  "updated_at": "2026-04-20T03:05:18.855Z"
+}

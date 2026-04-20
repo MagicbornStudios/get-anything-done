@@ -1,0 +1,25 @@
+{
+  "id": "59-03",
+  "phase": "59",
+  "status": "done",
+  "goal": "Port /planning route from landing app to planning-app. All existing tabs (Tasks, Decisions, Requirements, Notes, Workflows, SkillCandidates, System) move intact. Data source stays the same — planning CLI readers via gad binary or direct XML parse. Landing app's /planning stays for one release cycle with a deprecation banner.",
+  "type": "migration",
+  "keywords": "",
+  "depends": [
+    "59-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.412Z",
+  "updated_at": "2026-04-20T03:05:19.412Z"
+}

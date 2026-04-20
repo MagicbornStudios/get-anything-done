@@ -1,0 +1,23 @@
+{
+  "id": "35-09",
+  "phase": "35",
+  "status": "done",
+  "goal": "Expand GAD README to upstream-level completeness without inheriting stale npm-first or command-first claims. Cover install, runtime split, evals, planning model, security, updating, troubleshooting, and development flow.",
+  "type": "",
+  "keywords": "readme,docs,install,onboarding,security",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.598Z",
+  "updated_at": "2026-04-20T03:05:18.598Z"
+}

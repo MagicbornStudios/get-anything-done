@@ -1,0 +1,23 @@
+{
+  "id": "16-06",
+  "phase": "16",
+  "status": "done",
+  "goal": "Measure optimized snapshot token count. Target: ~3,000 tokens for get-anything-done (currently ~9,750). Run cli-efficiency eval v7 with sprint-scoped snapshot. Compare composite score vs v6.",
+  "type": "",
+  "keywords": "eval,measurement,cli-efficiency,v7",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.173Z",
+  "updated_at": "2026-04-20T03:05:18.173Z"
+}

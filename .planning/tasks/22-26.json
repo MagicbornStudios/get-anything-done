@@ -1,0 +1,23 @@
+{
+  "id": "22-26",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "Expose scoring weights per project from evals/&lt;project&gt;/gad.json in the generated data. Every eval project can have different weights; we're currently only reading one set for display. Emit SCORING_WEIGHTS by project so the methodology page and per-run formula display can show the project-specific math.",
+  "type": "site",
+  "keywords": "scoring-weights,gad-json,prebuild",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.403Z",
+  "updated_at": "2026-04-20T03:05:18.403Z"
+}

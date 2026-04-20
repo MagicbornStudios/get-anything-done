@@ -1,0 +1,25 @@
+{
+  "id": "42.4-24",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Tree-format output for gad snapshot refs section per decision gad-241. Replace flat &apos;- path&apos; list with indented tree that groups shared prefixes (e.g. .planning/workflows/*, references/*, site/{lib,scripts,app}/*). Implementation: lib/snapshot-compact.cjs gains compactRefsTree() with single-child dir-chain collapse and single-leaf fold. Threshold REFS_TREE_THRESHOLD=5 keeps small lists flat. Tests: tests/snapshot-compact-refs-tree.test.cjs covers empty/below-threshold/tree-mode/collapse/fold/annotations/duplicates/dir-suffix/token-savings/compactStateXml-wiring (11 tests). Measured: full snapshot 17813B → 17622B (−191B, ~1%); refs section alone ~9% reduction; BPE token savings higher than byte due to shared-prefix coalescing. Follow-ups: apply same tree form to gad startup contract output; investigate deeper compression on DECISIONS section (title-only already compact).",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "42.4-23"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-snapshot-format-0001",
+  "agent_role": "snapshot-format",
+  "runtime": "claude-code",
+  "model_profile": "quality",
+  "resolved_model": "claude-opus-4-7",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.998Z",
+  "updated_at": "2026-04-20T03:05:18.998Z"
+}

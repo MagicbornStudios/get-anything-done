@@ -1,0 +1,23 @@
+{
+  "id": "44-39",
+  "phase": "44",
+  "status": "done",
+  "goal": "Generation publish status: extend per-generation manifest with status (draft|published|unlisted), publishedAt, publishedBy. Editor publish button writes status; file copy to public/playable/ becomes a side effect of status===published. publish/route.ts gains GET (status), PATCH (set status). Status is source of truth.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.165Z",
+  "updated_at": "2026-04-20T03:05:19.165Z"
+}

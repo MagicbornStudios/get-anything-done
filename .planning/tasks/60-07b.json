@@ -1,0 +1,26 @@
+{
+  "id": "60-07b",
+  "phase": "60",
+  "status": "done",
+  "goal": "Scoped BYOK + non-secret env defaults + dev-server passphrase fix. Per decision gad-268, extend the BYOK surface so keys and env defaults resolve along a scope chain: species &gt; eval &gt; planning. Shipped 2026-04-18: (1) lib/secrets-store.cjs — scope arg threaded through get/set/list/rotate/revoke/decryptAll; envelope+audit paths nest under .gad/secrets/&lt;projectId&gt;/&lt;scope-path&gt;.enc; per-scope keychain account (projectId::scope) so each scope&apos;s master key is independent; new listChain/decryptChain walk most-specific→least, marking shadowed parents in shadows[]. Backward-compatible: no-scope = legacy planning bag at .gad/secrets/&lt;projectId&gt;.enc. (2) tests/secrets-store.test.cjs — added scope path resolution + per-scope isolation suites (29 tests pass total). (3) lib/env-defaults-store.cjs — new plain-JSON scoped store at .gad/env/&lt;projectId&gt;[/&lt;scope&gt;].json with CRUD, parent-merge resolveChain, path-traversal safety, auto-gitignore on first write. (4) tests/env-defaults-store.test.cjs — 12 tests round-trip + scope merge + validation + gitignore. (5) lib/env-cli.cjs — --scope/--scope-chain flags on list/get/set/rotate/revoke; renderListTable adds BAG + SHADOWS columns when present; fixed revokeCmd variable shadow that was dropping --scope on the way to store.revoke. (6) lib/keychain/passphrase-fallback.cjs — honor GAD_NO_TTY_PROMPT=1 to refuse interactive prompts in server contexts (Next.js dev server inherits parent TTY → would deadlock HTTP request). (7) lib/secrets-store-errors.cjs — added VALIDATION code shared with env-defaults-store. (8) New API routes /api/dev/env-defaults/[projectId] (list/set/unset, scope+chain) + /api/dev/scopes/[projectId] (walks evals/&lt;eval&gt;/species/&lt;species&gt; for picker source); /api/dev/secrets/[projectId] + /audit + /test now accept scope/scopeChain/scopeBag and decrypt-once per distinct bag for last-four tails. All routes set process.env.GAD_NO_TTY_PROMPT=&quot;1&quot; at module load. (9) ByokTab.tsx — ScopePicker dropdown, BagBadge (active vs inherited), ShadowHint (count of parents hidden), inherited rows go read-only (rotate/revoke disabled), AddKeyForm + RotateForm + TestCallButton thread scopeBag end-to-end, new EnvDefaultsSection mirrors the keys list for non-secret values, AuditList title shows active scope, byokFetch wrapper handles PASSPHRASE_REQUIRED_NO_TTY (423) + PASSPHRASE_INVALID (401) by prompting via window.prompt and caching in tab-lifetime Map. 108/108 BYOK-related tests pass. Note: re-applied after parallel-agent vendor commits clobbered the lib + planning edits — see commit message.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "60-07",
+    "60-10"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-byok-lane-0002",
+  "agent_role": "byok-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.474Z",
+  "updated_at": "2026-04-20T03:05:19.474Z"
+}

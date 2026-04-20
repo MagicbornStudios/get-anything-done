@@ -1,0 +1,23 @@
+{
+  "id": "65-SP",
+  "phase": "65",
+  "status": "done",
+  "goal": "Shell-profile installer (new files only — collision-safe with live bin/gad.cjs refactor). lib/shell-profile-snippet.cjs: idempotent BEGIN/END block generator for bash/zsh/pwsh, 9 runtimes. scripts/install-shell-profile.cjs: standalone CLI (install/uninstall/status/show). Precedence: cursor/codex/gemini/opencode first so inherited CLAUDECODE from parent Claude Code session doesn&apos;t mask narrower runtime. Commit: 1f86f54e + parent b7f51de.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "opus-claude",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-opus-4-7",
+  "skill": "framework-upgrade",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.584Z",
+  "updated_at": "2026-04-20T03:05:19.584Z"
+}

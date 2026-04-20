@@ -1,0 +1,23 @@
+{
+  "id": "42.2-01",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Write `references/proto-skills.md` as the canonical definition of proto-skill as a permanent skill type: pipeline stages, filesystem handoff contract (CANDIDATE.md + optional CONTEXT.md + REFERENCES.md), batching, promotion with PROVENANCE.md, and relationship to gad-skill-creator. Linked from the Reference nav and cited by decisions gad-167 and gad-168.",
+  "type": "docs",
+  "keywords": "proto-skill,references,docs,evolution",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.680Z",
+  "updated_at": "2026-04-20T03:05:18.680Z"
+}

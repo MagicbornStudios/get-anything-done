@@ -1,0 +1,27 @@
+{
+  "id": "22-25",
+  "phase": "22",
+  "status": "done",
+  "goal": "Nav surface update: add Framework + Methodology + Projects links. Current nav is already packed â€” may need a secondary nav row or drop items.",
+  "type": "",
+  "keywords": "nav,navigation,dropdown,refactor",
+  "depends": [
+    "22-20",
+    "22-21",
+    "22-23"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.399Z",
+  "updated_at": "2026-04-20T03:05:18.399Z"
+}

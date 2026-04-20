@@ -1,0 +1,23 @@
+{
+  "id": "42.2-32",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Ship `gad skill promote-folder` — generalized promote that accepts any skill-shaped folder source (not just `.planning/proto-skills/&lt;slug&gt;/`) and installs it into the canonical get-anything-done framework tree. Also canonicalize the VCS skill.",
+  "type": "cli",
+  "keywords": "cli,skill,promote-folder,canonicalize,vcs",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.773Z",
+  "updated_at": "2026-04-20T03:05:18.773Z"
+}

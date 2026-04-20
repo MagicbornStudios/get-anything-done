@@ -1,0 +1,23 @@
+{
+  "id": "42.4-16",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Forge proving-ground spec: formalize \"forge produces a passing escape-the-dungeon generation from its existing REQUIREMENTS.md via the editor's spawn flow\" as a measurable acceptance criterion. Decision forge-11 captures the why. Output: checklist doc at `apps/forge/.planning/plans/forge-proving-ground.md` defining PG-01..PG-09 (build preserved, clean headless load, zero console.error, game root mounts, player renders, tilemap renders, input moves player, no unhandled rejections, probe runtime &lt; 30s). Historical comparison table retroactively scores all 12 ETD gad-species generations (v1..v12): 4 have preserved builds (v7, v8, v9, v10), exactly 1 (v8) has an explicit SCORE.md \"Build requirement gate PASSED\" annotation, and PG-02..PG-08 are `?` across the board because no mechanical probe has ever run against an ETD build. GAPs flagged: no Playwright harness in repo (phase 08 scope), no canonical ETD root selector / player hook, input scheme varies arrow vs WASD. DOG-02 in `apps/forge/.planning/REQUIREMENTS.xml` and phase 08 success criteria in `apps/forge/.planning/ROADMAP.xml` both updated to cite the checklist. Last of the 42.4-12..16 framework gates blocking app-forge phase 01.",
+  "type": "docs",
+  "keywords": "proving-ground,etd,acceptance,measurable,dog-02,forge-11,docs,forge-proving-ground-md",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.947Z",
+  "updated_at": "2026-04-20T03:05:18.947Z"
+}

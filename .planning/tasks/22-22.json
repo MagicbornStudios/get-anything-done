@@ -1,0 +1,23 @@
+{
+  "id": "22-22",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "Per-run page enhancements: (1) render composite formula as a weighted-sum breakdown showing each dimension's contribution to the composite; (2) when skill_accuracy has expected_triggers array (like v5), render the per-skill trigger table; (3) when skill_accuracy is a bare number (like v8), show a \"tracing gap\" callout noting the run didn't capture per-skill detail and link to phase 25 (trace schema overhaul).",
+  "type": "site",
+  "keywords": "per-run,formulas,trace-breakdown,tracing-gap",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.390Z",
+  "updated_at": "2026-04-20T03:05:18.390Z"
+}

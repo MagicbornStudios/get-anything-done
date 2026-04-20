@@ -1,0 +1,23 @@
+{
+  "id": "42.2-06",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Implement create-proto-skill using the bulk + per-candidate-checkpoint pattern locked by decision gad-171. At startup: enumerate `skills/candidates/`, filter to candidates without a matching `.planning/proto-skills//{PROVENANCE.md,SKILL.md}` pair, draft each pending candidate in turn. For each: write PROVENANCE.md FIRST as a lock marker (candidate slug, phase id, pressure metrics, timestamp), then SKILL.md in dot-agent format. On crash/resume the skill picks up exactly where it left off because half-written proto-skills are identifiable by the PROVENANCE+no-SKILL state. Also update `gad evolution status` to render pending / in-progress / complete counts so partial runs are visible at a glance. Output contract updated by decision gad-191: the skill writes a self-contained bundle at `.planning/proto-skills/&lt;slug&gt;/` with SKILL.md (`status: proto`, `workflow: ./workflow.md`), sibling `workflow.md`, PROVENANCE.md, and optionally CANDIDATE.md — not a flat SKILL.md.",
+  "type": "skill",
+  "keywords": "skill,create-proto-skill,batching,checkpoint,evolution,classifier",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.696Z",
+  "updated_at": "2026-04-20T03:05:18.696Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "42.2-22",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Add `gad startup` command — one-shot session-start contract, closes the chicken-and-egg gap Agent D1 surfaced (no skill governed session start, gad snapshot was only discoverable via CLAUDE.md or from inside its own output).",
+  "type": "cli",
+  "keywords": "cli,startup,session-start,chicken-egg",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.742Z",
+  "updated_at": "2026-04-20T03:05:18.742Z"
+}

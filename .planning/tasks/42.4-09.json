@@ -1,0 +1,26 @@
+{
+  "id": "42.4-09",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Project shape format review and refresh. The \"canonical XML file set\" for a planning root has drifted over time (some projects have HUMAN-TODOS.xml, some have phases/, some have plans/, some have proto-skills/, some have notes/). There is no single documented shape that `gad projects init` and `gad health` agree on. Audit the actual file sets across all registered planning roots (global, get-anything-done, magicborn, app-forge, etc.), define the canonical minimum + canonical optional file set, document it in references/, and align both `projects init` and `gad health` against it. Surfaced 2026-04-14 by the user during app-forge scaffolding: \"the project shape format needs to be reviewed/updated soon.\"",
+  "type": "framework",
+  "keywords": "schema,project-shape,canonical-format,health,audit,references,gad-185",
+  "depends": [],
+  "commands": [
+    "node vendor/get-anything-done/bin/gad.cjs projects audit --project app-forge",
+    "node vendor/get-anything-done/bin/gad.cjs projects audit --project grime-time"
+  ],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.919Z",
+  "updated_at": "2026-04-20T03:05:18.919Z"
+}

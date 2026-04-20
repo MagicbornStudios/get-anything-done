@@ -1,0 +1,23 @@
+{
+  "id": "13-03",
+  "phase": "13",
+  "status": "done",
+  "goal": "Create DOCS-MAP.xml for grime-time, repo-planner, and any other roots that have feature docs in their sink paths. Check each root's sink directory for non-planning MDX files.",
+  "type": "",
+  "keywords": "docs-map,rollout,planning-roots",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.077Z",
+  "updated_at": "2026-04-20T03:05:18.077Z"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "22-46",
+  "phase": "22",
+  "status": "done",
+  "goal": "Adopt agentskills.io .agents/skills/ convention (gad-80). Extend bin/install.js to copy skills to BOTH .claude/skills/ (native) AND .agents/skills/ (cross-client) for supported runtimes. Migrate the fundamental triumvirate (create-skill, merge-skill, find-skills per gad-73) to the new location once those skills exist. Required for the codex-vs-claude comparison eval (task 89) because Codex uses different discovery conventions â€” if we target .agents/skills/, both runtimes find the same skills. Also honor the excluded-from-default-install:true frontmatter flag I added to the emergent skill â€” the installer must skip those.",
+  "type": "",
+  "keywords": "agentskills,cross-client,install,discovery-convention,migration",
+  "depends": [
+    "gad-80"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.477Z",
+  "updated_at": "2026-04-20T03:05:18.477Z"
+}

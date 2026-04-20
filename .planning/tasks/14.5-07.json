@@ -1,0 +1,23 @@
+{
+  "id": "14.5-07",
+  "phase": "14.5",
+  "status": "done",
+  "goal": "Re-run escape-the-dungeon eval with fixes applied (template AGENTS.md, snapshot injection, checkpoint enforcement). Compare v3 TRACE.json against v2. Validate that: gad CLI is actually used, task-level tracking happens, conventions are generated, trace has real data not backfilled.",
+  "type": "",
+  "keywords": "eval,rerun,validation,comparison",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.135Z",
+  "updated_at": "2026-04-20T03:05:18.135Z"
+}

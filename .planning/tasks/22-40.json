@@ -1,0 +1,23 @@
+{
+  "id": "22-40",
+  "phase": "22",
+  "status": "done",
+  "goal": "Interactive chart on /roadmap showing human review across rounds broken out by hypothesis track. Solid lines for tracks with real data (freedom/csh/gad). Dashed ghost lines for planned tracks without runs yet (content-driven, codex runtime) so the research plan is visible.",
+  "type": "",
+  "keywords": "interactive-chart,recharts,hypothesis-tracks",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.459Z",
+  "updated_at": "2026-04-20T03:05:18.459Z"
+}

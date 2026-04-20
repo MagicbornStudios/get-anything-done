@@ -1,0 +1,23 @@
+{
+  "id": "44.5-10",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "iframe live-preview primitive for the editor's right pane. Takes a generation identifier (project/species/version) and renders the preserved static build from `apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/` in a sandboxed iframe. Includes: device-frame chrome selector (desktop/tablet/mobile), reload button, \"open in new tab\" link, URL path input for SPA routes, and a fallback screenshot when the build isn't live-servable. Gets a cid. Integrates with the Visual Context System such that the modal footer can target either the iframe wrapper or (via postMessage when the inner build opts in) the selected element inside the iframe. Primary right-pane content for 44.5-01's split viewport.",
+  "type": "site",
+  "keywords": "project-editor,iframe,preview,split-viewport,artifact,site,cid",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.234Z",
+  "updated_at": "2026-04-20T03:05:19.234Z"
+}

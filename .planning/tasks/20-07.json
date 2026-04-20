@@ -1,0 +1,23 @@
+{
+  "id": "20-07",
+  "phase": "20",
+  "status": "cancelled",
+  "goal": "IDE integration: document VS Code / Cursor Tasks (background watch), optional problem matcher mapping JSON errors to Problems panel. Update portfolio sink evals.mdx when behavior is stable.",
+  "type": "",
+  "keywords": "ide,vscode,cursor,docs-sink,deferred",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.228Z",
+  "updated_at": "2026-04-20T03:05:18.228Z"
+}

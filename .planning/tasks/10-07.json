@@ -1,0 +1,23 @@
+{
+  "id": "10-07",
+  "phase": "10",
+  "status": "done",
+  "goal": "Create docs-map-reader.cjs and DOCS-MAP.xml per planning root. Extend gad refs to include docs-map entries. Update gad sink compile to handle DOCS-MAP.xml.",
+  "type": "",
+  "keywords": "docs-map,feature-docs,refs",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.023Z",
+  "updated_at": "2026-04-20T03:05:18.023Z"
+}

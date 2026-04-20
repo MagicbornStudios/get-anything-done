@@ -1,0 +1,26 @@
+{
+  "id": "42.4-12",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Multi-root eval discovery. Add `[[evals.roots]]` array to `gad-config.toml` mirroring `[[planning.roots]]`. Default root stays `vendor/get-anything-done/evals/` for backwards-compat. New roots like parent-repo `evals/` (or `apps/forge/evals/`) become first-class. `gad eval list/run/preserve/verify/open/review/report` all walk the union of roots. Eval project ids must be unique across roots â€” duplicate detection at load time. Surfaced 2026-04-14 during app-forge planning: forge wants to consume evals from the parent custom_portfolio repo without polluting the framework submodule with downstream user projects, AND forge's own eval project (app-forge) needs to live outside the GAD submodule because forge is not a framework component. Blocks app-forge eval bootstrap (decision forge-09 plan/build separation requires fresh-agent spawn for any forge implementation work).",
+  "type": "framework",
+  "keywords": "multi-root,evals,discovery,gad-config,roots",
+  "depends": [],
+  "commands": [
+    "node vendor/get-anything-done/bin/gad.cjs eval list",
+    "node vendor/get-anything-done/bin/gad.cjs eval verify"
+  ],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.927Z",
+  "updated_at": "2026-04-20T03:05:18.927Z"
+}

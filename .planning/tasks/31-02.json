@@ -1,0 +1,23 @@
+{
+  "id": "31-02",
+  "phase": "31",
+  "status": "done",
+  "goal": "Site: skill provenance badges on per-run page. Show installed (blue), inherited (green), authored (amber) badges with full start/end snapshot collapsible.",
+  "type": "skill",
+  "keywords": "skill-provenance,badges,per-run-page,site,gad-120",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "execute-phase",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.515Z",
+  "updated_at": "2026-04-20T03:05:18.515Z"
+}

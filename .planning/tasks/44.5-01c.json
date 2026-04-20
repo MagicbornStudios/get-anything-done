@@ -1,0 +1,23 @@
+{
+  "id": "44.5-01c",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "\"Open in Editor\" CTA on the existing `/projects/[...id]` listing detail page. Adds a single button/link in the listing header that routes to the new `/projects/[id]/edit` editor surface, visible only when `NODE_ENV=development` or the dev-panel equivalent flag. Button gets its own cid. Also adds the reverse nav — an \"Exit to listing\" link in the editor shell that routes back to the listing detail for the same project. Both links participate in the visual context panel.",
+  "type": "site",
+  "keywords": "project-editor,cta,nav,cid,listing-detail",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.199Z",
+  "updated_at": "2026-04-20T03:05:19.199Z"
+}

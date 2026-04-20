@@ -1,0 +1,23 @@
+{
+  "id": "14.5-04",
+  "phase": "14.5",
+  "status": "done",
+  "goal": "Add checkpoint enforcement to execute-phase workflow. Before the agent can start the next task, it must have: (1) updated TASK-REGISTRY.xml for the previous task, (2) updated STATE.xml next-action. The workflow checks these preconditions. If not met, it prompts the agent to update before continuing. Not a hook â€” a step in the workflow that reads the planning docs and verifies.",
+  "type": "",
+  "keywords": "checkpoint,enforcement,task-tracking,workflow",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.126Z",
+  "updated_at": "2026-04-20T03:05:18.126Z"
+}

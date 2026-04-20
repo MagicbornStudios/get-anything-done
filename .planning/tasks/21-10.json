@@ -1,0 +1,23 @@
+{
+  "id": "21-10",
+  "phase": "21",
+  "status": "done",
+  "goal": "Build requirements v3: add gate criteria (game loop, spell crafting, UI quality) that override requirement_coverage to 0 if failed. Trim source gameplay design doc from 640 â†’ 120 lines for the vertical slice focus.",
+  "type": "",
+  "keywords": "requirements-v3,gates,vertical-slice",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.258Z",
+  "updated_at": "2026-04-20T03:05:18.258Z"
+}

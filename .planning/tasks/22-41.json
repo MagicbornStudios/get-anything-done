@@ -1,0 +1,23 @@
+{
+  "id": "22-41",
+  "phase": "22",
+  "status": "done",
+  "goal": "/hypotheses index page + /freedom evidence page + /content-driven planned-hypothesis page. Every hypothesis the project tracks gets wired to its eval track, its latest evidence, and its dedicated evidence page. Status labels: preliminary observation / discussing / operationalized / not-yet-tested.",
+  "type": "",
+  "keywords": "hypotheses,freedom,content-driven,hypothesis-pages",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.462Z",
+  "updated_at": "2026-04-20T03:05:18.462Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "42.2-47",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Build `gad query` CLI command — structural graph queries against .planning/graph.json. Accepts natural-language-ish queries or structured flags (--type, --phase, --status, --depends, --cites, --skill, --search). Auto-rebuilds graph if missing. Returns compact, token-efficient results for agent consumption. LLM-free.",
+  "type": "cli",
+  "keywords": "cli,query,graph,structural,token-savings",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.831Z",
+  "updated_at": "2026-04-20T03:05:18.831Z"
+}

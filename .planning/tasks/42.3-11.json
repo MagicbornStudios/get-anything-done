@@ -1,0 +1,23 @@
+{
+  "id": "42.3-11",
+  "phase": "42.3",
+  "status": "done",
+  "goal": "`gad workflow status | validate | promote | discard` CLI subcommands mirroring `gad evolution`.",
+  "type": "cli",
+  "keywords": "workflow,cli,promote,discard,evolution-parallel",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.874Z",
+  "updated_at": "2026-04-20T03:05:18.874Z"
+}

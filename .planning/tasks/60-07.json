@@ -1,0 +1,26 @@
+{
+  "id": "60-07",
+  "phase": "60",
+  "status": "done",
+  "goal": "Project-editor BYOK tab UI. Lives in local-dev project-editor (phase 44.5). Tab renders current keys (redacted — last 4 chars only), 'add key' form with paste + provider picker + 'test call' validation button, rotate/revoke actions. Calls 'gad env' CLI via dev-server command bridge. Local-dev only — NODE_ENV=development gate. Shipped 2026-04-18: added 4th left-pane tab (BYOK) to ProjectEditor.tsx + new ByokTab.tsx component. Backend uses dedicated /api/dev/secrets/[projectId] route (GET list/POST set/PUT rotate/DELETE revoke) + /audit + /test sub-routes that import lib/secrets-store.cjs directly via createRequire — bypasses the SSE command-bridge for mutating ops to avoid stdin-pipe plaintext exposure. Also added 'env' to command-bridge ALLOWED_SUBCOMMANDS for any future read-only CLI calls. Provider validators: openai, anthropic, openrouter, groq (HTTP probe with 8s timeout). Last-four redaction via decryptAll() with synchronous plaintext drop. Audit tail surfaces last 20 envset/envrotate/envrevoke/envpurge events. Built clean against next 16.0.8 turbopack. Unblocks 60-08 (cloud BYOK surface, same shapes behind auth).",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "60-03",
+    "60-10"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-byok-lane-0001",
+  "agent_role": "byok-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.471Z",
+  "updated_at": "2026-04-20T03:05:19.471Z"
+}

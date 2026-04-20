@@ -1,0 +1,23 @@
+{
+  "id": "46-10",
+  "phase": "46",
+  "status": "done",
+  "goal": "Fix gad tip reindex ENOENT on installed binary. teachings-reader.cjs now resolves TEACHINGS_DIR by walking up from cwd looking for a gad-config.toml repo root and preferring vendor/get-anything-done/teachings/ (or direct teachings/) on that root before falling back to the bundled runtime location. GAD_TEACHINGS_DIR env override added for testing. Source CLI verified — 'node vendor/get-anything-done/bin/gad.cjs tip reindex' now writes to the user repo's teachings/ instead of the read-only runtime bundle. Installed binary picks up the fix on next reinstall (deferred: current gad.exe is still held open by this session).",
+  "type": "cli",
+  "keywords": "teachings,reindex,runtime,path-resolve,installed-binary",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.362Z",
+  "updated_at": "2026-04-20T03:05:19.362Z"
+}

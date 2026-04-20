@@ -1,0 +1,23 @@
+{
+  "id": "15-04",
+  "phase": "15",
+  "status": "done",
+  "goal": "Update all 42 command @-path references from get-shit-done/workflows/ â†’ workflows/, get-shit-done/templates/ â†’ templates/, get-shit-done/references/ â†’ references/. Sync to .claude/commands/gad/.",
+  "type": "",
+  "keywords": "migration,commands,path-update",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.148Z",
+  "updated_at": "2026-04-20T03:05:18.148Z"
+}

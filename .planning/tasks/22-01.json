@@ -1,0 +1,23 @@
+{
+  "id": "22-01",
+  "phase": "22",
+  "status": "done",
+  "goal": "Plan the portfolio experiment documentation structure â€” pivoted to a standalone Next.js site at vendor/get-anything-done/site/ instead of apps/portfolio docs. Designed single-page sections (workflow, rounds, projects, results, playable, requirements, catalog, templates) plus dynamic per-run pages.",
+  "type": "",
+  "keywords": "portfolio,site,planning,structure,pivot",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.314Z",
+  "updated_at": "2026-04-20T03:05:18.314Z"
+}

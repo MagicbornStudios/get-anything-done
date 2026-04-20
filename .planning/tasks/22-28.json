@@ -1,0 +1,23 @@
+{
+  "id": "22-28",
+  "phase": "22",
+  "status": "done",
+  "goal": "Mark the create-skill inheritance requirement explicit in a DECISION so bare/emergent templates are not accidentally regressed.",
+  "type": "",
+  "keywords": "decision,create-skill,invariant",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.412Z",
+  "updated_at": "2026-04-20T03:05:18.412Z"
+}

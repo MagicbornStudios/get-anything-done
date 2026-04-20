@@ -1,0 +1,23 @@
+{
+  "id": "14.5-06",
+  "phase": "14.5",
+  "status": "done",
+  "goal": "Define expected_triggers for implementation evals. The TRACE.json skill_accuracy field needs expected_triggers populated before the eval runs â€” defining which skills SHOULD fire and when. Create a template expected_triggers list for implementation evals: discuss-phase before planning, plan-phase before execution, execute-phase per phase, verify-work after phases, map-codebase after first implementation.",
+  "type": "",
+  "keywords": "eval,trace,expected-triggers,skill-accuracy",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.132Z",
+  "updated_at": "2026-04-20T03:05:18.132Z"
+}

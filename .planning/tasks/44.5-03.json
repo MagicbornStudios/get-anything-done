@@ -1,0 +1,23 @@
+{
+  "id": "44.5-03",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Live-edit eval folder from the editor: file-system adapter that reads/writes requirements.md, gad.json, per-species overrides, and manifest entries for the currently-selected project, guarded by the same dev-only gate as 44.5-02. No schema validation in this task — focus on the round-trip (read file → edit in browser → write file → trigger rebuild).",
+  "type": "site",
+  "keywords": "brood-editor,filesystem,local-dev",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.213Z",
+  "updated_at": "2026-04-20T03:05:19.213Z"
+}

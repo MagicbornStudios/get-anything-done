@@ -1,0 +1,23 @@
+{
+  "id": "44-35",
+  "phase": "44",
+  "status": "done",
+  "goal": "Encounter-style skill surfacing in `gad snapshot`: inline the most-relevant equipped skills for the current sprint into snapshot output so subagents (and the main session post-compact) see \"which skills apply to this encounter\" rather than having to re-discover them by trigger words. Today snapshot has no skill block at all — agents discover skills via their runtime dir (`.claude/skills/`) at session start, which misses proto-skills + doesn't weight by relevance. User framing: \"the snapshot provides the encounter / the obstacle and we use the skills we have equipped. like almost like a game and these are encounters.\" Mechanism: at snapshot time, (a) build a query string from the current sprint's open task goals + STATE.xml next-action + current-phase goal, (b) compute top-N skill relevance via cosine similarity against pre-computed skill embeddings (gad models backend already shipped, commit 9412d67) with a Jaccard token-overlap fallback when the embeddings model isn't installed, (c) include both canonical skills under `skills/` AND pending proto-skills under `.planning/proto-skills/` in the ranking — proto-skills get a \"(proto, run `gad evolution install` to equip)\" annotation so the operator can promote-on-demand, (d) emit a new `-- EQUIPPED SKILLS -- ` block in snapshot output listing top-N (configurable, default 5) entries with name + description + `:runtime-install-hint`, (e) respect the existing snapshot token budget — cap at ~500 tokens for the skills block. Edge cases: no model installed → Jaccard; no open tasks → fall back to current-phase goal; empty result → skip block. Optional flag `gad snapshot --skills=0` to disable when not wanted. This is the same \"equipped skills for the encounter\" shape we would give a subagent via a prompt, but hoisted into snapshot so it's cheap and automatic. Sibling follow-up (not in this task): a similar pass for workflows / decisions / references.",
+  "type": "cli",
+  "keywords": "snapshot,skills,embeddings,jaccard,proto-skills,relevance,encounter,subagent-hydration",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.124Z",
+  "updated_at": "2026-04-20T03:05:19.124Z"
+}

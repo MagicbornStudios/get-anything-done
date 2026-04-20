@@ -1,0 +1,23 @@
+{
+  "id": "22-03",
+  "phase": "22",
+  "status": "done",
+  "goal": "Per-eval-project cards for all six projects with greenfield/brownfield split.",
+  "type": "",
+  "keywords": "portfolio,projects,greenfield,brownfield",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.321Z",
+  "updated_at": "2026-04-20T03:05:18.321Z"
+}

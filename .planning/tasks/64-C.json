@@ -1,0 +1,23 @@
+{
+  "id": "64-C",
+  "phase": "64",
+  "status": "done",
+  "goal": "Deprecate the legacy Node SEA release script now that the Bun release build is green. Keep the SEA path available for one release as an escape hatch, mark it deprecated, and do not touch the npm tarball publish chain per gad-274.",
+  "type": "pipeline",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "codex",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "repo-planner",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.548Z",
+  "updated_at": "2026-04-20T03:05:19.548Z"
+}

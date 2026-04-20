@@ -1,0 +1,23 @@
+{
+  "id": "45-05",
+  "phase": "45",
+  "status": "done",
+  "goal": "Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants.",
+  "type": "site",
+  "keywords": "epigraphs,art-of-war,copy,visual-identity,content,45-16-upstream",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.285Z",
+  "updated_at": "2026-04-20T03:05:19.285Z"
+}

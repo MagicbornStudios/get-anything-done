@@ -1,0 +1,23 @@
+{
+  "id": "44-34",
+  "phase": "44",
+  "status": "cancelled",
+  "goal": "44-28.B4 — Portable Node bootstrap branch for the installer. When the consumer passes `--node` (or picks it in the interactive prompt), the installer (a) downloads a pinned Node zip (current LTS or whatever the site build targets) from our release assets — NOT from nodejs.org — so we own the distribution channel end-to-end; (b) extracts to `&lt;target&gt;/.planning/.node/`; (c) writes a small `.planning/.cmd/gad.cmd` (or equivalent shim) that points at `.planning/.node/node.exe` + the gad.exe location; (d) adds an instruction block in the installer's success message explaining how to activate the portable Node for this shell session. Do NOT touch the consumer's system PATH — this is a fenced install that works by being invoked through the shim. Depends on 44-31 (release pipeline must host the node zip) + 44-32 (installer --node flag wiring). Leave GitHub Actions out.",
+  "type": "framework",
+  "keywords": "portable-node,node-bootstrap,installer,fenced-install,shim,cmd",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.115Z",
+  "updated_at": "2026-04-20T03:05:19.115Z"
+}

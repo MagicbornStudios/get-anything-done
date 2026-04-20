@@ -1,0 +1,23 @@
+{
+  "id": "44-03",
+  "phase": "44",
+  "status": "done",
+  "goal": "App-forge build preservation: today `gad eval verify` flags app-forge v1 MISSING because preservation expects a statically-servable dist/ but forge is a Next.js app producing `.next/` (server components, no output:export). Decide the path: (a) add `output: \"export\"` to `apps/forge/next.config.mjs` and rewrite any server-only code so `next build` produces `out/`, then teach `gad eval preserve` to copy `out/` for Next.js eval species; (b) skip static preservation for forge entirely and instead preserve a headless Playwright trace / screenshot bundle as the \"build artifact\"; (c) run forge as a live dev server from the portfolio site when viewing its eval (no static artifact). Capture the decision, update `gad eval preserve` per the chosen path, re-run preservation for app-forge v1, and confirm `gad eval verify` goes green. Also file a runtime-identity record so the preservation audit's other MISSING column clears.",
+  "type": "pipeline",
+  "keywords": "eval-preservation,next-js,app-forge,gad-eval-verify",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.053Z",
+  "updated_at": "2026-04-20T03:05:19.053Z"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "51-07",
+  "phase": "51",
+  "status": "done",
+  "goal": "gad publish CLI command with operator attribution. Subagents spawned via /api/dev/spawn inherit OPERATOR_ID/GAD_AGENT_ID env vars (task 51-03) but had no CLI consumer that actually threaded them as request headers. Provide one so an agent runtime calling `gad publish escape-the-dungeon --species gad --version v7` from inside a spawned shell stamps MANIFEST.publishedBy with the human operator, not the runtime.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "51-03"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.395Z",
+  "updated_at": "2026-04-20T03:05:19.395Z"
+}

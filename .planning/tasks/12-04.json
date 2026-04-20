@@ -1,0 +1,23 @@
+{
+  "id": "12-04",
+  "phase": "12",
+  "status": "done",
+  "goal": "Simplify root AGENTS.md: remove the 15-file mandatory read order. Agents use gad snapshot on session start, not manual file reads. Remove GSD section. Keep build/lint/verify gates, conventions, site copy guide. Reference vendor/get-anything-done/AGENTS.md as the canonical loop definition.",
+  "type": "",
+  "keywords": "agents,simplify,redundancy",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.054Z",
+  "updated_at": "2026-04-20T03:05:18.054Z"
+}

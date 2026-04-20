@@ -1,0 +1,23 @@
+{
+  "id": "42.2-42",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Decision based on 42.2-41 findings: (A) vendor Graphify as a `skills/gad-graphify/` keeper and accept the Python runtime dep, or (B) build a GAD-native graph extractor in Node that consumes planning XML + markdown + JSON and emits the same `graph.json` shape so third-party tools (Obsidian, Neo4j, Gephi) still work. Produces a decision doc (new gad-NNN entry in DECISIONS.xml).",
+  "type": "framework",
+  "keywords": "decision,graphify,vendor-vs-native,hybrid,gad-197",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.815Z",
+  "updated_at": "2026-04-20T03:05:18.815Z"
+}

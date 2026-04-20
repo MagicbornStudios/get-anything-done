@@ -1,0 +1,23 @@
+{
+  "id": "44.5-01b",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Draft/published model — add `published: false` boolean to `project.json` schema (default draft) + reserve `published` on `species.json` without enforcing yet. Update `/project-market` page component to filter `FEATURED_PROJECTS` / marketplace lists to `published === true`; add a \"no published projects yet — browse drafts in the editor\" empty state with a CTA that routes to the Project Editor. Update `build-site-data.mjs` or equivalent data generator to read the new field and surface it on every project record. `/projects/[...id]` listing detail and `gad eval list` remain unfiltered per decision gad-189. Operator-facing flip is a single checkbox in the editor (44.5-01c). Schema migration: touch every existing `project.json` to add `\"published\": false` explicitly — do not rely on missing-field-means-draft, because the difference between \"not yet touched\" and \"explicitly draft\" matters for later auditing. Acceptance: `/project-market` renders the empty state with the editor CTA until at least one project flips published.",
+  "type": "site",
+  "keywords": "project-editor,published,draft,project-json,marketplace-filter,schema",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.195Z",
+  "updated_at": "2026-04-20T03:05:19.195Z"
+}

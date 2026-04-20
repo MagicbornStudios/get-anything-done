@@ -1,0 +1,26 @@
+{
+  "id": "51-09",
+  "phase": "51",
+  "status": "done",
+  "goal": "UI publish actions need to be distinguishable from CLI/agent publishes in the audit trail. Without a marker, server logs show `operator=&lt;id&gt;` for both a Bestiary tab click and a `gad publish` call from an agent, hiding intent.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "51-03",
+    "51-07"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.402Z",
+  "updated_at": "2026-04-20T03:05:19.402Z"
+}

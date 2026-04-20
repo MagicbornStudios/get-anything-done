@@ -1,0 +1,23 @@
+{
+  "id": "21-02",
+  "phase": "21",
+  "status": "done",
+  "goal": "Speed up planning-ref-verify by reading from planning-config roots instead of full tree walk, plus cache fs.statSync results.",
+  "type": "",
+  "keywords": "perf,verify,cache",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.237Z",
+  "updated_at": "2026-04-20T03:05:18.237Z"
+}

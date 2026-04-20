@@ -1,0 +1,23 @@
+{
+  "id": "20-05",
+  "phase": "20",
+  "status": "done",
+  "goal": "Optional MCP server package: thin adapter over the same core as CLI (verify, snapshot summary, session status). Stdio MCP; document Cursor config. Agents may use it; primary user remains human IDE workflows.",
+  "type": "",
+  "keywords": "mcp,adapter,cursor",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.222Z",
+  "updated_at": "2026-04-20T03:05:18.222Z"
+}

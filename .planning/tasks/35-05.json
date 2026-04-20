@@ -1,0 +1,23 @@
+{
+  "id": "35-05",
+  "phase": "35",
+  "status": "in-progress",
+  "goal": "After the naming/portability cleanup lands, review inherited GSD SDK design and the deferred workstream concept before restoring any workstream feature. Confirm which parts of the old SDK are worth keeping, which should stay compatibility-only, and whether workstreams should exist in GAD at all.",
+  "type": "",
+  "keywords": "workstreams,sdk,review,lineage,deferred",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.588Z",
+  "updated_at": "2026-04-20T03:05:18.588Z"
+}

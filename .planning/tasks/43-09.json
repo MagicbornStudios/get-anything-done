@@ -1,0 +1,23 @@
+{
+  "id": "43-09",
+  "phase": "43",
+  "status": "done",
+  "goal": "Update gad CLI help text, command surfaces, and snapshot output to use the new vocabulary. gad eval list shows species/generation rows. gad eval preserve gets a new signature that takes project + species + generation. Old --version flag either errors with a redirect or accepts the new shape.",
+  "type": "cli",
+  "keywords": "cli,help-text,gad-eval,snapshot",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.028Z",
+  "updated_at": "2026-04-20T03:05:19.028Z"
+}

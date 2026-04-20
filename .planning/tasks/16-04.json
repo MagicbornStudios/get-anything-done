@@ -1,0 +1,23 @@
+{
+  "id": "16-04",
+  "phase": "16",
+  "status": "done",
+  "goal": "Add file refs to snapshot: for each active/in-progress task, include code and doc files touched (from git log scoped to project path). Add recent git log (last 5-10 commits for the project). These give the agent immediate code context without manual file reads.",
+  "type": "",
+  "keywords": "snapshot,file-refs,git-log",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.167Z",
+  "updated_at": "2026-04-20T03:05:18.167Z"
+}

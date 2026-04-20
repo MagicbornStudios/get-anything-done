@@ -1,0 +1,23 @@
+{
+  "id": "43-11",
+  "phase": "43",
+  "status": "done",
+  "goal": "Update ROADMAP.xml phase 44.5 title from \"Brood Editor\" to \"Species Editor\" and rewrite its goal to drop \"brood\" / \"Brood Editor\" references, reserve /project-editor route name, and embed the Lovable/Bolt-style species-without-build visualization scope (D-17, D-18). Update phase 45 goal to drop the \"v4 brood\" example phrasing. Closed phase prose stays verbatim per D-15.",
+  "type": "docs",
+  "keywords": "roadmap,phase-44.5,phase-45,brood-rename",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.034Z",
+  "updated_at": "2026-04-20T03:05:19.034Z"
+}

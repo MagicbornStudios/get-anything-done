@@ -1,0 +1,23 @@
+{
+  "id": "16-03",
+  "phase": "16",
+  "status": "done",
+  "goal": "Add gad snapshot --sprint mode: collapse done phases to id|title|done (no goal text), inline only active/planned phases within current sprint, show only open tasks (planned/in-progress), omit completed task history. Measure token reduction vs current full dump.",
+  "type": "",
+  "keywords": "snapshot,optimization,token-reduction",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.164Z",
+  "updated_at": "2026-04-20T03:05:18.164Z"
+}

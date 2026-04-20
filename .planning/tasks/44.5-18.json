@@ -1,0 +1,23 @@
+{
+  "id": "44.5-18",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "VCS speech capture + landmark neutral prompt — add mic icon and landmark icon per panel list item row. Mic captures speech and injects \"landmark identifier: {cid} --- {transcribed text}\" as freeform prompt snippet. Landmark copies \"landmark: {cid}\" to clipboard. Neutral prompt with no CRUD verb for spatial/layout references.",
+  "type": "site",
+  "keywords": "vcs,speech,landmark,dictation,prompt,devpanel,ux",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.257Z",
+  "updated_at": "2026-04-20T03:05:19.257Z"
+}

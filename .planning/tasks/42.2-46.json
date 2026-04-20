@@ -1,0 +1,23 @@
+{
+  "id": "42.2-46",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Verb collapse documentation — write `references/skill-lifecycle.md` explaining decision gad-198's two-verb model (**express** = `gad try` for epigenetic temporary expression; **integrate** = `gad evolution promote` for permanent DNA integration) against the three states (**expressed** in `.gad-try/`, **mutation** in `.planning/proto-skills/`, **integrated** in `.claude/skills/` or canonical `skills/`). Map every existing CLI command to its lifecycle role: `gad try`, `gad try cleanup`, `gad evolution install`, `gad evolution promote`, `gad evolution shed`, `gad evolution discard`, `gad skill promote-folder`, `gad install` (local), `gad install --global`. Deprecate `gad install --global` as the default first-encounter path for new skills (route new users through `gad try` + `gad evolution promote` instead). Backward compatible — no CLI changes, docs only. Update `references/skill-shape.md` §1 and AGENTS.md loop section to cite the new lifecycle model. Per decision gad-198.",
+  "type": "docs",
+  "keywords": "docs,skill-lifecycle,verb-collapse,references,gad-198",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "human-default-0004",
+  "agent_role": "default",
+  "runtime": "human",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.270Z",
+  "updated_at": "2026-04-20T03:05:19.270Z"
+}

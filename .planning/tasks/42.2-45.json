@@ -1,0 +1,23 @@
+{
+  "id": "42.2-45",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Implement `skills/gad-planning-graph/` — Node-only knowledge-graph extractor that walks `.planning/*.xml`, `skills/*/SKILL.md`, `decisions/*.xml`, `workflows/*.md` and emits `site/data/planning-graph.json` in a shape compatible with Graphify's `graph.json` (typed nodes + typed edges + community detection so downstream tools like Obsidian, Neo4j, Gephi can consume it). Node types: `phase`, `task`, `decision`, `skill`, `workflow`, `file`, `requirement`. Edge types: `cites`, `depends_on`, `decides`, `belongs_to`, `authored_by`, `supersedes`. Uses Node `graphology` or similar for graph primitives. First-cut scope: structural extraction only, no NL query surface (that's 42.2-43's domain via command+K traversal). Per decision gad-197.",
+  "type": "framework",
+  "keywords": "framework,planning-graph,extractor,native,node,gad-197,gad-199",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.827Z",
+  "updated_at": "2026-04-20T03:05:18.827Z"
+}

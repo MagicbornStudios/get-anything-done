@@ -1,0 +1,23 @@
+{
+  "id": "46-09",
+  "phase": "46",
+  "status": "done",
+  "goal": "Teachings reader routes — /teachings index (card grid by category, difficulty + date + tags) and /teachings/[slug] detail (marked markdown render, frontmatter stripped, backrefs panel for implementation/decisions/phases/related). Server components read teachings/index.json + per-tip md bodies from teachings/static/**. Decision gad-264 promoted this into active phase 46 scope. Acceptance: curl /teachings returns 200 with tip titles visible; curl /teachings/&lt;slug&gt; returns 200 with rendered body. Verified against all 6 indexed tips.",
+  "type": "site",
+  "keywords": "teachings,site,route,reader,markdown,backrefs",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.358Z",
+  "updated_at": "2026-04-20T03:05:19.358Z"
+}

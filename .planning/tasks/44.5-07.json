@@ -1,0 +1,23 @@
+{
+  "id": "44.5-07",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Bestiary view — read-only UI for a project's accumulated broods. Renders as a grid of bestiary-entry cards, one per species, each card showing: species name, generation count, newest generation thumbnail, animated trait bars for the 6-8 key traits (44.5-08 dependency), click-to-expand inline panel showing all generations in the species's brood with a visual diff tree (44.5-09 dependency) highlighting which traits changed between adjacent generations. Card cids are deterministic on species slug; generation-row cids are deterministic on species+version. The bestiary is the primary left-pane in the editor's split viewport for 44.5-01. Acceptance: app-forge's bestiary shows one species (gad) with one generation (v1); project-editor's bestiary shows one species (app-forge-baseline) with its inherited-baseline badge and zero generations of its own.",
+  "type": "site",
+  "keywords": "project-editor,bestiary,brood,species-detail,site,cid",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.225Z",
+  "updated_at": "2026-04-20T03:05:19.225Z"
+}

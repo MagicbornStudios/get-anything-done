@@ -1,0 +1,23 @@
+{
+  "id": "65-F",
+  "phase": "65",
+  "status": "done",
+  "goal": "Slice F — Tracks 6+7+10 skills/observability/integrations: 6.1 /skills picker; 6.2 /skill find; 6.3 /skill candidates; 7.1 /events viewer; 7.2 tool intent breadcrumb (closed in 7a9c19b — Transcript.tsx integration); 7.3 trace replay (beta); 10.1 /eval inline; 10.2 /health panel; 10.3 GadCommandPanel generic runner. Commits: c083c49, c7b4bb8, b939614, 7a9c19b.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-codex-lane-f",
+  "agent_role": "codex-lane",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "scaffold-visual-context-surface",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.570Z",
+  "updated_at": "2026-04-20T03:05:19.570Z"
+}

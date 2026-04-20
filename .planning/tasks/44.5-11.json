@@ -1,0 +1,23 @@
+{
+  "id": "44.5-11",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Scaffold the DNA Editor pane inside the Project Editor left-pane region (sibling to the Bestiary pane) using the `scaffold-visual-context-surface` skill promoted 2026-04-15. Follow its 6-step checklist: (1) dev gate via `NODE_ENV === 'development'`, (2) enumerate panes + cid assignments (pane shell `dna-editor-pane-site-section`, four state groups `dna-editor-state-{dna,expressed,mutation,shed}-site-section`, row prototype `dna-editor-gene-&lt;slug&gt;-site-section`), (3) emit cids as literal strings (no computed cids — include a prototype literal in a comment for the row family), (4) register identities with the Visual Context Panel, (5) round-trip one modal-footer CRUD prompt against a real cid BEFORE any feature wiring, (6) only then begin list rendering / action wiring. Ships with empty state groups — the list population is 44.5-12's scope. Dev-panel badge \"DNA Editor (dev mode)\" visible. First real application of the `scaffold-visual-context-surface` skill; success criterion is that the skill's checklist guides the scaffolding without re-derivation. Per decision gad-198.",
+  "type": "site",
+  "keywords": "dna-editor,project-editor,scaffold,vcs,visual-context-system,gad-198",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "scaffold-visual-context-surface",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.237Z",
+  "updated_at": "2026-04-20T03:05:19.237Z"
+}

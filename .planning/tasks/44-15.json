@@ -1,0 +1,23 @@
+{
+  "id": "44-15",
+  "phase": "44",
+  "status": "done",
+  "goal": "Lock the component identity pattern for the Visual Context Panel: use explicit SiteSection cid=\"...-site-section\" literals as the default searchable section handle, keep Identified optional for inner-block granularity, and remove duplicate in-section panel rendering so each section shows one canonical panel surface. Document the pattern and human-in-the-loop prompt handoff workflow in a reusable skill.",
+  "type": "site",
+  "keywords": "visual-context-panel,site-section,cid,identifiers,human-in-the-loop,skill",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "create-skill",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.144Z",
+  "updated_at": "2026-04-20T03:05:19.144Z"
+}

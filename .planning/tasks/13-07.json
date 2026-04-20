@@ -1,0 +1,23 @@
+{
+  "id": "13-07",
+  "phase": "13",
+  "status": "done",
+  "goal": "CLI error hardening: audit all gad.cjs commands for gad-12 compliance (missing-arg UX prints choices + rerun hint). Test edge cases: missing .planning/ dirs, malformed XML, empty files.",
+  "type": "",
+  "keywords": "error-handling,hardening,gad-12",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.087Z",
+  "updated_at": "2026-04-20T03:05:18.087Z"
+}

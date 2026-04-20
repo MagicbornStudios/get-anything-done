@@ -1,0 +1,23 @@
+{
+  "id": "22-02",
+  "phase": "22",
+  "status": "done",
+  "goal": "Hub/home page explaining the experiment, freedom hypothesis, methodology, and linking to every section.",
+  "type": "",
+  "keywords": "portfolio,hub,home",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.317Z",
+  "updated_at": "2026-04-20T03:05:18.317Z"
+}

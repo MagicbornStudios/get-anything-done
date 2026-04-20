@@ -1,0 +1,25 @@
+{
+  "id": "51-06",
+  "phase": "51",
+  "status": "done",
+  "goal": "Per-project best/latest score chips on /project-market/species/[species] detail page. Operators evaluating a species&apos;s portfolio against one project want to see the high-water mark and the most recent scored attempt at a glance, not just the count of generations.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "44-44"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.392Z",
+  "updated_at": "2026-04-20T03:05:19.392Z"
+}

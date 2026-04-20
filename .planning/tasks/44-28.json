@@ -1,0 +1,23 @@
+{
+  "id": "44-28",
+  "phase": "44",
+  "status": "planned",
+  "goal": "UMBRELLA (see decision gad-188): site-as-project-management-UI + Windows installer + release pipeline. Discuss-phase 2026-04-14 reframed this from a thin \"gad site install\" task into a 5-sub-task spine. User's atomic decisions: no npm publishing ever (distribution is GitHub releases of get-anything-done, pulled from our site); Windows-first with a real lightweight installer; no contamination of consumer repo (installer writes only to .planning/, .claude/, .codex/, .agent/, etc. — .planning is the safe zone); site lives at .planning/site/ as a self-contained Next.js server runtime with a launcher.exe for double-click read-only operation; installer prompts {site, skills, planning, node} with args to bypass prompts; skills branch gated on node+gad.exe present; no backward-compat; consumer baseline is \"has a computer, finds the repo, downloads the installer, reads README, double-clicks launcher\"; AI coding agent install is on the consumer. Split into: 44-30 (A1 data scoping — ships standalone), 44-31 (B0 release pipeline foundation), 44-32 (B2 installer extension — new flags + release-zip source), 44-33 (B3 site packaging for .planning/site/), 44-34 (B4 portable node bootstrap). Dropped from original plan: B1 (gad.exe build — already exists as Node SEA, see dist/release/), and B5 (runtime rewriters — already shipped in bin/install.js for 9 coding agents). This task stays open as the tracking umbrella until all 5 sub-tasks close.",
+  "type": "meta",
+  "keywords": "umbrella,site-install,installer,release-pipeline,data-scoping,windows",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.098Z",
+  "updated_at": "2026-04-20T03:05:19.098Z"
+}

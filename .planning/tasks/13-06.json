@@ -1,0 +1,23 @@
+{
+  "id": "13-06",
+  "phase": "13",
+  "status": "done",
+  "goal": "Flesh out write-tech-doc SKILL.md: add concrete examples, mermaid diagram patterns, decision-referencing conventions. Currently steps are correct but thin.",
+  "type": "",
+  "keywords": "skills,write-tech-doc,content",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.084Z",
+  "updated_at": "2026-04-20T03:05:18.084Z"
+}

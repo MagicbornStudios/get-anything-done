@@ -1,0 +1,26 @@
+{
+  "id": "25-02",
+  "phase": "25",
+  "status": "done",
+  "goal": "Write the hook handler script at bin/gad-trace-hook.cjs that Claude Code invokes for PreToolUse/PostToolUse.",
+  "type": "",
+  "keywords": "hook-handler,claude-code,pretooluse,posttooluse,trace",
+  "depends": [
+    "25-01",
+    "25-03"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.438Z",
+  "updated_at": "2026-04-20T03:05:18.438Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "20-01",
+  "phase": "20",
+  "status": "done",
+  "goal": "Document tooling eval contract: extend TRACE.json with eval_type tooling|mcp, trace_schema_version, nested tooling or mcp metrics blocks, optional metrics.json for granular histograms. Record gad-26â€“gad-28 in DECISIONS.xml. Add a short section to vendor/get-anything-done/AGENTS.md (or evals/README) describing implementation vs tooling evals and how regressions are compared.",
+  "type": "",
+  "keywords": "tooling-eval,trace-schema,documentation,gad-26,gad-27,gad-28",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.209Z",
+  "updated_at": "2026-04-20T03:05:18.209Z"
+}

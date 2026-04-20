@@ -1,0 +1,23 @@
+{
+  "id": "14-07",
+  "phase": "14",
+  "status": "done",
+  "goal": "Review CONTEXT.md: what it is, how discuss-phase produces it, how downstream agents (researcher, planner) consume it. Evaluate whether gad CLI should have a `gad context-doc` command or if gad-tools.cjs scaffold is sufficient. Decide if CONTEXT.md should be a GAD skill output or a planning file type. Update skills and CLI to integrate CONTEXT.md into the loop if valuable.",
+  "type": "",
+  "keywords": "context-md,review,skills,cli,integration",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.110Z",
+  "updated_at": "2026-04-20T03:05:18.110Z"
+}

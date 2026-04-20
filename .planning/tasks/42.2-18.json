@@ -1,0 +1,23 @@
+{
+  "id": "42.2-18",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Document the canonical standard flow for creating new command/workflow skills in references/skill-shape.md.",
+  "type": "docs",
+  "keywords": "docs,skill-shape,standard-flow,lifecycle",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.729Z",
+  "updated_at": "2026-04-20T03:05:18.729Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "22-37",
+  "phase": "22",
+  "status": "done",
+  "goal": "Reorganize .planning/ root: move ad-hoc markdown docs (ASSUMPTIONS.md, GAPS.md, SKEPTIC.md, SESSION-REFLECTION-*.md) into a new .planning/docs/ subdirectory per user directive. Rationale: .planning/ root should hold the formal XML artifacts that gad snapshot surfaces; ad-hoc human-written docs that are not formal (but still project-relevant) belong in a peer docs/ folder. Update all site page references to the new paths.",
+  "type": "",
+  "keywords": "planning-docs,reorganization,site-refs",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.452Z",
+  "updated_at": "2026-04-20T03:05:18.452Z"
+}

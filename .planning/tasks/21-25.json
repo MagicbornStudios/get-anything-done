@@ -1,0 +1,25 @@
+{
+  "id": "21-25",
+  "phase": "21",
+  "status": "done",
+  "goal": "Create create_skill skill doc (skills/create-skill/SKILL.md) that documents how bare/emergent agents can define their own reusable skills. Only skill bare starts with; emergent starts with create_skill + inherited skills from previous runs.",
+  "type": "",
+  "keywords": "create-skill,skill,emergent,bare,ai-workflow",
+  "depends": [
+    "21-22"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.293Z",
+  "updated_at": "2026-04-20T03:05:18.293Z"
+}

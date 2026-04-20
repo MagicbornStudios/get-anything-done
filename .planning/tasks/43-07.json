@@ -1,0 +1,23 @@
+{
+  "id": "43-07",
+  "phase": "43",
+  "status": "done",
+  "goal": "Update tests/eval-preservation.test.cjs (and any other tests broken by the schema rename) to expect the new species/generation paths. The test now asserts both positive (every (project, species) pair has TRACE.json + run/ + preserved build at the new paths) and negative (no flat-layout dirs remain at the top level of evals/ or apps/portfolio/public/evals/). All 8 tests passing. Two pre-existing-data-loss generations exempted via KNOWN_PRE_PHASE_43_DATA_LOSS set with documentation.",
+  "type": "framework",
+  "keywords": "tests,gad-38,preservation",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.021Z",
+  "updated_at": "2026-04-20T03:05:19.021Z"
+}

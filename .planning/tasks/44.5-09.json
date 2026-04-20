@@ -1,0 +1,23 @@
+{
+  "id": "44.5-09",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Visual diff tree primitive. Renders a side-by-side (or overlaid) tree view of two config objects (typically generation N vs generation N+1) where changed leaves glow with a color gradient indicating change direction (+/- for numerics, added/removed/modified for strings/objects). Used inside bestiary-card expansion (44.5-07) to surface what changed between generations in a species's brood. Every diff-row has a cid derived from the config key path for grep-ability. Accepts arbitrary JSON — schema-agnostic by design so it works for gad.json, species.json, recipe.json, and future types.",
+  "type": "site",
+  "keywords": "project-editor,visual-diff,tree,generations,brood,primitive,site",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.231Z",
+  "updated_at": "2026-04-20T03:05:19.231Z"
+}

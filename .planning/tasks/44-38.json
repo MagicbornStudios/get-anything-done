@@ -1,0 +1,23 @@
+{
+  "id": "44-38",
+  "phase": "44",
+  "status": "done",
+  "goal": "44-28.B5 — Fix /gad-update path by switching from npx (which 404s because get-anything-done is not published to npm public registry) to GitHub Releases tarball. Discovered 2026-04-18: workflows/update.md step run_update invokes npx -y get-anything-done@latest which dies for every user. Rewrite: (a) hooks/gad-check-update.js polls GitHub Releases API for latest tag, (b) workflows/update.md fetches tarball via gh release download, unpacks, runs bin/install.js, (c) version-compare against git tag not npm, (d) keep backup/reapply-patches flow. Acceptance: gad update works on a clean machine with zero prior vendor checkout. Blocks wider adoption — today every user who runs /gad-update sees 404. Connects to 44-28.B0 (44-31, done).",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-default-0026",
+  "agent_role": "default",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.161Z",
+  "updated_at": "2026-04-20T03:05:19.161Z"
+}

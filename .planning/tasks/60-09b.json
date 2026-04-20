@@ -1,0 +1,23 @@
+{
+  "id": "60-09b",
+  "phase": "60",
+  "status": "done",
+  "goal": "Read-only handoff queue dashboard in planning-app (/handoffs). Walks vendor/.planning/handoffs/{open,claimed,closed}/, parses YAML frontmatter, renders bucket sections with priority and estimated_context chips. Auth-gated. Highlights operator&apos;s own claims. Writes still flow through gad handoffs CLI until per-file format stabilizes. Adds /handoffs to AppShell + middleware.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.488Z",
+  "updated_at": "2026-04-20T03:05:19.488Z"
+}

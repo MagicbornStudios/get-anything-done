@@ -1,0 +1,23 @@
+{
+  "id": "12-01",
+  "phase": "12",
+  "status": "done",
+  "goal": "Add decisions gad-17 (revised: auto-compact over fresh sessions), gad-18 (canonical loop: snapshot â†’ work â†’ update â†’ commit), gad-19 (GSD is dead, GAD only).",
+  "type": "",
+  "keywords": "decisions,loop,formalization",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.045Z",
+  "updated_at": "2026-04-20T03:05:18.045Z"
+}

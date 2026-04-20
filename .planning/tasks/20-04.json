@@ -1,0 +1,23 @@
+{
+  "id": "20-04",
+  "phase": "20",
+  "status": "done",
+  "goal": "Harden implementation eval scoring automation: generate scores.json alongside SCORE.md from score-generator; change gad eval scores to prefer JSON totals over SCORE.md regex. Prepare same pattern for tooling composite (tooling_composite) so weights can evolve without breaking old runs.",
+  "type": "",
+  "keywords": "scores-json,eval-scores,automation",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.218Z",
+  "updated_at": "2026-04-20T03:05:18.218Z"
+}

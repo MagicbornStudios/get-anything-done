@@ -1,0 +1,23 @@
+{
+  "id": "51-01",
+  "phase": "51",
+  "status": "done",
+  "goal": "Clerk skeleton in apps/planning-app: install @clerk/nextjs, mount middleware that protects /api/dev/* and /projects/edit/*, render UserButton in header, expose helper that resolves operator id (Clerk userId or &apos;solo-operator&apos; fallback). Stamp publishedBy on the publish PATCH route from auth(). Solo-operator fallback when CLERK_PUBLISHABLE_KEY/CLERK_SECRET_KEY are unset so local dev keeps working without Clerk creds.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.372Z",
+  "updated_at": "2026-04-20T03:05:19.372Z"
+}

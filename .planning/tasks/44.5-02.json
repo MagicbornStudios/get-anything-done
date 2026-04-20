@@ -1,0 +1,23 @@
+{
+  "id": "44.5-02",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Dev-server command bridge: Node child-process bridge behind a dev-only API route that rejects all requests unless NODE_ENV=development. First cut is permissive: accepts any `gad *` and any `npx *` command so we can iterate on the editor surface without fighting the allow-list. Hardening (explicit allow-list, argument sanitization, per-command timeout tuning) is deferred to a follow-up task after the editor's happy path is proven. Stream stdout/stderr back to the browser via Server-Sent Events or similar. Explicitly rejects production requests at module load time so the wide-open dev surface can never ship in prod.",
+  "type": "site",
+  "keywords": "brood-editor,dev-bridge,security,local-dev",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.206Z",
+  "updated_at": "2026-04-20T03:05:19.206Z"
+}

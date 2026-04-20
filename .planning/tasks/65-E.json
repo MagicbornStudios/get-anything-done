@@ -1,0 +1,23 @@
+{
+  "id": "65-E",
+  "phase": "65",
+  "status": "done",
+  "goal": "Slice E — Track 5 context engineering: 5.1 /snapshot renderer (collapsible sections); 5.2 /context payload inspector overlay; 5.3 token-per-turn sparkline; 5.4 cache hit-rate meter (data layer closed in 7a9c19b); 5.5 /cost teardown with pricing table + top-5 expensive events. Commits: 0b2b190, 7a9c19b.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-codex-lane-e",
+  "agent_role": "codex-lane",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "scaffold-visual-context-surface",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.567Z",
+  "updated_at": "2026-04-20T03:05:19.567Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "60-01",
+  "phase": "60",
+  "status": "done",
+  "goal": "Write references/byok-design.md resolving the open questions in phase 60 goal + decision gad-260: (a) crypto primitive — libsodium sealed-box vs AES-256-GCM with scrypt KDF, recommend one, (b) master-key UX — OS keychain-first (Windows Credential Manager, macOS Keychain, Linux secret-service) with passphrase fallback when keychain unavailable, (c) on-disk format — JSON envelope with version, salt, nonce, per-key metadata (last-rotated, scope, provider), (d) rotation model — in-place vs additive, (e) site-side strategy — browser-only WebCrypto decrypt vs server-side per-user KMS.",
+  "type": "design",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.446Z",
+  "updated_at": "2026-04-20T03:05:19.446Z"
+}

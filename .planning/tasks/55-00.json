@@ -1,0 +1,23 @@
+{
+  "id": "55-00",
+  "phase": "55",
+  "status": "done",
+  "goal": "Catalog all 91 vendor SKILL.md files into DEV/PROD/META lanes per gad-247 + todo 2026-04-17-skill-lane-taxonomy. Output: .planning/notes/skill-lane-taxonomy-2026-04-18.md (counts: 60 dev, 22 meta, 3 prod, 6 dual-tag). Recommends META as third lane. Answers todo open questions (debug=dev+meta, verify-phase=dev, verify-work=dev+prod, create-skill=meta, third lane=yes). Provides phase 55 frontmatter schema + 5-wave migration order. Closes audit todo; phase 55 frontmatter rollout itself is a separate task.",
+  "type": "framework",
+  "keywords": "skill-catalog,lane,dev,prod,meta,taxonomy,phase-55-prep",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.368Z",
+  "updated_at": "2026-04-20T03:05:19.368Z"
+}

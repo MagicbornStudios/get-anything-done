@@ -1,0 +1,23 @@
+{
+  "id": "21-03",
+  "phase": "21",
+  "status": "done",
+  "goal": "Standardize implementation eval composite formula. Replace inconsistent per-eval weights with a single v3 formula: requirement_coverage + planning_quality + per_task_discipline + skill_accuracy + time_efficiency + human_review. Document in DEFINITIONS.md.",
+  "type": "",
+  "keywords": "composite,formula,scoring,v3",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.239Z",
+  "updated_at": "2026-04-20T03:05:18.239Z"
+}

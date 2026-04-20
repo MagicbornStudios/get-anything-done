@@ -1,0 +1,23 @@
+{
+  "id": "42.2-40.a",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Polish items for `gad try` surfaced by operator questions after shipping 42.2-40: (1) clipboard auto-populate with the handoff prompt so the user can paste directly into their coding agent without opening ENTRY.md, (2) clearer documentation that the sandbox is always cwd-relative regardless of whether the gad binary is globally or locally installed, (3) stdout prints the handoff prompt inline alongside the clipboard status so the flow is self-documenting. Originally scoped alongside lower-priority items (strip .git, --branch flag, interactive consent, lowercase SKILL.md warning) — those four are pushed to 42.2-40.b.",
+  "type": "cli",
+  "keywords": "cli,try,polish,clipboard,cwd-docs,shipped",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.803Z",
+  "updated_at": "2026-04-20T03:05:18.803Z"
+}

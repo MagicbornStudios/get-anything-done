@@ -1,0 +1,23 @@
+{
+  "id": "42.2-33",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Ship gad:proto-skill-battery — per-proto discoverability + supersession test, wired as automatic step 9 of workflows/evolution-evolve.md per operator direction.",
+  "type": "skill",
+  "keywords": "skill,proto-skill,battery,supersession,shed,evolution",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.776Z",
+  "updated_at": "2026-04-20T03:05:18.776Z"
+}

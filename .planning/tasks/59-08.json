@@ -1,0 +1,25 @@
+{
+  "id": "59-08",
+  "phase": "59",
+  "status": "done",
+  "goal": "Deprecate landing-site /planning and /projects routes with redirect stubs — server-rendered page that says 'this view moved to gad planning serve' with copy-pasteable install+run commands. Keep for one release cycle then remove. Update all internal cross-links to /my-projects.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [
+    "59-04"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-default-0012",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.432Z",
+  "updated_at": "2026-04-20T03:05:19.432Z"
+}

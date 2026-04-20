@@ -1,0 +1,23 @@
+{
+  "id": "44-04",
+  "phase": "44",
+  "status": "done",
+  "goal": "Restore source-searchable dev-id behavior on the public site so copied identifiers and update/delete handoff prompts point back to literal code tokens instead of runtime-only generated ids. `Identified` and `PageIdentified` should prefer explicit literals (`cid`, `stableCid`, or `as`) for `data-cid`/clipboard/search metadata, `SiteSection` should support explicit `cid`, and the shared dev-panel handoff flow should preserve component kind + source-search hint for agent prompts.",
+  "type": "site",
+  "keywords": "dev-panel,dev-ids,searchable-ids,prompts,site",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.055Z",
+  "updated_at": "2026-04-20T03:05:19.055Z"
+}

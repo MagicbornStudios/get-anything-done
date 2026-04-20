@@ -1,0 +1,23 @@
+{
+  "id": "44-31",
+  "phase": "44",
+  "status": "done",
+  "goal": "44-28.B0 — Release pipeline foundation. Today `dist/release/gad-v1.32.0-windows-x64.exe` is a 3-day-stale Node SEA build on one machine; `dist/` is gitignored; zero git tags exist; zero GitHub releases have been published on github.com/MagicbornStudios/get-anything-done. Nothing a consumer can download. Deliverables: (1) Verify + document the existing Node SEA build script that produces dist/release/*.exe. (2) Author a new `build-and-release-locally` skill via create-skill that runs the full sequence idempotently: clean build, version bump (package.json + CHANGELOG.md), rebuild exe, `git tag v`, `gh release create v dist/release/* --notes-from-tag`, verify with `gh release view`. (3) First release cut: v1.33.0 or similar, with current artifacts attached. (4) Consumer-facing README section documenting the \"download installer.exe from latest release → run in target repo\" path. Gates: no GitHub Actions (operator-triggered only), no npm publishing ever, local-only build pre-commit/post-push. Must precede any B2/B3/B4 work — those sub-tasks depend on there being a consumable release.",
+  "type": "framework",
+  "keywords": "release-pipeline,github-releases,node-sea,build-and-release-locally,create-skill,gh-release,postject,node24,onnxruntime",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "build-and-release-locally",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.105Z",
+  "updated_at": "2026-04-20T03:05:19.105Z"
+}

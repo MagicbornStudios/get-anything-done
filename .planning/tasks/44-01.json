@@ -1,0 +1,23 @@
+{
+  "id": "44-01",
+  "phase": "44",
+  "status": "done",
+  "goal": "/project-market ProjectCard gains a dev-only Launch eval button that actually runs `gad eval run --project &lt;id&gt; --execute` via a Node child_process spawn from the dev server and streams stdout/stderr back to the browser. POST /api/dev/launch-eval refuses unless NODE_ENV=development. First cut is the live run path; legacy planning-root migration and app-forge build-preservation are split into separate tasks.",
+  "type": "site",
+  "keywords": "project-market,launcher,child-process,site,dev-bridge",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.038Z",
+  "updated_at": "2026-04-20T03:05:19.038Z"
+}

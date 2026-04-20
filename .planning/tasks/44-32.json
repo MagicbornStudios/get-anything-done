@@ -1,0 +1,23 @@
+{
+  "id": "44-32",
+  "phase": "44",
+  "status": "done",
+  "goal": "44-28.B2 — Extend bin/install.js (5993 lines, already supports 9 coding-agent runtimes with per-runtime path rewriters) with: (a) new `--site` flag that installs a self-contained site tree into `&lt;target&gt;/.planning/site/`; (b) new `--planning` flag that scaffolds `&lt;target&gt;/.planning/` with STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, DECISIONS.xml from a template; (c) new `--node` flag that opts into the portable-node bootstrap branch (44-34); (d) new `--from-release &lt;url|tag&gt;` source mode that downloads the release zip from github.com/MagicbornStudios/get-anything-done releases and extracts into a scratch dir for the installer to source files from — today install.js assumes it's running from inside the GAD repo source tree, which is wrong for a consumer that only has the installer.exe; (e) reshape interactive mode from \"pick one runtime\" to \"pick features {site, skills, planning, node}\" → then runtime picker for the skills branch; (f) gate the skills branch on `gad.exe` + node being detectable on PATH or in `.planning/.node/` — refuse install with a clear error if missing; (g) enforce the local-only install scope (no home-dir writes). Rebuild installer.exe via Node SEA, attach to the next release. Depends on 44-31 (B0) landing first so there's a release to pull from.",
+  "type": "framework",
+  "keywords": "installer,install-js,site-flag,planning-flag,node-flag,from-release,skills-gating,interactive-mode",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.108Z",
+  "updated_at": "2026-04-20T03:05:19.108Z"
+}

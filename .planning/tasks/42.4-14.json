@@ -1,0 +1,23 @@
+{
+  "id": "42.4-14",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Audit and finish phase 43 species.json migration. Phase 43 unified the eval schema around `evals/&lt;project&gt;/project.json` + `evals/&lt;project&gt;/species/&lt;species&gt;/species.json`, but escape-the-dungeon's existing species directories still use `gad.json` instead of `species.json`. Decide canonical name (recommend: `species.json` per phase 43 spec) and either: (a) rename `gad.json` â†’ `species.json` across all existing species in `vendor/get-anything-done/evals/`, OR (b) update phase 43 prose + the CLI loader to treat `gad.json` as the canonical name and abandon `species.json`. User direction 2026-04-14: do the rename to species.json. Update CLI loaders, build-site-data.mjs, eval-preservation tests, and any references in skills/workflows/docs. Pick one shape so app-forge's species file isn't ahead of reality and so the project âŠ‡ species inheritance contract (42.4-15) has a stable file shape to read from.",
+  "type": "framework",
+  "keywords": "schema,species-json,gad-json,rename,phase-43-cleanup,migration",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.935Z",
+  "updated_at": "2026-04-20T03:05:18.935Z"
+}

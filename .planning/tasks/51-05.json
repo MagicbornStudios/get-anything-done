@@ -1,0 +1,26 @@
+{
+  "id": "51-05",
+  "phase": "51",
+  "status": "done",
+  "goal": "Hot-rebuild marketplace-index.generated.json on publish so /my-published and the public marketplace surface state changes without a full vendor-site predev. Avoid re-scanning every TRACE.json — mutate the existing index in place, preserving fields the publish PATCH can&apos;t recompute (score, date, contextFramework).",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "44-40",
+    "51-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.388Z",
+  "updated_at": "2026-04-20T03:05:19.388Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "46-02",
+  "phase": "46",
+  "status": "done",
+  "goal": "Trim landing site nav to 9 public routes. Remove dead route directories (glossary, formulas, insights, bugs, phases, tasks, decisions, eval-guide, standards, data, agents/[id], commands/[id], runs/[project]/[version]). Create /how-it-works stub. Decision gad-207.",
+  "type": "site",
+  "keywords": "nav,routes,cleanup,site-architecture,page-map",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.338Z",
+  "updated_at": "2026-04-20T03:05:19.338Z"
+}

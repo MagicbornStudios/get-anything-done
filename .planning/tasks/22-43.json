@@ -1,0 +1,23 @@
+{
+  "id": "22-43",
+  "phase": "22",
+  "status": "done",
+  "goal": "Scaffold evals/gad-explainer-video/ as a new eval project: REQUIREMENTS.md describing the Remotion GAD explainer video task (3-minute explainer, 4 mandatory gate frames, pedagogical clarity as primary rubric dimension), gad.json with workflow:gad + compare_to bare/emergent siblings + rubric weights. Tests freedom/CSH/emergent-evolution hypotheses on a DIFFERENT task domain (video composition instead of game implementation) â€” the generalization test /skeptic says we need.",
+  "type": "",
+  "keywords": "remotion,eval-domain,generalization,gad-explainer,task-22-31",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.468Z",
+  "updated_at": "2026-04-20T03:05:18.468Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "42.4-21",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "TRACK 3 formula display remainder: refine /how-it-works pressure section (Section 3) to show current values, not just the abstract formula. Previous session delivered formula + dimension table + Shannon entropy decomposition; this task adds a \"Live example\" card between the dimensions table and entropy cards that computes the top-pressure phase from `site/data/self-eval.json` and renders each pressure term with its raw count, weight, and contribution — plus H_d / H_l side-by-side — so a reader sees the formula evaluated end-to-end against real planning data.",
+  "type": "site",
+  "keywords": "site,how-it-works,pressure,formula-display,self-eval-json,track-3,gad-145,gad-220,gad-222",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.983Z",
+  "updated_at": "2026-04-20T03:05:18.983Z"
+}

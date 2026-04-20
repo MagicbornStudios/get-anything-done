@@ -1,0 +1,23 @@
+{
+  "id": "14.5-01",
+  "phase": "14.5",
+  "status": "done",
+  "goal": "Create eval template AGENTS.md that enforces the GAD loop. The eval template's .planning/ directory must include an AGENTS.md that tells the agent: (1) run gad snapshot first, (2) plan phases in ROADMAP.xml before coding, (3) update TASK-REGISTRY.xml per task, (4) update STATE.xml after each phase, (5) capture decisions. This file is what the agent reads to know how to work â€” not a prompt instruction it ignores.",
+  "type": "",
+  "keywords": "eval,agents-md,enforcement,loop",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.114Z",
+  "updated_at": "2026-04-20T03:05:18.114Z"
+}

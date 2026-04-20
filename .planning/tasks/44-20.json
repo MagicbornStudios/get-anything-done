@@ -1,0 +1,23 @@
+{
+  "id": "44-20",
+  "phase": "44",
+  "status": "done",
+  "goal": "Compact the /planning Workflows tab (Identified `PlanningTabWorkflows`) per 2026-04-14 feedback: (a) authored workflows now render as compact React-Flow-primary cards in a grid (matching emergent layout) instead of large Mermaid+React-Flow side-by-side panels; Mermaid is tucked under a `` disclosure. (b) Section blurbs trimmed from 2-3 sentences to one. (c) MethodologyCallout collapsed from a big amber block to a one-line `` disclosure. (d) Authored tree now flattens into the same grid instead of indented nested cards so the grid density is uniform. Noise panel remains deferred (user: \"still under discussion\"). Build clean.",
+  "type": "site",
+  "keywords": "planning-tab,workflows,compact,react-flow,ui",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.076Z",
+  "updated_at": "2026-04-20T03:05:19.076Z"
+}

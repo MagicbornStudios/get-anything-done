@@ -1,0 +1,23 @@
+{
+  "id": "34-04",
+  "phase": "34",
+  "status": "done",
+  "goal": "Build a path-gated release workflow so executable rebuild/release work only triggers on shipped CLI surface changes (bin/, lib/, hooks/, package.json, build/release scripts, and bundled assets). Non-shipping docs/site/eval/planning commits must not require a new release.",
+  "type": "",
+  "keywords": "release-gating,cli-surface,path-filter",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.570Z",
+  "updated_at": "2026-04-20T03:05:18.570Z"
+}

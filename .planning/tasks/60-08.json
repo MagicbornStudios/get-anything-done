@@ -1,0 +1,26 @@
+{
+  "id": "60-08",
+  "phase": "60",
+  "status": "done",
+  "goal": "Landing-site project-dashboard BYOK surface. Lands on planning-app post phase 59 split. Auth-gated. Same key-management surface as 60-07 + scope chain from 60-07b but for cloud projects. Decryption strategy per 60-01 decision — browser WebCrypto or server-side KMS. Keys never transit plaintext over the wire in either direction.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "60-07b",
+    "59-04"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.477Z",
+  "updated_at": "2026-04-20T03:05:19.477Z"
+}

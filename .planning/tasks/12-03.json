@@ -1,0 +1,23 @@
+{
+  "id": "12-03",
+  "phase": "12",
+  "status": "done",
+  "goal": "Rebrand .claude/hooks/ for GAD: remove gsd-check-update.js (checks npm for get-shit-done-cc). Rename gsd-context-monitor.js â†’ context-monitor.js, strip GSD references from warning messages. Rename gsd-statusline.js â†’ statusline.js, strip GSD update check and branding. Update .claude/settings.json to reference new hook filenames.",
+  "type": "",
+  "keywords": "hooks,rebrand,settings",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.052Z",
+  "updated_at": "2026-04-20T03:05:18.052Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "44.5-01a",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Visual Context System reference research for 44.5-01 (discuss-phase deliverable, not a code task). Before PLAN.md is written for 44.5-01, enumerate the exact set of existing Visual Context System components, skills, decisions, and file paths that the Project Editor route will consume: (a) the `SiteSection cid` pattern source (site/components/...), (b) the visual-context-panel component + its modal footer CRUD form, (c) the `gad-visual-context-panel-identities` skill, (d) decisions gad-186/187, (e) how the panel participates in portal modals (decision point from phase 42 work), (f) how dev-id band scan discovers new sections, (g) the global search hook that indexes cids, (h) any missing pieces that would need to be built before the editor can meet the mandatory Visual Context coverage requirement. Produce a short reference index (not a full plan) used as the \"references\" section of 44.5-01's KICKOFF.md. This closes the user's \"make sure what references will be needed for implementation is understood\" instruction from 2026-04-15.",
+  "type": "site",
+  "keywords": "project-editor,visual-context-system,research,references,kickoff-input,clipboard-crud,cid,modal-footer",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.191Z",
+  "updated_at": "2026-04-20T03:05:19.191Z"
+}

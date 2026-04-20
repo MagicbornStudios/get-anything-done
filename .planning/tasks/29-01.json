@@ -1,0 +1,23 @@
+{
+  "id": "29-01",
+  "phase": "29",
+  "status": "done",
+  "goal": "Create CLI build script (scripts/build-cli.mjs) using esbuild to bundle bin/gad.cjs + all lib/*.cjs into dist/gad.cjs â€” single distributable file.",
+  "type": "cli",
+  "keywords": "build,esbuild,bundle,dist,cli",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "execute-phase",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.545Z",
+  "updated_at": "2026-04-20T03:05:18.545Z"
+}

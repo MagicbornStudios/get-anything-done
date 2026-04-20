@@ -1,0 +1,23 @@
+{
+  "id": "44.5-01",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Scaffold the Project Editor route at `/projects/[id]/edit` (new route, separate from the existing `/projects/[...id]` listing detail catch-all), gated to `NODE_ENV=development`. First cut: three-pane split viewport shell with NO real editing yet — left pane placeholder for bestiary grid, right pane placeholder for iframe live preview, bottom pane placeholder for minecraft inventory grid config inspector. Every pane gets an explicit `SiteSection cid=\"project-editor-&lt;pane&gt;-site-section\"` literal, participates in the visual context panel + modal-footer CRUD loop, and is grep-able by cid — per decision gad-189 and the Visual Context System mandate. Renders against `projects/project-editor/project-editor/` as the dogfood target. Does NOT implement edit affordances or the dev bridge — this task is the shell only. Must include a visible \"Project Editor (dev mode)\" dev-panel badge so the operator can see the gate status. Acceptance: route renders in dev with empty panes + cids; `/projects/[...id]` listing detail unchanged; tsc clean; at least one prompt from the visual-context-modal-footer round-trips against a pane cid (proves the Visual Context System is wired before any editor feature work starts).",
+  "type": "site",
+  "keywords": "project-editor,brood-editor,scaffold,route,cid,visual-context,local-dev",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "scaffold-visual-context-surface",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.188Z",
+  "updated_at": "2026-04-20T03:05:19.188Z"
+}

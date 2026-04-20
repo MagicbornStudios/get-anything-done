@@ -1,0 +1,23 @@
+{
+  "id": "42.2-13",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Promote the phase-44.5 candidate (`.planning/candidates/phase-44.5-project-editor-brood-editor-local-dev-ga/CANDIDATE.md`) to a proto-skill via the new `create-proto-skill` flow — first end-to-end pipeline proof. Output must be a self-contained bundle at `.planning/proto-skills/phase-44.5-project-editor-brood-editor-local-dev-ga/` per decision gad-191. Then `gad evolution install` into the Claude runtime, exercise the proto-skill on a task in phase 44.5, capture feedback in VALIDATION.md, and either `gad evolution promote` or `gad evolution discard` based on the test run.",
+  "type": "eval",
+  "keywords": "eval,pipeline,proof,proto-skill,phase-44.5,first-real-evolution",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "create-proto-skill",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.715Z",
+  "updated_at": "2026-04-20T03:05:18.715Z"
+}

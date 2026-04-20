@@ -1,0 +1,25 @@
+{
+  "id": "44-42",
+  "phase": "44",
+  "status": "done",
+  "goal": "Shareable marketplace URLs: sync species/project/workflow/round/status filters to /project-market query string. Reading the URL on mount hydrates filter state; URL keeps in sync as filters change. Enables linking directly to a species or workflow view.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "44-41"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.176Z",
+  "updated_at": "2026-04-20T03:05:19.176Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "43-04",
+  "phase": "43",
+  "status": "done",
+  "goal": "Migrate preserved build artifact paths under apps/portfolio/public/evals/ from flat-name to project/species nesting. escape-the-dungeon-bare/v3/ becomes escape-the-dungeon/bare/v3/ etc. Use git mv. Honors decision gad-38 by keeping every preserved build readable, just at a new addressable path (D-27).",
+  "type": "cleanup",
+  "keywords": "preservation,gad-38,paths,git-mv",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.012Z",
+  "updated_at": "2026-04-20T03:05:19.012Z"
+}

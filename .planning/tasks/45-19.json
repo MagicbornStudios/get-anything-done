@@ -1,0 +1,25 @@
+{
+  "id": "45-19",
+  "phase": "45",
+  "status": "done",
+  "goal": "Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/*.tsx for orphaned files.",
+  "type": "cleanup",
+  "keywords": "cleanup,dead-imports,planning-route,unused-files",
+  "depends": [
+    "45-12"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-default-0025",
+  "agent_role": "default",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.325Z",
+  "updated_at": "2026-04-20T03:05:19.325Z"
+}

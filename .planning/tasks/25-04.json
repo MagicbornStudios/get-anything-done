@@ -1,0 +1,25 @@
+{
+  "id": "25-04",
+  "phase": "25",
+  "status": "done",
+  "goal": "`gad install hooks` CLI subcommand that wires the trace hook into Claude Code settings.json.",
+  "type": "",
+  "keywords": "cli,install-hooks,settings-json,gad-install",
+  "depends": [
+    "25-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.444Z",
+  "updated_at": "2026-04-20T03:05:18.444Z"
+}

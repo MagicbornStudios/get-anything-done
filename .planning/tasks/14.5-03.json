@@ -1,0 +1,23 @@
+{
+  "id": "14.5-03",
+  "phase": "14.5",
+  "status": "done",
+  "goal": "Create gad eval trace reconstruct --project &lt;name&gt; command. Parses git log + planning doc state to build TRACE.json after the fact. Detects: which files were created/modified per commit, which planning docs were updated, time between commits (phase duration), task completion count from TASK-REGISTRY.xml diff. This replaces manual log-cmd/log-skill with post-hoc reconstruction.",
+  "type": "",
+  "keywords": "eval,trace,reconstruct,git-log,automated",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.122Z",
+  "updated_at": "2026-04-20T03:05:18.122Z"
+}

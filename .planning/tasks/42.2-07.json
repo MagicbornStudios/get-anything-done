@@ -1,0 +1,23 @@
+{
+  "id": "42.2-07",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Author `references/skill-shape.md` as the canonical contract for the uniform skill shape: SKILL.md as single entry point, `workflow:` frontmatter key replacing `skill.json`, single `workflows/` dir, proto-skill bundle shape with sibling `workflow.md`, runtime install contract, validator rules, migration checklist. Cited by decisions gad-190/gad-191/gad-192 and by every downstream migration task in phase 42.2.",
+  "type": "docs",
+  "keywords": "skill-shape,references,contract,uniform,migration",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.699Z",
+  "updated_at": "2026-04-20T03:05:18.699Z"
+}

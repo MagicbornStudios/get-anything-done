@@ -1,0 +1,23 @@
+{
+  "id": "44.5-01d",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Update `project-skills-scope-section-site-section` data source on the listing detail (`/projects/[...id]`). The panel stays in place but its current data source (project-level skill catalog) changes to brood/generation-aggregated skill usage pulled from the project's accumulated broods. The aggregation walks every species's generations under the project and sums skill invocations from each generation's preserved trace/attribution data. `build-site-data.mjs` gains a `projectBroodSkillAggregation` helper that produces the input record. Panel UI unchanged beyond the numbers — still source-searchable via the existing cid, still grep-able, still wired to the visual context panel. Acceptance: panel on the listing shows non-zero numbers for app-forge after aggregating app-forge v1's preserved trace, and shows zero + empty state for project-editor (baseline species inherits, no generations yet).",
+  "type": "site",
+  "keywords": "project-editor,listing-detail,skills-scope,aggregation,build-site-data",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.203Z",
+  "updated_at": "2026-04-20T03:05:19.203Z"
+}

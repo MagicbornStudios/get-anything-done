@@ -1,0 +1,23 @@
+{
+  "id": "13-05",
+  "phase": "13",
+  "status": "done",
+  "goal": "Flesh out write-feature-doc SKILL.md: add concrete examples of good feature docs, MDX frontmatter template, sink path resolution logic. Currently steps are correct but thin.",
+  "type": "",
+  "keywords": "skills,write-feature-doc,content",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.082Z",
+  "updated_at": "2026-04-20T03:05:18.082Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "10-02",
+  "phase": "10",
+  "status": "done",
+  "goal": "Migrate gad-01 through gad-15 decisions from root DECISIONS.xml into vendor/get-anything-done/.planning/DECISIONS.xml. Add gad-16 (no subagents until evaluated) and gad-17 (context handoff via planning docs).",
+  "type": "",
+  "keywords": "decisions,migration,subagents,context-handoff",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.003Z",
+  "updated_at": "2026-04-20T03:05:18.003Z"
+}

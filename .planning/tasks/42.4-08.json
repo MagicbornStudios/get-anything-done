@@ -1,0 +1,26 @@
+{
+  "id": "42.4-08",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "`gad projects init` defaults to canonical XML and scaffolds the full file set. Currently it writes 4 markdown template files (PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md) containing literal template placeholders. The rest of the monorepo uses 6+ canonical XML files (STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml, DECISIONS.xml, ERRORS-AND-ATTEMPTS.xml, REQUIREMENTS.xml). Surfaced 2026-04-14 during app-forge scaffolding â€” the markdown output had to be hand-converted to XML, see ERRORS-AND-ATTEMPTS entry `forge-init-md-misaction-2026-04-14`. Fix: update `bin/gad.cjs projects init` (or wherever the scaffold lives) to write the canonical XML file set with valid empty headers. Optional `--format md` flag for the legacy markdown path. Also scaffold the missing files (TASK-REGISTRY, DECISIONS, ERRORS-AND-ATTEMPTS) regardless of format.",
+  "type": "framework",
+  "keywords": "cli,projects-init,scaffold,xml,canonical-format,gad-185",
+  "depends": [],
+  "commands": [
+    "node vendor/get-anything-done/bin/gad.cjs projects init --projectid test-xml --name \"Test XML\"",
+    "node vendor/get-anything-done/bin/gad.cjs projects init --projectid test-md --name \"Test MD\" --format md"
+  ],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.916Z",
+  "updated_at": "2026-04-20T03:05:18.916Z"
+}

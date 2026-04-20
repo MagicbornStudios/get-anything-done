@@ -1,0 +1,25 @@
+{
+  "id": "22-45",
+  "phase": "22",
+  "status": "done",
+  "goal": "Site/remotion/ runtime scaffold (second half of task 22-31): create Root.tsx composition registry, one placeholder Composition.tsx, site/app/videos/page.tsx loading compositions via @remotion/player, VideoEmbed.tsx wrapper component. This unblocks the gad-explainer-video eval project (22-43) being run for the first time.",
+  "type": "site",
+  "keywords": "remotion,runtime,videos-route,scaffold",
+  "depends": [
+    "22-43"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "execute-phase",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.474Z",
+  "updated_at": "2026-04-20T03:05:18.474Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "44-21",
+  "phase": "44",
+  "status": "done",
+  "goal": "Trace-based agent-behavior analytics on /planning. New tab (Identified `PlanningTabSignal` or similar) that mines `.trace-events.jsonl` for: (a) most-visited files ranked by tool_use count across Read/Edit/Write/Glob, normalized to repo-relative paths; (b) tool mix histogram (Bash/Read/Edit/Grep/WebFetch share %); (c) file-path frequency heatmap (by directory); (d) Bash command extraction (separate path refs inside `inputs.command` from the tool name); (e) URL route frequency from WebFetch. Cross-reference the observed patterns against authored workflow participants (44-20 is the authored surface) to surface conformance gaps at the file-path level instead of just the tool level. User ask: \"I want to be able to see where the coding agent goes most of the time and what tool it is using — looking for repeating patterns.\" Data source already exists; gap is the aggregation/rank/visualization layer.",
+  "type": "site",
+  "keywords": "planning-tab,signal,trace-analytics,file-visits,tool-mix,heatmap",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.079Z",
+  "updated_at": "2026-04-20T03:05:19.079Z"
+}

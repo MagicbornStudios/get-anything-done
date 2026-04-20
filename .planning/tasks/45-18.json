@@ -1,0 +1,25 @@
+{
+  "id": "45-18",
+  "phase": "45",
+  "status": "done",
+  "goal": "Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft filter works, landing page content visible.",
+  "type": "site",
+  "keywords": "marketplace,project-market,integration,verification,data-cid-fix",
+  "depends": [
+    "45-13"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.321Z",
+  "updated_at": "2026-04-20T03:05:19.321Z"
+}

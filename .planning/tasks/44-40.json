@@ -1,0 +1,25 @@
+{
+  "id": "44-40",
+  "phase": "44",
+  "status": "done",
+  "goal": "Compile marketplace-index.json from per-generation manifests + EVAL_PROJECTS at predev/prebuild. Index shape: { projects: [...], generations: [{projectId, species, version, status, publishedAt, publishedBy, buildPath, score?}] }. /project-market reads index instead of EVAL_PROJECTS.published. ProjectCard shows generation rows with species badge.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "44-39"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.169Z",
+  "updated_at": "2026-04-20T03:05:19.169Z"
+}

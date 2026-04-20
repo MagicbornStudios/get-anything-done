@@ -1,0 +1,23 @@
+{
+  "id": "42.2-38",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Interactive onboard flow for bin/install.js — a third install location option (\"new GAD project folder\") that prompts for a folder path (default `~/Desktop/my-gad-project/`, created if missing), treats that folder as the local install target for runtime skills, then invokes `gad projects init --path &lt;folder&gt;` to scaffold `.planning/` with the canonical XML ledgers. Addresses the operator-raised gap from 2026-04-15: `bin/install.js` by itself installs a runtime (skills + agents + hooks + settings) but leaves the consumer staring at an empty folder with no `.planning/` state — two commands are required to get a working project, but a new user only knows about the exe. The onboard flow wraps both primitives into one double-clickable path. Non-interference contract: local install into the chosen folder never touches global state; `gad projects init` only writes under the chosen path; existing non-empty folders trigger a warning before proceeding. Explicit non-goal: do NOT bundle Claude Code / Codex CLIs themselves — detect-and-report only. Supporting flag `--new-project &lt;path&gt;` gives a scriptable path parallel to the interactive choice. Umbrella: task 44-28.",
+  "type": "framework",
+  "keywords": "installer,onboard,interactive,project-init,double-clickable,44-28,self-contained",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.793Z",
+  "updated_at": "2026-04-20T03:05:18.793Z"
+}

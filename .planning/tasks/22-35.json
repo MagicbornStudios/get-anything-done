@@ -1,0 +1,23 @@
+{
+  "id": "22-35",
+  "phase": "22",
+  "status": "done",
+  "goal": "Fix YAML parsing errors in session-authored skill frontmatter (create-skill, objective-eval-design). Descriptions with embedded colons like \"methodology:\" and \"discipline:\" were parsed by js-yaml as key-value separators, breaking skill loading in Claude Code. Fix by converting plain scalar descriptions to YAML folded block scalar form (`description: &gt;- ...`) which treats the body as opaque.",
+  "type": "",
+  "keywords": "yaml,frontmatter,skill-loader,js-yaml",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.446Z",
+  "updated_at": "2026-04-20T03:05:18.446Z"
+}

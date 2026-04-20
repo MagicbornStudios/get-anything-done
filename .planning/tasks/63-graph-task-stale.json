@@ -1,0 +1,23 @@
+{
+  "id": "63-graph-task-stale",
+  "phase": "63",
+  "status": "done",
+  "goal": "Graph cache stale on TASK-REGISTRY.xml mutations. Repro 2026-04-18: (a) edit task status from planned to done in TASK-REGISTRY.xml, run gad snapshot --projectid get-anything-done, gad query &lt;id&gt; still reports (planned); (b) add a brand-new &lt;task id=...&gt; entry by hand-editing the XML, gad snapshot, gad query &lt;id&gt; returns 0 matches. Phase + decision indexes refresh fine. Root cause likely: graph extractor caches task-status + task-id index without invalidating on TASK-REGISTRY.xml mtime change, OR rebuilds only the structure not the per-task fields. Examples in the wild: 45-14 (status edit not reflected), 51-08 + 51-09 (new tasks not indexed), pre-existing entry around dev-server command bridge hardening shows up in tasks list with empty GAD-T- id. Workaround: always use &apos;gad tasks add&apos; for new tasks and &apos;gad tasks release --done --agentid --skill&apos; for status changes — both write paths apparently DO invalidate. Fix: graph extractor should mtime-watch TASK-REGISTRY.xml or always re-parse it on snapshot. Affects every agent that follows the CLAUDE.md &apos;Update TASK-REGISTRY.xml status=done&apos; workflow literally.\r\n\r\nFIX 2026-04-18: lib/graph-extractor.cjs gains isGraphStale(planDir, jsonPath) which compares graph.json mtime against TASK-REGISTRY/ROADMAP/DECISIONS source XML mtimes, and loadOrBuildGraph(root, baseDir, opts) which is now the single read entry point — checks staleness, rebuilds + writes when stale (or when graph.json missing/corrupt), returns parsed graph. opts.readOnly skips the file-write race so concurrent snapshot agents do not collide. All 5 read sites in bin/gad.cjs (snapshot tasks block, sprint snapshot block, snapshot graph-stats block, gad tasks --graph listing, gad query run) routed through the helper. Smoke: graph.json mtime forced 10s old vs TASK-REGISTRY now → isGraphStale=true → reload rebuilt=true (1019→1023 nodes confirming a hand-edit was picked up) → isGraphStale=false.\r\n\r\nSTRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — they were producing noisy diffs on every task-status change and guaranteed parallel-agent merge conflicts that were never meaningful. Cache-only model: rebuild on demand. (a) `.gitignore` added the two paths with a rationale comment. (b) `git rm --cached .planning/graph.json .planning/graph.html` untracked the historical copies. (c) bin/gad.cjs gains `ensureGraphFresh(baseDir, root)` helper near the existing `maybeRebuildGraph` — delegates to graphExtractor.loadOrBuildGraph for the staleness check (uses STALENESS_SOURCES = TASK-REGISTRY/ROADMAP/DECISIONS) and additionally writes graph.html when the json was rebuilt or the html is missing. Wired into snapshotV2Cmd (the actual snapshot dispatched at runtime — original patch hit the legacy snapshotCmd at line 9277 by mistake; corrected) and startupCmd (right after projectid resolution). Both call sites guard on !sideEffectsSuppressed() so --no-side-effects snapshots stay read-only. Smoke verified end-to-end: rm graph.* → gad snapshot prints \"[snapshot] graph cache rebuilt (missing)\" + writes both files; touch TASK-REGISTRY.xml → next snapshot prints \"(stale)\"; subsequent snapshot is silent (fresh). (d) site/scripts/pack-site-release.cjs gains ensureFrameworkGraph() that runs `node bin/gad.cjs graph build --projectid get-anything-done` before staging if .planning/graph.json is missing, so site/data/planning-graph.json (baked into the release zip by build-site-data.mjs) doesn't ship as an empty stub on a fresh checkout. Note: site/data/planning-graph.json + planning-graph-index.json remain tracked deliberately (separate site-data convention alongside cli-captures.json, db.json, etc. — those exist so static site builds are deterministic without first running the planning-graph extractor). Closes the operator-surfaced concern: \"graph keeps getting modified, what is it?\" — answer is now \"it's a cache, you'll never see it in diffs again.\"",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.522Z",
+  "updated_at": "2026-04-20T03:05:19.522Z"
+}

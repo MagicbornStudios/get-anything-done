@@ -1,0 +1,23 @@
+{
+  "id": "42.4-03",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Project metadata gains a `contextFramework` field resolved from gad.json.",
+  "type": "framework",
+  "keywords": "context-framework,schema,project-metadata",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.902Z",
+  "updated_at": "2026-04-20T03:05:18.902Z"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "59-09",
+  "phase": "59",
+  "status": "done",
+  "goal": "Render subagent-run history on /my-projects project drawer. Reads .planning/subagent-runs/&lt;projectid&gt;/*.json (schema from todo 2026-04-17-subagent-run-history.md). Timeline view — date, task id, status, one-line outcome, link to full report body, link to teaching tip produced. Empty state with a 'trigger a run' button.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "59-04",
+    "59-07"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.435Z",
+  "updated_at": "2026-04-20T03:05:19.435Z"
+}

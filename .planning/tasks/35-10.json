@@ -1,0 +1,23 @@
+{
+  "id": "35-10",
+  "phase": "35",
+  "status": "done",
+  "goal": "Review the inherited SDK context-engine and phase-hydration model now that `gad-config.toml`, `framework_compliance`, and hydration are canonical. Decide whether phase prompts should stay on a fixed file manifest or move to scoped/query-driven hydration, and whether execute should receive relevant decisions or plan-linked refs instead of file-name-based context only.",
+  "type": "framework",
+  "keywords": "sdk,context-engine,hydration,decisions,requirements,query-layer,matrix-integration",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.601Z",
+  "updated_at": "2026-04-20T03:05:18.601Z"
+}

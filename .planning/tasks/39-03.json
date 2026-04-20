@@ -1,0 +1,23 @@
+{
+  "id": "39-03",
+  "phase": "39",
+  "status": "done",
+  "goal": "Maintenance pass: ripgrep site/ for remaining duplication patterns (parallel *Intro.tsx bodies, repeated Nav/main/Footer shells, copy-pasted class stacks). File findings under .planning/notes/ or append to phase39 PLAN when created; close task when no trivial hits remain.",
+  "type": "site",
+  "keywords": "site,audit,dedup,low-risk",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.660Z",
+  "updated_at": "2026-04-20T03:05:18.660Z"
+}

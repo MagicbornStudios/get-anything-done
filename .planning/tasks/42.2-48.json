@@ -1,0 +1,23 @@
+{
+  "id": "42.2-48",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Build `gad graph` CLI command — generate .planning/graph.json and .planning/graph.html from planning XML files. Subcommands: build (generate), stats (inspect without regenerating). Interactive HTML visualization with force-directed layout, type filtering, search, and click-to-inspect.",
+  "type": "cli",
+  "keywords": "cli,graph,visualization,html,force-directed",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.835Z",
+  "updated_at": "2026-04-20T03:05:18.835Z"
+}

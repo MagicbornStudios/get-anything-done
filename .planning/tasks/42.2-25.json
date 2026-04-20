@@ -1,0 +1,23 @@
+{
+  "id": "42.2-25",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Implement the Position B workflow flow-control DSL v0 per `.planning/notes/workflow-flow-control-dsl-exploration-2026-04-15.md`: seven structural tags (workflow, step, branch, else, loop, parallel, output) layered on top of existing free-form Markdown as advisory annotations.",
+  "type": "framework",
+  "keywords": "framework,dsl,parser,workflow,position-b",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.752Z",
+  "updated_at": "2026-04-20T03:05:18.752Z"
+}

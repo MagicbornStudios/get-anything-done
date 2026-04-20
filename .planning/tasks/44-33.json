@@ -1,0 +1,23 @@
+{
+  "id": "44-33",
+  "phase": "44",
+  "status": "done",
+  "goal": "44-28.B3 — Site packaging for .planning/site/ double-click launch path. Produce a self-contained site tree: (a) Next.js server build output that can run with `node server.js` in place (not `next start` which needs the full next CLI). (b) Bundled Node runtime extracted beside the site (so the launcher doesn't depend on the host having Node installed). (c) `launcher.exe` — tiny Windows exe (bun --compile or Go) that spawns `./.node/node.exe ./site/server.js`, waits for the server to bind a local port, opens the default browser at `http://localhost:&lt;port&gt;`, stays running until the browser window closes or Ctrl+C. (d) The site must read `.planning/*.xml` from its parent dir at request time — already works in dev via build-site-data.mjs but must keep working after packaging. (e) Build target + release artifact: `site-&lt;version&gt;.zip` containing site/ + .node/ + launcher.exe + README.txt. (f) Wire into 44-32's `--site` branch: installer downloads the zip from the release and extracts it to `&lt;target&gt;/.planning/site/`. Depends on 44-31 (release pipeline) + 44-32 (installer --site flag). Decision point during planning: does the packaged site rebuild its lib/catalog.generated.ts against the consumer's planning data on first launch, or does it ship with prebuilt GAD framework data baked in and only read live project data? Recommend: first-launch rebuild against consumer's gad-config.toml.",
+  "type": "site",
+  "keywords": "site-packaging,launcher-exe,bundled-node,next-server,double-click,release-zip,planning-site",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.112Z",
+  "updated_at": "2026-04-20T03:05:19.112Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "44-17",
+  "phase": "44",
+  "status": "done",
+  "goal": "Write a durable reference methodology for the Visual Context Panel identity workflow so deleted/refactored sections do not erase the pattern memory. Include canonical snippets, prompt-handoff shape, and planning usage rules that make skill usage explicit in TASK-REGISTRY/STATE/DECISIONS.",
+  "type": "docs",
+  "keywords": "visual-context-panel,methodology,references,create-skill,planning",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "create-skill",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.152Z",
+  "updated_at": "2026-04-20T03:05:19.152Z"
+}

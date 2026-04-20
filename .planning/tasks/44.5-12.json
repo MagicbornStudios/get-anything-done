@@ -1,0 +1,23 @@
+{
+  "id": "44.5-12",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "DNA Editor list population — read the four gene states into the scaffolded 44.5-11 pane. **DNA**: enumerate `.claude/skills/` (or the per-runtime skills dir) in the current project, read SKILL.md frontmatter for name/description/status. **Expressed**: enumerate `.gad-try/&lt;slug&gt;/` sandboxes in cwd, read PROVENANCE.md for source/kind/staged_on and ENTRY.md for the handoff prompt. **Mutations**: enumerate `.planning/proto-skills/&lt;slug&gt;/`, read PROVENANCE status + SKILL.md name + VALIDATION.md verdict. **Shed**: enumerate shed-score data (when 42.2-33 battery output is available) and manually-flagged entries. Each row renders with state-appropriate metadata badges and a cid derived from the slug (literal-prototype comment for grep-ability). No actions wired yet — pure read + render. File-system adapter extends 44.5-03's round-trip primitive. Per decision gad-198.",
+  "type": "site",
+  "keywords": "dna-editor,file-system-adapter,gene-states,project-editor,gad-198",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.240Z",
+  "updated_at": "2026-04-20T03:05:19.240Z"
+}

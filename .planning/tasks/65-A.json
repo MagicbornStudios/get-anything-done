@@ -1,0 +1,23 @@
+{
+  "id": "65-A",
+  "phase": "65",
+  "status": "done",
+  "goal": "Slice A — Track 1 transcript/rendering: R1.1 animated thinking/tool-call phase indicator in StatusBar; R1.2 code-block syntax highlighting (9 languages, zero new deps); R1.3 ANSI stdout/stderr normalizer (stripAnsi + ansiToInk); R1.4 timestamp toggle (T key); R1.5 collapsible transcript blocks; R1.7 compaction reminder banner; R1.8 completed tool-call file-tree with Ctrl+O expand. Commits: 9efc49b, 295d90a, 1982827, 71a3b3b, 66f77a0, c03a54d, 906a11e.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-codex-lane-a",
+  "agent_role": "codex-lane",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "scaffold-visual-context-surface",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.554Z",
+  "updated_at": "2026-04-20T03:05:19.554Z"
+}

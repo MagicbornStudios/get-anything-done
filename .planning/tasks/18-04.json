@@ -1,0 +1,23 @@
+{
+  "id": "18-04",
+  "phase": "18",
+  "status": "done",
+  "goal": "Run the full eval suite: portfolio-bare v3, escape-the-dungeon v4, reader-workspace v2. Launch all three in parallel worktree agents. Reconstruct traces and produce cross-project report.",
+  "type": "",
+  "keywords": "eval,suite,run,parallel,all-projects",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.202Z",
+  "updated_at": "2026-04-20T03:05:18.202Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "21-22",
+  "phase": "21",
+  "status": "done",
+  "goal": "Build requirements v4: pressure-oriented design (not features checklist). Authored dungeon with floors â†’ 5-8 rooms â†’ boss gate. Room types: Combat, Elite, Forge, Rest, Event. Each floor must introduce a mechanical constraint that can't be brute-forced with default spells. Forge is gate with at least one encounter per floor that favors crafted/adapted spells. Pressure mechanics required from at least 2 of 4 categories. Starter abilities explicitly insufficient. Skills scored but not gate (combat needs non-spell action category only). Sprites: attempt sourcing first, coherent fallback allowed. Traits label in UI, narrativeStats in code. Add ingenuity/adaptation scoring dimension.",
+  "type": "",
+  "keywords": "requirements-v4,greenfield,pressure,authored",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.290Z",
+  "updated_at": "2026-04-20T03:05:18.290Z"
+}

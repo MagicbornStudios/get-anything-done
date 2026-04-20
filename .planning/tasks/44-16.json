@@ -1,0 +1,23 @@
+{
+  "id": "44-16",
+  "phase": "44",
+  "status": "done",
+  "goal": "Normalize remaining sections to the explicit-id pattern across the app: every user-facing SiteSection should have a stable literal cid token and any redundant Identified wrappers that only restate the same section identity should be removed. Keep Identified only where extra inner-block targeting is materially useful for prompts.",
+  "type": "site",
+  "keywords": "site-section,cid,rollout,cleanup,visual-context-panel",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-default-0025",
+  "agent_role": "default",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.148Z",
+  "updated_at": "2026-04-20T03:05:19.148Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "42.4-10",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Audit existing `gad sink` and `gad docs` command surface for the markdownâ†’XML conversion gap before adding new commands. CORRECTION 2026-04-14: original framing of this task assumed no conversion path existed and proposed `gad migrate-schema --from md --to xml`. User pointed out we already have `gad docs compile`, `gad sink compile/decompile/sync/diff/status/validate` â€” bidirectional sink flow exists. `gad sink decompile` specifically \"ensures .planning/ dirs exist for all projects; creates stubs for missing source files\" which is close to but not identical to the MDâ†’XML conversion needed. Audit: does any existing command convert markdown PROJECT/REQUIREMENTS/ROADMAP/STATE prose into canonical XML? If yes, document it and close this task. If no, decide whether to extend `gad sink decompile` to handle the case or add a focused subcommand. Don't add new commands until we've ruled out the existing surface.",
+  "type": "framework",
+  "keywords": "cli,sink,docs,convert,md-to-xml,audit,decompile",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.921Z",
+  "updated_at": "2026-04-20T03:05:18.921Z"
+}

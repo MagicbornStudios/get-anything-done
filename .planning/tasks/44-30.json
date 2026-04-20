@@ -1,0 +1,23 @@
+{
+  "id": "44-30",
+  "phase": "44",
+  "status": "done",
+  "goal": "44-28.A1 — Full-surface data scoping by current-project signal. Ships independent of the installer track. Add a global `currentProject` React context (populated from `?projectid=` query param, falling back to the first `[[planning.roots]]` id in gad-config.toml, falling back to \"get-anything-done\"). Thread the hook `useCurrentProject()` through every user-facing route and filter records by project where records already carry a project field (FINDINGS.projects string[], BUGS.project, EVAL_RUNS.project, EVAL_PROJECTS.project, REQUIREMENTS_HISTORY.project, PLANNING_ZIPS.project). Add a project picker dropdown in NavActions that reads the list of registered projects (new helper `site/lib/project-config.ts` that loads gad-config.toml at build time into a typed constant), writes the selection to the URL, and persists nothing (URL is the source of truth). Routes that MUST filter: /planning (already filters BUGS hardcoded to \"gad\" — replace with context), /findings (+ /findings/[slug]), /project-market. Routes that stay framework-global for now: /skills, /formulas, /glossary, /, /about, /methodology, /workflows, /lineage. Planning/tasks/phases/decisions data stays single-project at build time per the build script's GAD_PROJECT_ROOT env var — broaden in a follow-up (Option B in the scoping research: read all projects' planning into ALL_TASKS_BY_PROJECT etc.). Verify: tsc clean, `/` renders for a consumer's repo where their planning root is NOT get-anything-done, /findings filters to the picked project, /project-market collapses to the picked project's species rows.",
+  "type": "site",
+  "keywords": "data-scoping,project-context,nav-picker,findings-filter,bugs-filter,query-param",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.101Z",
+  "updated_at": "2026-04-20T03:05:19.101Z"
+}

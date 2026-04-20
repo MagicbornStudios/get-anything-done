@@ -1,0 +1,23 @@
+{
+  "id": "44-13",
+  "phase": "44",
+  "status": "done",
+  "goal": "Fix `gad projects init` config-write location: today it registers the new planning root into \"the nearest gad-config.toml\" relative to the CLI binary, which when the CLI runs from `vendor/get-anything-done/bin/gad.cjs` resolves to the submodule's own `vendor/get-anything-done/.planning/gad-config.toml` instead of the workspace root's `gad-config.toml`. That pollutes the submodule and hides the new root from the outer workspace. Fix: `projects init` should walk upward from `process.cwd()` (NOT from __dirname) to find the first parent with a `gad-config.toml` or `.planning/gad-config.toml` and write there. Also make the path stored in the registration relative to THAT config file's dir, not to wherever the CLI binary lives (the current entry used backslash-escaped `..\\..\\projects\\project-editor` which is a second bug). Surfaced 2026-04-14 by the project-editor scaffold workflow; manually corrected both the main-repo config and reverted the submodule pollution after init.",
+  "type": "cli",
+  "keywords": "cli,projects-init,config-resolution,bugfix",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.073Z",
+  "updated_at": "2026-04-20T03:05:19.073Z"
+}

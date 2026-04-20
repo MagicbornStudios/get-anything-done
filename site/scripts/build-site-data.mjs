@@ -2163,24 +2163,25 @@ function parsePlanningState() {
     });
   }
 
-  // TASK-REGISTRY.xml â€” tasks (open vs done)
-  const taskPath = path.join(planningDir, "TASK-REGISTRY.xml");
-  if (exists(taskPath)) {
-    const src = fs.readFileSync(taskPath, "utf8");
-    // Simple regex: capture task id, phase id, status, goal
-    // Phase wraps tasks; we grab phase id from the nearest preceding <phase id="N">.
-    const taskRegex = /<task\s+id="([^"]+)"[^>]*status="([^"]+)"[^>]*>([\s\S]*?)<\/task>/g;
-    let m;
-    while ((m = taskRegex.exec(src)) !== null) {
-      const id = m[1];
-      const status = m[2];
-      const inner = m[3];
-      const goalMatch = inner.match(/<goal>([\s\S]*?)<\/goal>/);
-      const goal = goalMatch ? goalMatch[1].trim() : "";
+  // Tasks — read via lib/task-registry-reader.cjs (prefers per-task JSON
+  // files under tasks/<id>.json per decision 2026-04-20 D3, falls back to
+  // TASK-REGISTRY.xml). Previously this block did its own regex parse of
+  // the XML — cut over to the canonical reader so consumers stop
+  // duplicating parsing logic and auto-pick-up the migrated layout.
+  {
+    const rootShape = { id: "get-anything-done", path: "", planningDir };
+    const tasks = readTasks(rootShape, "", {});
+    for (const t of tasks) {
+      const status = String(t.status || "").toLowerCase();
+      const goal = String(t.goal || "").trim();
       if (status === "done") {
         state.doneTasksCount++;
       } else if (status !== "cancelled") {
-        state.openTasks.push({ id, status, goal: goal.length > 260 ? goal.slice(0, 259) + "â€¦" : goal });
+        state.openTasks.push({
+          id: t.id,
+          status,
+          goal: goal.length > 260 ? goal.slice(0, 259) + "…" : goal,
+        });
       }
     }
   }

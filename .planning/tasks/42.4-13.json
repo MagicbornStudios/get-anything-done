@@ -1,0 +1,26 @@
+{
+  "id": "42.4-13",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "New skill + slash command `/gad-eval-spawn` for kicking off eval runs from inside a Claude Code session. Wraps `gad eval run --project &lt;name&gt; --execute` to get the JSON spec, then uses the orchestrator's Agent/spawn capability to launch a worktree-isolated Claude (or other runtime) agent against the spec. Writes a session marker (probably under `.planning/.eval-runs/&lt;run-id&gt;.json`) so the orchestrator knows which run is in flight, can poll status, and can preserve outputs via `gad eval preserve` after completion. Authored via the `create-skill` skill so we dogfood the skill-authoring pattern. Skill name: `gad-eval-spawn`. Slash command: `/gad-eval-spawn &lt;project&gt; [--runtime claude-code] [--baseline HEAD]`. Surfaced 2026-04-14 by user: \"we need a skill use create skill and also our command workflow pattern for /gad-project-eval-run or whatever we should call it to actually kick start the flow in claude code.\" Per decision forge-09 (plan/build separation), this skill is the seam between the orchestrating session and the spawned builder session.",
+  "type": "skill",
+  "keywords": "skill,slash-command,eval-spawn,create-skill,orchestrator,worktree,dogfood,forge-09,forge-seam",
+  "depends": [],
+  "commands": [
+    "node vendor/get-anything-done/scripts/validate-canonical-assets.mjs",
+    "node vendor/get-anything-done/bin/gad.cjs eval run --help"
+  ],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "create-skill",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.930Z",
+  "updated_at": "2026-04-20T03:05:18.930Z"
+}

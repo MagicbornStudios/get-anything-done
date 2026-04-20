@@ -1,0 +1,23 @@
+{
+  "id": "65-TT",
+  "phase": "65",
+  "status": "done",
+  "goal": "Teachings + note questions. tip category filter (--category flag + env GAD_TIP_CATEGORIES + gad-config.toml [teachings] categories) — commit on earlier vendor bump; 6 new tips: context-engineering (3: snapshot token cuts, surgical test runs, brevity discipline) + multi-agent (3: handoff queue canonical channel, commit-fast parallel agents, offload to cheaper models). gad note questions — surface ## Open questions sections from planning notes (item-1 regex bug closed in 219377df).",
+  "type": "teachings",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "opus-claude",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-opus-4-7",
+  "skill": "gad-note",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.591Z",
+  "updated_at": "2026-04-20T03:05:19.591Z"
+}

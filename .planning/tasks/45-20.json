@@ -1,0 +1,25 @@
+{
+  "id": "45-20",
+  "phase": "45",
+  "status": "done",
+  "goal": "Full build + VCS audit — npm run build passes, all new components have data-cid attributes, VCS grep confirms every new section is discoverable.",
+  "type": "site",
+  "keywords": "verification,build,vcs-audit,data-cid,type-check",
+  "depends": [
+    "45-19"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-default-0025",
+  "agent_role": "default",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.328Z",
+  "updated_at": "2026-04-20T03:05:19.328Z"
+}

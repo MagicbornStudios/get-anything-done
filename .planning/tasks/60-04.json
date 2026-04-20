@@ -1,0 +1,25 @@
+{
+  "id": "60-04",
+  "phase": "60",
+  "status": "done",
+  "goal": "Scoped spawn wrapper in lib/scoped-spawn.cjs. Given projectId + child command, decrypts that project's env bag, merges into child process.env ONLY for the child, never mutates parent process.env. Subagent dispatch (phase 59 task 59-07) uses this wrapper. Subagent sees OPENAI_API_KEY etc. without the main session leaking it.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "60-03"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.457Z",
+  "updated_at": "2026-04-20T03:05:19.457Z"
+}

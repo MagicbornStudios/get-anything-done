@@ -1,0 +1,23 @@
+{
+  "id": "42.1-04",
+  "phase": "42.1",
+  "status": "done",
+  "goal": "Replace self-eval `loop_compliance` with two more honest framework metrics: `framework_compliance` based on TASK-REGISTRY skill/agent/type attribution coverage, and `hydration` metrics based on snapshot count, estimated snapshot tokens, total project tokens, and hydration-overhead percentage.",
+  "type": "telemetry",
+  "keywords": "self-eval,framework-compliance,hydration,snapshot,tokens,metrics",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "default",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "objective-eval-design",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.615Z",
+  "updated_at": "2026-04-20T03:05:18.615Z"
+}

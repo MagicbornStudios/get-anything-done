@@ -1,0 +1,23 @@
+{
+  "id": "22-42",
+  "phase": "22",
+  "status": "done",
+  "goal": "Clickable skills modal on /emergent: convert the static skill-artifact chip list on the emergent page into client-component buttons that open a modal showing the full SKILL.md content with Copy button + GitHub source link. Per user directive 2026-04-09: \"I wish i could click and download or get that pop up of those skills on the page.\"",
+  "type": "",
+  "keywords": "emergent,skill-modal,client-component",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.465Z",
+  "updated_at": "2026-04-20T03:05:18.465Z"
+}

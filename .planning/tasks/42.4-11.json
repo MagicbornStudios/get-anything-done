@@ -1,0 +1,23 @@
+{
+  "id": "42.4-11",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Sink coherence investigation: map the full doc compilation pipeline so agents know which surface to edit when. Concern surfaced 2026-04-14 by user: \"I am pretty sure we have a planning sink set up. We need to investigate why at some point and make sure all our docs compile to the same place.\" The repo has `[planning] docs_sink = \"docs\"` in gad-config.toml, `[[docs.projects]]` and `[[planning.roots]]` registries, `gad docs compile`, `gad sink compile/sync/decompile/diff/status/validate`, plus `gad site compile` (phase 10). It's unclear from the outside which command is canonical for: (a) editing a planning root's ROADMAP/DECISIONS/etc, (b) updating a docs.projects entry, (c) keeping the compiled MDX in `docs/&lt;id&gt;/planning/` in sync with `.planning/` source, (d) what happens when both source and sink drift. Output: a short references/sink-pipeline.md doc explaining the full flow + a quick-reference table mapping \"I want to edit X\" â†’ \"use command Y\" â†’ \"verify with Z.\" Then update relevant skills (new-project, plan-phase, execute-phase) to reference it.",
+  "type": "docs",
+  "keywords": "sink,docs,compile,pipeline,investigation,documentation,coherence",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.924Z",
+  "updated_at": "2026-04-20T03:05:18.924Z"
+}

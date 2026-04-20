@@ -1,0 +1,23 @@
+{
+  "id": "42.2-03",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Rename `skills/gad-quick-skill/` â†’ `skills/create-proto-skill/`. Update SKILL.md title/description to describe the filesystem handoff input contract and batching workflow. Update callers: `skills/gad-evolution-evolve/SKILL.md`, AGENTS.md, any site copy mentioning gad-quick-skill. Neutral upstream baseline (dot-agent create-skill) stays untouched â€” decision gad-168.",
+  "type": "skill",
+  "keywords": "skill,rename,create-proto-skill,evolution",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.687Z",
+  "updated_at": "2026-04-20T03:05:18.687Z"
+}

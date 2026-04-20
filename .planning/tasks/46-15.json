@@ -1,0 +1,23 @@
+{
+  "id": "46-15",
+  "phase": "46",
+  "status": "done",
+  "goal": "Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each: last commit upstream vs. ours, production usage vs. dead references, whether still needed as submodule or should be pulled in-tree / deleted. Initial scan 2026-04-18: mb-cli-framework has 103 live references (packages/magicborn-cli tests + docs + vendor-registry + ink-tui) — KEEP. grime-time-site / repub-builder / claw-code status unknown, user suspects unused now that PayloadCMS pivot was dropped. Deliverable: references/submodule-audit-2026-04.md with KEEP/INLINE/DROP recommendation per submodule. Follow-up tasks for any DROP + gitmodules cleanup.",
+  "type": "cleanup",
+  "keywords": "submodules,audit,cleanup,vendor",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.365Z",
+  "updated_at": "2026-04-20T03:05:19.365Z"
+}

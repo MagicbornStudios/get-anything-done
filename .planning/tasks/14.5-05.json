@@ -1,0 +1,23 @@
+{
+  "id": "14.5-05",
+  "phase": "14.5",
+  "status": "done",
+  "goal": "Auto-scaffold CONVENTIONS.md after first implementation phase of greenfield projects. When phase 01 (or first phase with code output) completes in a project with no existing CONVENTIONS.md, run a lightweight codebase scan (file structure, naming patterns, import style, content pack format) and write .planning/CONVENTIONS.md. Integrate with gad:map-codebase skill output.",
+  "type": "",
+  "keywords": "conventions,auto-scaffold,greenfield,map-codebase",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.129Z",
+  "updated_at": "2026-04-20T03:05:18.129Z"
+}

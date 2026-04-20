@@ -1,0 +1,23 @@
+{
+  "id": "44-10",
+  "phase": "44",
+  "status": "done",
+  "goal": "Pull eval launch off /project-market cards and onto /projects/[id] as a dev-only ProjectOperator panel. User feedback: card-level Launch eval was scoped wrong â€” accidental scaffolding of new generations when the user expected \"show me the latest build.\" Cards now read-only (View project only). New `ProjectOperator.tsx` client component on /projects/[id] renders: (a) dev-only amber-tinted operator section, (b) status strip with preserved-build info (resolved server-side from apps/portfolio/public/evals/&lt;project&gt;/v&lt;N&gt;/ via fs walk â€” file count, size, path) + latest-generation info, (c) explicit \"Run new eval\" button with confirm-first intermediate state that spells out \"this will scaffold a NEW eval generation via `gad eval run --project X --execute`. It does NOT run the agent â€” just produces EXEC.json,\" (d) live 320px terminal panel consuming the existing /api/dev/launch-eval SSE, (e) abort/clear/run-again affordances with exit-code display. Server-side resolvers walk [apps/forge/evals, evals, vendor/get-anything-done/evals] for latest generation and apps/portfolio/public/evals for preserved build. Solves \"right now I am blind\" complaint â€” user can see what's running, what ran, and what's preserved without leaving the site.",
+  "type": "site",
+  "keywords": "project-operator,terminal,detail-page,dev-panel,sse",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.059Z",
+  "updated_at": "2026-04-20T03:05:19.059Z"
+}

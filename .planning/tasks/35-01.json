@@ -1,0 +1,23 @@
+{
+  "id": "35-01",
+  "phase": "35",
+  "status": "done",
+  "goal": "Extend trace/log schemas to record coding agent runtime identity and provenance: runtime-derived primary identity, self-declared secondary identity, model when available, and source-of-truth markers that distinguish Claude Code vs Codex cleanly.",
+  "type": "",
+  "keywords": "trace,runtime-identity,claude,codex",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.576Z",
+  "updated_at": "2026-04-20T03:05:18.576Z"
+}

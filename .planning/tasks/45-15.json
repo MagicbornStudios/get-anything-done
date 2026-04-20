@@ -1,0 +1,25 @@
+{
+  "id": "45-15",
+  "phase": "45",
+  "status": "done",
+  "goal": "Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.",
+  "type": "site",
+  "keywords": "vocabulary-audit,string-sweep,gad-166,gad-169,terminology",
+  "depends": [
+    "45-04"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.312Z",
+  "updated_at": "2026-04-20T03:05:19.312Z"
+}

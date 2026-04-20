@@ -1,0 +1,23 @@
+{
+  "id": "22-31",
+  "phase": "22",
+  "status": "done",
+  "goal": "Phase 26 scaffolding: install @remotion/player, create site/remotion/ directory with Root.tsx composition registry + one placeholder Composition.tsx (the v8 dissection stub), create app/videos/page.tsx index with filter, create components/VideoEmbed.tsx inline player wrapper (30s cap, cinematic passthrough, stop button, reuses existing site components as frames). Does NOT author full video content â€” the scaffold establishes the pattern and the first composition is a placeholder.",
+  "type": "site",
+  "keywords": "remotion,scaffold,videos-route,player-embed,eval-domain",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "execute-phase",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.423Z",
+  "updated_at": "2026-04-20T03:05:18.423Z"
+}

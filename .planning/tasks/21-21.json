@@ -1,0 +1,23 @@
+{
+  "id": "21-21",
+  "phase": "21",
+  "status": "done",
+  "goal": "Create an experiment log doc (evals/EXPERIMENT-LOG.md) that tracks every round: conditions, requirements version, results, findings. Running ledger across all rounds.",
+  "type": "",
+  "keywords": "experiment-log,documentation",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.287Z",
+  "updated_at": "2026-04-20T03:05:18.287Z"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "60-09",
+  "phase": "60",
+  "status": "done",
+  "goal": "Work-stealing handoff queue using per-file directory (not JSONL — decision per user 2026-04-18, see .planning/notes/2026-04-18-handoff-queue-design.md). Shape: .planning/handoffs/{open,claimed,closed}/ with one md file per handoff. Lifecycle = fs.rename between dirs (atomic on POSIX + Windows, no lock needed). Each file = YAML frontmatter {id, projectid, phase, task_id, created_at, created_by, claimed_by, claimed_at, completed_at, priority, estimated_context} + markdown body. CLI: gad handoffs {list,claim,complete,show,create}. gad-pause-work + gad-session pause invoke &apos;handoffs create&apos;. gad startup/snapshot surface unclaimed count + top-3 summary. Idle agents pick appropriate items by estimated_context (mechanical→Haiku/Sonnet, reasoning→Opus per offload policy). Gap discovered: no &apos;gad tasks update &lt;id&gt; --goal&apos; exists — surfaced in design note, file as follow-up. See .planning/notes/2026-04-18-handoff-queue-design.md for full schema.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "59-10"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-default-0018",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.481Z",
+  "updated_at": "2026-04-20T03:05:19.481Z"
+}

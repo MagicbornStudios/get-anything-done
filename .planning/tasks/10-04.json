@@ -1,0 +1,23 @@
+{
+  "id": "10-04",
+  "phase": "10",
+  "status": "done",
+  "goal": "Create vendor/get-anything-done/AGENTS.md using GAD's own workflow â€” gad CLI commands, planning loop, context re-hydration, skill references.",
+  "type": "",
+  "keywords": "agents,documentation,workflow",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.012Z",
+  "updated_at": "2026-04-20T03:05:18.012Z"
+}

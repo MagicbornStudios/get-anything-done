@@ -1,0 +1,23 @@
+{
+  "id": "42.2-20",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Add `gad skill show &lt;id&gt;` + `gad skill list --paths` to close the P0 discoverability gap surfaced by the subagent test battery in task 42.2-21. Also update stale references.",
+  "type": "cli",
+  "keywords": "cli,skill-show,discoverability,paths",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.736Z",
+  "updated_at": "2026-04-20T03:05:18.736Z"
+}

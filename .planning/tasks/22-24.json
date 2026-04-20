@@ -1,0 +1,23 @@
+{
+  "id": "22-24",
+  "phase": "22",
+  "status": "done",
+  "goal": "Lightweight SVG charts in a Graphs section on the home page: composite + human review bars per run grouped by workflow, rounds timeline, freedom hypothesis scatter (composite vs human review divergence). No charting library â€” pure React-rendered SVG so it ships in every prebuild.",
+  "type": "",
+  "keywords": "graphs,charts,recharts,interactive,home,roadmap",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.396Z",
+  "updated_at": "2026-04-20T03:05:18.396Z"
+}

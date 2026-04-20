@@ -1,0 +1,23 @@
+{
+  "id": "14-02",
+  "phase": "14",
+  "status": "done",
+  "goal": "Create bin/gad-tools.cjs â€” the GAD equivalent of gsd-tools.cjs. Provides the core commands that workflows depend on: init (phase-op, execute-phase, plan-phase), commit, config-get, config-set, state (load, update, record-session), phase (find, add, complete), roadmap (get-phase, analyze), generate-slug, current-timestamp, scaffold, agent-skills. Reads from XML planning files instead of MD. This replaces all gsd-tools.cjs references in workflows.",
+  "type": "",
+  "keywords": "eval,setup,scaffold,skill",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.095Z",
+  "updated_at": "2026-04-20T03:05:18.095Z"
+}

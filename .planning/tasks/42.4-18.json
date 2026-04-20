@@ -1,0 +1,25 @@
+{
+  "id": "42.4-18",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Delete dead project-level `gad.json` fallthrough reads in `bin/gad.cjs` (decision gad-184). Task 42.4-14 renamed `evals/&lt;project&gt;/gad.json` to species-level `evals/&lt;project&gt;/species/&lt;sp&gt;/species.json`, but five call sites in `bin/gad.cjs` (buildEvalPrompt / eval run metadata + traceScaffold / eval verify / eval review --rubric / eval readme) still read from the old project-level path. Because the file no longer exists, every read silently fell back to `{}` and every downstream field rendered as a default or dash â€” legacy fallback fallout flagged in task 42.4-15's note. Delete the reads; inline defaults where a field must remain; rewire `eval review --rubric` and `eval readme` through `lib/eval-loader.cjs::loadAllResolvedSpecies` so they pull `humanReviewRubric` / description / domain / tech stack / build requirement from the resolved-species shape instead.",
+  "type": "cleanup",
+  "keywords": "cleanup,eval,gad-json,species-json,dead-code,gad-184,42.4-14-followup,42.4-15-followup",
+  "depends": [],
+  "commands": [
+    "node vendor/get-anything-done/bin/gad.cjs eval list"
+  ],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.967Z",
+  "updated_at": "2026-04-20T03:05:18.967Z"
+}

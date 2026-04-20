@@ -1,0 +1,23 @@
+{
+  "id": "22-10",
+  "phase": "22",
+  "status": "done",
+  "goal": "Build pipeline so the site data stays in sync with the repo.",
+  "type": "",
+  "keywords": "portfolio,build-pipeline,prebuild",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.351Z",
+  "updated_at": "2026-04-20T03:05:18.351Z"
+}

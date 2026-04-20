@@ -1,0 +1,23 @@
+{
+  "id": "22-27",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "New skill skills/framework-upgrade/SKILL.md. Methodology for versioning the GAD framework on branches (version/v1.x), stamping every TRACE.json with the framework commit it ran against, re-running past evals when the framework changes to check for framework-level score drift. References phase 25 as the backing work.",
+  "type": "",
+  "keywords": "skill,framework-upgrade,versioning",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.408Z",
+  "updated_at": "2026-04-20T03:05:18.408Z"
+}

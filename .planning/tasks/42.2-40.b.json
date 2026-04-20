@@ -1,0 +1,23 @@
+{
+  "id": "42.2-40.b",
+  "phase": "42.2",
+  "status": "in-progress",
+  "goal": "Remaining `gad try` polish items deferred from 42.2-40.a: (1) strip `.git/` from cloned sandboxes to save disk space, (2) add a `--branch &lt;name&gt;` flag for explicit branch selection instead of the fallback probe, (3) interactive consent gate `y/N` prompt for future runtime-invocation flows where the skill actually runs (not needed for the current stage-only flow), (4) warn or normalize when external skills use lowercase `skill.md` instead of the canonical `SKILL.md`.",
+  "type": "cli",
+  "keywords": "cli,try,polish,follow-up",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.806Z",
+  "updated_at": "2026-04-20T03:05:18.806Z"
+}

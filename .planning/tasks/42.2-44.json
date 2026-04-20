@@ -1,0 +1,23 @@
+{
+  "id": "42.2-44",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "New Visual Context System primitive `&lt;VisualContextGraphPanel&gt;` that renders `planning-graph.json` inside the project-editor split viewport. Every node gets a cid derived from its id so the modal footer CRUD can target nodes. Integrates with the `scaffold-visual-context-surface` skill shipped earlier 2026-04-15. Depends on 42.2-43. Shipped: apps/planning-app/app/projects/edit/[id]/PlanningGraphPanel.tsx (native column-clustered SVG, type filters, search, click-to-focus 1-hop neighborhood, selected-node detail rail, deterministic data-cid per node via lib/planning-graph.ts nodeCid()), /api/dev/projects/[id]/planning-graph route (per-project graph.json + rebuild=1 hook), replaces the older GAD-only iframe in ProjectEditor canvas mode \"graph\". Lean: zero new deps (no react-flow/d3/dagre).",
+  "type": "site",
+  "keywords": "site,vcs,graph-panel,react-flow,cids,visual-context-system",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-default-0021",
+  "agent_role": "default",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.823Z",
+  "updated_at": "2026-04-20T03:05:18.823Z"
+}

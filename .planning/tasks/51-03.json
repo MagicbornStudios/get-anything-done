@@ -1,0 +1,26 @@
+{
+  "id": "51-03",
+  "phase": "51",
+  "status": "done",
+  "goal": "Subagent attribution: spawn route resolves operator via getOperatorId() and injects OPERATOR_ID + GAD_OPERATOR_ID + GAD_AGENT_ID + GAD_AGENT_ROLE + GAD_PROJECT_ID into child env, plus /api/dev/whoami returns the same payload for client-side surfaces. Subagent CLIs (claude-code, codex, gad eval run) can echo identity via env, and a callback into /api/dev/publish from inside a spawned child can pass x-operator-id header so MANIFEST.json publishedBy carries the human operator even when the actual write came from an agent runtime.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "51-01",
+    "51-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-marketplace-lane-0001",
+  "agent_role": "marketplace-lane",
+  "runtime": "cursor-composer",
+  "model_profile": "balanced",
+  "resolved_model": "composer-2",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.380Z",
+  "updated_at": "2026-04-20T03:05:19.380Z"
+}

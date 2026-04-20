@@ -1,0 +1,23 @@
+{
+  "id": "63-04",
+  "phase": "63",
+  "status": "done",
+  "goal": "Agent lane manifest — canonical file/directory ownership per agent runtime. Authors a top-level AGENT-LANES.md (or references/agent-lanes.md) that every parallel agent consults as ground truth. Minimum content: (a) per-runtime lane definition (claude-code, codex, cursor, etc.) with file-glob allow + deny lists, (b) shared-write protocols (TASK-REGISTRY.xml via gad tasks add ONLY, etc.), (c) conflict-resolution playbook (who wins on collision, how to cede, how to request cross-lane work), (d) session-start etiquette (read this file BEFORE touching anything). Driven by 2026-04-18 3-agent overlap post-mortem where Cursor misattributed Claude&apos;s tasks to Codex, costing ~5% of its turn. Codex owns runtime/bin/gad.cjs + lib/runtime-* + verify; Cursor owns BYOK/lib/secrets-* + lib/env-cli + lib/scoped-spawn; Claude owns snapshot/lib/snapshot-* + planning docs + memory + cross-cutting framework hygiene. Operator assigns souls per lane per project.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-default-0013",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.501Z",
+  "updated_at": "2026-04-20T03:05:19.501Z"
+}

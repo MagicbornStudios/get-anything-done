@@ -1,0 +1,23 @@
+{
+  "id": "41-04",
+  "phase": "41",
+  "status": "done",
+  "goal": "Integrate assignment/scoped-context data into runtime telemetry and site reporting. Active agent lanes should be visible on planning/system surfaces, and eval/trace records should be able to attribute work to agent ids and scoped execution contexts.",
+  "type": "telemetry",
+  "keywords": "telemetry,site,assignments,workstreams,trace",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "default",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "framework-upgrade",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.642Z",
+  "updated_at": "2026-04-20T03:05:18.642Z"
+}

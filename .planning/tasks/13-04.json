@@ -1,0 +1,23 @@
+{
+  "id": "13-04",
+  "phase": "13",
+  "status": "done",
+  "goal": "Flesh out write-intent SKILL.md: add concrete examples, template output, edge cases. The skill should be usable by any agent reading it cold â€” currently too abstract.",
+  "type": "",
+  "keywords": "skills,write-intent,content",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.079Z",
+  "updated_at": "2026-04-20T03:05:18.079Z"
+}

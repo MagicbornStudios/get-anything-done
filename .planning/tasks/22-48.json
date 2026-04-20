@@ -1,0 +1,25 @@
+{
+  "id": "22-48",
+  "phase": "22",
+  "status": "done",
+  "goal": "Worktree isolation audit script (gad-82, open question worktree-isolation-verification). Write scripts/audit-worktree-isolation.mjs that walks a fresh eval worktree and reports: which files from the parent repo are reachable (by relative path traversal), what settings from .claude/settings.json inherit, what env vars are set, what's on PATH, which workspace skills at vendor/get-anything-done/skills/ could be picked up by a scan that walks parent dirs. Output structured report. ROUND 5 IS BLOCKED on either passing this audit or documenting which parent-repo state is explicitly allowed (e.g. the trace hook handler is allowed because it's the instrumentation layer per gad-50; workspace skills are NOT allowed because bare condition requires zero framework affordances).",
+  "type": "",
+  "keywords": "isolation,worktree,audit,round-5-unblocked",
+  "depends": [
+    "gad-82"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.483Z",
+  "updated_at": "2026-04-20T03:05:18.483Z"
+}

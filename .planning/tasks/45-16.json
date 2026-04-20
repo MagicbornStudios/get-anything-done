@@ -1,0 +1,26 @@
+{
+  "id": "45-16",
+  "phase": "45",
+  "status": "done",
+  "goal": "Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.",
+  "type": "site",
+  "keywords": "hero-copy,epigraphs,evolutionary-language,copy-pass,45-05-consumer,45-13-consumer,section-divider",
+  "depends": [
+    "45-05",
+    "45-13"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.315Z",
+  "updated_at": "2026-04-20T03:05:19.315Z"
+}

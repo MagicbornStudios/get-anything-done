@@ -1,0 +1,23 @@
+{
+  "id": "42.2-05",
+  "phase": "42.2",
+  "status": "cancelled",
+  "goal": "Whitepaper-framed /findings index copy: update the intro paragraph and visual treatment on the /findings list page to read as a whitepaper library rather than an internal scratchpad. Summary badges, projects filter chips, sort-by-date control. Decision gad-169.",
+  "type": "site",
+  "keywords": "site,findings,whitepapers,copy",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "cursor-default-0026",
+  "agent_role": "default",
+  "runtime": "cursor",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.693Z",
+  "updated_at": "2026-04-20T03:05:18.693Z"
+}

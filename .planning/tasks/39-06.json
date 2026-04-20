@@ -1,0 +1,23 @@
+{
+  "id": "39-06",
+  "phase": "39",
+  "status": "done",
+  "goal": "Medium: extract shared Playable pieces (run chip row, embed + side panel layout, modal wiring) between Playable and PlayableTeaser.",
+  "type": "site",
+  "keywords": "site,playable,medium,dedup",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.676Z",
+  "updated_at": "2026-04-20T03:05:18.676Z"
+}

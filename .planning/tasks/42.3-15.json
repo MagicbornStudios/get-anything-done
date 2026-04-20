@@ -1,0 +1,23 @@
+{
+  "id": "42.3-15",
+  "phase": "42.3",
+  "status": "done",
+  "goal": "Emergent workflows render React-Flow-only (no synthetic Mermaid), in a compact grid layout on /planning, with skill-named authored Mermaid diagrams (decisions gad-175, gad-177).",
+  "type": "site",
+  "keywords": "workflow,emergent,react-flow,compact,scope-filter,mermaid",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.894Z",
+  "updated_at": "2026-04-20T03:05:18.894Z"
+}

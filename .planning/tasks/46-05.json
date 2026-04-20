@@ -1,0 +1,25 @@
+{
+  "id": "46-05",
+  "phase": "46",
+  "status": "done",
+  "goal": "Define project-level assets/ directory convention and generation data salvage pipeline. Extract valuable data from completed generation runs to species level. Decision gad-210.",
+  "type": "framework",
+  "keywords": "assets,media,salvage,generation,data-reuse",
+  "depends": [
+    "46-04"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.346Z",
+  "updated_at": "2026-04-20T03:05:19.346Z"
+}

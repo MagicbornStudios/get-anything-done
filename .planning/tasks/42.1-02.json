@@ -1,0 +1,23 @@
+{
+  "id": "42.1-02",
+  "phase": "42.1",
+  "status": "done",
+  "goal": "Clarify and harden the three concepts that are currently conflated: `gad workspace` manages planning roots, `gad worktree` manages git working copies, and GAD workstreams are shared-tree execution lanes over a single planning source of truth. Update docs/CLI/help text to reflect that split and review what first-class project worktree support should exist outside evals.",
+  "type": "framework",
+  "keywords": "workspace,worktree,workstream,docs,cli,lineage",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "default",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "framework-upgrade",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.607Z",
+  "updated_at": "2026-04-20T03:05:18.607Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "12-07",
+  "phase": "12",
+  "status": "done",
+  "goal": "Uninstall GSD globally: delete ~/.claude/get-shit-done/, ~/.claude/commands/gsd/ (56 files), ~/.claude/hooks/gsd-*.js (5 files). Clean ~/.claude/settings.json â€” remove all GSD hooks and statusline, keep permissions and preferences.",
+  "type": "",
+  "keywords": "gsd,global,uninstall",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.063Z",
+  "updated_at": "2026-04-20T03:05:18.063Z"
+}

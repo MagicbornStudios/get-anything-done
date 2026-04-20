@@ -1,0 +1,23 @@
+{
+  "id": "42.2-37",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Fix three real defects in `gad evolution promote` (bin/gad.cjs evolutionPromote) surfaced by the first real end-to-end run of the pipeline in 42.2-13: (1) final skill directory uses the candidate slug instead of the `name:` frontmatter value chosen by the drafter, (2) canonical workflow file inherits the same ugly slug-based filename, (3) `status: proto` is not flipped to `status: stable` during promotion despite promotion being the proto→canonical transition.",
+  "type": "cli",
+  "keywords": "cli,evolution,promote,bug-fix,frontmatter,status-flip,real-installer",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.789Z",
+  "updated_at": "2026-04-20T03:05:18.789Z"
+}

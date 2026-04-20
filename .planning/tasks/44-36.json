@@ -1,0 +1,23 @@
+{
+  "id": "44-36",
+  "phase": "44",
+  "status": "done",
+  "goal": "Unified skill promote command — collapse `gad evolution promote` (canonical) and `gad evolution install` (runtime) into one verb with two modes. User ask 2026-04-14: \"let's move canonical skill shipping under the command skill --promote --[framework|project] so it would be a pseudo command for a project since that will just be an install to their agent runtime they would provide. for us it would be to the actual folder location in the get-anything-done and that command only works in the canonical cloned repo.\" Two modes: (a) `--framework `: move proto-skill from `.planning/proto-skills//` to canonical `skills//`. GATED: refuses unless running in the canonical `get-anything-done` cloned repo — detect via `git config --get remote.origin.url` matching `MagicbornStudios/get-anything-done` OR via a sentinel file like `.gad-canonical` at repo root. Same behavior as today's `gad evolution promote`. (b) `--project  [--claude|--codex|--copilot|...]`: delegate to `bin/install.js`'s runtime path to install the proto-skill into the target agent's dir (.claude/skills/, .codex/skills/, etc.) with per-runtime path rewrites. Works in any consumer project. From the project's perspective their skill is now \"promoted\" (equipped), but nothing pushes upstream to canonical GAD. Shape preference (to confirm via discuss-phase): recommended entry point is a NEW top-level `gad skill` subcommand (`gad skill promote  --framework` / `gad skill promote  --project --claude`) with room to grow: `gad skill list`, `gad skill install`, `gad skill deprecate`. Current `gad evolution promote` becomes a thin shim that forwards to `gad skill promote --framework` for back-compat for one or two releases then removed. Update create-skill SKILL.md's \"promoting\" section to reference the new unified command. Update gad-evolution-evolve SKILL.md's step 6 (promote stable ones) to reference the new command. Keep `gad evolution install` working as-is for the moment — it can be a sibling of the new shape rather than deprecated now.",
+  "type": "cli",
+  "keywords": "skill-promote,gad-skill,framework-mode,project-mode,canonical-gate,install-js,unified-verb",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.119Z",
+  "updated_at": "2026-04-20T03:05:19.119Z"
+}

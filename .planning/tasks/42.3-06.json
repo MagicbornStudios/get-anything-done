@@ -1,0 +1,23 @@
+{
+  "id": "42.3-06",
+  "phase": "42.3",
+  "status": "done",
+  "goal": "Resolve the three phase-42.3 open design questions: (1) workflows nest, (2) workflows carry validators, (3) agents self-report workflow identity.",
+  "type": "docs",
+  "keywords": "workflow,design,open-questions",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.858Z",
+  "updated_at": "2026-04-20T03:05:18.858Z"
+}

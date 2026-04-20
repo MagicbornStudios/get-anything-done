@@ -1,0 +1,23 @@
+{
+  "id": "42.3-01",
+  "phase": "42.3",
+  "status": "done",
+  "goal": "Design the workflow planning-artifact schema and write `.planning/workflows/README.md`.",
+  "type": "framework",
+  "keywords": "workflow,schema,design,planning",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.839Z",
+  "updated_at": "2026-04-20T03:05:18.839Z"
+}

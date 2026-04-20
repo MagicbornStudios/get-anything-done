@@ -1,0 +1,23 @@
+{
+  "id": "35-04",
+  "phase": "35",
+  "status": "done",
+  "goal": "Restore model profile resolution for current GAD workflows and Claude SDK sessions with `off` as the default, runtime-safe Claude aliases when enabled, and a live verification path that proves a real Claude sub-session changed models.",
+  "type": "",
+  "keywords": "model-profiles,claude,sdk,off-by-default,live-verification",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.585Z",
+  "updated_at": "2026-04-20T03:05:18.585Z"
+}

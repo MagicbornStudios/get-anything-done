@@ -1,0 +1,23 @@
+{
+  "id": "22-44",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "Manual fresh-clone contribution test (open question fresh-clone-contribution-test, decision gad-77). Clone the repo into a new directory, walk through the /contribute 5-step flow (clone â†’ install â†’ open in Claude â†’ talk conversationally), document everything that breaks, update /contribute with the friction points, remove the \"fresh-clone test still open\" amber warning. Goal: make contribution actually work for a human who has never touched GAD before.",
+  "type": "site",
+  "keywords": "contribution,fresh-clone,gad-77,manual-test",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.471Z",
+  "updated_at": "2026-04-20T03:05:18.471Z"
+}

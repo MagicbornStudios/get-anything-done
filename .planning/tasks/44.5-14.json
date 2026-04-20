@@ -1,0 +1,23 @@
+{
+  "id": "44.5-14",
+  "phase": "44.5",
+  "status": "done",
+  "goal": "Iframe preview integration for DNA Editor trial artifacts. Extends the 44.5-10 iframe live-preview primitive to detect and render non-generation artifacts: auto-detect `graph.html` (graphify trials), generic `index.html` (codebase maps, game builds), or a SKILL.md-declared `outputs:` path. When an operator clicks Preview on an expressed trial, the right pane loads the detected artifact in the sandboxed iframe. Integrates with the Visual Context System — the iframe wrapper gets a cid derived from `&lt;slug&gt;-preview-iframe-site-section`. Falls back to a \"no viewable artifact\" placeholder when no HTML output is detected. Depends on 44.5-13 (Preview button) and 44.5-10 (iframe primitive). Per decision gad-198.",
+  "type": "site",
+  "keywords": "dna-editor,iframe,preview,artifact,trial,project-editor,gad-198",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.246Z",
+  "updated_at": "2026-04-20T03:05:19.246Z"
+}

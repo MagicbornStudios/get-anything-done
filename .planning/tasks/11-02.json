@@ -1,0 +1,23 @@
+{
+  "id": "11-02",
+  "phase": "11",
+  "status": "done",
+  "goal": "Run gad:eval-run on GAD itself â€” portfolio-bare with get-anything-done requirements as the project. Measure planning loop fidelity on GAD's own workflow.",
+  "type": "",
+  "keywords": "eval,self-eval,portfolio-bare",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.036Z",
+  "updated_at": "2026-04-20T03:05:18.036Z"
+}

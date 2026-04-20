@@ -1,0 +1,23 @@
+{
+  "id": "63-06b",
+  "phase": "63",
+  "status": "done",
+  "goal": "Fix phases add to sync TASK-REGISTRY phase containers via lib/task-registry-writer.cjs and add gad tasks update &lt;id&gt; --goal CLI path.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "human-default-0002",
+  "agent_role": "default",
+  "runtime": "human",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.515Z",
+  "updated_at": "2026-04-20T03:05:19.515Z"
+}

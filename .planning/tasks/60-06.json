@@ -1,0 +1,25 @@
+{
+  "id": "60-06",
+  "phase": "60",
+  "status": "done",
+  "goal": "Migrate llm-from-scratch OPENAI_API_KEY from global process.env into its project bag. Subagent wrapper for llm-from-scratch uses scoped-spawn + 'gad env get' to decrypt at dispatch time. Documents the expected migration in references/byok-design.md §Migration.",
+  "type": "migration",
+  "keywords": "",
+  "depends": [
+    "60-04"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "default",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.467Z",
+  "updated_at": "2026-04-20T03:05:19.467Z"
+}

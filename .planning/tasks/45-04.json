@@ -1,0 +1,23 @@
+{
+  "id": "45-04",
+  "phase": "45",
+  "status": "done",
+  "goal": "Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. Exports VOCAB object used by all components.",
+  "type": "site",
+  "keywords": "vocabulary,constants,gad-166,gad-169,gad-189,gad-219,terminology,phase-45-wave-2",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.282Z",
+  "updated_at": "2026-04-20T03:05:19.282Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "22-06",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "Visualizations/graphs across rounds. Deferred â€” score bars on the per-run page and run cards cover the \"at a glance\" comparison for now; a dedicated charts section can be revived later if we decide we're missing the signal.",
+  "type": "",
+  "keywords": "portfolio,graphs,deferred",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.336Z",
+  "updated_at": "2026-04-20T03:05:18.336Z"
+}

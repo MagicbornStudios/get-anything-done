@@ -1,0 +1,25 @@
+{
+  "id": "46-04",
+  "phase": "46",
+  "status": "done",
+  "goal": "Add species-level .planning/ support to gad projects sync. When discover=true, detect species/&lt;name&gt;/.planning/ dirs as sub-roots. Decision gad-209.",
+  "type": "framework",
+  "keywords": "species,planning,sub-roots,discover,sync",
+  "depends": [
+    "46-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.343Z",
+  "updated_at": "2026-04-20T03:05:19.343Z"
+}

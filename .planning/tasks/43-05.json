@@ -1,0 +1,23 @@
+{
+  "id": "43-05",
+  "phase": "43",
+  "status": "done",
+  "goal": "Rewrite scanEvalProjects() and scanProducedArtifacts() in site/scripts/build-site-data.mjs to walk the new evals/&lt;project&gt;/species/&lt;species&gt;/v&lt;N&gt;/ layout. Replace the hardcoded escape-the-dungeon project list. Update the keys (currently project/version) to project/species/version. Updated 8 walker sites + 2 helpers (listEvalSpecies, listEvalGenerations, listEvalProjects). Site/public/playable migrated to same layout.",
+  "type": "pipeline",
+  "keywords": "build-site-data,extractor,schema",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.015Z",
+  "updated_at": "2026-04-20T03:05:19.015Z"
+}

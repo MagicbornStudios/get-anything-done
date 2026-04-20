@@ -1,0 +1,23 @@
+{
+  "id": "22-33",
+  "phase": "22",
+  "status": "cancelled",
+  "goal": "`gad install` CLI subcommand as a local-checkout-friendly wrapper around existing bin/install.js. The underlying install.js already supports --claude --cursor --codex --opencode --gemini --copilot --antigravity --windsurf --augment --all --uninstall and ships the full GSD-pattern cross-runtime install â€” but it's hardcoded for the npm-published package layout (expects to find files under `node_modules/get-anything-done/get-anything-done/`). This task wraps it in a `gad install` subcommand that resolves paths correctly whether running from a git checkout (vendor/get-anything-done/) or an npm install. Related to 22-34 (fix install.js directly) â€” this task may become a no-op if 22-34 fixes the path resolution at the install.js level.",
+  "type": "",
+  "keywords": "gad-install,cli,wrapper,infrastructure",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.429Z",
+  "updated_at": "2026-04-20T03:05:18.429Z"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "21-26",
+  "phase": "21",
+  "status": "done",
+  "goal": "Rewrite bare and emergent AGENTS.md to be truly minimal. Stop mandating ARCHITECTURE.md, CHANGELOG.md, or any specific artifact. Only mandate: (1) all workflow artifacts in game/.planning/, (2) reference create_skill skill for defining new skills. Everything else is agent-defined. This defeats the previous round's too-prescriptive guidance and lets us observe what emergent workflows actually produce.",
+  "type": "",
+  "keywords": "bare,emergent,agents-md,minimal,emergent-workflow",
+  "depends": [
+    "21-25"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.296Z",
+  "updated_at": "2026-04-20T03:05:18.296Z"
+}

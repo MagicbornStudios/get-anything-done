@@ -1,0 +1,23 @@
+{
+  "id": "35-07",
+  "phase": "35",
+  "status": "done",
+  "goal": "Rewrite GAD README to match the completeness and onboarding depth of upstream GSD&apos;s README while preserving GAD&apos;s actual runtime/install/canonical-source truth and avoiding stale command/runtime advice.",
+  "type": "",
+  "keywords": "readme,docs,onboarding,upstream-review",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "human-default-0003",
+  "agent_role": "default",
+  "runtime": "human",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.593Z",
+  "updated_at": "2026-04-20T03:05:18.593Z"
+}

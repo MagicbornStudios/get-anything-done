@@ -1,0 +1,23 @@
+{
+  "id": "22-51",
+  "phase": "22",
+  "status": "done",
+  "goal": "Scaffold new eval domain evals/skill-evaluation-app/ per decision gad-88. Third task-domain alongside escape-the-dungeon (game dev) and gad-explainer-video (video composition). Tests the same hypotheses (freedom / CSH / emergent-evolution) on GUI app development. The GUI, once built, is also part of the GAD eval framework (dogfood).",
+  "type": "",
+  "keywords": "skill-evaluation-app,new-eval-domain,generalization-test,gad-88",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.492Z",
+  "updated_at": "2026-04-20T03:05:18.492Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "34-03",
+  "phase": "34",
+  "status": "done",
+  "goal": "Publish installable GAD skills through skills.sh / `npx skills add` using the GitHub repo as the source of truth. Document the exact command(s), verify the repo is listable/installable from skills.sh, and make skill installation distinct from CLI installation throughout the docs.",
+  "type": "",
+  "keywords": "skills.sh,skills,distribution,github",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.567Z",
+  "updated_at": "2026-04-20T03:05:18.567Z"
+}

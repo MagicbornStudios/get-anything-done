@@ -1,0 +1,23 @@
+{
+  "id": "42.2-23",
+  "phase": "42.2",
+  "status": "done",
+  "goal": "Add authoring-skill disambiguation footer to `gad skill list` output per Agent D2 finding — four overlapping authoring skills with no CLI-surfaced ordering guidance.",
+  "type": "cli",
+  "keywords": "cli,skill-list,disambiguation,lifecycle",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.746Z",
+  "updated_at": "2026-04-20T03:05:18.746Z"
+}

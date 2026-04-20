@@ -1,0 +1,23 @@
+{
+  "id": "30-04",
+  "phase": "30",
+  "status": "done",
+  "goal": "Source + build size computation â€” gad eval preserve computes source_size_bytes and build_size_bytes, writes to TRACE.json.",
+  "type": "",
+  "keywords": "source-size,build-size,preserve,TRACE.json",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.537Z",
+  "updated_at": "2026-04-20T03:05:18.537Z"
+}

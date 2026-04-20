@@ -1,0 +1,23 @@
+{
+  "id": "42.4-15",
+  "phase": "42.4",
+  "status": "done",
+  "goal": "Project âŠ‡ Species inheritance contract in the CLI eval loader. `project.json` declares defaults: `techStack`, `contextFramework`, `installedSkills`, `defaultContent` (paths or refs to default assets/files/scaffolding). `species.json` may override any of those + adds species-only fields: `inherits_from` (parent species for cross-species lineage), `dna` (workflow + skill manifest summary), species-specific `description`. The CLI's eval loaders (used by `gad eval list/run/preserve` and by build-site-data.mjs) MUST merge project + species at load time and return the merged shape â€” readers should never manually combine them. Shipped: new `lib/eval-loader.cjs` exporting `loadProject`, `loadSpecies`, `loadAllSpeciesRaw`, `loadResolvedSpecies`, `loadAllResolvedSpecies`, `mergeProjectSpecies`, `resolveInheritanceChain`. Merge semantics per decision gad-184: project defaults â†’ inherits_from chain (deepest ancestor first) â†’ target species; last write wins; arrays REPLACE not merge; species-only fields (inherits_from, dna, description) do not back-propagate to project; cycles throw. Wired `bin/gad.cjs eval list` to the loader and swapped `site/scripts/build-site-data.mjs scanEvalProjects` to use `loadResolvedSpecies` so the site sees the merged shape. Hermetic tests in `tests/eval-loader-inheritance.test.cjs` cover (a)-(e) plus loadAllResolvedSpecies + pure-function spot check (7/7 pass via `node --test`). Other legacy `gad.json` reads in bin/gad.cjs (eval run, eval verify, eval review, eval open/report) are orthogonal rename fallout and left for a separate surgical pass.",
+  "type": "framework",
+  "keywords": "schema,inheritance,project-species,merge,loader,forge-10,gad-184",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:18.942Z",
+  "updated_at": "2026-04-20T03:05:18.942Z"
+}

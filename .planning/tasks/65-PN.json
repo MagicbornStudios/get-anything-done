@@ -1,0 +1,23 @@
+{
+  "id": "65-PN",
+  "phase": "65",
+  "status": "done",
+  "goal": "Planning notes (durable discussion docs): tui-requirements.md (5 tracks 17 specs); tui-requirements-discovery.md (28-item operator curation); skills-on-demand.md (3 options, recommendation Option B); a2a-research.md (subagent↔main comms, per-runtime pricing tiers); task-handoff-phase-unified-model.md (self-resume primary, bi-directional task linkage); llm-from-scratch-purpose.md (3 roles: runtime classifier, complexity scorer, SITREP summarizer); cross-lane-build-plan.md (A+B+D-mod scope); daily-routine-a2a-windows-hud-consolidated.md (OMX HUD lessons, Windows Git-Bash trick, daily routine); per-runtime-hooks-detection.md (runtime hook gap + 3-timescale path).",
+  "type": "docs",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "opus-claude",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-opus-4-7",
+  "skill": "gad-note",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-20T03:05:19.594Z",
+  "updated_at": "2026-04-20T03:05:19.594Z"
+}
