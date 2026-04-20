@@ -52,7 +52,7 @@ function createPublishCommand() {
         });
       } catch (err) {
         console.error(`error: PATCH ${url} failed: ${err.message}`);
-        console.error(`(is planning-app running? \`pnpm dev:planning-app\` or \`pnpm --filter @portfolio/planning-app dev\`)`);
+        console.error(`(is platform app running? \`pnpm gad:platform:dev\` or \`pnpm --filter @portfolio/platform dev\`)`);
         process.exitCode = 1;
         return;
       }
