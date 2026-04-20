@@ -2284,9 +2284,10 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>Tauri sidecar binding for gad.exe. src-tauri/tauri.conf.json declares gad binary as sidecar resource. Rust #[tauri::command] wrappers for common subcommands (projects list, publish list, skill list, tasks list) returning parsed JSON (gad --json flag). Frontend hook useGadCommand() wraps invoke() with loading/error state.</goal>
       <depends>53-01,66-01</depends>
     </task>
-    <task id="53-03" type="site" status="planned">
+    <task id="53-03" type="site" status="done" skill="tauri-first-run" agent="claude-sonnet-4-6" commit="feat(desktop): first-run CLI detection panel (task 53-03)">
       <goal>First-run flow: on launch, detect claude CLI on PATH — if missing, show install prompt with one-click winget install Anthropic.Claude. Detect gad.exe on PATH — if missing, download latest from GitHub Releases into app data dir. Cache detection result per-session. Skippable via settings toggle.</goal>
       <depends>53-01</depends>
+      <resolution>Rust probe_cli command uses `where` + `--version` with 3s tokio timeout. Frontend: src/types/probe.ts, src/hooks/useFirstRun.ts, src/components/FirstRunPanel.tsx. Panel renders above app shell when either CLI missing and not dismissed. localStorage first-run-dismissed flag. opener:allow-open-url added to capabilities. @tauri-apps/plugin-opener added as frontend dep. typecheck passes.</resolution>
     </task>
     <task id="53-04" type="site" status="planned">
       <goal>Bundled planning-app sidecar approach (D1 lean): Tauri spawns apps/planning-app Next production server as child process on ephemeral port, webview points at http://localhost:&lt;port&gt;. Shuts down child on app quit. Advantage: zero UI duplication, planning-app stays single source of truth (gad-269). Measure startup time; if &gt;3s, revisit.</goal>
