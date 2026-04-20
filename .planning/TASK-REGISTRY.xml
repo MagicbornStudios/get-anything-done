@@ -2275,9 +2275,17 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>Unit tests for VirtualFileFolder adapter contract + expand/collapse state. vitest (match repo convention). Validates adapter interface stability before downstream consumers depend.</goal>
       <depends>52-02,52-03</depends>
     </task>
-    <task id="52-06" type="site" status="planned">
+    <task id="52-06" type="site" status="done" skill="default" agent="claude-code" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-sonnet-4-6">
       <goal>Consumer story: apps/planning-app imports VirtualFileFolder + CodeView from @repo/editor-core, replacing any inline file-tree / code-preview code. Validates API surface against a real consumer before apps/desktop depends on it.</goal>
       <depends>52-02,52-04</depends>
+      <resolution>
+        Consumer: apps/platform/components/FileBrowserPane.tsx — new component using VirtualFileFolder + CodeView from @portfolio/editor-core.
+        Adapter: FetchAdapter against real /api/dev/fs/[op] endpoint (NOT MockAdapter). Endpoint created at apps/platform/app/api/dev/fs/[op]/route.ts, ops: ls/read/stat, all paths resolved against REPO_ROOT with escape-guard.
+        Integration: FileBrowserPane wired into apps/platform/app/project-editor/[project]/page.tsx as additive "file browser" section below the tree/preview grid.
+        VCS wrappings: data-cid="project-editor-file-tree-site-section" on tree pane, data-cid="project-editor-code-view-site-section" on code pane, data-cid="project-editor-code-view-clear-btn" on clear button.
+        Dependency: @portfolio/editor-core workspace:* added to apps/platform/package.json; workspace link confirmed in node_modules.
+        Typecheck: one pre-existing error (PlanningAppRedirectStub.tsx missing @/lib/platform-url — unrelated to this task); zero new errors.
+      </resolution>
     </task>
   </phase>
 
