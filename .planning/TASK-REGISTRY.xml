@@ -2254,8 +2254,14 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
   </phase>
 
   <phase id="53">
-    <task id="53-01" type="site" status="planned">
+    <task id="53-01" type="infra" status="done" skill="default" agent="claude-code" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-sonnet-4-6">
       <goal>Scaffold apps/desktop with Tauri 2.x, Windows x64 target only. Next.js frontend (or Vite+React if Next adds bundle weight — decide during scaffold). tauri.conf.json pinned to windowsOnly. Minimal hello-world window launches via &apos;bun tauri dev&apos; and produces unsigned MSI via &apos;bun tauri build&apos;.</goal>
+      <resolution>
+        Frontend: Vite+React (default choice — lighter bundle, better Tauri support).
+        Key files: apps/desktop/package.json (@portfolio/desktop v0.0.0), apps/desktop/index.html, apps/desktop/vite.config.ts (clearScreen:false, host:127.0.0.1, port:1420), apps/desktop/tsconfig.json, apps/desktop/src/main.tsx, apps/desktop/src/App.tsx, apps/desktop/src/index.css, apps/desktop/src-tauri/Cargo.toml (crate gad-desktop), apps/desktop/src-tauri/build.rs, apps/desktop/src-tauri/src/main.rs, apps/desktop/src-tauri/src/lib.rs, apps/desktop/src-tauri/tauri.conf.json (bundle.targets:[msi], window 1200x800), apps/desktop/src-tauri/capabilities/default.json (opener:default), apps/desktop/src-tauri/icons/ (png/ico/icns placeholders), apps/desktop/.gitignore, apps/desktop/README.md.
+        pnpm install: clean (lockfile up to date). typecheck: passed (tsc --noEmit, zero errors).
+        Deviation: build scripts use &apos;dev:frontend&apos;/&apos;build:frontend&apos; aliases instead of &apos;bun tauri dev/build&apos; — pnpm is the monorepo package manager.
+      </resolution>
     </task>
     <task id="53-02" type="site" status="planned">
       <goal>Tauri sidecar binding for gad.exe. src-tauri/tauri.conf.json declares gad binary as sidecar resource. Rust #[tauri::command] wrappers for common subcommands (projects list, publish list, skill list, tasks list) returning parsed JSON (gad --json flag). Frontend hook useGadCommand() wraps invoke() with loading/error state.</goal>
