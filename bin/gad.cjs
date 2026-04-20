@@ -100,28 +100,9 @@ const {
 // as undefined. Original location preserved as a comment marker for grep.
 const graphExtractor = require('../lib/graph-extractor.cjs');
 
-// Sweep E (2026-04-19, opus-claude): extracted command families. Pattern is
-// factory-receives-deps so we don't have to extract `resolveRoots` (and its
-// transitive `getActiveSessionProjectId` / `loadSessions` chain) yet. Future
-// sweeps move shared helpers into lib/cli-helpers.cjs and convert these to
-// direct requires.
-const { createStateCommand } = require('./commands/state.cjs');
-const { createNoteCommand } = require('./commands/note.cjs');
-const { createTodosCommand } = require('./commands/todos.cjs');
-const { createPhasesCommand } = require('./commands/phases.cjs');
-const { createDecisionsCommand } = require('./commands/decisions.cjs');
-const { createHandoffsCommand } = require('./commands/handoffs.cjs');
-const {
-  createRequirementsCommand,
-  createErrorsCommand,
-  createBlockersCommand,
-} = require('./commands/readers.cjs');
-const { createRefsCommand } = require('./commands/refs.cjs');
-const { createNarrativeCommand } = require('./commands/narrative.cjs');
-const { createStartCommand } = require('./commands/start.cjs');
-const { createSubagentsCommand } = require('./commands/subagents.cjs');
-const { createAgentsCommand } = require('./commands/agents.cjs');
-const { createSiteCommand } = require('./commands/site.cjs');
+// Command modules are wired in bin/commands/_registry.cjs (see comment near
+// the bottom of this file). Adding a new command does not require any edit
+// here — drop bin/commands/<name>.cjs and append one row to _registry.cjs.
 
 const pkg = require('../package.json');
 
@@ -300,14 +281,28 @@ function buildHandoffsSection(opts = {}) {
   return __sectionHelpers.buildHandoffsSection(opts, { render });
 }
 
-// runtime → bin/commands/runtime.cjs (deps SESSION_STATUS / loadSessions /
-// buildContextRefs come from session.cjs further down — late-bound)
-const { createRuntimeCommand, getRuntimeArg } = require('./commands/runtime.cjs');
-let runtimeCmd;
+const { getRuntimeArg } = require('./commands/runtime.cjs');
 
-// Shared dependency bag used by most command factories. Each factory
-// destructures the keys it needs; extras are ignored. Spread into per-call
-// overrides as `{ ...common, extra }` when a single binding needs more.
+// Install / sink helpers → lib/install-helpers.cjs
+const __installHelpers = require('../lib/install-helpers.cjs');
+const {
+  GAD_HOOK_MARKER, getClaudeSettingsPath, readJsonSafe, writeJsonPretty,
+  isPackagedExecutableRuntime, getPackagedExecutablePath,
+  getDefaultSelfInstallDir, updateWindowsUserPath, stampSinkCompileNote,
+} = __installHelpers;
+function maybeGenerateDailyTip() {
+  return __installHelpers.maybeGenerateDailyTip({
+    teachings, scriptDir: path.join(__dirname, '..', 'scripts'),
+  });
+}
+
+// worktree helpers → lib/worktree-helpers.cjs
+const { listAllWorktrees, worktreeInfo, findWorktreeByPartial } = require('../lib/worktree-helpers.cjs');
+const { getFrameworkVersion } = require('../lib/framework-version.cjs');
+const { normalizeGenerationReference, buildEvalPrompt } = require('../lib/eval-helpers.cjs');
+
+// Shared dependency bag. Most factories take only `common` and destructure
+// what they need — extras are ignored. Add cross-cutting helpers here.
 const repoRoot = path.resolve(__dirname, '..');
 const common = {
   findRepoRoot, gadConfig, resolveRoots, resolveTomlPath, repoRoot, pkg,
@@ -327,197 +322,60 @@ const common = {
   parseTraceEventsJsonl, summarizeAgentLineage,
 };
 
-// projects (projects/workspace/ls), species, recipes, generation, env
-const { projectsCmd, workspaceCmd, lsCmd }
-  = require('./commands/projects.cjs').createProjectsCommands(common);
-const speciesCmd = require('./commands/species.cjs').createSpeciesCommand(common);
-const recipesCmd = require('./commands/recipes.cjs').createRecipesCommand(common);
-const { generationSalvage, generationCmd }
-  = require('./commands/generation.cjs').createGenerationCommands(common);
-const envCmd = require('./commands/env.cjs').createEnvCommand();
-
-// state / phases / decisions / todos / note / handoffs / refs (sweep E/F)
-const stateCmd = createStateCommand(common);
-const phasesCmd = createPhasesCommand(common);
-const decisionsCmd = createDecisionsCommand(common);
-const todosCmd = createTodosCommand(common);
-const noteCmd = createNoteCommand(common);
-const handoffsCmd = createHandoffsCommand(common);
-const refsCmd = createRefsCommand(common);
-const requirementsCmd = createRequirementsCommand(common);
-const errorsCmd = createErrorsCommand(common);
-const blockersCmd = createBlockersCommand(common);
-const taskCheckpoint = require('./commands/task-checkpoint.cjs').createTaskCheckpointCommand(common);
-
-const docsCmd = require('./commands/docs.cjs').createDocsCommand(common);
-const planningCmd = require('./commands/planning.cjs').createPlanningCommand(common);
-const narrativeCmd = createNarrativeCommand();
-const startCmd = createStartCommand(common);
-const subagentsCmd = createSubagentsCommand(common);
-const agentsCmd = createAgentsCommand(common);
-const siteCmd = createSiteCommand(common);
-
-// eval surface — split across eval-{info,run,trace,suite,artifacts,preview,skill}.cjs
-const { normalizeGenerationReference, buildEvalPrompt } = require('../lib/eval-helpers.cjs');
-const evalCommonExtras = { buildEvalPrompt, normalizeEvalRuntime, ensureEvalRuntimeHooks };
-const { evalList, evalScore, evalDiff, evalStatus, evalRuns, evalShow, evalScores, evalVersion }
-  = require('./commands/eval-info.cjs').createEvalInfoCommands(common);
-const { evalRun } = require('./commands/eval-run.cjs').createEvalRunCommand({ ...common, ...evalCommonExtras });
-const { evalTraceCmd } = require('./commands/eval-trace.cjs').createEvalTraceCommand(common);
-const { evalSetup, evalSuite, evalReport, evalReadme, evalInheritSkills }
-  = require('./commands/eval-suite.cjs').createEvalSuiteCommands({ ...common, ...evalCommonExtras });
-const { evalPreserve, evalVerify }
-  = require('./commands/eval-artifacts.cjs').createEvalArtifactsCommands(common);
-const { servePreservedGenerationBuildArtifact, evalOpen, evalReview }
-  = require('./commands/eval-preview.cjs').createEvalPreviewSurfaces(common);
-const { evalSkillCmd } = require('./commands/eval-skill.cjs').createEvalSkillCommands(common);
-
-// Decision gad-212: promote selected eval subcommands into species / generation
-// (the user-visible vocabulary). `gad eval` stays as a deprecated alias.
-Object.assign(speciesCmd.subCommands, { run: evalRun, suite: evalSuite });
-Object.assign(generationCmd.subCommands, {
-  preserve: evalPreserve, verify: evalVerify,
-  open: evalOpen, review: evalReview, report: evalReport,
-});
-
-const evalCmd = defineCommand({
-  meta: { name: 'eval', description: '[DEPRECATED] Use `gad species` or `gad generation` instead' },
-  subCommands: { list: evalList, setup: evalSetup, status: evalStatus, version: evalVersion, run: evalRun, runs: evalRuns, show: evalShow, score: evalScore, scores: evalScores, diff: evalDiff, trace: evalTraceCmd, suite: evalSuite, report: evalReport, review: evalReview, open: evalOpen, preserve: evalPreserve, verify: evalVerify, skill: evalSkillCmd, 'inherit-skills': evalInheritSkills, readme: evalReadme },
-  run() {
-    console.warn("DEPRECATED: 'gad eval <cmd>' is deprecated. Use 'gad species <cmd>' or 'gad generation <cmd>' instead.");
+// Per-command extras. Each block holds the helpers a single command needs
+// beyond `common`. Two agents touching different blocks → no conflict.
+const extras = {
+  setLoadSessions: (fn) => { __loadSessionsRef = fn; },
+  session: {
+    sideEffectsSuppressed,
+    getLastActiveProjectid, setLastActiveProjectid,
   },
-});
-
-// session/context/pause-work + helpers → bin/commands/session.cjs
-const _sessionMod = require('./commands/session.cjs').createSessionCommands({
-  ...common, sideEffectsSuppressed,
-  getLastActiveProjectid, setLastActiveProjectid,
-});
-const { sessionCmd, pauseWorkCmd, contextCmd } = _sessionMod;
-const { SESSION_STATUS, loadSessions, buildContextRefs } = _sessionMod.helpers;
-__loadSessionsRef = loadSessions; // late-bind for scope-helpers (resolveRoots)
-const { writeSession } = require('./commands/session.cjs');
-
-runtimeCmd = createRuntimeCommand({
-  ...common, loadSessions, SESSION_STATUS, buildContextRefs,
-});
-
-// Install / sink helpers → lib/install-helpers.cjs
-const __installHelpers = require('../lib/install-helpers.cjs');
-const {
-  GAD_HOOK_MARKER, getClaudeSettingsPath, readJsonSafe, writeJsonPretty,
-  isPackagedExecutableRuntime, getPackagedExecutablePath,
-  getDefaultSelfInstallDir, updateWindowsUserPath, stampSinkCompileNote,
-} = __installHelpers;
-function maybeGenerateDailyTip() {
-  return __installHelpers.maybeGenerateDailyTip({
-    teachings, scriptDir: path.join(__dirname, '..', 'scripts'),
-  });
-}
-
-const tasksCmd = require('./commands/tasks.cjs').createTasksCommand({
-  ...common,
-  resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
-  claimTask, addTaskClaim, nowIso, releaseTask, removeTaskClaim,
-  RAW_ARGV, getRuntimeArg, readRawFlagValue, SENTINEL_SKILL_VALUES,
-  listAgentLanes, simplifyAgentLane,
-});
-
-const migrateSchema = require('./commands/migrate-schema.cjs').createMigrateSchemaCommand(common);
-const packCmd = require('./commands/pack.cjs').createPackCommand(common);
-const sinkCmd = require('./commands/sink.cjs').createSinkCommand({ ...common, stampSinkCompileNote });
-const verifyCmd = require('./commands/verify.cjs').createVerifyCommand(common);
-const { createSprintCommand, getSprintPhaseIds, getCurrentSprintIndex } = require('./commands/sprint.cjs');
-const sprintCmd = createSprintCommand(common);
-const devCmd = require('./commands/dev.cjs').createDevCommand(common);
-const logCmd = require('./commands/log.cjs').createLogCommand(common);
-
-// worktree helpers → lib/worktree-helpers.cjs
-const { listAllWorktrees, worktreeInfo, findWorktreeByPartial } = require('../lib/worktree-helpers.cjs');
-const worktreeExtras = { listAllWorktrees, worktreeInfo, findWorktreeByPartial };
-const worktreeCmd = require('./commands/worktree.cjs').createWorktreeCommand({ ...common, ...worktreeExtras });
-const healthCmd = require('./commands/health.cjs').createHealthCommand({ ...common, ...worktreeExtras });
-
-const { getFrameworkVersion } = require('../lib/framework-version.cjs');
-const discoveryTestCmd = require('./commands/discovery-test.cjs').createDiscoveryTestCommand();
-const versionCmd = require('./commands/version.cjs').createVersionCommand({ getFrameworkVersion });
-
-// startup → bin/commands/startup.cjs (decision gad-59: trace-hook handler at
-// bin/gad-trace-hook.cjs is merged into ~/.claude/settings.json by install).
-const { createStartupCommand, runDogfoodSelfRefreshOrExit } = require('./commands/startup.cjs');
-const startupCmd = createStartupCommand({
-  ...common,
-  sideEffectsSuppressed, resolveSideEffectsMode, NO_SIDE_EFFECTS_FLAG,
-  getPackagedExecutablePath, isPackagedExecutableRuntime, getDefaultSelfInstallDir,
-  ensureGraphFresh, writeEvolutionScan, maybeGenerateDailyTip,
-  getLastActiveProjectid, setLastActiveProjectid,
-  sessionHelpers: {
-    sessionsDir: require('./commands/session.cjs').sessionsDir,
-    generateSessionId: require('./commands/session.cjs').generateSessionId,
-    SESSION_STATUS, buildContextRefs, writeSession,
+  tasks: {
+    resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
+    claimTask, addTaskClaim, nowIso, releaseTask, removeTaskClaim,
+    RAW_ARGV, getRuntimeArg, readRawFlagValue, SENTINEL_SKILL_VALUES,
+    listAgentLanes, simplifyAgentLane,
   },
-});
-
-const { createSelfCommand, createSelfEvalCommand } = require('./commands/self.cjs');
-const selfCmd = createSelfCommand({ runDogfoodSelfRefreshOrExit });
-const selfEvalCmd = createSelfEvalCommand(common);
-
-const { install: installCmd, uninstall: uninstallCmd }
-  = require('./commands/install.cjs').createInstallCommand({
+  snapshot: {
+    sideEffectsSuppressed, ensureGraphFresh,
+    resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
+    listAgentLanes, touchAgentLane,
+    buildAssignmentsView, compactStateXml, compactRoadmapSection, compactTasksSection,
+    buildEvolutionSection, listSkillDirs, readSkillFrontmatter,
+  },
+  startup: {
+    sideEffectsSuppressed, resolveSideEffectsMode, NO_SIDE_EFFECTS_FLAG,
+    getPackagedExecutablePath, isPackagedExecutableRuntime, getDefaultSelfInstallDir,
+    ensureGraphFresh, writeEvolutionScan, maybeGenerateDailyTip,
+    getLastActiveProjectid, setLastActiveProjectid,
+  },
+  evolutionImages: {
+    splitCsvList, getProtoSkillGlobalDir, listSkillDirs, readSkillFrontmatter,
+  },
+  evolution: {
+    evolutionPaths, resolveProtoSkillInstallRuntimes, installProtoSkillToRuntime,
+    protoSkillRelativePath, writeEvolutionScan, readEvolutionScan,
+  },
+  skill: {
+    evolutionPaths, resolveSkillRoots, listSkillDirs, readSkillFrontmatter,
+    validateSkillLaneFilter, skillMatchesLane, resolveSkillWorkflowPath,
+    normalizeSkillLaneValues, lintSkill, summarizeLint, lintAllSkills,
+    filterIssuesBySeverity, auditSkillTokens, buildSkillUsageIndex,
+  },
+  install: {
     getClaudeSettingsPath, readJsonSafe, writeJsonPretty, GAD_HOOK_MARKER,
     isPackagedExecutableRuntime, getPackagedExecutablePath,
     getDefaultSelfInstallDir, updateWindowsUserPath,
-  });
+  },
+  sink: { stampSinkCompileNote },
+  worktree: { listAllWorktrees, worktreeInfo, findWorktreeByPartial },
+  version: { getFrameworkVersion },
+  bundle: { readSkillFrontmatter },
+  tip: { teachings },
+  eval: { buildEvalPrompt, normalizeEvalRuntime, ensureEvalRuntimeHooks },
+};
 
-const dataCmd = require('./commands/data.cjs').createDataCommand(common);
-const roundsCmd = require('./commands/rounds.cjs').createRoundsCommand(common);
-
-// evolution images + evolution: validate/promote/discard/status proto-skills
-const evolutionImagesCmd = require('./commands/evolution-images.cjs').createEvolutionImagesCommand({
-  splitCsvList, getProtoSkillGlobalDir, listSkillDirs, readSkillFrontmatter,
-});
-const { evolutionCmd, evolutionPromote, evolutionInstall }
-  = require('./commands/evolution.cjs').createEvolutionCommands({
-    ...common,
-    evolutionPaths, resolveProtoSkillInstallRuntimes, installProtoSkillToRuntime,
-    protoSkillRelativePath, writeEvolutionScan, readEvolutionScan,
-    evolutionImagesCmd,
-  });
-
-// skill (44-36): unified skill ops. promote --framework moves into canonical
-// skills/ tree; --project installs into current project's runtime skill dirs.
-const { skillCmd } = require('./commands/skill.cjs').createSkillCommands({
-  ...common,
-  evolutionPaths, resolveSkillRoots, listSkillDirs, readSkillFrontmatter,
-  validateSkillLaneFilter, skillMatchesLane, resolveSkillWorkflowPath,
-  normalizeSkillLaneValues, lintSkill, summarizeLint, lintAllSkills,
-  filterIssuesBySeverity, auditSkillTokens, buildSkillUsageIndex,
-  evolutionPromote, evolutionInstall,
-});
-
-const bundleCmd = require('./commands/bundle.cjs').createBundleCommand({ readSkillFrontmatter });
-const workflowCmd = require('./commands/workflow.cjs').createWorkflowCommand();
-const modelsCmd = require('./commands/models.cjs').createModelsCommand();
-const graphCmd = require('./commands/graph.cjs').createGraphCommand(common);
-const queryCmd = require('./commands/query.cjs').createQueryCommand(common);
-const { tryCmd } = require('./commands/try.cjs').createTryCommand();
-const { generateCmd } = require('./commands/generate.cjs').createGenerateCommand(common);
-const { spawnCmd, breedCmd, playCmd } = require('./commands/shortcuts.cjs').createShortcutCommands({
-  ...common, evalRun, servePreservedGenerationBuildArtifact,
-});
-const tipCmd = require('./commands/tip.cjs').createTipCommand({ ...common, teachings });
-const nextCmd = require('./commands/next.cjs').createNextCommand(common);
-const publishCmd = require('./commands/publish.cjs').createPublishCommand();
-
-const snapshotCmd = require('./commands/snapshot.cjs').createSnapshotCommand({
-  ...common,
-  sideEffectsSuppressed, ensureGraphFresh, loadSessions, writeSession,
-  resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
-  listAgentLanes, touchAgentLane,
-  buildAssignmentsView, compactStateXml, compactRoadmapSection, compactTasksSection,
-  buildEvolutionSection, listSkillDirs, readSkillFrontmatter,
-  getCurrentSprintIndex, getSprintPhaseIds,
-});
+const { subCommands } = require('./commands/_registry.cjs').build({ common, extras });
 
 const main = defineCommand({
   meta: {
@@ -525,75 +383,7 @@ const main = defineCommand({
     description: 'Planning CLI for get-anything-done',
     version: pkg.version,
   },
-  subCommands: {
-    ls: lsCmd,
-    workspace: workspaceCmd,
-    projects: projectsCmd,
-    species: speciesCmd,
-    recipes: recipesCmd,
-    generation: generationCmd,
-    session: sessionCmd,
-    context: contextCmd,
-    state: stateCmd,
-    phases: phasesCmd,
-    tasks: tasksCmd,
-    'task-checkpoint': taskCheckpoint,
-    next: nextCmd,
-    decisions: decisionsCmd,
-    handoffs: handoffsCmd,
-    todos: todosCmd,
-    note: noteCmd,
-    notes: noteCmd,
-    requirements: requirementsCmd,
-    errors: errorsCmd,
-    blockers: blockersCmd,
-    refs: refsCmd,
-    pack: packCmd,
-    docs: docsCmd,
-    planning: planningCmd,
-    narrative: narrativeCmd,
-    site: siteCmd,
-    self: selfCmd,
-    'self-eval': selfEvalCmd,
-    data: dataCmd,
-    env: envCmd,
-    runtime: runtimeCmd,
-    eval: evalCmd,
-    evolution: evolutionCmd,
-    skill: skillCmd,
-    models: modelsCmd,
-    workflow: workflowCmd,
-    rounds: roundsCmd,
-    verify: verifyCmd,
-    snapshot: snapshotCmd,
-    start: startCmd,
-    dashboard: startCmd,
-    subagents: subagentsCmd,
-    agents: agentsCmd,
-    startup: startupCmd,
-    'pause-work': pauseWorkCmd,
-    'discovery-test': discoveryTestCmd,
-    sprint: sprintCmd,
-    dev: devCmd,
-    sink: sinkCmd,
-    log: logCmd,
-    worktree: worktreeCmd,
-    health: healthCmd,
-    'migrate-schema': migrateSchema,
-    graph: graphCmd,
-    query: queryCmd,
-    install: installCmd,
-    uninstall: uninstallCmd,
-    bundle: bundleCmd,
-    try: tryCmd,
-    generate: generateCmd,
-    spawn: spawnCmd,
-    breed: breedCmd,
-    play: playCmd,
-    tip: tipCmd,
-    publish: publishCmd,
-    version: versionCmd,
-  },
+  subCommands,
 });
 
 // argv injectors → lib/argv-injectors.cjs
