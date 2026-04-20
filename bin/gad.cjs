@@ -179,15 +179,10 @@ const {
 const __cliHelpers = require('../lib/cli-helpers.cjs');
 const {
   PROJECT_NAMESPACE_MAP, projectNamespace, formatId,
-  detectAgentTelemetry, normalizeEvalRuntime, runtimeInstallFlag,
+  detectAgentTelemetry,
   resolveSnapshotRuntime, resolveSnapshotAgentInputs,
   simplifyAgentLane, buildAssignmentsView,
 } = __cliHelpers;
-function ensureEvalRuntimeHooks(runtimeIdentity) {
-  return __cliHelpers.ensureEvalRuntimeHooks(runtimeIdentity, {
-    outputError, gadEntryPath: __filename,
-  });
-}
 
 function output(rows, opts = {}) {
   const fmt = shouldUseJson() ? 'json' : (opts.format || 'table');
@@ -286,20 +281,14 @@ const { getRuntimeArg } = require('./commands/runtime.cjs');
 // Install / sink helpers → lib/install-helpers.cjs
 const __installHelpers = require('../lib/install-helpers.cjs');
 const {
-  GAD_HOOK_MARKER, getClaudeSettingsPath, readJsonSafe, writeJsonPretty,
   isPackagedExecutableRuntime, getPackagedExecutablePath,
-  getDefaultSelfInstallDir, updateWindowsUserPath, stampSinkCompileNote,
+  getDefaultSelfInstallDir, stampSinkCompileNote,
 } = __installHelpers;
 function maybeGenerateDailyTip() {
   return __installHelpers.maybeGenerateDailyTip({
     teachings, scriptDir: path.join(__dirname, '..', 'scripts'),
   });
 }
-
-// worktree helpers → lib/worktree-helpers.cjs
-const { listAllWorktrees, worktreeInfo, findWorktreeByPartial } = require('../lib/worktree-helpers.cjs');
-const { getFrameworkVersion } = require('../lib/framework-version.cjs');
-const { normalizeGenerationReference, buildEvalPrompt } = require('../lib/eval-helpers.cjs');
 
 // Shared dependency bag. Most factories take only `common` and destructure
 // what they need — extras are ignored. Add cross-cutting helpers here.
@@ -362,17 +351,6 @@ const extras = {
     normalizeSkillLaneValues, lintSkill, summarizeLint, lintAllSkills,
     filterIssuesBySeverity, auditSkillTokens, buildSkillUsageIndex,
   },
-  install: {
-    getClaudeSettingsPath, readJsonSafe, writeJsonPretty, GAD_HOOK_MARKER,
-    isPackagedExecutableRuntime, getPackagedExecutablePath,
-    getDefaultSelfInstallDir, updateWindowsUserPath,
-  },
-  sink: { stampSinkCompileNote },
-  worktree: { listAllWorktrees, worktreeInfo, findWorktreeByPartial },
-  version: { getFrameworkVersion },
-  bundle: { readSkillFrontmatter },
-  tip: { teachings },
-  eval: { buildEvalPrompt, normalizeEvalRuntime, ensureEvalRuntimeHooks },
 };
 
 const { subCommands } = require('./commands/_loader.cjs').load({ common, extras });

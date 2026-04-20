@@ -1,13 +1,12 @@
 'use strict';
 /**
  * gad health — machine health surface (disk/prune/caches). Task 63-health-cli.
- *
- * Required deps: findRepoRoot, outputError, listAllWorktrees, worktreeInfo
  */
 
 const path = require('path');
 const fs = require('fs');
 const { defineCommand } = require('citty');
+const { listAllWorktrees, worktreeInfo } = require('../../lib/worktree-helpers.cjs');
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return '?';
@@ -311,5 +310,5 @@ function createHealthCommand(deps) {
 
 module.exports = { createHealthCommand };
 module.exports.register = (ctx) => ({
-  health: createHealthCommand({ ...ctx.common, ...ctx.extras.worktree }),
+  health: createHealthCommand(ctx.common),
 });

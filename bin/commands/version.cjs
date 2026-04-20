@@ -1,14 +1,12 @@
 'use strict';
 /**
  * gad version — print framework version + git commit/branch for trace stamping
- *
- * Required deps: getFrameworkVersion
  */
 
 const { defineCommand } = require('citty');
+const { getFrameworkVersion } = require('../../lib/framework-version.cjs');
 
-function createVersionCommand(deps) {
-  const { getFrameworkVersion } = deps;
+function createVersionCommand() {
   return defineCommand({
     meta: { name: 'version', description: 'Print GAD framework version + git commit/branch for trace stamping' },
     args: {
@@ -33,4 +31,4 @@ function createVersionCommand(deps) {
 }
 
 module.exports = { createVersionCommand };
-module.exports.register = (ctx) => ({ version: createVersionCommand(ctx.extras.version) });
+module.exports.register = () => ({ version: createVersionCommand() });

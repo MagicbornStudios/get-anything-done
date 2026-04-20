@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
+const { buildEvalPrompt } = require('../../lib/eval-helpers.cjs');
 
 function createEvalSuiteCommands(deps) {
   const {
@@ -19,7 +20,6 @@ function createEvalSuiteCommands(deps) {
     defaultEvalsDir,
     outputError,
     output,
-    buildEvalPrompt,
     loadEvalProject,
     loadAllResolvedSpecies,
   } = deps;
@@ -504,4 +504,4 @@ Manual score added to SCORE.md.
 
 module.exports = { createEvalSuiteCommands };
 module.exports.provides = (ctx) =>
-  createEvalSuiteCommands({ ...ctx.common, ...ctx.extras.eval });
+  createEvalSuiteCommands(ctx.common);

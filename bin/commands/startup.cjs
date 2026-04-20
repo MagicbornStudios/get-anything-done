@@ -200,7 +200,7 @@ function buildStartupCmd() {
   const { sessionsDir, generateSessionId, SESSION_STATUS, buildContextRefs, writeSession } = sessionHelpers;
 
   return defineCommand({
-    meta: { name: 'startup', description: 'Print the GAD session-start contract. One-shot answer to "how do I begin working on this project?" (task 42.2-22, fixes chicken-and-egg identified by subagent battery findings 2026-04-15).' },
+    meta: { name: 'startup', description: 'Print the GAD session-start contract. Prefer `gad snapshot --projectid <id>` — snapshot is the canonical orientation command per decision 2026-04-20 D6 (phase-63 task 63-14 tracks the unification). `startup` remains as an alias.' },
     args: {
       projectid: { type: 'string', description: 'Project id to snapshot against (default: first root)', default: '' },
       'no-side-effects': { type: 'boolean', description: 'Read-only startup: suppress .planning/ writes, user-setting stamps, and session creation.', default: false },
@@ -210,6 +210,9 @@ function buildStartupCmd() {
         'GAD session startup — one command gets you full context.',
         '',
         '  gad snapshot --projectid <id>      # full context dump, ~6-7k tokens',
+        '',
+        '  NOTE: `gad snapshot` is the canonical orientation command (D6, 2026-04-20).',
+        '        `gad startup` is an alias kept for one release.',
         '',
         'What snapshot gives you:',
         '  - STATE.xml (current phase, next-action, references)',

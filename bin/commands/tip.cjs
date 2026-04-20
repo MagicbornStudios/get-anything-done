@@ -1,17 +1,15 @@
 'use strict';
 /**
  * gad tip — daily teachings, file-backed, zero API cost
- *
- * Required deps:
- *   teachings, findRepoRoot, gadConfig, outputError
  */
 
 const path = require('path');
 const fs = require('fs');
 const { defineCommand } = require('citty');
+const teachings = require('../../lib/teachings-reader.cjs');
 
 function createTipCommand(deps) {
-  const { teachings, findRepoRoot, gadConfig, outputError } = deps;
+  const { findRepoRoot, gadConfig, outputError } = deps;
 
   function renderTipBackrefs(tip) {
     if (!tip) return '';
@@ -172,5 +170,5 @@ function createTipCommand(deps) {
 
 module.exports = { createTipCommand };
 module.exports.register = (ctx) => ({
-  tip: createTipCommand({ ...ctx.common, ...ctx.extras.tip }),
+  tip: createTipCommand(ctx.common),
 });

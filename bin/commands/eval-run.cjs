@@ -9,20 +9,26 @@ const { defineCommand } = require('citty');
 const {
   buildSkillsProvenance,
   formatGenerationPreserveCommand,
+  buildEvalPrompt,
 } = require('../../lib/eval-helpers.cjs');
+const {
+  normalizeEvalRuntime,
+  ensureEvalRuntimeHooks: ensureEvalRuntimeHooksBase,
+} = require('../../lib/cli-helpers.cjs');
 
 function createEvalRunCommand(deps) {
   const {
     listEvalProjectsHint,
     resolveEvalProject,
     outputError,
-    normalizeEvalRuntime,
-    ensureEvalRuntimeHooks,
-    buildEvalPrompt,
     summarizeAgentLineage,
   } = deps;
 
   const gadDir = path.join(__dirname, '..', '..');
+  const gadEntryPath = path.join(__dirname, '..', 'gad.cjs');
+  function ensureEvalRuntimeHooks(runtimeIdentity) {
+    return ensureEvalRuntimeHooksBase(runtimeIdentity, { outputError, gadEntryPath });
+  }
 
   const evalRun = defineCommand({
     meta: { name: 'run', description: 'Run eval project — generates prompt, creates worktree, optionally spawns agent' },
@@ -249,5 +255,5 @@ function createEvalRunCommand(deps) {
 
 module.exports = { createEvalRunCommand };
 module.exports.provides = (ctx) => ({
-  cmd: createEvalRunCommand({ ...ctx.common, ...ctx.extras.eval }),
+  cmd: createEvalRunCommand(ctx.common),
 });

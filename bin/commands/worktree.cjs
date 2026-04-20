@@ -1,15 +1,16 @@
 'use strict';
 /**
  * gad worktree — manage git worktrees for eval agents and normal project work
- *
- * Required deps:
- *   outputError, listAllWorktrees, worktreeInfo, findWorktreeByPartial,
- *   listAllEvalProjects
  */
 
 const path = require('path');
 const fs = require('fs');
 const { defineCommand } = require('citty');
+const {
+  listAllWorktrees,
+  worktreeInfo,
+  findWorktreeByPartial,
+} = require('../../lib/worktree-helpers.cjs');
 
 function createWorktreeCommand(deps) {
   const { outputError, listAllWorktrees, worktreeInfo, findWorktreeByPartial, listAllEvalProjects } = deps;
@@ -241,5 +242,5 @@ function createWorktreeCommand(deps) {
 
 module.exports = { createWorktreeCommand };
 module.exports.register = (ctx) => ({
-  worktree: createWorktreeCommand({ ...ctx.common, ...ctx.extras.worktree }),
+  worktree: createWorktreeCommand(ctx.common),
 });

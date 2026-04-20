@@ -1,13 +1,12 @@
 'use strict';
 /**
  * gad bundle — export GAD skills as portable bundles for agent runtime upload
- *
- * Required deps: readSkillFrontmatter
  */
 
 const path = require('path');
 const fs = require('fs');
 const { defineCommand } = require('citty');
+const { readSkillFrontmatter } = require('../../lib/skill-helpers.cjs');
 
 function copyDirRecursive(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
@@ -19,9 +18,7 @@ function copyDirRecursive(src, dest) {
   }
 }
 
-function createBundleCommand(deps) {
-  const { readSkillFrontmatter } = deps;
-
+function createBundleCommand() {
   const bundleExport = defineCommand({
     meta: {
       name: 'export',
@@ -138,4 +135,4 @@ function createBundleCommand(deps) {
 }
 
 module.exports = { createBundleCommand };
-module.exports.register = (ctx) => ({ bundle: createBundleCommand(ctx.extras.bundle) });
+module.exports.register = () => ({ bundle: createBundleCommand() });

@@ -1,13 +1,12 @@
 'use strict';
 /**
  * gad sink — manage docs sink (sync, compile, decompile, status, validate)
- *
- * Required deps: findRepoRoot, gadConfig, resolveRoots, outputError, output, stampSinkCompileNote
  */
 
 const path = require('path');
 const fs = require('fs');
 const { defineCommand } = require('citty');
+const { stampSinkCompileNote } = require('../../lib/install-helpers.cjs');
 
 const SINK_SOURCE_MAP = [
   { srcs: ['STATE.xml', 'STATE.md'],                 sink: 'state.mdx' },
@@ -224,5 +223,5 @@ function createSinkCommand(deps) {
 
 module.exports = { createSinkCommand };
 module.exports.register = (ctx) => ({
-  sink: createSinkCommand({ ...ctx.common, ...ctx.extras.sink }),
+  sink: createSinkCommand(ctx.common),
 });
