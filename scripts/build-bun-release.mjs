@@ -86,6 +86,14 @@ function main() {
     stdio: 'inherit',
   });
 
+  // Pre-bundle: freeze git SHA + src hash into the exe so gad version and the
+  // pre-commit staleness check (task 66-04) don't rely on runtime git queries
+  // against the user's cwd (task 66-06).
+  execFileSync(process.execPath, [join(ROOT, 'scripts', 'build-stamp.mjs')], {
+    cwd: ROOT,
+    stdio: 'inherit',
+  });
+
   execFileSync(
     'bun',
     ['build', '--compile', '--target', target, join(ROOT, 'bin', 'gad.cjs'), '--outfile', artifactPath],

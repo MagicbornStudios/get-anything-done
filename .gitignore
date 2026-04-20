@@ -23,6 +23,9 @@ hooks/dist/
 # Generated command manifest (scripts/build-manifest.mjs; task 66-01)
 bin/commands/_manifest.cjs
 
+# Generated build stamp (scripts/build-stamp.mjs; task 66-06)
+lib/build-stamp.generated.cjs
+
 # Coverage artifacts
 coverage/
 

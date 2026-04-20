@@ -24,6 +24,8 @@ function createVersionCommand() {
       console.log(`  commit:      ${info.commit || '(unknown)'}`);
       console.log(`  branch:      ${info.branch || '(unknown)'}`);
       console.log(`  commit_ts:   ${info.commit_ts || '(unknown)'}`);
+      if (info.src_hash) console.log(`  src_hash:    ${info.src_hash}`);
+      if (info.built_at) console.log(`  built_at:    ${info.built_at}`);
       console.log(`  stamp:       ${info.stamp}`);
       console.log('');
     },

@@ -2228,7 +2228,7 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
   </phase>
 
   <phase id="52">
-    <task id="52-01" type="site" status="planned">
+    <task id="52-01" type="feature" status="done" skill="scaffold" agent="claude-sonnet-4-6">
       <goal>Scaffold packages/editor-core with package.json, tsconfig, src/index.ts exports. Peer deps on React 19. Turborepo workspace entry. Initial exports are placeholder components — 52-02 and 52-04 fill them in. Consumer smoke test: apps/planning-app imports from &apos;@repo/editor-core&apos; without error.</goal>
     </task>
     <task id="52-02" type="site" status="planned">
@@ -2316,8 +2316,9 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>Delete scripts/build-release.mjs (SEA pipeline), scripts/build-release-support.mjs if SEA-only, scripts/sea-bootstrap.cjs, and tests/release-deprecation.test.cjs. Remove SEA-related npm scripts (build:release:sea) from package.json. Update docs/release-guide.md and any prose that references SEA. Bun is the only pipeline going forward.</goal>
       <depends>66-03</depends>
     </task>
-    <task id="66-06" type="code" status="planned">
+    <task id="66-06" type="code" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="default">
       <goal>Embed git SHA + src-hash stamp into built exe at build time. scripts/build-bun-release.mjs writes lib/build-stamp.generated.cjs with { sha, hash, builtAt } before running bun build --compile. bin/gad-version.cjs reads the stamp and exposes via &apos;gad version --verbose&apos;. Precommit hook (66-04) uses the stamp to decide staleness.</goal>
+      <resolution>Shipped 2026-04-20. scripts/build-stamp.mjs runs as a pre-bundle step (alongside build-manifest.mjs), computes { version, commit, branch, commit_ts, src_hash, built_at } and writes lib/build-stamp.generated.cjs. src_hash is a 16-char SHA-256 prefix over sorted {path, content} triples for bin/, lib/, scripts/, package.json — skips .generated / _manifest / node_modules / dist / .git / tmp. lib/framework-version.cjs prefers the stamp when present; falls back to runtime git exec when absent. bin/commands/version.cjs adds src_hash + built_at to the pretty output. lib/build-stamp.generated.cjs gitignored. Verified: v1.35.0+7b0803ea exe reports src_hash=d1df93f412b83552.</resolution>
     </task>
   </phase>
 </task-registry>
