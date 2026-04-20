@@ -19,6 +19,7 @@ const { createWorkCommand }     = require('./team/work.cjs');
 const { createTailCommand }     = require('./team/tail.cjs');
 const { createRestartCommand }  = require('./team/restart.cjs');
 const { createProfileCommand }  = require('./team/profile.cjs');
+const { createDispatcherCommand } = require('./team/dispatcher.cjs');
 
 function createTeamCommands(deps) {
   return defineCommand({
@@ -33,6 +34,7 @@ function createTeamCommands(deps) {
       tail:     createTailCommand(deps),
       restart:  createRestartCommand(deps),
       profile:  createProfileCommand(deps),
+      dispatcher: createDispatcherCommand(deps),
     },
   });
 }

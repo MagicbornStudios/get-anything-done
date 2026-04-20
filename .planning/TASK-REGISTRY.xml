@@ -2151,6 +2151,27 @@ FIX 2026-04-18: lib/graph-extractor.cjs gains isGraphStale(planDir, jsonPath) wh
 
 STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — they were producing noisy diffs on every task-status change and guaranteed parallel-agent merge conflicts that were never meaningful. Cache-only model: rebuild on demand. (a) `.gitignore` added the two paths with a rationale comment. (b) `git rm --cached .planning/graph.json .planning/graph.html` untracked the historical copies. (c) bin/gad.cjs gains `ensureGraphFresh(baseDir, root)` helper near the existing `maybeRebuildGraph` — delegates to graphExtractor.loadOrBuildGraph for the staleness check (uses STALENESS_SOURCES = TASK-REGISTRY/ROADMAP/DECISIONS) and additionally writes graph.html when the json was rebuilt or the html is missing. Wired into snapshotV2Cmd (the actual snapshot dispatched at runtime — original patch hit the legacy snapshotCmd at line 9277 by mistake; corrected) and startupCmd (right after projectid resolution). Both call sites guard on !sideEffectsSuppressed() so --no-side-effects snapshots stay read-only. Smoke verified end-to-end: rm graph.* → gad snapshot prints "[snapshot] graph cache rebuilt (missing)" + writes both files; touch TASK-REGISTRY.xml → next snapshot prints "(stale)"; subsequent snapshot is silent (fresh). (d) site/scripts/pack-site-release.cjs gains ensureFrameworkGraph() that runs `node bin/gad.cjs graph build --projectid get-anything-done` before staging if .planning/graph.json is missing, so site/data/planning-graph.json (baked into the release zip by build-site-data.mjs) doesn't ship as an empty stub on a fresh checkout. Note: site/data/planning-graph.json + planning-graph-index.json remain tracked deliberately (separate site-data convention alongside cli-captures.json, db.json, etc. — those exist so static site builds are deterministic without first running the planning-graph extractor). Closes the operator-surfaced concern: "graph keeps getting modified, what is it?" — answer is now "it's a cache, you'll never see it in diffs again."</goal>
     </task>
+    <task id="63-10" type="migration" status="planned">
+      <goal>Drop pre-claim semantics from `gad tasks claim` — rename to attribution-only stamp written at task completion. Handoff rename is already the atomic work lock per decision 2026-04-20 D2.</goal>
+    </task>
+    <task id="63-11" type="migration" status="planned">
+      <goal>Migrate TASK-REGISTRY.xml from single-file XML to per-task files under .planning/tasks/&lt;id&gt;.{json|md} via phased dual-write. Closes multi-agent race class. Decision 2026-04-20 D3.</goal>
+    </task>
+    <task id="63-12" type="migration" status="planned">
+      <goal>Cut planning-app lib/planning-data.ts and site/scripts/build-site-data.mjs over to graph.json for task reads; eliminate direct TASK-REGISTRY.xml parsing in consumers. Enables 63-11 finalization. Decision 2026-04-20 D3.</goal>
+    </task>
+    <task id="63-13" type="migration" status="planned">
+      <goal>Split STATE.xml &lt;next-action&gt; out to per-session field under .planning/sessions/&lt;id&gt;.json::next_action. Keep &lt;state-log&gt; in STATE.xml (append-only, safe). Decision 2026-04-20 D4.</goal>
+    </task>
+    <task id="63-14" type="cleanup" status="planned">
+      <goal>Deprecate gad startup in favor of gad snapshot --create-session. First call of the day auto-creates a session record if none exists. Keep startup as a documented alias for one release, then remove. Decision 2026-04-20 D6.</goal>
+    </task>
+    <task id="63-15" type="design" status="planned">
+      <goal>Audit ROADMAP.xml canonical status. Either formalize it as source-of-truth for phases, or migrate phase definitions to .planning/phases/&lt;id&gt;/KICKOFF.md and have graph-extractor source from there. Operator had noted uncertainty about this file&apos;s role. Decision 2026-04-20 D5 follow-up.</goal>
+    </task>
+    <task id="63-16" type="design" status="planned">
+      <goal>Audit REQUIREMENTS.xml canonical status — is it still the official planning artifact, or has that role moved to specs/ and context-frameworks/? Decision 2026-04-20 D5 follow-up.</goal>
+    </task>
   </phase>
 
   <phase id="64">
