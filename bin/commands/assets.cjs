@@ -6,90 +6,133 @@
  *   vendor/get-anything-done/.planning/notes/2026-04-20-asset-storage-design.md
  *
  * Phase 71-01: scaffold only. All subcommands except `list` print
- * "not implemented — see task 71-02" and exit 1.
- * Actual implementation: task 71-02.
+ * "not implemented — see task 71-03" and exit 1.
+ * list implemented: task 71-02.
  *
  * Subcommands:
- *   list       [--project] [--species] [--generation]  — stubbed empty table
+ *   list       [--project] [--species] [--generation] [--limit] [--offset] — live Supabase query
  *   upload     <file> --project [--species] [--generation] [--labels]
  *   download   <asset_id> [--out]
  *   move       <asset_id> --species
  *   transfer   <asset_id> --project [--keep-source]
  */
 
+const path = require('path');
 const { defineCommand } = require('citty');
+const { render } = require(path.join(__dirname, '../../lib/table.cjs'));
+const { getSupabaseClient } = require(path.join(__dirname, '../../lib/supabase-client.cjs'));
 
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 
 function notImplemented(name) {
-  console.error(`\n  gad assets ${name}: not implemented — see task 71-02\n`);
+  console.error(`\n  gad assets ${name}: not implemented — see task 71-03\n`);
   process.exitCode = 1;
 }
 
-function printTableHeader(cols) {
-  const widths = cols.map((c) => c.length);
-  const fmt = (cells) => cells.map((c, i) => String(c).padEnd(widths[i])).join('  ');
-  console.log('');
-  console.log('  ' + fmt(cols));
-  console.log('  ' + widths.map((w) => '-'.repeat(w)).join('  '));
-  return { fmt, widths };
+// Truncate a string to maxLen, appending '…' if truncated.
+function trunc(s, maxLen) {
+  if (!s) return '';
+  const str = String(s);
+  return str.length > maxLen ? str.slice(0, maxLen - 1) + '…' : str;
 }
 
 // ---------------------------------------------------------------------------
-// list
+// list (task 71-02)
 // ---------------------------------------------------------------------------
 const listCmd = defineCommand({
   meta: {
     name: 'list',
-    description: 'List assets for a project. Queries the assets metadata table via Supabase client.',
+    description: 'List assets for a project. Queries the assets metadata table via Supabase.',
   },
   args: {
     project: {
       type: 'string',
-      description: 'Project id (UUID or slug) to list assets for.',
+      description: 'Filter by project_id (UUID).',
     },
     species: {
       type: 'string',
-      description: 'Filter by species id.',
+      description: 'Filter by species_id (UUID).',
     },
     generation: {
       type: 'string',
-      description: 'Filter by generation id.',
+      description: 'Filter by generation_id (UUID).',
+    },
+    projectid: {
+      type: 'string',
+      description: 'GAD project id for session scoping (no-op filter — reserves arg slot for 71-03).',
     },
     json: {
       type: 'boolean',
       description: 'Emit JSON output instead of table.',
+      default: false,
+    },
+    limit: {
+      type: 'string',
+      description: 'Max rows to return (default 50).',
+      default: '50',
+    },
+    offset: {
+      type: 'string',
+      description: 'Row offset for pagination (default 0).',
+      default: '0',
     },
   },
-  run({ args }) {
-    // 71-01: placeholder — prints empty table with correct shape.
-    // 71-02 will query Supabase: SELECT * FROM assets WHERE project_id = <args.project>
-    //        filtered by species_id / generation_id when provided.
-    if (args.json) {
-      process.stdout.write(JSON.stringify({
-        _note: 'not implemented — see task 71-02',
-        project: args.project ?? null,
-        species: args.species ?? null,
-        generation: args.generation ?? null,
-        assets: [],
-      }, null, 2) + '\n');
+  async run({ args }) {
+    const limit = Math.max(1, parseInt(args.limit, 10) || 50);
+    const offset = Math.max(0, parseInt(args.offset, 10) || 0);
+
+    let client;
+    try {
+      ({ client } = getSupabaseClient());
+    } catch (err) {
+      console.error(err.message);
+      process.exitCode = 1;
       return;
     }
 
-    const cols = ['ID', 'BUCKET', 'PATH', 'MIME', 'SIZE', 'LABELS', 'CREATED'];
-    const { fmt } = printTableHeader(cols);
-    console.log(`  ${'(no assets — list not implemented yet, see task 71-02)'.padEnd(cols.join('  ').length)}`);
-    console.log('');
+    // Build query — select all metadata columns, ordered newest-first.
+    let query = client
+      .from('assets')
+      .select('id, project_id, species_id, generation_id, bucket_name, storage_path, mime_type, size_bytes, labels, created_at')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    if (args.project) {
-      console.log(`  (would filter: project=${args.project})`);
+    if (args.project) query = query.eq('project_id', args.project);
+    if (args.species) query = query.eq('species_id', args.species);
+    if (args.generation) query = query.eq('generation_id', args.generation);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error(`assets list: ${error.message}`);
+      process.exitCode = 1;
+      return;
     }
-    if (args.species) console.log(`  (would filter: species=${args.species})`);
-    if (args.generation) console.log(`  (would filter: generation=${args.generation})`);
-    console.log('');
-    void fmt; // used in 71-02
+
+    if (!data || data.length === 0) {
+      console.log('No assets found.');
+      return;
+    }
+
+    if (args.json) {
+      process.stdout.write(JSON.stringify(data, null, 2) + '\n');
+      return;
+    }
+
+    // Render as table with truncated paths for readability.
+    const rows = data.map((a) => ({
+      project_id: trunc(a.project_id, 16),
+      species_id: trunc(a.species_id, 16),
+      gen_id: trunc(a.generation_id, 16),
+      path: trunc(a.storage_path, 40),
+      mime: trunc(a.mime_type, 20),
+      size_bytes: a.size_bytes != null ? String(a.size_bytes) : '',
+      created_at: a.created_at ? String(a.created_at).slice(0, 19) : '',
+    }));
+
+    console.log(render(rows));
   },
 });
 

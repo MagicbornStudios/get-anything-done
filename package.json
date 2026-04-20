@@ -45,6 +45,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "citty": "^0.1.6",
     "pdf-parse": "^2.4.5"
   },
