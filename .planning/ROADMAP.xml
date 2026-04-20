@@ -442,5 +442,40 @@
     <depends>42.2</depends>
   </phase>
 
+  <phase id="67">
+    <title>CLI fix wave 2 — team --projectid, gad tui wiring, misc</title>
+    <goal>Second CLI hygiene wave after phase 66 landed. (1) Fix gad team cwd-anchor bug — team commands must accept --projectid and resolve to the project's .planning/team/ regardless of cwd. Today, 'gad team start --profile default' fails from monorepo root because it looks for monorepo/.planning/team/profiles/default.json while the profile lives under vendor/get-anything-done/.planning/team/profiles/. (2) Wire gad tui as a real gad subcommand that delegates to @magicborn/gad-tui package. Today gad tui is not a command; operator has to know to launch the package directly. Build gad-tui, ship binary alongside gad.exe, add bin/commands/tui.cjs wrapper that spawns it. (3) Misc CLI follow-ups surfaced during phase 66 — leftover comments, help-text drift.</goal>
+    <status>planned</status>
+    <depends>66</depends>
+  </phase>
+
+  <phase id="68">
+    <title>Monorepo reorg — rename planning-app → platform, move portfolio-v2, merge marketing</title>
+    <goal>Accept operator directive: don't see apps/planning-app or apps/portfolio-v2 at top level. (1) Rename apps/planning-app → apps/platform. Sweep all imports, Clerk metadata, docs, gad CLI references (gad:planning:*). Package name @portfolio/planning-app → @portfolio/platform. (2) Move apps/portfolio-v2 → apps/species/portfolio-v2 (portfolio-v2 is a species being dogfooded, not a top-level app per phase 50). Create apps/species/ dir. (3) Copy vendor/get-anything-done/site/ marketing shell into apps/platform/app/(marketing)/ — landing + marketplace share the same app per operator decision overriding gad-261. Single Next app serving unauth marketing (including /marketplace browse) + authed operator surfaces. Record as new decision (supersedes gad-261).</goal>
+    <status>planned</status>
+    <depends>66,51,59</depends>
+  </phase>
+
+  <phase id="69">
+    <title>Supabase wire — schema migrations + @supabase/supabase-js client</title>
+    <goal>Wire the real cloud DB per gad-253 + operator decision 2026-04-20. GAD Supabase project ref dqsdfwcuhiiiztryrkwc already linked via supabase CLI. (1) Design + write initial schema migrations under supabase/migrations/: users (mirror Clerk user IDs), projects, species, generations, publishes (marketplace entries), assets metadata (storage pointers). (2) Wire @supabase/supabase-js client in apps/platform — both server-side (middleware-aware) and client-side factories. Types generated from schema via supabase gen types typescript. (3) Replace marketplace-index.generated.json file reads in apps/platform with Supabase queries. Hot-rebuild path gets replaced by real DB writes on publish.</goal>
+    <status>planned</status>
+    <depends>68,51</depends>
+  </phase>
+
+  <phase id="70">
+    <title>Marketplace move — vendor /project-market → apps/platform /marketplace</title>
+    <goal>Move the marketplace UI out of the GAD framework's public landing site (vendor/get-anything-done/site/) into the platform app. Per decision this session, vendor site = framework dev/landing only; consumer-facing marketplace = platform. Files to move: app/project-market/page.tsx + components/project-market/* + use-project-market hook. New route: /marketplace on apps/platform. Replace file-based data reads with Supabase queries (depends on 69). Add nav entry to platform AppShell. Leave a deprecation stub on vendor /project-market pointing to the platform URL.</goal>
+    <status>planned</status>
+    <depends>68,69</depends>
+  </phase>
+
+  <phase id="71">
+    <title>Asset storage — Supabase Storage + gad assets CLI + cross-project mobility</title>
+    <goal>Project assets (generation build outputs, cover images, species assets, book PDFs) live in Supabase Storage; metadata in the DB points to storage URLs. Operator wants to move assets between projects easily. (1) Schema: assets table with { id, project_id, species_id?, generation_id?, storage_path, mime_type, size_bytes, created_at, labels }. (2) Supabase Storage buckets per project (RLS-scoped) + shared bucket for cross-project moves. (3) 'gad assets' CLI family: list (by project/species/generation), upload, download, move (same project), transfer (across projects — writes new metadata row, copies storage object). (4) 'gad data' may be a higher-level alias that also covers non-asset data (DB rows, planning artifacts) — decide before shipping. (5) Platform + desktop UI surfaces for browsing/managing assets.</goal>
+    <status>planned</status>
+    <depends>69</depends>
+  </phase>
+
 </roadmap>
 

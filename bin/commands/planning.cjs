@@ -79,7 +79,7 @@ function createPlanningCommand(deps) {
       const workspace = resolveWorkspaceRoot(process.cwd());
       if (!workspace) {
         outputError(
-          'could not locate apps/planning-app/ by walking up from cwd. ' +
+          'could not locate apps/platform/ by walking up from cwd. ' +
           '`gad planning serve` requires a monorepo checkout (decision gad-265 Q1). ' +
           'Follow-up: standalone binary bundling gated on task 44-28 pattern.',
         );
@@ -106,7 +106,7 @@ function createPlanningCommand(deps) {
         return;
       }
 
-      console.log(`[gad planning serve] spawning pnpm --filter @portfolio/planning-app ${args.prod ? 'start' : 'dev'} on port ${port}`);
+      console.log(`[gad planning serve] spawning pnpm --filter @portfolio/platform ${args.prod ? 'start' : 'dev'} on port ${port}`);
       console.log(`[gad planning serve] log file: ${logFile}`);
       appendLogLine(logFile, 'stderr', `[gad planning serve] spawn port=${port} prod=${!!args.prod} cwd=${workspace.root}`);
 

@@ -2088,5 +2088,10 @@ Operator priority statement: "I just need it working right now. If we can put it
     </references>
   </decision>
 
+  <decision id="gad-277">
+    <title>apps/planning-app renamed to apps/platform</title>
+    <summary>apps/planning-app renamed to apps/platform to align with its actual role as the platform app (dashboards, BYOK, planning surfaces). Package name updated @portfolio/planning-app to @portfolio/platform. Supersedes the naming portion of gad-234 that originally called it apps/platform; execution rolled into planning-app per gad-261 — task 68-01 undoes that rename. gad:planning:* scripts kept as aliases pointing at @portfolio/platform for muscle memory.</summary>
+  </decision>
+
 </decisions>
 
