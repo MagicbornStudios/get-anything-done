@@ -59,6 +59,22 @@ Those builds use the same packaged runtime model:
 - no user Node prerequisite
 - support tree extracted on first run
 
+## Pre-commit hook — automatic rebuild on src change
+
+A git pre-commit hook (`scripts/hooks/pre-commit.sh`, installed via
+`scripts/install-hooks.mjs`) runs before every commit. It compares the
+`src_hash` embedded in the installed `gad.exe` (read via
+`gad version --json`) against the working-tree hash computed by
+`scripts/check-staleness.mjs`. If the hashes match, the hook reports
+"skipping rebuild" and the commit proceeds immediately. If they differ, the
+hook runs `npm run build:release` and then `gad self install` before
+allowing the commit. A failed build blocks the commit. Set
+`GAD_NO_PRECOMMIT_BUILD=1` to bypass the hook entirely (e.g. when working
+on non-source files or when the installed exe is intentionally locked).
+
+Hook installation runs automatically on `npm install` via the `"prepare"`
+lifecycle script. It is also safe to run manually: `node scripts/install-hooks.mjs`.
+
 ## Skills
 
 Skills are not published through the executable release. They remain GitHub-hosted and are

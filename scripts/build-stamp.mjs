@@ -17,19 +17,15 @@
  * runtime git query is the fallback for dev (unbundled) contexts.
  */
 
-import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { computeSrcHash } from './lib/src-hash.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const STAMP_PATH = join(ROOT, 'lib', 'build-stamp.generated.cjs');
-
-const HASH_TARGETS = ['bin', 'lib', 'scripts', 'package.json'];
-const HASH_SKIP = new Set(['node_modules', 'dist', '.git', 'tmp', '.gad-try']);
-const HASH_SKIP_FILE_PATTERNS = [/\.generated\.(js|cjs|mjs|ts)$/, /\._manifest\.cjs$/, /^_manifest\.cjs$/];
 
 function safeExec(cmd, args) {
   try {
@@ -41,49 +37,12 @@ function safeExec(cmd, args) {
   }
 }
 
-function shouldSkipFile(name) {
-  return HASH_SKIP_FILE_PATTERNS.some((re) => re.test(name));
-}
-
-function walkFiles(target, absBase, out) {
-  let stat;
-  try { stat = statSync(absBase); } catch { return; }
-  if (stat.isFile()) {
-    if (shouldSkipFile(target.split(/[\\/]/).pop() || '')) return;
-    out.push(target);
-    return;
-  }
-  if (!stat.isDirectory()) return;
-  for (const entry of readdirSync(absBase)) {
-    if (HASH_SKIP.has(entry)) continue;
-    if (entry.startsWith('.')) continue;
-    walkFiles(`${target}/${entry}`, join(absBase, entry), out);
-  }
-}
-
-function computeSrcHash() {
-  const paths = [];
-  for (const target of HASH_TARGETS) {
-    walkFiles(target, join(ROOT, target), paths);
-  }
-  paths.sort();
-  const hash = createHash('sha256');
-  for (const rel of paths) {
-    const content = readFileSync(join(ROOT, rel));
-    hash.update(rel);
-    hash.update('\0');
-    hash.update(content);
-    hash.update('\0');
-  }
-  return hash.digest('hex').slice(0, 16);
-}
-
 function main() {
   const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
   const commit = safeExec('git', ['rev-parse', '--short', 'HEAD']);
   const branch = safeExec('git', ['rev-parse', '--abbrev-ref', 'HEAD']);
   const commitTs = safeExec('git', ['log', '-1', '--format=%cI']);
-  const srcHash = computeSrcHash();
+  const srcHash = computeSrcHash(ROOT);
   const builtAt = new Date().toISOString();
 
   const stamp = {
