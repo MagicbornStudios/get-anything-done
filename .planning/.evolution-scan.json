@@ -1,0 +1,775 @@
+{
+  "scannedAt": "2026-04-20T01:43:03.787Z",
+  "projectid": "get-anything-done",
+  "candidates": [
+    {
+      "id": "phase-11-agents-md-and-context-system",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-16-sprint-context-window-snapshot-optimizat",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-28-project-market-site-architecture-overhau",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-31-skill-ecosystem-provenance-creation-work",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-44.5-project-editor-brood-editor-dna-editor-l",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-44.5-project-editor-brood-editor-local-dev-ga",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-45-full-site-rebrand-visual-identity-copy-p",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-46-site-architecture-redesign-cli-consolida",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-10-repeated-work",
+      "phase": "10",
+      "reason": "8 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-11-repeated-work",
+      "phase": "11",
+      "reason": "3 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-12-repeated-work",
+      "phase": "12",
+      "reason": "9 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-13-repeated-work",
+      "phase": "13",
+      "reason": "8 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-14-repeated-work",
+      "phase": "14",
+      "reason": "7 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-14.5-repeated-work",
+      "phase": "14.5",
+      "reason": "7 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-15-repeated-work",
+      "phase": "15",
+      "reason": "6 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-16-repeated-work",
+      "phase": "16",
+      "reason": "7 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-17-repeated-work",
+      "phase": "17",
+      "reason": "4 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-18-repeated-work",
+      "phase": "18",
+      "reason": "6 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-20-repeated-work",
+      "phase": "20",
+      "reason": "7 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-21-repeated-work",
+      "phase": "21",
+      "reason": "26 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-22-repeated-work",
+      "phase": "22",
+      "reason": "42 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-25-repeated-work",
+      "phase": "25",
+      "reason": "4 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-28-repeated-work",
+      "phase": "28",
+      "reason": "2 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-31-repeated-work",
+      "phase": "31",
+      "reason": "4 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-30-repeated-work",
+      "phase": "30",
+      "reason": "5 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-29-repeated-work",
+      "phase": "29",
+      "reason": "4 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-34-repeated-work",
+      "phase": "34",
+      "reason": "5 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-35-repeated-work",
+      "phase": "35",
+      "reason": "8 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-41-repeated-work",
+      "phase": "41",
+      "reason": "4 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-39-repeated-work",
+      "phase": "39",
+      "reason": "6 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-42.2-repeated-work",
+      "phase": "42.2",
+      "reason": "47 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-42.3-repeated-work",
+      "phase": "42.3",
+      "reason": "16 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-43-repeated-work",
+      "phase": "43",
+      "reason": "11 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-44.5-repeated-work",
+      "phase": "44.5",
+      "reason": "24 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-45-repeated-work",
+      "phase": "45",
+      "reason": "21 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-46-repeated-work",
+      "phase": "46",
+      "reason": "11 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-51-repeated-work",
+      "phase": "51",
+      "reason": "9 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-59-repeated-work",
+      "phase": "59",
+      "reason": "11 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-60-repeated-work",
+      "phase": "60",
+      "reason": "13 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-63-repeated-work",
+      "phase": "63",
+      "reason": "10 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-64-repeated-work",
+      "phase": "64",
+      "reason": "2 done tasks, 1 real attributed skills",
+      "source": "phase-signal"
+    }
+  ],
+  "shedCandidates": [
+    {
+      "id": "find-sprites",
+      "type": "system-requirements",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-add-phase",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-add-tests",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-add-todo",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-audit-milestone",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-audit-uat",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-autonomous",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-check-todos",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-cleanup",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-complete-milestone",
+      "type": "prompt",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-discuss-phase",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-do",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-docs-compile",
+      "type": "command-wrapper",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-docs-update",
+      "type": "command-wrapper",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-eval-list",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-eval-report",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-eval-run",
+      "type": "command-wrapper",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-eval-spawn",
+      "type": "command-wrapper",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-evolution-images",
+      "type": "command-wrapper",
+      "lane": [
+        "prod"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-execute-phase",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-forensics",
+      "type": "prompt",
+      "lane": [
+        "dev",
+        "meta"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-health",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-help",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-insert-phase",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-list-phase-assumptions",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-manager",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-manuscript",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-map-codebase",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-migrate-schema",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-milestone",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-milestone-summary",
+      "type": "prompt",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-new-milestone",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-new-project",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-next",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-pause-work",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-plan-milestone-gaps",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-plan-phase",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-plant-seed",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-progress",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-reapply-patches",
+      "type": "command-wrapper",
+      "lane": [
+        "meta"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-remove-phase",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-research-phase",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-resume-work",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-review",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-review-backlog",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-session",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-session-report",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-set-profile",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-settings",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-stats",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-task-checkpoint",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-thread",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-update",
+      "type": "command-wrapper",
+      "lane": [
+        "meta"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-validate-phase",
+      "type": "captured-answer",
+      "lane": [
+        "dev",
+        "prod"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-verify-phase",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-verify-work",
+      "type": "workflow",
+      "lane": [
+        "dev",
+        "prod"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-visual-context-panel-identities",
+      "type": "system-requirements",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-visual-context-system",
+      "type": "system-requirements",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-workspace-add",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-workspace-show",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-workspace-sync",
+      "type": "command-wrapper",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-write-feature-doc",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-write-intent",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "gad-write-tech-doc",
+      "type": "workflow",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "phase-42.4-context-frameworks",
+      "type": "captured-answer",
+      "lane": [
+        "dev"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    },
+    {
+      "id": "portfolio-sync",
+      "type": "command-wrapper",
+      "lane": [
+        "prod"
+      ],
+      "reason": "unused, unreferenced, and not meta-framework"
+    }
+  ],
+  "usageSummary": {
+    "totalRuns": 54,
+    "uniqueSkillsUsed": 13,
+    "unusedSkills": 83,
+    "attributedButMissing": 3
+  }
+}

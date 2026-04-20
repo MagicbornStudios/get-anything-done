@@ -290,8 +290,9 @@ function maybeGenerateDailyTip() {
   });
 }
 
-// Shared dependency bag. Most factories take only `common` and destructure
-// what they need — extras are ignored. Add cross-cutting helpers here.
+// Shared dependency bag. Command modules take `common` and destructure what
+// they need. Keep only cross-cutting helpers here; `extras` is compatibility-
+// only and loader callers pass it empty.
 const repoRoot = path.resolve(__dirname, '..');
 const common = {
   findRepoRoot, gadConfig, resolveRoots, resolveTomlPath, repoRoot, pkg,
