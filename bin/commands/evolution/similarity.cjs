@@ -17,7 +17,7 @@ function createEvolutionSimilarityCommand({ repoRoot }) {
       json: { type: 'boolean', description: 'Emit JSON instead of markdown report', default: false },
     },
     async run({ args }) {
-      const sim = require('../../lib/similarity.cjs');
+      const sim = require('../../../lib/similarity.cjs');
       const threshold = parseFloat(args.threshold);
       const shedThreshold = parseFloat(args.shedThreshold);
       const useSprint = args.against === 'sprint';
@@ -38,7 +38,7 @@ function createEvolutionSimilarityCommand({ repoRoot }) {
 
       let analysis, shed;
       if (args.embeddings) {
-        const emb = require('../../lib/embeddings.cjs');
+        const emb = require('../../../lib/embeddings.cjs');
         const modelId = emb.resolveModelId(args.model);
         console.error(`[embeddings] model=${modelId}`);
         console.error(`[embeddings] encoding ${mainDocs.length} docs...`);
@@ -98,7 +98,7 @@ function createEvolutionSimilarityCommand({ repoRoot }) {
       let obsolete = null;
       if (useSprint && sprintDoc && sprintDoc.text.trim()) {
         if (args.embeddings) {
-          const emb = require('../../lib/embeddings.cjs');
+          const emb = require('../../../lib/embeddings.cjs');
           const modelId = emb.resolveModelId(args.model);
           console.error(`[embeddings] encoding sprint corpus...`);
           const [sprintVec] = await emb.embedCorpus([sprintDoc], modelId, repoRoot);

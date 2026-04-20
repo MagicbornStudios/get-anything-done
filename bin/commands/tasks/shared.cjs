@@ -66,9 +66,10 @@ function runTasksListView(deps, args) {
           goal: goalText.length > limit ? `${goalText.slice(0, limit - 1)}…` : goalText,
           status: match.status || '',
           phase: taskId.replace(/-\d+$/, ''),
-          'agent-id': '',
-          'agent-role': '',
-          runtime: '',
+          'agent-id': match.agentId || '',
+          'agent-role': match.agentRole || '',
+          runtime: match.runtime || '',
+          skill: match.skill || '',
         });
       }
       continue;
@@ -87,6 +88,7 @@ function runTasksListView(deps, args) {
         'agent-id': task.agentId || '',
         'agent-role': task.agentRole || '',
         runtime: task.runtime || '',
+        skill: task.skill || '',
       });
     }
   }

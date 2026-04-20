@@ -34,7 +34,7 @@ function createTasksStampCommand(deps) {
       agent: { type: 'string', description: 'Agent name (e.g. team-w1)', default: '' },
       role: { type: 'string', description: 'Agent role (executor, reviewer, …)', default: '' },
       runtime: { type: 'string', description: 'Runtime id (claude-code, codex-cli, …)', default: '' },
-      skill: { type: 'string', description: 'Skill that did the work', default: '' },
+      'skill-id': { type: 'string', description: 'Skill that did the work (arg renamed from --skill to avoid a citty collision with the root `gad skill` subcommand)', default: '' },
       status: { type: 'string', description: 'Final status (planned | in-progress | done | cancelled)', default: '' },
       resolution: { type: 'string', description: 'Free-form completion note', default: '' },
     },
@@ -60,12 +60,12 @@ function createTasksStampCommand(deps) {
       if (args.agent)      patch.agent_id = String(args.agent);
       if (args.role)       patch.agent_role = String(args.role);
       if (args.runtime)    patch.runtime = String(args.runtime);
-      if (args.skill)      patch.skill = String(args.skill);
+      if (args['skill-id']) patch.skill = String(args['skill-id']);
       if (args.status)     patch.status = String(args.status).toLowerCase();
       if (args.resolution) patch.resolution = String(args.resolution);
 
       if (Object.keys(patch).length === 0) {
-        deps.outputError('Nothing to stamp — pass at least one of --agent / --role / --runtime / --skill / --status / --resolution.');
+        deps.outputError('Nothing to stamp — pass at least one of --agent / --role / --runtime / --skill-id / --status / --resolution.');
         process.exit(1);
         return;
       }

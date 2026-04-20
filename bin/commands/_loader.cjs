@@ -26,10 +26,10 @@
  *
  * ctx shape:
  *   {
- *     common,    // shared dep bag (readers, writers, render, etc.)
- *     extras,    // per-command dep bags (legacy; will be inlined per-module
- *                // over time). extras.setLoadSessions(fn) is honored for
- *                // late-binding loadSessions into scope-helpers.
+ *     common,    // shared dep bag (readers, writers, render, late-bound
+ *                // registration hooks, and true cross-cutting helpers)
+ *     extras,    // reserved compatibility field; currently expected to be
+ *                // empty. Keep the shape stable for loader callers.
  *     services,  // populated during the provides phase, keyed by module name
  *   }
  */

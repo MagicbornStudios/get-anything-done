@@ -96,7 +96,7 @@ function createEvolutionShedCommand({ repoRoot, findRepoRoot, gadConfig, resolve
               .filter((e) => e.isDirectory()).map((e) => e.name)
           : [];
       } else if (args.obsolete) {
-        const sim = require('../../lib/similarity.cjs');
+        const sim = require('../../../lib/similarity.cjs');
         const sprintDoc = sim.loadSprintCorpus(repoRoot, repoRoot);
         const candidateDocs = sim.loadCorpusFromDirs([
           { kind: 'candidate', root: candidatesDir },
@@ -104,7 +104,7 @@ function createEvolutionShedCommand({ repoRoot, findRepoRoot, gadConfig, resolve
         const cutoff = args.threshold ? parseFloat(args.threshold) : (args.embeddings ? 0.65 : 0.40);
         let scores;
         if (args.embeddings) {
-          const emb = require('../../lib/embeddings.cjs');
+          const emb = require('../../../lib/embeddings.cjs');
           const modelId = emb.resolveModelId('');
           const [sv] = await emb.embedCorpus([sprintDoc], modelId, repoRoot);
           const cv = await emb.embedCorpus(candidateDocs, modelId, repoRoot);

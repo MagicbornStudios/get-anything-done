@@ -188,6 +188,32 @@ function createStateCommand(deps) {
         return;
       }
       fs.writeFileSync(statePath, replaced);
+
+      // Dual-write to per-session JSON (decision 2026-04-20 D4). STATE.xml
+      // next-action is single-file → last-write-wins race across agents.
+      // Writing the same payload into the most-recent session's JSON keeps
+      // per-agent copies so we can surface the right "next action for this
+      // session" in the future without losing what another agent wrote.
+      try {
+        const sessionsDir = path.join(baseDir, root.path, root.planningDir, 'sessions');
+        if (fs.existsSync(sessionsDir)) {
+          const files = fs.readdirSync(sessionsDir)
+            .filter(f => f.startsWith('s-') && f.endsWith('.json'))
+            .map(f => ({ f, path: path.join(sessionsDir, f), mtime: fs.statSync(path.join(sessionsDir, f)).mtimeMs }))
+            .sort((a, b) => b.mtime - a.mtime);
+          if (files.length > 0) {
+            const target = files[0];
+            const session = JSON.parse(fs.readFileSync(target.path, 'utf8'));
+            session.nextAction = text;
+            session.nextActionAt = new Date().toISOString();
+            session.updatedAt = session.nextActionAt;
+            fs.writeFileSync(target.path, JSON.stringify(session, null, 2));
+          }
+        }
+      } catch (sessErr) {
+        console.error(`  (warning: session next_action write failed: ${sessErr.message})`);
+      }
+
       maybeRebuildGraph(baseDir, root);
       console.log(`Updated: ${path.relative(baseDir, statePath)}`);
       console.log(`Length:  ${text.length}/${NEXT_ACTION_MAX_CHARS} chars`);
