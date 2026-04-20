@@ -20,6 +20,9 @@ commands.html
 # Build artifacts (committed to npm, not git)
 hooks/dist/
 
+# Generated command manifest (scripts/build-manifest.mjs; task 66-01)
+bin/commands/_manifest.cjs
+
 # Coverage artifacts
 coverage/
 

@@ -77,6 +77,15 @@ function main() {
   mkdirSync(args.outDir, { recursive: true });
   rmSync(artifactPath, { force: true });
 
+  // Pre-bundle: generate static require manifest so bun build --compile can
+  // trace every bin/commands/*.cjs module. Without this, the filesystem-
+  // discovery loader is opaque to the bundler and command modules get
+  // dropped from the exe.
+  execFileSync(process.execPath, [join(ROOT, 'scripts', 'build-manifest.mjs')], {
+    cwd: ROOT,
+    stdio: 'inherit',
+  });
+
   execFileSync(
     'bun',
     ['build', '--compile', '--target', target, join(ROOT, 'bin', 'gad.cjs'), '--outfile', artifactPath],

@@ -2226,6 +2226,100 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>Planning notes (durable discussion docs): tui-requirements.md (5 tracks 17 specs); tui-requirements-discovery.md (28-item operator curation); skills-on-demand.md (3 options, recommendation Option B); a2a-research.md (subagent↔main comms, per-runtime pricing tiers); task-handoff-phase-unified-model.md (self-resume primary, bi-directional task linkage); llm-from-scratch-purpose.md (3 roles: runtime classifier, complexity scorer, SITREP summarizer); cross-lane-build-plan.md (A+B+D-mod scope); daily-routine-a2a-windows-hud-consolidated.md (OMX HUD lessons, Windows Git-Bash trick, daily routine); per-runtime-hooks-detection.md (runtime hook gap + 3-timescale path).</goal>
     </task>
   </phase>
+
+  <phase id="52">
+    <task id="52-01" type="site" status="planned">
+      <goal>Scaffold packages/editor-core with package.json, tsconfig, src/index.ts exports. Peer deps on React 19. Turborepo workspace entry. Initial exports are placeholder components — 52-02 and 52-04 fill them in. Consumer smoke test: apps/planning-app imports from &apos;@repo/editor-core&apos; without error.</goal>
+    </task>
+    <task id="52-02" type="site" status="planned">
+      <goal>Design VirtualFileFolder primitive per decision gad-254. Interface: DataSourceAdapter { listChildren(path): Entry[]; readFile(path): string; stat(path): Stat }. Component accepts adapter prop, renders tree view with expand/collapse, file-click callback. Read-only per gad-246. TypeScript interfaces exported.</goal>
+      <depends>52-01</depends>
+    </task>
+    <task id="52-03" type="site" status="planned">
+      <goal>Implement LocalFileSystemAdapter using node:fs for desktop use. Also a Web-safe browser adapter for planning-app using fetch() against a dev-server endpoint. Two adapters, same DataSourceAdapter interface from 52-02.</goal>
+      <depends>52-02</depends>
+    </task>
+    <task id="52-04" type="site" status="planned">
+      <goal>Read-only CodeView component per decision gad-246. Syntax highlighting via shiki or prism (decide). Props: path, content, language (optional, auto-detect from extension). No editing handles. Consumed by Bestiary + Project Editor.</goal>
+      <depends>52-01</depends>
+    </task>
+    <task id="52-05" type="test" status="planned">
+      <goal>Unit tests for VirtualFileFolder adapter contract + expand/collapse state. vitest (match repo convention). Validates adapter interface stability before downstream consumers depend.</goal>
+      <depends>52-02,52-03</depends>
+    </task>
+    <task id="52-06" type="site" status="planned">
+      <goal>Consumer story: apps/planning-app imports VirtualFileFolder + CodeView from @repo/editor-core, replacing any inline file-tree / code-preview code. Validates API surface against a real consumer before apps/desktop depends on it.</goal>
+      <depends>52-02,52-04</depends>
+    </task>
+  </phase>
+
+  <phase id="53">
+    <task id="53-01" type="site" status="planned">
+      <goal>Scaffold apps/desktop with Tauri 2.x, Windows x64 target only. Next.js frontend (or Vite+React if Next adds bundle weight — decide during scaffold). tauri.conf.json pinned to windowsOnly. Minimal hello-world window launches via &apos;bun tauri dev&apos; and produces unsigned MSI via &apos;bun tauri build&apos;.</goal>
+    </task>
+    <task id="53-02" type="site" status="planned">
+      <goal>Tauri sidecar binding for gad.exe. src-tauri/tauri.conf.json declares gad binary as sidecar resource. Rust #[tauri::command] wrappers for common subcommands (projects list, publish list, skill list, tasks list) returning parsed JSON (gad --json flag). Frontend hook useGadCommand() wraps invoke() with loading/error state.</goal>
+      <depends>53-01,66-01</depends>
+    </task>
+    <task id="53-03" type="site" status="planned">
+      <goal>First-run flow: on launch, detect claude CLI on PATH — if missing, show install prompt with one-click winget install Anthropic.Claude. Detect gad.exe on PATH — if missing, download latest from GitHub Releases into app data dir. Cache detection result per-session. Skippable via settings toggle.</goal>
+      <depends>53-01</depends>
+    </task>
+    <task id="53-04" type="site" status="planned">
+      <goal>Bundled planning-app sidecar approach (D1 lean): Tauri spawns apps/planning-app Next production server as child process on ephemeral port, webview points at http://localhost:&lt;port&gt;. Shuts down child on app quit. Advantage: zero UI duplication, planning-app stays single source of truth (gad-269). Measure startup time; if &gt;3s, revisit.</goal>
+      <depends>53-01</depends>
+    </task>
+    <task id="53-05" type="site" status="planned">
+      <goal>In-app terminal panel using xterm.js wired to child PTY (node-pty or Tauri equivalent). Runs claude or gad as shell. Implements terminal-as-chat (decision gad-253). Slide-out panel, toggleable via keyboard shortcut.</goal>
+      <depends>53-01</depends>
+    </task>
+    <task id="53-06" type="site" status="planned">
+      <goal>Sidenav: Dashboard / Projects / Bestiary / Publish / Settings. Each tab routes to planning-app URL (via bundled sidecar from 53-04) OR Tauri-native surface (publish wizard, settings). Keyboard navigation (Cmd+1..5). Icons via shared packages/icons or inline SVG.</goal>
+      <depends>53-04</depends>
+    </task>
+    <task id="53-07" type="site" status="planned">
+      <goal>Publish wizard UI fronting existing &apos;gad publish&apos; CLI (phase 51 task 51-07). Steps: pick project → pick generation (from MANIFEST.json per gad-270) → review manifest → confirm → invoke &apos;gad publish set&apos; via sidecar binding (53-02) → show progress. Uses Clerk operator-id for attribution.</goal>
+      <depends>53-02,53-08</depends>
+    </task>
+    <task id="53-08" type="site" status="planned">
+      <goal>Clerk auth integration in Tauri frontend per gad-271. Solo-operator fallback for local dev (signed out = operator-id &apos;local&apos;). Auth state syncs into sidecar env so gad publish CLI inherits GAD_OPERATOR_ID.</goal>
+      <depends>53-01</depends>
+    </task>
+    <task id="53-09" type="ops" status="planned">
+      <goal>GitHub Actions workflow building unsigned MSI on tag push. Workflow: checkout → install bun + rust → &apos;bun tauri build --target x86_64-pc-windows-msvc&apos; → attach MSI to GitHub Release. Authenticode signing deferred to HUMAN-TODO (cert procurement).</goal>
+      <depends>53-01</depends>
+    </task>
+    <task id="53-10" type="ops" status="planned">
+      <goal>Tauri built-in auto-updater. Update manifest hosted on GitHub Releases (tauri.updater endpoint). On launch, check for newer version; prompt user to download+restart. Signing keypair generated + embedded per Tauri 2 updater docs.</goal>
+      <depends>53-09</depends>
+    </task>
+  </phase>
+
+  <phase id="66">
+    <task id="66-01" type="code" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="default">
+      <goal>Fix bin/commands/_loader.cjs for bundled-exe context: add scripts/build-manifest.mjs that enumerates bin/commands/*.cjs at build time and writes bin/commands/_manifest.cjs with explicit requires for each command module. Update _loader.cjs to import from _manifest when present (bundled case), fall back to readdirSync when _manifest absent (dev case). Wire the manifest generator into scripts/build-bun-release.mjs as a pre-bundle step. Success: npm run build:release produces a gad.exe where &apos;gad team --help&apos; lists all team subcommands and no &apos;Cannot find package citty&apos; errors fire.</goal>
+      <resolution>Shipped 2026-04-20. Three changes. (1) scripts/build-manifest.mjs enumerates bin/commands/*.cjs and writes bin/commands/_manifest.cjs with 64 explicit requires. Wired as a pre-bundle step in scripts/build-bun-release.mjs. (2) bin/commands/_loader.cjs loadManifest() tries require(&apos;./_manifest.cjs&apos;) first; falls back to readdirSync when the manifest is absent. Also added topologicalSort() so the provides phase respects declared dependsOn edges — alphabetical order was wrong for evolution → evolution-images. (3) bin/commands/evolution.cjs declares module.exports.dependsOn = [&apos;evolution-images&apos;] so evolution-images.provides runs first. No other module needed annotation (register-phase consumers already see a fully-populated ctx.services). Result: fresh Bun-compiled v1.35.0 exe registers team + all 64 commands, no circular-dep warnings, gad team status works.</resolution>
+    </task>
+    <task id="66-02" type="cleanup" status="planned">
+      <goal>Remove dogfood-refresh from bin/commands/startup.cjs — delete resolveStartupFrameworkRoot, shouldDelegateStartupToTemporaryExecutable, delegateStartupToTemporaryExecutable, resolveStartupReleaseArtifactPath, runStartupSelfRefresh, runDogfoodSelfRefreshOrExit. Keep only the snapshot-invocation path. Startup becomes read-only + session-creation. Any tests that expect the refresh behavior get updated or deleted.</goal>
+      <depends>66-01</depends>
+    </task>
+    <task id="66-03" type="code" status="planned">
+      <goal>Consolidate gad self subcommands to exactly &apos;gad self build&apos; and &apos;gad self install&apos;. Remove &apos;gad self refresh&apos;. Build = node scripts/build-bun-release.mjs (Bun only, no SEA fallback). Install = copy dist/release/gad-v&lt;ver&gt;-&lt;platform&gt;-&lt;arch&gt;.exe to %LOCALAPPDATA%/Programs/gad/bin/gad.exe. On Windows lock, print clear error + exit 1 — no PS1 retry shim. Help text documents both verbs.</goal>
+      <depends>66-01</depends>
+    </task>
+    <task id="66-04" type="code" status="planned">
+      <goal>Add vendor/get-anything-done/.husky/pre-commit (or equivalent) that runs &apos;gad self build &amp;&amp; gad self install&apos; only if src is newer than installed exe. Staleness check via git diff --quiet bin/ lib/ scripts/ against the commit SHA embedded in installed exe (task 66-06). Skippable via GAD_NO_PRECOMMIT_BUILD=1. Idempotent: running twice in a row produces no work the second time.</goal>
+      <depends>66-03,66-06</depends>
+    </task>
+    <task id="66-05" type="cleanup" status="planned">
+      <goal>Delete scripts/build-release.mjs (SEA pipeline), scripts/build-release-support.mjs if SEA-only, scripts/sea-bootstrap.cjs, and tests/release-deprecation.test.cjs. Remove SEA-related npm scripts (build:release:sea) from package.json. Update docs/release-guide.md and any prose that references SEA. Bun is the only pipeline going forward.</goal>
+      <depends>66-03</depends>
+    </task>
+    <task id="66-06" type="code" status="planned">
+      <goal>Embed git SHA + src-hash stamp into built exe at build time. scripts/build-bun-release.mjs writes lib/build-stamp.generated.cjs with { sha, hash, builtAt } before running bun build --compile. bin/gad-version.cjs reads the stamp and exposes via &apos;gad version --verbose&apos;. Precommit hook (66-04) uses the stamp to decide staleness.</goal>
+    </task>
+  </phase>
 </task-registry>
 
 

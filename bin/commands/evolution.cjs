@@ -100,6 +100,11 @@ function createEvolutionCommands(deps) {
 
 module.exports = { createEvolutionCommands };
 
+// evolution.provides reads ctx.services['evolution-images'].cmd — loader must
+// run evolution-images.provides first. Alphabetical default ordering breaks
+// this (evolution < evolution-images), so declare the edge explicitly.
+module.exports.dependsOn = ['evolution-images'];
+
 module.exports.provides = (ctx) => {
   const built = createEvolutionCommands({
     ...ctx.common,

@@ -435,5 +435,12 @@
     <depends>63</depends>
   </phase>
 
+  <phase id="66">
+    <title>CLI hygiene — loader bundling fix, build/install split, pre-commit build hook</title>
+    <goal>Fix the v1.35.0 CLI bundle regression that broke both SEA and Bun pipelines, then clean up the build/install UX. (1) Make bin/commands/_loader.cjs work in bundled-exe context — Bun's static analyzer can't see dynamic require(path.join(dir,file)), so command modules aren't embedded. Fix via static manifest generated at build time (scripts/build-manifest.mjs enumerates bin/commands/*.cjs, writes bin/commands/_manifest.cjs with explicit requires). Loader reads _manifest when bundled, falls back to readdirSync when unbundled. (2) Remove dogfood-refresh block from bin/commands/startup.cjs — build-on-startup has misfired and masked defects. (3) Remove 'gad self refresh' subcommand — consolidate to plain 'gad self build' (Bun-only, no SEA fallback) and 'gad self install' (pure file copy, fails loud if locked, no PS1 shim). (4) Add pre-commit hook at vendor/get-anything-done/.husky/pre-commit that compares src-hash to embedded-exe stamp and runs build+install only when stale — idempotent, skippable via GAD_NO_PRECOMMIT_BUILD=1. (5) Delete scripts/build-release.mjs (SEA pipeline) — deprecated by its own banner. (6) Embed git SHA + src-hash stamp into built exe for staleness check. Success: fresh checkout + npm run build:release produces a Bun exe where 'gad team --help' lists subcommands and all register-pattern commands wire.</goal>
+    <status>planned</status>
+    <depends>42.2</depends>
+  </phase>
+
 </roadmap>
 
