@@ -24,7 +24,18 @@ project, separate from the parent monorepo.
 4. Build command, output directory, install command: leave on defaults.
 5. Deploy.
 
-That's it. No env vars required.
+One optional env var: `NEXT_PUBLIC_PLATFORM_URL` (see below).
+
+## Platform URL configuration
+
+The vendor site links to platform-app surfaces (the marketplace and post-auth
+project views). The target URL is resolved via `lib/platform-url.ts`:
+
+- **Local dev default:** `http://localhost:3002` (platform dev server port).
+- **Override:** set `NEXT_PUBLIC_PLATFORM_URL` in your environment or Vercel
+  project settings to point at any deployed platform domain, e.g.
+  `https://platform.yoursite.com`.
+- See `.env.example` for the full variable listing.
 
 ## Updating the eval results
 

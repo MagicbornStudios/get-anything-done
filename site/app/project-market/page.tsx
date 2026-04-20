@@ -1,4 +1,5 @@
 import { MarketingShell, SiteSection, SiteSectionHeading } from "@/components/site";
+import { platformUrl } from "@/lib/platform-url";
 
 export const metadata = {
   title: "Marketplace moved to platform — GAD",
@@ -7,7 +8,7 @@ export const metadata = {
 };
 
 const RUN_CMD = "pnpm --filter @portfolio/platform dev";
-const MARKETPLACE_URL = "http://localhost:3002/marketplace";
+const MARKETPLACE_URL = platformUrl('/marketplace');
 
 export default function ProjectMarketDeprecatedPage() {
   return (

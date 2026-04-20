@@ -11,7 +11,7 @@ export async function generateMetadata({
   const joined = Array.isArray(id) ? id.join("/") : String(id);
   return {
     title: `${joined} moved to planning-app — GAD`,
-    description: `Project detail views moved to the local planning-app (gad planning serve). Visit http://localhost:3002/projects/${joined} after starting the server.`,
+    description: `Project detail views moved to the local planning-app (gad planning serve). Visit ${process.env.NEXT_PUBLIC_PLATFORM_URL ?? 'http://localhost:3002'}/projects/${joined} after starting the server.`,
   };
 }
 

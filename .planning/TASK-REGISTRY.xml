@@ -2243,9 +2243,20 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
         error, loading indicator, memoize, initialExpanded). All 30 tests pass.
       </resolution>
     </task>
-    <task id="52-03" type="site" status="planned">
+    <task id="52-03" type="feature" status="done" skill="default" agent="claude-sonnet-4-6">
       <goal>Implement LocalFileSystemAdapter using node:fs for desktop use. Also a Web-safe browser adapter for planning-app using fetch() against a dev-server endpoint. Two adapters, same DataSourceAdapter interface from 52-02.</goal>
       <depends>52-02</depends>
+      <resolution>
+        LocalFileSystemAdapter (packages/editor-core/src/adapters/local-fs.ts): node:fs/promises + node:path,
+        rootDir sandbox (PathEscapeError on .. traversal), listChildren via readdir withFileTypes (no extra stat),
+        readFile with 1 KB binary probe (BinaryFileError on null bytes), stat returns null on ENOENT.
+        FetchAdapter (packages/editor-core/src/adapters/fetch.ts): GET /ls|/read|/stat?path=...,
+        header pass-through, 404→null on stat, HTTP status in thrown errors, trailing-slash normalization.
+        index.ts updated to re-export both adapters + FetchAdapterOptions type.
+        @types/node added to devDependencies. README.md adapter-context guide section added.
+        Tests: 13 (LocalFileSystemAdapter) + 12 (FetchAdapter) = 25 new; 30 prior = 55 total, all pass.
+        typecheck clean, build clean (dist/adapters/ emitted).
+      </resolution>
     </task>
     <task id="52-04" type="feature" status="done" skill="default" agent="claude-sonnet-4-6">
       <goal>Read-only CodeView component per decision gad-246. Syntax highlighting via shiki or prism (decide). Props: path, content, language (optional, auto-detect from extension). No editing handles. Consumed by Bestiary + Project Editor.</goal>
@@ -2399,6 +2410,11 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>Deprecation stub on vendor /project-market route after task 70-01 moved marketplace to apps/platform. Replace the moved vendor/get-anything-done/site/app/project-market/page.tsx with a server-rendered deprecation message: &apos;The marketplace has moved to the platform app.&apos; + install/run CLI snippet (pnpm --filter @portfolio/platform dev) + a link to the new /marketplace URL. Match the pattern used by existing /planning and /projects deprecation stubs in the vendor site (decision gad-269). No component imports, just a single file.</goal>
       <depends>70-01</depends>
       <resolution>Shipped 2026-04-20. Replaced full marketplace page with a 57-line server-component deprecation stub mirroring the PlanningAppRedirectStub pattern (MarketingShell + SiteSection + SiteSectionHeading). Renders headline, explanation paragraph, pnpm run command in pre block, and cross-app anchor to http://localhost:3002/marketplace. No imports from @/components/project-market or @portfolio/visual-context. Vendor site typecheck passes.</resolution>
+    </task>
+    <task id="70-03" type="site" status="done" skill="platform-url-helper" agent="claude-sonnet-4-6">
+      <goal>Replace hardcoded platform URL with env-driven NEXT_PUBLIC_PLATFORM_URL helper. Clean up TODO from task 70-01.</goal>
+      <depends>70-01</depends>
+      <resolution>Created lib/platform-url.ts helper. Refactored 3 call sites (PlayableTeaser, PlanningAppRedirectStub, app/project-market/page.tsx). Added .env.example with NEXT_PUBLIC_PLATFORM_URL default. Updated README.md. tsc --noEmit passes. Zero hardcoded localhost:3002 hits outside the default fallback expressions.</resolution>
     </task>
   </phase>
 

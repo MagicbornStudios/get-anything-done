@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MarketingShell, SiteSection, SiteSectionHeading } from "@/components/site";
+import { platformUrl } from "@/lib/platform-url";
 
 export type PlanningAppRedirectStubProps = {
   surface: string;
@@ -18,7 +19,7 @@ export function PlanningAppRedirectStub({
   summary,
   cid,
 }: PlanningAppRedirectStubProps) {
-  const targetUrl = `http://localhost:3002${targetPath}`;
+  const targetUrl = platformUrl(targetPath);
 
   return (
     <MarketingShell>

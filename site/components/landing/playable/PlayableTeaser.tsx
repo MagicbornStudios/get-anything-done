@@ -19,6 +19,7 @@ import {
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
 import { WORKFLOW_LABELS } from "@/lib/eval-data";
 import { cn } from "@/lib/utils";
+import { platformUrl } from "@/lib/platform-url";
 import { Identified } from "@/components/devid/Identified";
 import { SiteSection, SiteSectionIntro } from "@/components/site";
 
@@ -169,9 +170,7 @@ export default function PlayableTeaser() {
           className="rounded-full bg-accent px-8 py-3 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/20 transition-transform hover:-translate-y-0.5 hover:bg-accent/90"
           asChild
         >
-          {/* TODO task 70-01: marketplace moved to apps/platform /marketplace.
-              Replace with env-driven NEXT_PUBLIC_PLATFORM_URL when available. */}
-          <Link href="http://localhost:3002/marketplace">
+          <Link href={platformUrl('/marketplace')}>
             <Gamepad2 size={16} aria-hidden />
             Browse all projects
             <ArrowRight size={16} aria-hidden />
