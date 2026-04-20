@@ -444,6 +444,11 @@ function buildHookCommand(configDir, hookName) {
  * On Windows, PowerShell/cmd have no `bash` on PATH, so we locate Git Bash
  * (installed by Git for Windows) and invoke it by absolute path. Elsewhere,
  * plain `bash` from PATH is fine.
+ *
+ * Kept for any remaining .sh hooks; new hooks should use resolveNodeCommand
+ * since recent Claude Code on Windows re-wraps quoted bash.exe paths in a
+ * way that makes bash interpret bash.exe as its script argument (port
+ * 2026-04-20).
  */
 function resolveBashCommand(scriptPath) {
   const fwd = scriptPath.replace(/\\/g, '/');
@@ -459,6 +464,16 @@ function resolveBashCommand(scriptPath) {
   const found = candidates.find(p => { try { return fs.existsSync(p); } catch { return false; } });
   const bashExe = found || 'bash';
   return `"${bashExe}" ${fwd}`;
+}
+
+/**
+ * Resolve a `node <scriptPath>` command. Preferred over resolveBashCommand
+ * for all new hooks because node is already on PATH wherever gad runs (gad
+ * is a node CLI), and we avoid the Windows bash.exe wrap failure class.
+ */
+function resolveNodeCommand(scriptPath) {
+  const fwd = scriptPath.replace(/\\/g, '/');
+  return `node "${fwd}"`;
 }
 
 /**
@@ -3205,7 +3220,7 @@ function uninstall(isGlobal, runtime = 'claude') {
   // 4. Remove GAD hooks
   const hooksDir = path.join(targetDir, 'hooks');
   if (fs.existsSync(hooksDir)) {
-    const gadHooks = ['gad-statusline.js', 'gad-check-update.js', 'gad-check-update.sh', 'gad-context-monitor.js', 'gad-prompt-guard.js', 'gad-session-state.sh', 'gad-validate-commit.sh', 'gad-phase-boundary.sh'];
+    const gadHooks = ['gad-statusline.js', 'gad-check-update.js', 'gad-check-update.sh', 'gad-context-monitor.js', 'gad-prompt-guard.js', 'gad-session-state.js', 'gad-session-state.sh', 'gad-validate-commit.js', 'gad-validate-commit.sh', 'gad-phase-boundary.js', 'gad-phase-boundary.sh'];
     let hookCount = 0;
     for (const hook of gadHooks) {
       const hookPath = path.join(hooksDir, hook);
@@ -4336,8 +4351,8 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure commit validation hook (Conventional Commits enforcement, opt-in)
     const validateCommitCommand = isGlobal
-      ? resolveBashCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-validate-commit.sh')
-      : resolveBashCommand(dirName + '/hooks/gad-validate-commit.sh');
+      ? resolveNodeCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-validate-commit.js')
+      : resolveNodeCommand(dirName + '/hooks/gad-validate-commit.js');
     const hasValidateCommitHook = settings.hooks[preToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gad-validate-commit'))
     );
@@ -4358,8 +4373,8 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure session state orientation hook (opt-in)
     const sessionStateCommand = isGlobal
-      ? resolveBashCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-session-state.sh')
-      : resolveBashCommand(dirName + '/hooks/gad-session-state.sh');
+      ? resolveNodeCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-session-state.js')
+      : resolveNodeCommand(dirName + '/hooks/gad-session-state.js');
     const hasSessionStateHook = settings.hooks.SessionStart.some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gad-session-state'))
     );
@@ -4378,8 +4393,8 @@ function install(isGlobal, runtime = 'claude') {
 
     // Configure phase boundary detection hook (opt-in)
     const phaseBoundaryCommand = isGlobal
-      ? resolveBashCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-phase-boundary.sh')
-      : resolveBashCommand(dirName + '/hooks/gad-phase-boundary.sh');
+      ? resolveNodeCommand(targetDir.replace(/\\/g, '/') + '/hooks/gad-phase-boundary.js')
+      : resolveNodeCommand(dirName + '/hooks/gad-phase-boundary.js');
     const hasPhaseBoundaryHook = settings.hooks[postToolEvent].some(entry =>
       entry.hooks && entry.hooks.some(h => h.command && h.command.includes('gad-phase-boundary'))
     );

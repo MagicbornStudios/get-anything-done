@@ -68,6 +68,21 @@ describe('hook file validation', () => {
     assert.ok(fs.existsSync(hookPath), 'gad-phase-boundary.sh should exist');
   });
 
+  test('gad-session-state.js exists (preferred on Windows)', () => {
+    const hookPath = path.join(HOOKS_DIR, 'gad-session-state.js');
+    assert.ok(fs.existsSync(hookPath), 'gad-session-state.js should exist');
+  });
+
+  test('gad-validate-commit.js exists (preferred on Windows)', () => {
+    const hookPath = path.join(HOOKS_DIR, 'gad-validate-commit.js');
+    assert.ok(fs.existsSync(hookPath), 'gad-validate-commit.js should exist');
+  });
+
+  test('gad-phase-boundary.js exists (preferred on Windows)', () => {
+    const hookPath = path.join(HOOKS_DIR, 'gad-phase-boundary.js');
+    assert.ok(fs.existsSync(hookPath), 'gad-phase-boundary.js should exist');
+  });
+
   test('gad-session-state.sh is executable', { skip: isWindows ? 'Windows has no POSIX file permissions' : false }, () => {
     const hookPath = path.join(HOOKS_DIR, 'gad-session-state.sh');
     const stat = fs.statSync(hookPath);
@@ -164,8 +179,8 @@ describe('installer hook registration', () => {
   });
 
   test('install.js adds all 3 new hooks to the uninstall cleanup list', () => {
-    const gsdHooksMatch = installSource.match(/const gsdHooks\s*=\s*\[([^\]]+)\]/);
-    assert.ok(gsdHooksMatch, 'install.js should define gsdHooks array for uninstall cleanup');
+    const gsdHooksMatch = installSource.match(/const gadHooks\s*=\s*\[([^\]]+)\]/);
+    assert.ok(gsdHooksMatch, 'install.js should define gadHooks array for uninstall cleanup');
 
     const gsdHooksContent = gsdHooksMatch[1];
     assert.ok(
@@ -179,6 +194,18 @@ describe('installer hook registration', () => {
     assert.ok(
       gsdHooksContent.includes('gad-phase-boundary.sh'),
       'gsdHooks should include gad-phase-boundary.sh'
+    );
+    assert.ok(
+      gsdHooksContent.includes('gad-session-state.js'),
+      'gsdHooks should include gad-session-state.js (node port)'
+    );
+    assert.ok(
+      gsdHooksContent.includes('gad-validate-commit.js'),
+      'gsdHooks should include gad-validate-commit.js (node port)'
+    );
+    assert.ok(
+      gsdHooksContent.includes('gad-phase-boundary.js'),
+      'gsdHooks should include gad-phase-boundary.js (node port)'
     );
   });
 
