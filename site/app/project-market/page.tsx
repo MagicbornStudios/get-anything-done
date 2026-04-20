@@ -1,43 +1,60 @@
-export const dynamic = "force-dynamic";
-import type { Metadata } from "next";
-import { MarketingShell } from "@/components/site";
-import ProjectMarket from "@/components/project-market/ProjectMarket";
-import {
-  DEFAULT_PROJECT_ID,
-  REGISTERED_PROJECTS,
-} from "@/lib/project-config";
-import { EVAL_PROJECTS } from "@/lib/eval-data";
-import { DevCatalogBanner } from "@/components/dev/DevCatalogBanner";
+import { MarketingShell, SiteSection, SiteSectionHeading } from "@/components/site";
 
-export const metadata: Metadata = {
-  title: "Project Market - GAD",
+export const metadata = {
+  title: "Marketplace moved to platform — GAD",
   description:
-    "Browse all projects and species: games, video, software, and tooling. Play any scored build in your browser.",
+    "The project marketplace moved to the platform app. The vendor site stays as framework dev/landing; run the platform app locally to browse and launch projects.",
 };
 
-// Task 44-30: when ?projectid= names a project that has eval rows, collapse
-// the marketplace to that project's species. For the default framework id
-// (no EVAL_PROJECTS rows) show the full marketplace untouched.
-type PageSearchParams = Promise<{ projectid?: string | string[] }>;
+const RUN_CMD = "pnpm --filter @portfolio/platform dev";
+const MARKETPLACE_URL = "http://localhost:3002/marketplace";
 
-export default async function ProjectMarketPage({
-  searchParams,
-}: {
-  searchParams?: PageSearchParams;
-}) {
-  const resolvedSearchParams = await searchParams;
-  const rawProjectId = resolvedSearchParams?.projectid;
-  const paramId = Array.isArray(rawProjectId) ? rawProjectId[0] : rawProjectId;
-  const currentProject =
-    paramId && REGISTERED_PROJECTS.some((p) => p.id === paramId)
-      ? paramId
-      : DEFAULT_PROJECT_ID;
-  const hasEvalRows = EVAL_PROJECTS.some((p) => p.project === currentProject);
-  const scopeProject = hasEvalRows ? currentProject : null;
+export default function ProjectMarketDeprecatedPage() {
   return (
     <MarketingShell>
-      <DevCatalogBanner />
-      <ProjectMarket scopeProject={scopeProject} />
+      <SiteSection cid="project-market-deprecated-stub">
+        <div className="max-w-3xl space-y-6 py-16">
+          <SiteSectionHeading
+            kicker="moved"
+            title="The marketplace has moved."
+            preset="hero-compact"
+            as="h1"
+          />
+
+          <p className="text-base text-muted-foreground">
+            The project marketplace is now part of the platform app (
+            <code className="font-mono">apps/platform</code>). The vendor site
+            hosts framework dev tooling and the public landing only — it no
+            longer serves marketplace UI. Spin up the platform app locally to
+            browse and launch projects.
+          </p>
+
+          <div
+            data-cid="project-market-deprecated-run"
+            className="rounded-md border border-border/60 bg-card/30 p-5"
+          >
+            <p className="mb-3 text-sm font-medium">Run the platform app</p>
+            <pre className="overflow-x-auto rounded bg-background/60 p-3 font-mono text-xs">
+              <code>{RUN_CMD}</code>
+            </pre>
+            <p className="mt-4 mb-2 text-sm font-medium">
+              Open the marketplace (port{" "}
+              <code className="font-mono">3002</code>)
+            </p>
+            <a
+              href={MARKETPLACE_URL}
+              className="inline-flex items-center gap-2 text-sm text-accent underline-offset-2 hover:underline"
+            >
+              Open marketplace
+            </a>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            This stub ships per decision gad-261. Route will be removed in the
+            next release cycle once consumers have migrated.
+          </p>
+        </div>
+      </SiteSection>
     </MarketingShell>
   );
 }
