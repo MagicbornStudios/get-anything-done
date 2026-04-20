@@ -68,6 +68,28 @@ function maybeCopyWindowsInstaller(outDir) {
   copyFileSync(installerSource, installerDest);
 }
 
+function buildGadTui(outDir, gadVersion) {
+  // Locate gad-tui package relative to the monorepo root (two dirs above vendor/get-anything-done).
+  const monoRoot = join(ROOT, '..', '..');
+  const tuiPkg = join(monoRoot, 'packages', 'gad-tui');
+  const tuiExeSrc = join(tuiPkg, 'dist', 'gad-tui-windows.exe');
+  const tuiExeDest = join(outDir, `gad-tui-v${gadVersion}-windows-x64.exe`);
+
+  try {
+    // Run the gad-tui bun compile via pnpm filter.
+    execFileSync('pnpm', ['--filter', '@magicborn/gad-tui', 'build:bun'], {
+      cwd: monoRoot,
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+    });
+    copyFileSync(tuiExeSrc, tuiExeDest);
+    console.log(`Built gad-tui executable: dist/release/gad-tui-v${gadVersion}-windows-x64.exe`);
+  } catch (err) {
+    process.stderr.write(`[warn] gad-tui build skipped: ${err.message}\n`);
+    process.stderr.write(`[warn] gad.exe will still ship; install gad-tui manually via \`pnpm --filter @magicborn/gad-tui build:bun\`.\n`);
+  }
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const target = getTarget(args.platform, args.arch);
@@ -104,6 +126,9 @@ function main() {
   writeInstallNotes(args.outDir, artifactName);
 
   console.log(`Built GAD Bun executable: ${relative(ROOT, artifactPath)}`);
+
+  // Build gad-tui exe alongside gad.exe (soft dependency — skip+warn on failure).
+  buildGadTui(args.outDir, pkg.version);
 }
 
 main();

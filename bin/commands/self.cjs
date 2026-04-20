@@ -67,6 +67,20 @@ function createSelfCommand(_deps) {
           process.exit(1);
         }
       }
+
+      // Also install gad-tui if present (soft — skip+warn if absent).
+      const tuiSrc = path.join(gadDir, 'dist', 'release', `gad-tui-v${pkg.version}-windows-x64.exe`);
+      if (fs.existsSync(tuiSrc)) {
+        const tuiDest = path.join(destDir, 'gad-tui.exe');
+        try {
+          fs.copyFileSync(tuiSrc, tuiDest);
+          console.log(`Installed: ${tuiDest}`);
+        } catch (err) {
+          process.stderr.write(`[warn] Failed to install gad-tui.exe: ${err.message}\n`);
+        }
+      } else {
+        process.stderr.write(`[info] gad-tui not bundled in this release. Run \`gad self build\` after building the TUI to include it.\n`);
+      }
     },
   });
 
