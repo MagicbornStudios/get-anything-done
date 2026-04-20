@@ -1,0 +1,25 @@
+{
+  "id": "53-12",
+  "phase": "53",
+  "status": "done",
+  "goal": "Extract packages/dashboard-surface from apps/planning-app/app/(dashboard) routes. Surface contains: daily entry, handoffs list, next-action panel, today's sprint tasks. Accepts DataSourceAdapter prop (gad-CLI-backed for desktop, fetch-backed for web). Every section gets SiteSection cid=dashboard-<section>-site-section + grep-able interaction tokens. Refactors apps/planning-app to import from @portfolio/dashboard-surface. Tests: both hosts render identical DOM shape; VCS audit passes.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "53-11"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-4-6",
+  "agent_role": "claude-code",
+  "runtime": "claude-code",
+  "model_profile": "sonnet",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "",
+  "claimed": true,
+  "claimed_at": "2026-04-20T00:00:00.000Z",
+  "lease_expires_at": "",
+  "resolution": "Created packages/dashboard-surface with HandoffsPanel + ProjectsPanel (prop-driven, host-agnostic). ProjectDrawer/PickupPanel deferred — deep internal logic, see index.ts comments. Added @portfolio/dashboard-surface dep to apps/platform and apps/desktop. Build + typecheck clean.",
+  "created_at": "2026-04-20T17:17:38.859Z",
+  "updated_at": "2026-04-20T22:30:00.000Z"
+}
