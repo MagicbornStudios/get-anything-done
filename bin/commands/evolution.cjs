@@ -103,7 +103,6 @@ module.exports = { createEvolutionCommands };
 module.exports.provides = (ctx) => {
   const built = createEvolutionCommands({
     ...ctx.common,
-    ...ctx.extras.evolution,
     evolutionImagesCmd: ctx.services['evolution-images'].cmd,
   });
   return {

@@ -517,11 +517,11 @@ module.exports = {
 };
 
 module.exports.provides = (ctx) => {
-  const built = createSessionCommands({ ...ctx.common, ...ctx.extras.session });
+  const built = createSessionCommands(ctx.common);
   // Late-bind loadSessions so scope-helpers in gad.cjs can resolve session-
   // scoped roots once commands actually run.
-  if (typeof ctx.extras.setLoadSessions === 'function') {
-    ctx.extras.setLoadSessions(built.helpers.loadSessions);
+  if (typeof ctx.common.registerLoadSessions === 'function') {
+    ctx.common.registerLoadSessions(built.helpers.loadSessions);
   }
   return {
     built,

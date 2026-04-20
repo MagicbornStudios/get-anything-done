@@ -120,7 +120,6 @@ module.exports = { createSkillCommands, isCanonicalGadRepo };
 module.exports.register = (ctx) => {
   const { skillCmd } = createSkillCommands({
     ...ctx.common,
-    ...ctx.extras.skill,
     evolutionPromote: ctx.services.evolution.evolutionPromote,
     evolutionInstall: ctx.services.evolution.evolutionInstall,
   });

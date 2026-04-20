@@ -434,7 +434,6 @@ module.exports.provides = () => ({ runDogfoodSelfRefreshOrExit });
 module.exports.register = (ctx) => ({
   startup: createStartupCommand({
     ...ctx.common,
-    ...ctx.extras.startup,
     sessionHelpers: {
       sessionsDir: ctx.services.session.sessionsDir,
       generateSessionId: ctx.services.session.generateSessionId,

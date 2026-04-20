@@ -43,5 +43,5 @@ function createTasksCommand(deps) {
 
 module.exports = { createTasksCommand };
 module.exports.register = (ctx) => ({
-  tasks: createTasksCommand({ ...ctx.common, ...ctx.extras.tasks }),
+  tasks: createTasksCommand(ctx.common),
 });

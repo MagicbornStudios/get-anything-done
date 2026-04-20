@@ -301,59 +301,37 @@ const common = {
   writePhase, writeDecision, writeTodo, listTodos,
   writeNote, listNotes, listNoteQuestions,
   detectRuntimeIdentity, detectRuntimeSessionId,
+  sideEffectsSuppressed, resolveSideEffectsMode, NO_SIDE_EFFECTS_FLAG,
+  getLastActiveProjectid, setLastActiveProjectid,
   graphExtractor, maybeRebuildGraph, formatId, evalDataAccess,
+  ensureGraphFresh,
   planningRefVerify, compileDocs, getLogDir,
   listHandoffs, countHandoffs, createHandoff,
   resolveDetectedRuntimeId, printSection, buildHandoffsSection,
+  resolveSnapshotRuntime, resolveSnapshotAgentInputs,
+  ensureAgentLane, listAgentLanes, touchAgentLane,
+  buildAssignmentsView,
+  compactStateXml, compactRoadmapSection, compactTasksSection,
+  evolutionPaths, resolveProtoSkillInstallRuntimes, installProtoSkillToRuntime,
+  writeEvolutionScan, readEvolutionScan, protoSkillRelativePath,
+  resolveSkillRoots, listSkillDirs, readSkillFrontmatter,
+  validateSkillLaneFilter, skillMatchesLane, resolveSkillWorkflowPath,
+  normalizeSkillLaneValues, lintSkill, summarizeLint, lintAllSkills,
+  filterIssuesBySeverity, auditSkillTokens, buildSkillUsageIndex,
+  splitCsvList, getProtoSkillGlobalDir,
+  claimTask, addTaskClaim, nowIso, releaseTask, removeTaskClaim,
+  RAW_ARGV, getRuntimeArg, readRawFlagValue, SENTINEL_SKILL_VALUES,
+  buildEvolutionSection,
+  isPackagedExecutableRuntime, getPackagedExecutablePath, getDefaultSelfInstallDir,
+  maybeGenerateDailyTip,
   // eval surface
   listAllEvalProjects, listEvalProjectsHint, resolveOrDefaultEvalProjectDir,
   resolveEvalProject, defaultEvalsDir, loadEvalProject, loadAllResolvedSpecies,
   parseTraceEventsJsonl, summarizeAgentLineage,
+  registerLoadSessions: (fn) => { __loadSessionsRef = fn; },
 };
 
-// Per-command extras. Each block holds the helpers a single command needs
-// beyond `common`. Two agents touching different blocks → no conflict.
-const extras = {
-  setLoadSessions: (fn) => { __loadSessionsRef = fn; },
-  session: {
-    sideEffectsSuppressed,
-    getLastActiveProjectid, setLastActiveProjectid,
-  },
-  tasks: {
-    resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
-    claimTask, addTaskClaim, nowIso, releaseTask, removeTaskClaim,
-    RAW_ARGV, getRuntimeArg, readRawFlagValue, SENTINEL_SKILL_VALUES,
-    listAgentLanes, simplifyAgentLane,
-  },
-  snapshot: {
-    sideEffectsSuppressed, ensureGraphFresh,
-    resolveSnapshotAgentInputs, resolveSnapshotRuntime, ensureAgentLane,
-    listAgentLanes, touchAgentLane,
-    buildAssignmentsView, compactStateXml, compactRoadmapSection, compactTasksSection,
-    buildEvolutionSection, listSkillDirs, readSkillFrontmatter,
-  },
-  startup: {
-    sideEffectsSuppressed, resolveSideEffectsMode, NO_SIDE_EFFECTS_FLAG,
-    getPackagedExecutablePath, isPackagedExecutableRuntime, getDefaultSelfInstallDir,
-    ensureGraphFresh, writeEvolutionScan, maybeGenerateDailyTip,
-    getLastActiveProjectid, setLastActiveProjectid,
-  },
-  evolutionImages: {
-    splitCsvList, getProtoSkillGlobalDir, listSkillDirs, readSkillFrontmatter,
-  },
-  evolution: {
-    evolutionPaths, resolveProtoSkillInstallRuntimes, installProtoSkillToRuntime,
-    protoSkillRelativePath, writeEvolutionScan, readEvolutionScan,
-  },
-  skill: {
-    evolutionPaths, resolveSkillRoots, listSkillDirs, readSkillFrontmatter,
-    validateSkillLaneFilter, skillMatchesLane, resolveSkillWorkflowPath,
-    normalizeSkillLaneValues, lintSkill, summarizeLint, lintAllSkills,
-    filterIssuesBySeverity, auditSkillTokens, buildSkillUsageIndex,
-  },
-};
-
-const { subCommands } = require('./commands/_loader.cjs').load({ common, extras });
+const { subCommands } = require('./commands/_loader.cjs').load({ common, extras: {} });
 
 const main = defineCommand({
   meta: {
