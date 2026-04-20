@@ -2,32 +2,77 @@
 /**
  * gad self / self-eval — local dogfood build/install + framework metrics
  *
- * Required deps: runDogfoodSelfRefreshOrExit, outputError
+ * Required deps: outputError
  */
 
 const path = require('path');
 const fs = require('fs');
+const { spawnSync } = require('child_process');
 const { defineCommand } = require('citty');
 
-function createSelfCommand(deps) {
-  const { runDogfoodSelfRefreshOrExit } = deps;
+function createSelfCommand(_deps) {
+  const gadDir = path.join(__dirname, '..', '..');
+  const pkg = JSON.parse(fs.readFileSync(path.join(gadDir, 'package.json'), 'utf8'));
 
-  const refresh = defineCommand({
+  const build = defineCommand({
     meta: {
-      name: 'refresh',
-      description: 'Build + install the local GAD executable from the framework checkout (Bun release path primary; SEA fallback only).',
+      name: 'build',
+      description: 'Build the GAD executable via Bun (runs scripts/build-bun-release.mjs).',
     },
-    run() { runDogfoodSelfRefreshOrExit('gad self refresh'); },
+    run() {
+      const scriptPath = path.join(gadDir, 'scripts', 'build-bun-release.mjs');
+      const result = spawnSync(process.execPath, [scriptPath], {
+        cwd: gadDir,
+        stdio: 'inherit',
+      });
+      process.exit(result.status ?? 1);
+    },
   });
 
   const install = defineCommand({
-    meta: { name: 'install', description: 'Alias for `gad self refresh`.' },
-    run() { runDogfoodSelfRefreshOrExit('gad self install'); },
+    meta: {
+      name: 'install',
+      description: 'Copy dist/release/gad-v<ver>-windows-x64.exe to %LOCALAPPDATA%/Programs/gad/bin/.',
+    },
+    run() {
+      const artifactName = `gad-v${pkg.version}-windows-x64.exe`;
+      const src = path.join(gadDir, 'dist', 'release', artifactName);
+
+      if (!fs.existsSync(src)) {
+        process.stderr.write(`Source artifact not found: ${src}\nRun \`gad self build\` first.\n`);
+        process.exit(1);
+      }
+
+      const localAppData = process.env.LOCALAPPDATA;
+      if (!localAppData) {
+        process.stderr.write('LOCALAPPDATA environment variable is not set.\n');
+        process.exit(1);
+      }
+
+      const destDir = path.join(localAppData, 'Programs', 'gad', 'bin');
+      fs.mkdirSync(destDir, { recursive: true });
+
+      const targets = ['gad.exe', 'get-anything-done.exe'];
+      for (const name of targets) {
+        const dest = path.join(destDir, name);
+        try {
+          fs.copyFileSync(src, dest);
+          console.log(`Installed: ${dest}`);
+        } catch (err) {
+          if (err.code === 'EPERM' || err.code === 'EBUSY') {
+            process.stderr.write(`gad.exe is locked. Close all running gad processes then retry.\n`);
+          } else {
+            process.stderr.write(`Failed to install ${name}: ${err.message}\n`);
+          }
+          process.exit(1);
+        }
+      }
+    },
   });
 
   return defineCommand({
-    meta: { name: 'self', description: 'Self-management commands for local dogfood build/install convenience.' },
-    subCommands: { refresh, install },
+    meta: { name: 'self', description: 'Self-management commands for local dogfood build/install.' },
+    subCommands: { build, install },
   });
 }
 
@@ -89,8 +134,6 @@ function createSelfEvalCommand(deps) {
 
 module.exports = { createSelfCommand, createSelfEvalCommand };
 module.exports.register = (ctx) => ({
-  self: createSelfCommand({
-    runDogfoodSelfRefreshOrExit: ctx.services.startup.runDogfoodSelfRefreshOrExit,
-  }),
+  self: createSelfCommand({}),
   'self-eval': createSelfEvalCommand(ctx.common),
 });
