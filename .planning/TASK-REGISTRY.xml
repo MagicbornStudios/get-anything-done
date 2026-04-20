@@ -2476,6 +2476,10 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <depends>71-02</depends>
       <resolution>upload: SHA-256 hash8/sanitized-basename path, create_project_bucket RPC (idempotent), upsert:false + -1 suffix retry on collision, compensation delete on insert fail. download: signed URL (60s default, 3600s --cli), node:fetch stream to file. mime-types dep added. Tests: 14 cases, 14 pass. Smoke: env-config error path hit (no live Supabase in dev). move+transfer placeholders preserved for 71-04.</resolution>
     </task>
+    <task id="71-04" type="code" status="done" skill="assets-move-transfer" agent="claude-sonnet-4-6" completed="2026-04-20">
+      <goal>Implement move (within-project relocation: species_id/generation_id/storage_path rewrite + optional storage.move) and transfer (cross-project copy: download+upload to dest bucket + insert new row + optional source delete) subcommands for gad assets. Add shared helpers findAsset, bucketForProject, ensureBucket. Tests: 14 cases for move + transfer including compensation paths.</goal>
+      <resolution>move: metadata-only update unless --storage-path; storage.move for path rename; reverse storage.move compensation if UPDATE fails; manual-intervention message if reverse also fails. transfer: copy model (download+upload+insert); dest bucket lazy-create via ensureBucket RPC; --keep-source skips source cleanup; compensation removes dest storage object on insert failure; partial-cleanup failure prints WARNING but exits 0 (new asset is good). Shared helpers: findAsset/bucketForProject/ensureBucket factored. Tests: 14 new cases, all pass. Existing list (12) pass; upload-download pre-existing file-level failure unchanged (3/4 pass). Smoke: &apos;Supabase env not configured&apos; path hit on move/transfer without env.</resolution>
+    </task>
   </phase>
 </task-registry>
 

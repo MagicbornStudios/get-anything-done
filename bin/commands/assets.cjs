@@ -9,13 +9,14 @@
  * "not implemented — see task 71-03" and exit 1.
  * list implemented: task 71-02.
  * upload + download implemented: task 71-03.
+ * move + transfer implemented: task 71-04.
  *
  * Subcommands:
  *   list       [--project] [--species] [--generation] [--limit] [--offset] — live Supabase query
  *   upload     <file> --project [--species] [--generation] [--labels] [--mime] [--json]
  *   download   <asset_id> [--out] [--cli] [--json]
- *   move       <asset_id> --species   (placeholder — task 71-04)
- *   transfer   <asset_id> --project [--keep-source]   (placeholder — task 71-04)
+ *   move       <asset_id> [--species] [--generation] [--storage-path] [--json]
+ *   transfer   <asset_id> --project [--species] [--generation] [--keep-source] [--json]
  */
 
 const fs = require('fs');
@@ -29,9 +30,42 @@ const { getSupabaseClient } = require(path.join(__dirname, '../../lib/supabase-c
 // Shared helpers
 // ---------------------------------------------------------------------------
 
-function notImplemented(name) {
-  console.error(`\n  gad assets ${name}: not implemented — see task 71-04\n`);
-  process.exitCode = 1;
+/**
+ * Load a single asset by id. Returns { asset } or sets exitCode=1 and returns {}.
+ */
+async function findAsset(client, id) {
+  const { data: asset, error } = await client
+    .from('assets')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error || !asset) {
+    return { asset: null, err: error ? error.message : 'not found' };
+  }
+  return { asset, err: null };
+}
+
+/**
+ * Returns the canonical bucket name for a project.
+ */
+function bucketForProject(projectId) {
+  return `project-assets-${projectId}`;
+}
+
+/**
+ * Idempotent: call the create_project_bucket RPC.
+ * Returns null on success (including "already exists"), throws on real errors.
+ */
+async function ensureBucket(client, projectId) {
+  const { error: rpcErr } = await client.rpc('create_project_bucket', {
+    project_id: projectId,
+  });
+  if (rpcErr) {
+    const msg = (rpcErr.message || '').toLowerCase();
+    if (!msg.includes('already exist') && !msg.includes('duplicate')) {
+      throw new Error(`bucket creation failed: ${rpcErr.message}`);
+    }
+  }
 }
 
 // Truncate a string to maxLen, appending '…' if truncated.
@@ -532,57 +566,186 @@ const downloadCmd = defineCommand({
 });
 
 // ---------------------------------------------------------------------------
-// move
+// move (task 71-04)
 // ---------------------------------------------------------------------------
 const moveCmd = defineCommand({
   meta: {
     name: 'move',
     description: [
-      'Re-assign an asset to a different species within the same project.',
+      'Within-project relocation: update metadata fields and optionally rename storage object.',
       '',
-      'Updates: assets.species_id = <new species id>',
-      'Also moves the storage object to the new species path prefix',
-      'via storage.move() (atomic rename within same bucket).',
+      'At least one of --species, --generation, or --storage-path is required.',
       '',
-      'Not implemented — see task 71-02.',
+      'Default (no --storage-path): rewrites species_id / generation_id only.',
+      'Use case: "I forgot to tag this asset with a species — fix it."',
+      '',
+      'With --storage-path: renames the storage object via storage.move() (same bucket only).',
+      'Cross-bucket rename is not allowed; use `gad assets transfer` instead.',
+      '',
+      'Compensation: if storage rename succeeds but metadata UPDATE fails,',
+      'a reverse storage.move() is attempted automatically.',
+      '',
+      'Examples:',
+      '  gad assets move <uuid> --species <species-id>',
+      '  gad assets move <uuid> --generation <gen-id> --storage-path new/path.png',
+      '  gad assets move <uuid> --species <id> --json',
     ].join('\n'),
   },
   args: {
     assetId: {
       type: 'positional',
       required: true,
-      description: 'Asset id (UUID) to move.',
+      description: 'Asset id (UUID) to update.',
     },
     species: {
       type: 'string',
-      required: true,
-      description: 'Target species slug to move the asset under.',
+      description: 'New species_id (UUID) to assign to this asset.',
+    },
+    generation: {
+      type: 'string',
+      description: 'New generation_id (UUID) to assign to this asset.',
+    },
+    storagePath: {
+      type: 'string',
+      description: 'New storage path within the same bucket (triggers storage.move).',
+    },
+    json: {
+      type: 'boolean',
+      description: 'Emit JSON output (full updated row) instead of summary table.',
+      default: false,
     },
   },
-  run() {
-    notImplemented('move');
+  async run({ args }) {
+    // Validate: at least one update field required.
+    if (!args.species && !args.generation && !args.storagePath) {
+      console.error('assets move: at least one of --species, --generation, or --storage-path is required');
+      process.exitCode = 1;
+      return;
+    }
+
+    // Get client.
+    let client;
+    try {
+      ({ client } = getSupabaseClient());
+    } catch (err) {
+      console.error(err.message);
+      process.exitCode = 1;
+      return;
+    }
+
+    // Load asset.
+    const { asset, err: findErr } = await findAsset(client, args.assetId);
+    if (!asset) {
+      console.error(`Asset ${args.assetId} not found${findErr ? ': ' + findErr : ''}.`);
+      process.exitCode = 1;
+      return;
+    }
+
+    // Validate cross-bucket check: storage path must stay in same bucket.
+    // (buckets are implied by the asset's bucket_name; storage path is just the key within it)
+    // No bucket change is possible via move — that's transfer's job.
+
+    // Build update payload.
+    const updatePayload = {};
+    if (args.species !== undefined) updatePayload.species_id = args.species;
+    if (args.generation !== undefined) updatePayload.generation_id = args.generation;
+
+    const newStoragePath = args.storagePath;
+    const oldStoragePath = asset.storage_path;
+    const bucket = asset.bucket_name;
+    let storageMoved = false;
+
+    // Move storage object if --storage-path provided and differs from current.
+    if (newStoragePath && newStoragePath !== oldStoragePath) {
+      const { error: moveErr } = await client.storage
+        .from(bucket)
+        .move(oldStoragePath, newStoragePath);
+      if (moveErr) {
+        console.error(`assets move: storage.move failed: ${moveErr.message}`);
+        process.exitCode = 1;
+        return;
+      }
+      storageMoved = true;
+      updatePayload.storage_path = newStoragePath;
+    }
+
+    // Update metadata row.
+    const { data: updatedRows, error: updateErr } = await client
+      .from('assets')
+      .update(updatePayload)
+      .eq('id', args.assetId)
+      .select('*');
+
+    if (updateErr) {
+      // Compensation: reverse storage move if we already did one.
+      if (storageMoved) {
+        const { error: reverseErr } = await client.storage
+          .from(bucket)
+          .move(newStoragePath, oldStoragePath);
+        if (reverseErr) {
+          console.error(
+            `assets move: metadata UPDATE failed AND reverse storage.move also failed.\n` +
+            `MANUAL INTERVENTION REQUIRED:\n` +
+            `  storage object is now at: ${bucket}/${newStoragePath}\n` +
+            `  expected path:            ${bucket}/${oldStoragePath}\n` +
+            `  metadata UPDATE error:    ${updateErr.message}\n` +
+            `  reverse move error:       ${reverseErr.message}`
+          );
+        } else {
+          console.error(`assets move: metadata UPDATE failed (storage move reversed): ${updateErr.message}`);
+        }
+      } else {
+        console.error(`assets move: metadata UPDATE failed: ${updateErr.message}`);
+      }
+      process.exitCode = 1;
+      return;
+    }
+
+    const row = updatedRows && updatedRows[0] ? updatedRows[0] : { ...asset, ...updatePayload };
+
+    if (args.json) {
+      process.stdout.write(JSON.stringify(row, null, 2) + '\n');
+      return;
+    }
+
+    const rows = [{
+      id: trunc(row.id, 36),
+      species_id: trunc(row.species_id || '', 16),
+      generation_id: trunc(row.generation_id || '', 16),
+      storage_path: trunc(row.storage_path, 50),
+    }];
+    console.log(render(rows));
   },
 });
 
 // ---------------------------------------------------------------------------
-// transfer
+// transfer (task 71-04)
 // ---------------------------------------------------------------------------
 const transferCmd = defineCommand({
   meta: {
     name: 'transfer',
     description: [
-      'Copy an asset to a different project (cross-project transfer).',
+      'Cross-project copy: duplicate storage object + create new metadata row in destination project.',
       '',
-      'Implementation (71-02):',
-      '  1. Download storage object from source bucket.',
-      '  2. Upload to destination bucket (project-assets-<dest_project_id>).',
-      '  3. INSERT new assets row in destination project.',
-      '  4. Unless --keep-source: DELETE source assets row (storage object kept).',
-      '',
-      'Ownership semantics: copy model — no shared storage paths.',
+      'Ownership model: copy-based. Storage object is duplicated; no shared paths.',
       'See design doc for rationale over shared-path (zero-copy) approach.',
       '',
-      'Not implemented — see task 71-02.',
+      'Steps:',
+      '  1. Load source asset.',
+      '  2. Ensure destination bucket exists (create_project_bucket RPC).',
+      '  3. Download source object + upload to destination bucket.',
+      '  4. INSERT new assets row with destination project_id.',
+      '  5. Unless --keep-source: delete source storage object + delete source metadata row.',
+      '',
+      'Compensation:',
+      '  - If step 4 (INSERT) fails after step 3: destination storage object deleted.',
+      '  - If step 5 fails: new asset is good; old source still exists.',
+      '    Operator can re-run without --keep-source to clean up.',
+      '',
+      'Examples:',
+      '  gad assets transfer <uuid> --project <dest-project-id>',
+      '  gad assets transfer <uuid> --project <dest-id> --keep-source',
+      '  gad assets transfer <uuid> --project <dest-id> --species <sp-id> --json',
     ].join('\n'),
   },
   args: {
@@ -596,13 +759,153 @@ const transferCmd = defineCommand({
       required: true,
       description: 'Destination project id (UUID).',
     },
+    species: {
+      type: 'string',
+      description: 'Species id to assign in the destination project (replaces source species_id).',
+    },
+    generation: {
+      type: 'string',
+      description: 'Generation id to assign in the destination project (replaces source generation_id).',
+    },
     keepSource: {
       type: 'boolean',
-      description: 'Keep the source assets metadata row after transfer (storage object always kept).',
+      description: 'Keep the source assets row + storage object after transfer (fork mode).',
+      default: false,
+    },
+    json: {
+      type: 'boolean',
+      description: 'Emit JSON output (full new row) instead of summary table.',
+      default: false,
     },
   },
-  run() {
-    notImplemented('transfer');
+  async run({ args }) {
+    // Get client.
+    let client;
+    try {
+      ({ client } = getSupabaseClient());
+    } catch (err) {
+      console.error(err.message);
+      process.exitCode = 1;
+      return;
+    }
+
+    // 1. Load source asset.
+    const { asset: srcAsset, err: findErr } = await findAsset(client, args.assetId);
+    if (!srcAsset) {
+      console.error(`Asset ${args.assetId} not found${findErr ? ': ' + findErr : ''}.`);
+      process.exitCode = 1;
+      return;
+    }
+
+    const srcBucket = srcAsset.bucket_name;
+    const srcPath = srcAsset.storage_path;
+    const destProjectId = args.project;
+    const destBucket = bucketForProject(destProjectId);
+    // Destination path mirrors source path within its own bucket.
+    const destPath = srcPath;
+
+    // 2. Ensure destination bucket exists.
+    try {
+      await ensureBucket(client, destProjectId);
+    } catch (err) {
+      console.error(`assets transfer: ${err.message}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    // 3. Download source object + upload to destination.
+    const { data: downloadData, error: downloadErr } = await client.storage
+      .from(srcBucket)
+      .download(srcPath);
+
+    if (downloadErr || !downloadData) {
+      console.error(`assets transfer: download from source failed: ${downloadErr ? downloadErr.message : 'no data'}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    const { error: uploadErr } = await client.storage
+      .from(destBucket)
+      .upload(destPath, downloadData, { contentType: srcAsset.mime_type, upsert: false });
+
+    if (uploadErr) {
+      console.error(`assets transfer: upload to destination failed: ${uploadErr.message}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    // 4. INSERT new metadata row.
+    const insertPayload = {
+      project_id: destProjectId,
+      bucket_name: destBucket,
+      storage_path: destPath,
+      mime_type: srcAsset.mime_type,
+      size_bytes: srcAsset.size_bytes,
+      labels: srcAsset.labels || [],
+      species_id: args.species !== undefined ? args.species : (srcAsset.species_id || null),
+      generation_id: args.generation !== undefined ? args.generation : (srcAsset.generation_id || null),
+    };
+
+    const { data: insertedRows, error: insertErr } = await client
+      .from('assets')
+      .insert(insertPayload)
+      .select('*');
+
+    if (insertErr) {
+      // Compensation: remove the destination storage object we just uploaded.
+      await client.storage.from(destBucket).remove([destPath]);
+      console.error(`assets transfer: metadata insert failed (destination storage removed): ${insertErr.message}`);
+      process.exitCode = 1;
+      return;
+    }
+
+    const newRow = insertedRows && insertedRows[0] ? insertedRows[0] : insertPayload;
+
+    // 5. Remove source unless --keep-source.
+    if (!args.keepSource) {
+      const { error: removeStorageErr } = await client.storage
+        .from(srcBucket)
+        .remove([srcPath]);
+
+      const { error: deleteRowErr } = await client
+        .from('assets')
+        .delete()
+        .eq('id', args.assetId);
+
+      if (removeStorageErr || deleteRowErr) {
+        const storageMsg = removeStorageErr ? removeStorageErr.message : 'ok';
+        const rowMsg = deleteRowErr ? deleteRowErr.message : 'ok';
+        console.error(
+          `assets transfer: WARNING — new asset created successfully but source cleanup partially failed.\n` +
+          `  new asset id:           ${newRow.id || '(pending)'}\n` +
+          `  source storage remove:  ${storageMsg}\n` +
+          `  source row delete:      ${rowMsg}\n` +
+          `  To clean up: re-run without --keep-source or delete source manually.`
+        );
+        // Do NOT set exitCode=1 — the transfer succeeded; only cleanup failed.
+        if (args.json) {
+          process.stdout.write(JSON.stringify(newRow, null, 2) + '\n');
+        } else {
+          const rows = [{ id: trunc(newRow.id || '(pending)', 36), storage_path: trunc(newRow.storage_path, 50) }];
+          console.log(render(rows));
+        }
+        return;
+      }
+    }
+
+    // Output.
+    if (args.json) {
+      process.stdout.write(JSON.stringify(newRow, null, 2) + '\n');
+      return;
+    }
+
+    const rows = [{
+      id: trunc(newRow.id || '(pending)', 36),
+      dest_project: trunc(destProjectId, 16),
+      storage_path: trunc(newRow.storage_path, 50),
+      size_bytes: String(newRow.size_bytes || ''),
+    }];
+    console.log(render(rows));
   },
 });
 
@@ -621,7 +924,7 @@ function createAssetsCommand() {
         'Cross-project transfer: copy model (storage object duplicated, new metadata row).',
         '',
         'Design doc: .planning/notes/2026-04-20-asset-storage-design.md',
-        'upload + download: task 71-03. move + transfer: task 71-04 (placeholder).',
+        'upload + download: task 71-03. move + transfer: task 71-04.',
       ].join('\n'),
     },
     subCommands: {
