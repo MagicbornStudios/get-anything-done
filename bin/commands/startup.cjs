@@ -2,12 +2,10 @@
 /**
  * gad startup — print the GAD session-start contract and run snapshot.
  *
- * Also exports `runDogfoodSelfRefreshOrExit` which is consumed by self.cjs.
- *
  * Required deps (object passed to createStartupCommand):
  *   findRepoRoot, gadConfig, render,
  *   sideEffectsSuppressed, resolveSideEffectsMode, NO_SIDE_EFFECTS_FLAG,
- *   getPackagedExecutablePath, isPackagedExecutableRuntime, getDefaultSelfInstallDir,
+ *   getPackagedExecutablePath, isPackagedExecutableRuntime,
  *   detectRuntimeIdentity, buildHandoffsSection, printSection, ensureGraphFresh,
  *   readState, writeEvolutionScan, maybeGenerateDailyTip,
  *   getLastActiveProjectid, setLastActiveProjectid,
@@ -18,156 +16,12 @@ const path = require('path');
 const fs = require('fs');
 const { defineCommand } = require('citty');
 
-const STARTUP_DELEGATED_ENV = 'GAD_STARTUP_DELEGATED';
 const STARTUP_PRIMARY_EXECUTABLE_ENV = 'GAD_STARTUP_PRIMARY_EXECUTABLE';
 
 let _deps = null;
 function deps() {
   if (!_deps) throw new Error('startup.cjs: createStartupCommand() must be called first');
   return _deps;
-}
-
-function resolveStartupFrameworkRoot() {
-  const { findRepoRoot } = deps();
-  let repoRoot = null;
-  try {
-    repoRoot = findRepoRoot();
-  } catch {
-    return null;
-  }
-  const candidates = [
-    repoRoot,
-    path.join(repoRoot, 'vendor', 'get-anything-done'),
-  ];
-  for (const candidate of candidates) {
-    if (!candidate) continue;
-    const buildScript = fs.existsSync(path.join(candidate, 'scripts', 'build-bun-release.mjs'))
-      ? path.join(candidate, 'scripts', 'build-bun-release.mjs')
-      : path.join(candidate, 'scripts', 'build-release.mjs');
-    const installScript = path.join(candidate, 'scripts', 'install-gad-windows.ps1');
-    if (fs.existsSync(buildScript) && fs.existsSync(installScript)) {
-      return candidate;
-    }
-  }
-  return null;
-}
-
-function shouldDelegateStartupToTemporaryExecutable() {
-  const { getPackagedExecutablePath } = deps();
-  if (process.platform !== 'win32') return false;
-  if (process.env[STARTUP_DELEGATED_ENV] === '1') return false;
-  const executable = getPackagedExecutablePath() || process.execPath || '';
-  const basename = path.basename(executable).toLowerCase();
-  return basename === 'gad.exe' || basename === 'get-anything-done.exe';
-}
-
-function delegateStartupToTemporaryExecutable() {
-  const { getPackagedExecutablePath } = deps();
-  const { spawnSync } = require('child_process');
-  const os = require('os');
-  const primaryExecutable = getPackagedExecutablePath();
-  if (!primaryExecutable || !fs.existsSync(primaryExecutable)) {
-    throw new Error(`Packaged executable not found at ${primaryExecutable || '(empty path)'}`);
-  }
-  const tempExecutable = path.join(
-    os.tmpdir(),
-    `gad-startup-${Date.now()}-${process.pid}.exe`,
-  );
-  fs.copyFileSync(primaryExecutable, tempExecutable);
-  const env = {
-    ...process.env,
-    [STARTUP_DELEGATED_ENV]: '1',
-    [STARTUP_PRIMARY_EXECUTABLE_ENV]: primaryExecutable,
-  };
-  const result = spawnSync(tempExecutable, process.argv.slice(2), {
-    stdio: 'inherit',
-    env,
-  });
-  try { fs.rmSync(tempExecutable, { force: true }); } catch { /* noop */ }
-  process.exit(result.status || 0);
-}
-
-function resolveStartupReleaseArtifactPath(frameworkRoot) {
-  const pkgPath = path.join(frameworkRoot, 'package.json');
-  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  const platformLabel = process.platform === 'win32'
-    ? 'windows'
-    : process.platform === 'darwin'
-      ? 'macos'
-      : process.platform;
-  const baseName = `gad-v${pkg.version}-${platformLabel}-${process.arch}`;
-  const artifactName = process.platform === 'win32' ? `${baseName}.exe` : baseName;
-  const artifactPath = path.join(frameworkRoot, 'dist', 'release', artifactName);
-  if (fs.existsSync(artifactPath)) return artifactPath;
-  throw new Error(`Release artifact not found: ${artifactPath}`);
-}
-
-function runStartupSelfRefresh(frameworkRoot, commandLabel = 'gad startup') {
-  const { isPackagedExecutableRuntime, getDefaultSelfInstallDir } = deps();
-  const { spawnSync } = require('child_process');
-  const buildScript = fs.existsSync(path.join(frameworkRoot, 'scripts', 'build-bun-release.mjs'))
-    ? path.join(frameworkRoot, 'scripts', 'build-bun-release.mjs')
-    : path.join(frameworkRoot, 'scripts', 'build-release.mjs');
-  const installScript = path.join(frameworkRoot, 'scripts', 'install-gad-windows.ps1');
-  const nodeCommand = isPackagedExecutableRuntime() ? 'node' : process.execPath;
-
-  console.log(`[${commandLabel}] dogfood refresh: building from ${frameworkRoot}`);
-  const buildResult = spawnSync(nodeCommand, [buildScript], {
-    cwd: frameworkRoot,
-    stdio: 'inherit',
-    env: process.env,
-  });
-  if (buildResult.error) throw buildResult.error;
-  if (buildResult.status !== 0) {
-    throw new Error(`build-release failed with status ${buildResult.status || 1}`);
-  }
-
-  const artifactPath = resolveStartupReleaseArtifactPath(frameworkRoot);
-  if (process.platform === 'win32') {
-    console.log(`[${commandLabel}] dogfood refresh: installing ${path.basename(artifactPath)}`);
-    const installResult = spawnSync(
-      'powershell',
-      ['-ExecutionPolicy', 'Bypass', '-File', installScript, '-Artifact', artifactPath],
-      { cwd: frameworkRoot, stdio: 'pipe', env: process.env, encoding: 'utf8' },
-    );
-    if (installResult.stdout) process.stdout.write(installResult.stdout);
-    if (installResult.stderr) process.stderr.write(installResult.stderr);
-    if (installResult.error) throw installResult.error;
-    if (installResult.status !== 0) {
-      const combinedOutput = `${installResult.stdout || ''}\n${installResult.stderr || ''}`;
-      const lockConflict = /being used by another process|cannot access the file/i.test(combinedOutput);
-      if (lockConflict) {
-        throw new Error('gad.exe is locked by another process. Close running gad.exe processes and rerun the command.');
-      }
-      throw new Error(`install-gad-windows.ps1 failed with status ${installResult.status || 1}`);
-    }
-    return;
-  }
-
-  const targetDir = getDefaultSelfInstallDir();
-  const targetExecutable = path.join(targetDir, 'gad');
-  fs.mkdirSync(targetDir, { recursive: true });
-  fs.copyFileSync(artifactPath, targetExecutable);
-  try { fs.chmodSync(targetExecutable, 0o755); } catch { /* noop */ }
-  console.log(`[${commandLabel}] dogfood refresh: installed ${targetExecutable}`);
-}
-
-function runDogfoodSelfRefreshOrExit(commandLabel) {
-  const frameworkRoot = resolveStartupFrameworkRoot();
-  if (!frameworkRoot) {
-    console.error(`[${commandLabel}] could not locate local framework checkout (expected scripts/build-release.mjs).`);
-    process.exit(1);
-  }
-  if (shouldDelegateStartupToTemporaryExecutable()) {
-    delegateStartupToTemporaryExecutable();
-    return;
-  }
-  try {
-    runStartupSelfRefresh(frameworkRoot, commandLabel);
-  } catch (err) {
-    console.error(`[${commandLabel}] failed: ${err.message || err}`);
-    process.exit(1);
-  }
 }
 
 function runStartupSnapshot(projectId, sessionArg = [], extraArgs = []) {
@@ -426,10 +280,7 @@ function createStartupCommand(injected) {
 
 module.exports = {
   createStartupCommand,
-  runDogfoodSelfRefreshOrExit,
 };
-
-module.exports.provides = () => ({ runDogfoodSelfRefreshOrExit });
 
 module.exports.register = (ctx) => ({
   startup: createStartupCommand({
