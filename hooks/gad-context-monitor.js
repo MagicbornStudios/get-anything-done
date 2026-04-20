@@ -12,8 +12,14 @@
 //    as additionalContext, which the agent sees in its conversation
 //
 // Thresholds:
-//   WARNING  (remaining <= 35%): Agent should wrap up current task
-//   CRITICAL (remaining <= 25%): Agent should stop immediately and save state
+//   WARNING   (remaining <= 35%): Agent should wrap up current task
+//   CRITICAL  (remaining <= 25%): Agent should stop immediately and save state
+//   AUTOPAUSE (remaining <= 20%, team mode only): emit directive for worker
+//             loop to call `gad pause-work` and return to mailbox
+//
+// Team mode detection: either .planning/team/config.json exists in cwd, or
+// GAD_TEAM_WORKER_ID env var is set. Autopause only fires in team mode so
+// interactive single-agent sessions are unaffected.
 //
 // Debounce: 5 tool uses between warnings to avoid spam
 // Severity escalation bypasses debounce (WARNING -> CRITICAL fires immediately)
@@ -22,10 +28,11 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const WARNING_THRESHOLD = 35;  // remaining_percentage <= 35%
-const CRITICAL_THRESHOLD = 25; // remaining_percentage <= 25%
-const STALE_SECONDS = 60;      // ignore metrics older than 60s
-const DEBOUNCE_CALLS = 5;      // min tool uses between warnings
+const WARNING_THRESHOLD = 35;    // remaining_percentage <= 35%
+const CRITICAL_THRESHOLD = 25;   // remaining_percentage <= 25%
+const AUTOPAUSE_THRESHOLD = Number(process.env.GAD_AUTOPAUSE_THRESHOLD || 20);
+const STALE_SECONDS = 60;        // ignore metrics older than 60s
+const DEBOUNCE_CALLS = 5;        // min tool uses between warnings
 
 let input = '';
 // Timeout guard: if stdin doesn't close within 10s (e.g. pipe issues on
@@ -119,10 +126,25 @@ process.stdin.on('end', () => {
     // Detect if GAD is active (has .planning/STATE.md in working directory)
     const isGadActive = fs.existsSync(path.join(cwd, '.planning', 'STATE.md'));
 
+    // Detect team-mode worker: either explicit env var (set by `gad team work`
+    // supervisor) or config file exists. Autopause only fires for team workers
+    // so interactive sessions see the advisory warning, not an exit directive.
+    const isTeamWorker = Boolean(process.env.GAD_TEAM_WORKER_ID)
+      || fs.existsSync(path.join(cwd, '.planning', 'team', 'config.json'));
+    const shouldAutopause = isTeamWorker && remaining <= AUTOPAUSE_THRESHOLD;
+
     // Build advisory warning message (never use imperative commands that
-    // override user preferences — see #884)
+    // override user preferences — see #884). Autopause branch is imperative
+    // on purpose: the worker loop needs a deterministic signal to return
+    // control to the mailbox.
     let message;
-    if (isCritical) {
+    if (shouldAutopause) {
+      const workerId = process.env.GAD_TEAM_WORKER_ID || 'unknown';
+      message = `CONTEXT AUTOPAUSE (team worker ${workerId}, ${usedPct}% used, ${remaining}% remaining): ` +
+        'Immediately call `gad pause-work --goal "<one-line summary of where you are>" --priority high` ' +
+        'to capture state as a resume handoff, then end this response. The team worker loop will claim ' +
+        'the next mailbox item in a fresh context.';
+    } else if (isCritical) {
       message = isGadActive
         ? `CONTEXT CRITICAL: Usage at ${usedPct}%. Remaining: ${remaining}%. ` +
           'Context is nearly exhausted. Do NOT start new complex work or write handoff files — ' +
