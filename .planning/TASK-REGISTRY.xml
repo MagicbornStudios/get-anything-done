@@ -2313,9 +2313,10 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>Add vendor/get-anything-done/.husky/pre-commit (or equivalent) that runs &apos;gad self build &amp;&amp; gad self install&apos; only if src is newer than installed exe. Staleness check via git diff --quiet bin/ lib/ scripts/ against the commit SHA embedded in installed exe (task 66-06). Skippable via GAD_NO_PRECOMMIT_BUILD=1. Idempotent: running twice in a row produces no work the second time.</goal>
       <depends>66-03,66-06</depends>
     </task>
-    <task id="66-05" type="cleanup" status="planned">
+    <task id="66-05" type="cleanup" status="done" agent-id="claude-sonnet-4-6" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="default">
       <goal>Delete scripts/build-release.mjs (SEA pipeline), scripts/build-release-support.mjs if SEA-only, scripts/sea-bootstrap.cjs, and tests/release-deprecation.test.cjs. Remove SEA-related npm scripts (build:release:sea) from package.json. Update docs/release-guide.md and any prose that references SEA. Bun is the only pipeline going forward.</goal>
       <depends>66-03</depends>
+      <resolution>Shipped 2026-04-20. Deleted: scripts/build-release.mjs, scripts/build-release-support.mjs (SEA-only consumer confirmed), scripts/sea-bootstrap.cjs, tests/release-deprecation.test.cjs. Removed from package.json: build:release:sea script, build:release:bun alias, build:release-support script, postject devDependency. Updated docs/release-guide.md: removed SEA blob line from build output description. npm run build:release confirmed passing (Bun pipeline, gad-v1.35.0-windows-x64.exe).</resolution>
     </task>
     <task id="66-06" type="code" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="default">
       <goal>Embed git SHA + src-hash stamp into built exe at build time. scripts/build-bun-release.mjs writes lib/build-stamp.generated.cjs with { sha, hash, builtAt } before running bun build --compile. bin/gad-version.cjs reads the stamp and exposes via &apos;gad version --verbose&apos;. Precommit hook (66-04) uses the stamp to decide staleness.</goal>

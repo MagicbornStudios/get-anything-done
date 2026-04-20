@@ -29,7 +29,6 @@ The build also writes:
 
 - `install-gad-windows.ps1`
 - `INSTALL.txt`
-- the SEA blob and config used to build the executable
 
 ## Validate before publishing
 
