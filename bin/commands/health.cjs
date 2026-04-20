@@ -310,3 +310,6 @@ function createHealthCommand(deps) {
 }
 
 module.exports = { createHealthCommand };
+module.exports.register = (ctx) => ({
+  health: createHealthCommand({ ...ctx.common, ...ctx.extras.worktree }),
+});

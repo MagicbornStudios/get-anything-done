@@ -1168,6 +1168,15 @@ module.exports = {
   getRuntimeArg,
 };
 
+module.exports.register = (ctx) => ({
+  runtime: createRuntimeCommand({
+    ...ctx.common,
+    loadSessions: ctx.services.session.helpers.loadSessions,
+    SESSION_STATUS: ctx.services.session.helpers.SESSION_STATUS,
+    buildContextRefs: ctx.services.session.helpers.buildContextRefs,
+  }),
+});
+
 function createRuntimeCommand(deps) {
   const { findRepoRoot: _findRepoRoot, gadConfig: _gadConfig, resolveRoots: _resolveRoots,
           loadSessions: _loadSessions, SESSION_STATUS: _SESSION_STATUS,

@@ -218,3 +218,4 @@ function createRefsCommand(deps) {
 }
 
 module.exports = { createRefsCommand };
+module.exports.register = (ctx) => ({ refs: createRefsCommand(ctx.common) });

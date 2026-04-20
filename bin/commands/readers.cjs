@@ -150,3 +150,8 @@ function createBlockersCommand(deps) {
 }
 
 module.exports = { createRequirementsCommand, createErrorsCommand, createBlockersCommand };
+module.exports.register = (ctx) => ({
+  requirements: createRequirementsCommand(ctx.common),
+  errors: createErrorsCommand(ctx.common),
+  blockers: createBlockersCommand(ctx.common),
+});

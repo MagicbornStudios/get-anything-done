@@ -85,3 +85,4 @@ function createDataCommand(deps) {
 }
 
 module.exports = { createDataCommand };
+module.exports.register = (ctx) => ({ data: createDataCommand(ctx.common) });

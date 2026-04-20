@@ -679,3 +679,20 @@ function createEvolutionCommands(deps) {
 }
 
 module.exports = { createEvolutionCommands };
+
+module.exports.provides = (ctx) => {
+  const built = createEvolutionCommands({
+    ...ctx.common,
+    ...ctx.extras.evolution,
+    evolutionImagesCmd: ctx.services['evolution-images'].cmd,
+  });
+  return {
+    built,
+    evolutionPromote: built.evolutionPromote,
+    evolutionInstall: built.evolutionInstall,
+  };
+};
+
+module.exports.register = (ctx) => ({
+  evolution: ctx.services.evolution.built.evolutionCmd,
+});

@@ -165,3 +165,4 @@ function createLogCommand(deps) {
 }
 
 module.exports = { createLogCommand };
+module.exports.register = (ctx) => ({ log: createLogCommand(ctx.common) });

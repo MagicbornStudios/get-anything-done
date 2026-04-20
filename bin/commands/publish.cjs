@@ -154,3 +154,4 @@ function createPublishCommand() {
 }
 
 module.exports = { createPublishCommand };
+module.exports.register = () => ({ publish: createPublishCommand() });

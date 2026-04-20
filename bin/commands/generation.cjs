@@ -218,3 +218,7 @@ function createGenerationCommands(deps) {
 }
 
 module.exports = { createGenerationCommands };
+module.exports.provides = (ctx) => createGenerationCommands(ctx.common);
+module.exports.register = (ctx) => ({
+  generation: ctx.services.generation.generationCmd,
+});

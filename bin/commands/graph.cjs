@@ -88,3 +88,4 @@ function createGraphCommand(deps) {
 }
 
 module.exports = { createGraphCommand };
+module.exports.register = (ctx) => ({ graph: createGraphCommand(ctx.common) });

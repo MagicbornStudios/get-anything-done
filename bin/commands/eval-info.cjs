@@ -362,3 +362,4 @@ function createEvalInfoCommands(deps) {
 }
 
 module.exports = { createEvalInfoCommands };
+module.exports.provides = (ctx) => createEvalInfoCommands(ctx.common);

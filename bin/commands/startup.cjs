@@ -425,3 +425,19 @@ module.exports = {
   createStartupCommand,
   runDogfoodSelfRefreshOrExit,
 };
+
+module.exports.provides = () => ({ runDogfoodSelfRefreshOrExit });
+
+module.exports.register = (ctx) => ({
+  startup: createStartupCommand({
+    ...ctx.common,
+    ...ctx.extras.startup,
+    sessionHelpers: {
+      sessionsDir: ctx.services.session.sessionsDir,
+      generateSessionId: ctx.services.session.generateSessionId,
+      SESSION_STATUS: ctx.services.session.helpers.SESSION_STATUS,
+      buildContextRefs: ctx.services.session.helpers.buildContextRefs,
+      writeSession: ctx.services.session.writeSession,
+    },
+  }),
+});

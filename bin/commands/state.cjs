@@ -263,3 +263,4 @@ function createStateCommand(deps) {
 }
 
 module.exports = { createStateCommand, NEXT_ACTION_MAX_CHARS };
+module.exports.register = (ctx) => ({ state: createStateCommand(ctx.common) });

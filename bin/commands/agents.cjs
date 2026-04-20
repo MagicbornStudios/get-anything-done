@@ -164,3 +164,4 @@ function createAgentsCommand(deps) {
 }
 
 module.exports = { createAgentsCommand };
+module.exports.register = (ctx) => ({ agents: createAgentsCommand(ctx.common) });

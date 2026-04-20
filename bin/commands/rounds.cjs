@@ -123,3 +123,4 @@ function createRoundsCommand(deps) {
 }
 
 module.exports = { createRoundsCommand };
+module.exports.register = (ctx) => ({ rounds: createRoundsCommand(ctx.common) });

@@ -77,3 +77,4 @@ function createQueryCommand(deps) {
 }
 
 module.exports = { createQueryCommand };
+module.exports.register = (ctx) => ({ query: createQueryCommand(ctx.common) });

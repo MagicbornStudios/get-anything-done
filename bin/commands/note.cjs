@@ -158,3 +158,7 @@ function createNoteCommand(deps) {
 }
 
 module.exports = { createNoteCommand };
+module.exports.register = (ctx) => {
+  const cmd = createNoteCommand(ctx.common);
+  return { note: cmd, notes: cmd };
+};

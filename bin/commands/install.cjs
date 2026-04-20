@@ -178,3 +178,7 @@ function createInstallCommand(deps) {
 }
 
 module.exports = { createInstallCommand };
+module.exports.register = (ctx) => {
+  const { install, uninstall } = createInstallCommand(ctx.extras.install);
+  return { install, uninstall };
+};

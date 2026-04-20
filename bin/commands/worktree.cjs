@@ -240,3 +240,6 @@ function createWorktreeCommand(deps) {
 }
 
 module.exports = { createWorktreeCommand };
+module.exports.register = (ctx) => ({
+  worktree: createWorktreeCommand({ ...ctx.common, ...ctx.extras.worktree }),
+});

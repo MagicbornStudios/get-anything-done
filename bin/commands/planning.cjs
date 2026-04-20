@@ -134,3 +134,4 @@ function createPlanningCommand(deps) {
 }
 
 module.exports = { createPlanningCommand };
+module.exports.register = (ctx) => ({ planning: createPlanningCommand(ctx.common) });

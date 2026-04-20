@@ -113,3 +113,4 @@ function createModelsCommand() {
 }
 
 module.exports = { createModelsCommand };
+module.exports.register = () => ({ models: createModelsCommand() });

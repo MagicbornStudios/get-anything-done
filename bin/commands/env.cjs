@@ -186,3 +186,4 @@ function createEnvCommand() {
 }
 
 module.exports = { createEnvCommand };
+module.exports.register = () => ({ env: createEnvCommand() });

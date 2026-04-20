@@ -430,3 +430,6 @@ function createEvolutionImagesCommand(deps) {
 }
 
 module.exports = { createEvolutionImagesCommand };
+module.exports.provides = (ctx) => ({
+  cmd: createEvolutionImagesCommand(ctx.extras.evolutionImages),
+});

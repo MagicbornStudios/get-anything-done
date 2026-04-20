@@ -503,3 +503,5 @@ Manual score added to SCORE.md.
 }
 
 module.exports = { createEvalSuiteCommands };
+module.exports.provides = (ctx) =>
+  createEvalSuiteCommands({ ...ctx.common, ...ctx.extras.eval });

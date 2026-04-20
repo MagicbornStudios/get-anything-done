@@ -115,3 +115,4 @@ function createSiteCommand(deps) {
 }
 
 module.exports = { createSiteCommand };
+module.exports.register = (ctx) => ({ site: createSiteCommand(ctx.common) });

@@ -248,3 +248,6 @@ function createEvalRunCommand(deps) {
 }
 
 module.exports = { createEvalRunCommand };
+module.exports.provides = (ctx) => ({
+  cmd: createEvalRunCommand({ ...ctx.common, ...ctx.extras.eval }),
+});

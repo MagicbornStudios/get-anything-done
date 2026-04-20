@@ -100,9 +100,9 @@ const {
 // as undefined. Original location preserved as a comment marker for grep.
 const graphExtractor = require('../lib/graph-extractor.cjs');
 
-// Command modules are wired in bin/commands/_registry.cjs (see comment near
-// the bottom of this file). Adding a new command does not require any edit
-// here — drop bin/commands/<name>.cjs and append one row to _registry.cjs.
+// Command modules self-register via bin/commands/_loader.cjs. Adding a new
+// command should be a one-file change: create bin/commands/<name>.cjs with
+// register/provides/postWire hooks and let the loader discover it.
 
 const pkg = require('../package.json');
 
@@ -375,7 +375,7 @@ const extras = {
   eval: { buildEvalPrompt, normalizeEvalRuntime, ensureEvalRuntimeHooks },
 };
 
-const { subCommands } = require('./commands/_registry.cjs').build({ common, extras });
+const { subCommands } = require('./commands/_loader.cjs').load({ common, extras });
 
 const main = defineCommand({
   meta: {
@@ -392,4 +392,3 @@ __argvInjectors.applyDefaultSubcommandInjectors();
 __argvInjectors.extractActiveSkillFlag();
 
 runMain(main);
-

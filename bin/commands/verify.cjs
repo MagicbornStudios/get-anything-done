@@ -175,3 +175,4 @@ function createVerifyCommand(deps) {
 }
 
 module.exports = { createVerifyCommand };
+module.exports.register = (ctx) => ({ verify: createVerifyCommand(ctx.common) });

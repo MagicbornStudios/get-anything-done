@@ -906,3 +906,4 @@ function createEvalTraceCommand(deps) {
 }
 
 module.exports = { createEvalTraceCommand };
+module.exports.provides = (ctx) => createEvalTraceCommand(ctx.common);

@@ -367,3 +367,4 @@ function createHandoffsCommand(deps) {
 }
 
 module.exports = { createHandoffsCommand };
+module.exports.register = (ctx) => ({ handoffs: createHandoffsCommand(ctx.common) });

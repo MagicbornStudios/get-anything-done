@@ -84,3 +84,4 @@ function createNarrativeCommand() {
 }
 
 module.exports = { createNarrativeCommand };
+module.exports.register = () => ({ narrative: createNarrativeCommand() });

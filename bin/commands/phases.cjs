@@ -150,3 +150,4 @@ function createPhasesCommand(deps) {
 }
 
 module.exports = { createPhasesCommand };
+module.exports.register = (ctx) => ({ phases: createPhasesCommand(ctx.common) });

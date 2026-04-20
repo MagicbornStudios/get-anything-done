@@ -33,3 +33,4 @@ function createVersionCommand(deps) {
 }
 
 module.exports = { createVersionCommand };
+module.exports.register = (ctx) => ({ version: createVersionCommand(ctx.extras.version) });

@@ -705,3 +705,7 @@ function createProjectsCommands(deps) {
 }
 
 module.exports = { createProjectsCommands };
+module.exports.register = (ctx) => {
+  const { lsCmd, workspaceCmd, projectsCmd } = createProjectsCommands(ctx.common);
+  return { ls: lsCmd, workspace: workspaceCmd, projects: projectsCmd };
+};

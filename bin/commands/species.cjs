@@ -126,3 +126,6 @@ function createSpeciesCommand(deps) {
 }
 
 module.exports = { createSpeciesCommand };
+module.exports.register = (ctx) => ({
+  species: createSpeciesCommand(ctx.common),
+});

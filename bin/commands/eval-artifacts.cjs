@@ -385,3 +385,4 @@ function createEvalArtifactsCommands(deps) {
 }
 
 module.exports = { createEvalArtifactsCommands };
+module.exports.provides = (ctx) => createEvalArtifactsCommands(ctx.common);

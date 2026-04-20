@@ -209,3 +209,4 @@ function createDocsCommand(deps) {
 }
 
 module.exports = { createDocsCommand };
+module.exports.register = (ctx) => ({ docs: createDocsCommand(ctx.common) });

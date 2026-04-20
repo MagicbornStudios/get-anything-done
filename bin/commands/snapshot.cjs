@@ -861,3 +861,13 @@ return defineCommand({
 }
 
 module.exports = { createSnapshotCommand };
+module.exports.register = (ctx) => ({
+  snapshot: createSnapshotCommand({
+    ...ctx.common,
+    ...ctx.extras.snapshot,
+    loadSessions: ctx.services.session.helpers.loadSessions,
+    writeSession: ctx.services.session.writeSession,
+    getCurrentSprintIndex: ctx.services.sprint.getCurrentSprintIndex,
+    getSprintPhaseIds: ctx.services.sprint.getSprintPhaseIds,
+  }),
+});

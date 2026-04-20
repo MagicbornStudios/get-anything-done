@@ -513,3 +513,4 @@ Save as ${path.relative(process.cwd(), path.join(evalDir, 'without_skill', 'timi
 }
 
 module.exports = { createEvalSkillCommands };
+module.exports.provides = (ctx) => createEvalSkillCommands(ctx.common);

@@ -515,3 +515,24 @@ module.exports = {
   sessionsDir,
   generateSessionId,
 };
+
+module.exports.provides = (ctx) => {
+  const built = createSessionCommands({ ...ctx.common, ...ctx.extras.session });
+  // Late-bind loadSessions so scope-helpers in gad.cjs can resolve session-
+  // scoped roots once commands actually run.
+  if (typeof ctx.extras.setLoadSessions === 'function') {
+    ctx.extras.setLoadSessions(built.helpers.loadSessions);
+  }
+  return {
+    built,
+    helpers: built.helpers,
+    sessionsDir,
+    generateSessionId,
+    writeSession,
+  };
+};
+
+module.exports.register = (ctx) => {
+  const { sessionCmd, contextCmd, pauseWorkCmd } = ctx.services.session.built;
+  return { session: sessionCmd, context: contextCmd, 'pause-work': pauseWorkCmd };
+};

@@ -88,3 +88,9 @@ function createSelfEvalCommand(deps) {
 }
 
 module.exports = { createSelfCommand, createSelfEvalCommand };
+module.exports.register = (ctx) => ({
+  self: createSelfCommand({
+    runDogfoodSelfRefreshOrExit: ctx.services.startup.runDogfoodSelfRefreshOrExit,
+  }),
+  'self-eval': createSelfEvalCommand(ctx.common),
+});

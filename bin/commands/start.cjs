@@ -62,3 +62,7 @@ function createStartCommand(deps) {
 }
 
 module.exports = { createStartCommand };
+module.exports.register = (ctx) => {
+  const cmd = createStartCommand(ctx.common);
+  return { start: cmd, dashboard: cmd };
+};

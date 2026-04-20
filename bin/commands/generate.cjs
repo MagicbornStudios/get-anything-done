@@ -84,3 +84,4 @@ function createGenerateCommand(deps) {
 }
 
 module.exports = { createGenerateCommand };
+module.exports.register = (ctx) => ({ generate: createGenerateCommand(ctx.common).generateCmd });

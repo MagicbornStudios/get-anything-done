@@ -92,3 +92,4 @@ function createRecipesCommand(deps) {
 }
 
 module.exports = { createRecipesCommand };
+module.exports.register = (ctx) => ({ recipes: createRecipesCommand(ctx.common) });

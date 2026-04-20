@@ -41,3 +41,4 @@ function createDevCommand(deps) {
 }
 
 module.exports = { createDevCommand };
+module.exports.register = (ctx) => ({ dev: createDevCommand(ctx.common) });

@@ -96,3 +96,4 @@ function createTodosCommand(deps) {
 }
 
 module.exports = { createTodosCommand };
+module.exports.register = (ctx) => ({ todos: createTodosCommand(ctx.common) });

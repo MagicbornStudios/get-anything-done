@@ -106,3 +106,25 @@ function createShortcutCommands(deps) {
 }
 
 module.exports = { createShortcutCommands };
+module.exports.register = (ctx) => {
+  const { spawnCmd, breedCmd, playCmd } = createShortcutCommands({
+    ...ctx.common,
+    evalRun: ctx.services['eval-run'].cmd,
+    servePreservedGenerationBuildArtifact:
+      ctx.services['eval-preview'].servePreservedGenerationBuildArtifact,
+  });
+  return { spawn: spawnCmd, breed: breedCmd, play: playCmd };
+};
+module.exports.register = (ctx) => {
+  const shortcuts = createShortcutCommands({
+    ...ctx.common,
+    evalRun: ctx.services['eval-run'].cmd,
+    servePreservedGenerationBuildArtifact:
+      ctx.services['eval-preview'].servePreservedGenerationBuildArtifact,
+  });
+  return {
+    spawn: shortcuts.spawnCmd,
+    breed: shortcuts.breedCmd,
+    play: shortcuts.playCmd,
+  };
+};

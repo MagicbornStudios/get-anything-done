@@ -131,3 +131,4 @@ function createMigrateSchemaCommand(deps) {
 }
 
 module.exports = { createMigrateSchemaCommand };
+module.exports.register = (ctx) => ({ 'migrate-schema': createMigrateSchemaCommand(ctx.common) });

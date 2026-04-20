@@ -80,3 +80,4 @@ function createPackCommand(deps) {
 }
 
 module.exports = { createPackCommand };
+module.exports.register = (ctx) => ({ pack: createPackCommand(ctx.common) });

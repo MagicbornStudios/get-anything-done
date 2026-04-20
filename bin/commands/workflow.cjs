@@ -187,3 +187,4 @@ function createWorkflowCommand() {
 }
 
 module.exports = { createWorkflowCommand };
+module.exports.register = () => ({ workflow: createWorkflowCommand() });

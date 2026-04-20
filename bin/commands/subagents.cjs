@@ -121,3 +121,4 @@ function createSubagentsCommand(deps) {
 }
 
 module.exports = { createSubagentsCommand };
+module.exports.register = (ctx) => ({ subagents: createSubagentsCommand(ctx.common) });

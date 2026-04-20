@@ -83,3 +83,4 @@ function createTaskCheckpointCommand(deps) {
 }
 
 module.exports = { createTaskCheckpointCommand };
+module.exports.register = (ctx) => ({ 'task-checkpoint': createTaskCheckpointCommand(ctx.common) });

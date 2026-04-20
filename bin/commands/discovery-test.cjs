@@ -63,3 +63,4 @@ function createDiscoveryTestCommand() {
 }
 
 module.exports = { createDiscoveryTestCommand };
+module.exports.register = () => ({ 'discovery-test': createDiscoveryTestCommand() });

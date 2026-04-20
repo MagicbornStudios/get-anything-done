@@ -138,3 +138,4 @@ function createBundleCommand(deps) {
 }
 
 module.exports = { createBundleCommand };
+module.exports.register = (ctx) => ({ bundle: createBundleCommand(ctx.extras.bundle) });

@@ -109,3 +109,5 @@ function createSprintCommand(deps) {
 }
 
 module.exports = { createSprintCommand, getSprintPhaseIds, getCurrentSprintIndex };
+module.exports.provides = () => ({ getSprintPhaseIds, getCurrentSprintIndex });
+module.exports.register = (ctx) => ({ sprint: createSprintCommand(ctx.common) });

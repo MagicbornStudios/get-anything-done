@@ -83,3 +83,4 @@ function createNextCommand(deps) {
 }
 
 module.exports = { createNextCommand };
+module.exports.register = (ctx) => ({ next: createNextCommand(ctx.common) });

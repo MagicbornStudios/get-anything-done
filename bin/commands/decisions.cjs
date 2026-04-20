@@ -181,3 +181,4 @@ function createDecisionsCommand(deps) {
 }
 
 module.exports = { createDecisionsCommand };
+module.exports.register = (ctx) => ({ decisions: createDecisionsCommand(ctx.common) });

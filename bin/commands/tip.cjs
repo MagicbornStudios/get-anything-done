@@ -171,3 +171,6 @@ function createTipCommand(deps) {
 }
 
 module.exports = { createTipCommand };
+module.exports.register = (ctx) => ({
+  tip: createTipCommand({ ...ctx.common, ...ctx.extras.tip }),
+});

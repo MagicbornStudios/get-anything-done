@@ -288,3 +288,4 @@ function createEvalPreviewSurfaces(deps) {
 }
 
 module.exports = { createEvalPreviewSurfaces };
+module.exports.provides = (ctx) => createEvalPreviewSurfaces(ctx.common);

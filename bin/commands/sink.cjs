@@ -223,3 +223,6 @@ function createSinkCommand(deps) {
 }
 
 module.exports = { createSinkCommand };
+module.exports.register = (ctx) => ({
+  sink: createSinkCommand({ ...ctx.common, ...ctx.extras.sink }),
+});

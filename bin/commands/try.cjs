@@ -564,3 +564,4 @@ function createTryCommand() {
 }
 
 module.exports = { createTryCommand };
+module.exports.register = () => ({ try: createTryCommand().tryCmd });
