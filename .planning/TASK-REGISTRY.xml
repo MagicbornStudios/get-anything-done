@@ -2299,6 +2299,10 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>Tauri built-in auto-updater. Update manifest hosted on GitHub Releases (tauri.updater endpoint). On launch, check for newer version; prompt user to download+restart. Signing keypair generated + embedded per Tauri 2 updater docs.</goal>
       <depends>53-09</depends>
     </task>
+    <task id="53-11" type="site" status="done" agent-id="claude-sonnet-4-6" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-sonnet-4-6" skill="scaffold-visual-context-surface">
+      <goal>Extract Visual Context System primitives into packages/visual-context and apply to apps/desktop shell. Three outputs in one task. (1) Move apps/planning-app/components/site/SiteSection.tsx + siblings into new @portfolio/visual-context package. (2) Refactor apps/planning-app to import from @portfolio/visual-context. (3) Wrap apps/desktop App.tsx with VisualContextProvider + SiteSection + CrudModalFooter.</goal>
+      <resolution>Shipped 2026-04-20 commit f9df414. Files moved: apps/planning-app/components/site/SiteSection.tsx (git-renamed to packages/visual-context/src/SiteSection.tsx), apps/planning-app/components/site/index.ts (deleted — full sweep, no stub needed). Files created: packages/visual-context/package.json, packages/visual-context/tsconfig.json, packages/visual-context/src/index.ts, packages/visual-context/src/cn.ts, packages/visual-context/src/VisualContextProvider.tsx, packages/visual-context/src/CrudModalFooter.tsx. Files edited: 15 planning-app files in app/projects/edit/[id]/ (import rewrite @/components/site → @portfolio/visual-context), apps/planning-app/package.json (+typecheck script, +@portfolio/visual-context dep), apps/desktop/package.json (+@portfolio/visual-context dep), apps/desktop/src/App.tsx (wrapped with VisualContextProvider + SiteSection cid=desktop-app-shell-site-section + CrudModalFooter), pnpm-lock.yaml. Both typechecks pass: @portfolio/planning-app typecheck clean, @portfolio/desktop typecheck clean. API shape unchanged — SiteSection props identical to prior implementation.</resolution>
+    </task>
   </phase>
 
   <phase id="66">
@@ -2329,6 +2333,41 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>Embed git SHA + src-hash stamp into built exe at build time. scripts/build-bun-release.mjs writes lib/build-stamp.generated.cjs with { sha, hash, builtAt } before running bun build --compile. bin/gad-version.cjs reads the stamp and exposes via &apos;gad version --verbose&apos;. Precommit hook (66-04) uses the stamp to decide staleness.</goal>
       <resolution>Shipped 2026-04-20. scripts/build-stamp.mjs runs as a pre-bundle step (alongside build-manifest.mjs), computes { version, commit, branch, commit_ts, src_hash, built_at } and writes lib/build-stamp.generated.cjs. src_hash is a 16-char SHA-256 prefix over sorted {path, content} triples for bin/, lib/, scripts/, package.json — skips .generated / _manifest / node_modules / dist / .git / tmp. lib/framework-version.cjs prefers the stamp when present; falls back to runtime git exec when absent. bin/commands/version.cjs adds src_hash + built_at to the pretty output. lib/build-stamp.generated.cjs gitignored. Verified: v1.35.0+7b0803ea exe reports src_hash=d1df93f412b83552.</resolution>
     </task>
+  </phase>
+
+  <phase id="67">
+    <task id="67-01" type="code" status="planned">
+      <goal>Fix gad team commands to resolve the target .planning/team/ via --projectid (or the active session&apos;s projectid) rather than cwd. Currently &apos;gad team profile save/list/start --profile X&apos; look at &lt;cwd&gt;/.planning/team/profiles/ which breaks when cwd != project root. Edit bin/commands/team/*.cjs (profile.cjs, start.cjs, status.cjs, enqueue.cjs, dispatch.cjs) — each should accept --projectid, fall back to active session&apos;s projectid (sessionHelpers.getActiveSessionProjectId), fall back to cwd-based detection as last resort. Match pattern of gad phases/tasks which accept --projectid. Success: &apos;gad team profile save --projectid get-anything-done --name default --spec ...&apos; works from monorepo root; &apos;gad team start --projectid get-anything-done --profile default&apos; works from anywhere.</goal>
+    </task>
+    <task id="67-02" type="code" status="planned">
+      <goal>Wire &apos;gad tui&apos; as a real gad subcommand. Today gad-tui is a separate package @magicborn/gad-tui in packages/gad-tui/ with its own bin; user must know the pnpm command. (1) Build @magicborn/gad-tui via &apos;pnpm --filter @magicborn/gad-tui build:bun&apos; — produces packages/gad-tui/dist/gad-tui-windows.exe. (2) Teach scripts/build-bun-release.mjs to copy the gad-tui exe into dist/release/ next to gad.exe at build time. (3) gad self install copies BOTH gad.exe and gad-tui.exe to %LOCALAPPDATA%/Programs/gad/bin/. (4) Add bin/commands/tui.cjs that spawns the adjacent gad-tui exe (resolve via path.dirname(process.execPath)). (5) Works regardless of cwd. Verify: &apos;gad tui&apos; from any dir launches the TUI.</goal>
+      <depends>66-03</depends>
+    </task>
+  </phase>
+
+  <phase id="68">
+    <task id="68-01" type="cleanup" status="planned">
+      <goal>Rename apps/planning-app → apps/platform. Mechanical sweep. (1) git mv apps/planning-app apps/platform. (2) Update apps/platform/package.json name: @portfolio/planning-app → @portfolio/platform. (3) grep -rl &apos;@portfolio/planning-app&apos; across monorepo and replace with @portfolio/platform — touch apps/*, packages/*, vendor/*, root package.json, turbo/pnpm configs. (4) Update root package.json scripts gad:planning:* → gad:platform:* (OR keep old names as aliases for muscle memory — decide in-task). (5) Verify: pnpm install clean, pnpm --filter @portfolio/platform typecheck passes, pnpm --filter @portfolio/platform build passes if feasible without starting Next dev.</goal>
+    </task>
+    <task id="68-02" type="cleanup" status="planned">
+      <goal>Move apps/portfolio-v2 → apps/species/portfolio-v2. Operator directive: portfolio-v2 is a species being dogfooded (phase 50), not a top-level app. (1) mkdir apps/species if missing. (2) git mv apps/portfolio-v2 apps/species/portfolio-v2. (3) Update root pnpm-workspaces config to include apps/species/* if not already wildcarded. (4) grep -rl &apos;@portfolio/v2&apos; or &apos;apps/portfolio-v2&apos; across monorepo and fix paths/package refs. (5) Update root package.json scripts dev:portfolio-v2, build:portfolio-v2 to filter-pattern that still matches @portfolio/v2 (since package name stays the same, most things should just work). (6) Verify pnpm install clean + typecheck.</goal>
+    </task>
+    <task id="68-03" type="site" status="planned">
+      <goal>Copy vendor/get-anything-done/site/ marketing shell into apps/platform/app/(marketing)/ as the platform&apos;s public marketing surface. Operator decision this session (overrides gad-261): single Next app serves unauth marketing (landing, marketplace browse, articles) + authed operator surfaces (/project-editor, /my-published, /byok). (1) Copy landing home + hero + about + pricing (if exists) surfaces into apps/platform/app/(marketing)/*. (2) Reuse @portfolio/visual-context for SiteSection wrappers (already extracted in 53-11). (3) Middleware: marketing routes public, /platform/* authed. (4) Do NOT delete vendor/get-anything-done/site/ — it stays as the GAD framework&apos;s dev/landing site (different audience: framework contributors vs consumers).</goal>
+      <depends>68-01</depends>
+    </task>
+  </phase>
+
+  <phase id="69">
+    <task id="69-01" type="code" status="done" skill="supabase-schema" agent="claude-sonnet-4-6">
+      <goal>Write initial Supabase schema migrations under supabase/migrations/. Target project: dqsdfwcuhiiiztryrkwc (GAD). Tables: (1) users — Clerk-mirrored { clerk_user_id PK, email, display_name, created_at }. (2) projects — { id PK, owner_user_id FK, name, slug unique-per-owner, description, visibility enum(private/public/unlisted), created_at, updated_at }. (3) species — { id PK, project_id FK, name, slug, kind, dna_summary jsonb, created_at, updated_at }. (4) generations — { id PK, species_id FK, version_number, manifest jsonb, build_artifact_url, trace_url, review_score numeric(3,1), created_at }. (5) publishes — { id PK, generation_id FK, published_by_user_id FK, published_at, marketplace_status enum, scraped_metadata jsonb }. (6) assets — { id PK, project_id FK, species_id nullable FK, generation_id nullable FK, storage_path, bucket_name, mime_type, size_bytes, labels text[], created_at } — storage refs filled in phase 71. RLS: owner_user_id reads/writes own rows; public projects readable by anyone. Apply locally via &apos;pnpm supabase db push&apos; — operator confirms remote apply. Include seed data for a test project row so platform can render against real DB.</goal>
+    </task>
+  </phase>
+
+  <phase id="70">
+  </phase>
+
+  <phase id="71">
   </phase>
 </task-registry>
 
