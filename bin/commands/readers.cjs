@@ -119,7 +119,7 @@ function createBlockersCommand(deps) {
     args: {
       projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
       all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
-      status: { type: 'string', description: 'Filter by status: open|resolved|wont-fix', default: '' },
+      status: { type: 'string', description: 'Filter by status: open|resolved|wont-fix (defaults to open)', default: '' },
       json: { type: 'boolean', description: 'JSON output', default: false },
     },
     run({ args }) {
@@ -127,7 +127,7 @@ function createBlockersCommand(deps) {
       const config = gadConfig.load(baseDir);
       const roots = resolveRoots(args, baseDir, config.roots);
       if (roots.length === 0) return;
-      const filter = args.status ? { status: args.status } : {};
+      const filter = { status: args.status || 'open' };
 
       const rows = [];
       for (const root of roots) {

@@ -8,6 +8,7 @@
 const { defineCommand } = require('citty');
 const { resolveProjectRootById, resolveSingleTaskRoot, runTasksListView } = require('./tasks/shared.cjs');
 const { createTasksListCommand } = require('./tasks/list.cjs');
+const { createTasksShowCommand } = require('./tasks/show.cjs');
 const { createTasksClaimCommand } = require('./tasks/claim.cjs');
 const { createTasksReleaseCommand } = require('./tasks/release.cjs');
 const { createTasksActiveCommand } = require('./tasks/active.cjs');
@@ -29,6 +30,7 @@ function createTasksCommand(deps) {
     meta: { name: 'tasks', description: 'Show, claim, release, add, update, promote, and inspect tasks' },
     subCommands: {
       list: createTasksListCommand(commandDeps),
+      show: createTasksShowCommand(commandDeps),
       claim: createTasksClaimCommand(commandDeps),
       release: createTasksReleaseCommand(commandDeps),
       active: createTasksActiveCommand(commandDeps),

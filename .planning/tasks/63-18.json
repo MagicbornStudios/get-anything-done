@@ -1,0 +1,23 @@
+{
+  "id": "63-18",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Fix dispatch-infrastructure argv malformation on Windows when gad runs as bundled gad.exe sea binary. Root cause: process.execPath returns gad.exe under the sea-bundle install (%LOCALAPPDATA%/Programs/gad/bin/gad.exe) instead of node. Four spawn sites passed gad.exe + node-script-path to spawn(), causing the spawned process to re-enter gad's citty parser instead of executing as node ('Unknown command C:\\…\\<script>.mjs'). Sites: (1) lib/runtime-launch.cjs lines 22/28/34 — codex-trial.mjs, gemini-trial.mjs, opencode-trial.mjs (interactive runtime launch). (2) lib/team/spawn.cjs line 19 — bin/gad.cjs (worker). (3) bin/commands/team/dispatcher.cjs line 49 — bin/gad.cjs (dispatcher daemon). (4) lib/runtime-substrate-scripts.cjs line 44 — runtime substrate read-side scripts. Fix: new lib/node-exec.cjs::pickNodeExecutable() returns 'node' when path.basename(process.execPath) is 'gad.exe' or 'gad', else returns process.execPath. All four sites use the helper instead of process.execPath directly. Verified: gad.exe runtime launch --dry-run now emits 'node codex-trial.mjs' instead of 'gad.exe codex-trial.mjs'; gad team start --n 1 --runtime codex-cli now reaches IDLE with live PID; gad team dispatch routes handoffs into worker mailbox; w1 transitions to WORKING. Resolves entry gad-team-windows-detached-spawn-2026-04-21 (was OPEN, blocked task 05-08 in monorepo global registry). Constraint: assumes 'node' is on PATH where gad.exe was installed (almost always true since gad.exe install requires node-shaped CI). Lane: cross-lane (claude-code touched vendor runtime/spawn surface — operator-blessed because dispatch was self-blocking; couldn't go through Codex without a working dispatch path).",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-21T22:41:05.053Z",
+  "updated_at": "2026-04-21T22:41:05.053Z"
+}
