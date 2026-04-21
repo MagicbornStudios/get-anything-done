@@ -2308,8 +2308,9 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <depends>53-01</depends>
       <resolution>Rust probe_cli command uses `where` + `--version` with 3s tokio timeout. Frontend: src/types/probe.ts, src/hooks/useFirstRun.ts, src/components/FirstRunPanel.tsx. Panel renders above app shell when either CLI missing and not dismissed. localStorage first-run-dismissed flag. opener:allow-open-url added to capabilities. @tauri-apps/plugin-opener added as frontend dep. typecheck passes.</resolution>
     </task>
-    <task id="53-04" type="site" status="planned">
+    <task id="53-04" type="site" status="done" agent-id="opus-claude" agent-role="planning-orchestration" runtime="claude-code" resolved-model="claude-opus-4-7" skill="default">
       <goal>Bundled planning-app sidecar approach (D1 lean): Tauri spawns apps/planning-app Next production server as child process on ephemeral port, webview points at http://localhost:&lt;port&gt;. Shuts down child on app quit. Advantage: zero UI duplication, planning-app stays single source of truth (gad-269). Measure startup time; if &gt;3s, revisit.</goal>
+      <resolution>Superseded 2026-04-20. Operator clarified mid-session they wanted surface extraction, not a subprocess sidecar. The bundled-Next approach was dropped. Actual work landed across: 53-11 (@portfolio/visual-context), 53-12 (@portfolio/dashboard-surface), 53-13 (@portfolio/project-editor-surface), 53-14 (@portfolio/bestiary-surface), 53-15 (@portfolio/marketplace-surface), 53-16 (@portfolio/publish-surface), and 53-19 (full @gad-site runtime decouple so desktop can mount the surfaces). Single UI source shared between apps/platform (web) and apps/desktop (Tauri) via workspace packages, which is better than the sidecar idea that originally sat here.</resolution>
       <depends>53-01</depends>
     </task>
     <task id="53-05" type="site" status="done" skill="tauri-pty-terminal" agent="claude-sonnet-4-6" attribution="claude-code">
