@@ -148,6 +148,12 @@ function createTipCommand(deps) {
         outputError(`Generator script missing: ${path.relative(findRepoRoot(), scriptPath)}`);
         return;
       }
+      const { isPackagedExecutableRuntime } = require('../../lib/install-helpers.cjs');
+      if (isPackagedExecutableRuntime()) {
+        outputError('`gad tip generate` requires a Node interpreter; the packaged gad binary cannot spawn a .mjs script.');
+        outputError(`Run: node ${path.relative(findRepoRoot(), scriptPath)}`);
+        process.exit(1);
+      }
       const env = { ...process.env };
       if (args.date) env.TIP_DATE = args.date;
       if (args.force) env.TIP_FORCE = '1';
