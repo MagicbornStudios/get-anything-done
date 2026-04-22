@@ -2191,7 +2191,176 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
       <goal>GAD TUI workers liveness panel + subprocess watchdog. (1) packages/gad-tui add /workers route that tails log.jsonl per worker, computes liveness from mtime, displays badges [WRITING] [SILENT &gt;Ns] [WORKING] [IDLE] [DEAD]. Operator never needs to arm bash Monitor by hand. (2) lib/team/subprocess.cjs::runSubprocess add stderr-mtime watchdog — if no subproc activity &gt;300s and no child.exit, force-kill + logWrite work-failed reason=watchdog-timeout. Resolves silence-as-failure class (entries codex-worker-no-completion-marker, monitor-silence-not-failure, codex-hooks-hang-detached-worker).</goal>
     </task>
     <task id="63-23" type="framework" status="planned">
-      <goal>gad tui must NEVER be blocked from launching by a stale router lockfile. Repro 2026-04-22: gad tui exits with &apos;[router] lockfile exists at .gad/router-logs/.lock — pid=26520 is still running&apos; when PID 26520 is in fact NOT alive (process exited 5+ hours earlier; lockfile orphaned because previous tui crashed/killed without cleanup). Fix: in the router init code that reads .gad/router-logs/.lock, after parsing pid, probe with process.kill(pid, 0) (POSIX) or tasklist /FI &apos;PID eq &lt;pid&gt;&apos; (Windows) to verify liveness. If pid not running, log &apos;[router] stale lockfile (pid=X dead, age=Ns) — clearing&apos; and unlink + proceed. Operator-facing rule: gad tui is the operator&apos;s primary interactive surface; treat any block on launch as a P0 bug. Same lockfile-staleness pattern likely affects gad team dispatcher pid file (.planning/team/dispatcher.pid) — sweep all pid-file consumers in vendor for the same defensive probe.</goal>
+      <goal>Decision GLOBAL-D-05-02 reference: TUI is the operator&apos;s interactive coordinator (chat + dispatch + viewer + commands), not a viewer. It must NEVER refuse to start. Multi-instance allowed; if a router is already running for this workspace, attach + share state instead of competing.
+
+REPRO (2026-04-22): operator ran &apos;gad tui&apos;. Got: &apos;[router] lockfile exists at C:/Users/benja/Documents/custom_portfolio/.gad/router-logs/.lock — pid=26520 is still running.&apos; Verified PID 26520 NOT alive (tasklist empty). Lockfile timestamp 5h+ stale. Operator forced to manually &apos;rm .gad/router-logs/.lock&apos; to launch. ERRORS entry: gad-tui-stale-router-lockfile-blocks-launch-2026-04-22.
+
+ROOT CAUSE: TUI is currently bundled with router (start TUI → start router → singleton lock at .gad/router-logs/.lock). Two problems: (a) lockfile orphans when prior TUI crashes without cleanup, (b) operator can&apos;t peek at active workers while another TUI session is open (prevents the &apos;I just want to look while claude works&apos; flow).
+
+FIX SCOPE: split TUI from router. Three pieces:
+(1) Router becomes a standalone singleton process per workspace (or per-project — see 63-24). Lockfile still valid for router, but with eager liveness probe before refusing: parse pid from lockfile, probe via process.kill(pid, 0) on POSIX or &apos;tasklist /FI &quot;PID eq &lt;pid&gt;&quot;&apos; on Windows. If pid dead OR lockfile age &gt; N seconds AND pid dead, log &apos;[router] stale lockfile (pid=X dead, age=Ns) — clearing&apos; and unlink + proceed.
+(2) TUI becomes standalone — no lockfile of its own. On launch: probe for running router (read .gad/router-logs/.lock, check liveness). If running: ATTACH (tail router-logs, talk to router via IPC — named pipe / unix socket / shared file). If not running: spawn one as detached background process AND open TUI as separate viewer.
+(3) Files to inspect: packages/gad-tui/src/router.ts (lockfile logic at lines 18, 19, 54, 55, 256, 257, 356), packages/gad-tui/src/server/serve.ts, packages/gad-tui/src/server/TuiServer.ts.
+
+EDGE CASES:
+- Lockfile exists, pid alive, lockfile age &lt; 60s: another TUI just opened; attach.
+- Lockfile exists, pid alive, lockfile age &gt; some threshold: still attach (long-running TUI is normal — operator left it open).
+- Lockfile exists, pid dead, lockfile age any: clear + start fresh router + open TUI.
+- Lockfile missing: start fresh router + open TUI.
+- Multiple TUIs concurrently: all attach to the same router; each sees same state.
+- IPC failure (router alive but doesn&apos;t respond): timeout after Ns, log warning, fall back to read-only mode (TUI still opens, just can&apos;t dispatch).
+
+ACCEPTANCE: &apos;gad tui&apos; command never exits with a lockfile-related error. Two concurrent &apos;gad tui&apos; processes both render full state. Killing one doesn&apos;t affect the other. After all TUIs close, router stays running until explicit &apos;gad router stop&apos; or workspace close.
+
+PID-FILE SWEEP (separate audit): all vendor pid-file consumers (gad team dispatcher .planning/team/dispatcher.pid, possibly others) need the same eager-probe pattern. Grep for &apos;pidfile\|\.pid\|lockfile\|\.lock&apos; in vendor/get-anything-done/lib + bin to find them.
+
+REFERENCES:
+- ERRORS: gad-tui-stale-router-lockfile-blocks-launch-2026-04-22 (open, blocks this task)
+- DECISION: GLOBAL-D-05-02 — every project is a GAD project, TUI is the unified coordinator
+- MEMORY: project_phase_64_tui_orchestrator (TUI is operator&apos;s primary interactive surface)</goal>
+    </task>
+    <task id="63-24" type="framework" status="planned">
+      <goal>Decision GLOBAL-D-05-02 reference: every project is a GAD project. All per-project infrastructure scopes to the project&apos;s planning root — no exceptions, no cwd specialness.
+
+PROBLEM: today there are infrastructure files at the wrong scope:
+(1) .gad/router-logs/ at MONOREPO ROOT cwd, not per-project. Means project 1&apos;s router and project 2&apos;s router can&apos;t run concurrently — they fight over the same lockfile + log dir.
+(2) Possibly other pid-files / lockfiles / logs scoped to cwd instead of resolved projectid.
+(3) Confirmed working / per-project already: &lt;project&gt;/.planning/team/workers/, &lt;project&gt;/.planning/team/dispatcher.* — those scope correctly. The router is the asymmetry.
+
+ROOT CAUSE: packages/gad-tui/src/router.ts hardcodes &apos;process.cwd()&apos; for logDir + lockPath at lines 54-55, 256-257. Router doesn&apos;t know about projectid resolution. Whatever cwd the router was launched in becomes its scope.
+
+REPRO of the asymmetry it causes: ERRORS team-start-detached-spawn-projectid-global-fails-2026-04-22 — gad team start --projectid global from monorepo cwd silently kills detached worker, but --projectid get-anything-done from same cwd works. Symptom of cwd asymmetry.
+
+FIX SCOPE:
+(1) Audit every vendor file that reads/writes a pid-file, lockfile, or log dir. Search vendors for: &apos;pidfile&apos;, &apos;\.pid&apos;, &apos;lockfile&apos;, &apos;\.lock&apos;, &apos;router-logs&apos;, &apos;.gad/&apos;. Probable hits: packages/gad-tui/src/router.ts, vendor/get-anything-done/lib/team/dispatcher.cjs (already scoped via baseDir, verify), vendor/get-anything-done/lib/team/spawn.cjs.
+(2) For each, accept --projectid (or default to active session project). Resolve project&apos;s planning root via the same gadConfig.load + resolveRoots helpers vendor team commands use. Move all infra under &lt;project-root&gt;/.gad/ + &lt;project-root&gt;/.planning/.
+(3) Backwards compat: if old paths exist (.gad/router-logs/.lock at cwd), migrate or warn. After one release cycle, remove the cwd fallback.
+
+EDGE CASES:
+- Project with planning root = &apos;.&apos; (e.g. global) — .gad/ goes at monorepo root, same physical location as today, just resolved via projectid not cwd.
+- Project with planning root = &apos;vendor/X&apos; — .gad/ goes at &apos;vendor/X/.gad/&apos;, not monorepo root.
+- gad command run with NO --projectid + NO active session: error clearly (&apos;no projectid resolved — run gad startup --projectid X first&apos;), don&apos;t fall back to cwd.
+- Symlinked project paths: resolve symlinks consistently (fs.realpathSync) so two ways to reach the same project don&apos;t create two router instances.
+- Concurrent project routers: each holds its own .gad/router-logs/.lock at its own scope, no contention.
+
+ACCEPTANCE:
+- &apos;gad team start --projectid global&apos; from monorepo cwd works identically to &apos;gad team start --projectid get-anything-done&apos; from same cwd. No silent spawn death. Same liveness, same ergonomics.
+- Two routers running concurrently for two different projects, each with its own lockfile + logs, neither blocking the other.
+- &apos;find . -name .lock -o -name .pid -o -name &apos;*.pid&apos;&apos; shows no infra at the wrong scope.
+
+REFERENCES:
+- ERRORS: team-start-detached-spawn-projectid-global-fails-2026-04-22 (open, blocked by this)
+- DECISION: GLOBAL-D-05-02
+- DEPENDS: 63-23 (TUI never refuses launch — must land first so per-project routers don&apos;t get blocked by stale per-project lockfiles)</goal>
+      <depends>63-23</depends>
+    </task>
+    <task id="63-25" type="framework" status="planned">
+      <goal>Decision GLOBAL-D-05-02 reference: TUI is the unified interactive coordinator across all projects in a workspace. Operator can have project A&apos;s fleet AND project B&apos;s fleet running concurrently and view/control both from one TUI.
+
+PROBLEM TODAY: TUI is single-project at best. No way to see &apos;global has 1 worker IDLE, get-anything-done has 3 workers WORKING, llm-from-scratch has fleet stopped&apos; all at once. Operator has to switch contexts mentally + run gad team status --projectid X for each project to know what&apos;s happening.
+
+USE CASE (operator&apos;s words): &apos;I want people to be able to use differing runtimes in the desktop app for differing projects. like if project 1 wanted a fleet and project 2 wanted a fleet, we would be able to work on both of them with differing fleets of workers at the same time.&apos; AND &apos;I just wanted it for monitoring when you are doing things behind the scenes yourself. I just want to have a look.&apos;
+
+FIX SCOPE: TUI gains a Workspace View as its top-level orientation:
+(1) On launch, TUI iterates gad-config.toml [[roots]] entries (workspace-scoped — see DECISION GLOBAL-D-05-02 answer A). For each project, render a row/card with: name + projectid + planning-root + router state (idle/running/no-fleet) + worker count by role + total mailbox depth + last activity timestamp.
+(2) Per-project controls inline: &apos;Start fleet&apos; (opens profile picker — default 1 worker, opt-in --profile loads N workers with roles), &apos;Stop fleet&apos;, &apos;Dispatch handoff&apos;, &apos;Open project detail view&apos; (drills into that project&apos;s full state).
+(3) Live updates via tailing log.jsonl files + status.json file watches (chokidar or fs.watch). No polling.
+(4) Worker roles visible: when a fleet uses --profile (loads N workers with lanes like &apos;ui&apos;, &apos;backend&apos;, &apos;reviewer&apos;), display each worker&apos;s role tag in the unified view.
+(5) Cross-project dispatch (advanced): operator can drag a handoff from project A&apos;s queue to project B&apos;s queue if it&apos;s mis-routed. Optional Phase 2.
+
+ARCHITECTURE NOTES:
+- Don&apos;t change the data model — projects, fleets, workers are already per-project. This is a presentation + control layer over existing primitives.
+- Build on the new TUI/router split from 63-23 + per-project scoping from 63-24. Both must land first (depends).
+- The fleet &apos;shape&apos; (1 vs N workers) is the existing worker_spec[]. Default --n=1, opt-in --profile loads the saved spec.
+
+EDGE CASES:
+- Project listed in gad-config.toml but planning root missing: render as &apos;unconfigured&apos;, let operator click &apos;gad startup&apos; inline.
+- Project&apos;s router not running: render &apos;no fleet&apos;. &apos;Start fleet&apos; button is the entry point.
+- Project&apos;s router running but no workers: render &apos;router idle, 0 workers&apos;. &apos;Start fleet&apos; adds workers.
+- Worker NOT_STARTED state &gt;60s old: show as warning (&apos;worker w1 stuck NOT_STARTED — likely spawn issue, see 63-21&apos;). Operator can &apos;Restart worker&apos;.
+- Worker WORKING but log.jsonl untouched &gt;300s: show as warning (&apos;worker w1 silent — codex may be hung, see 63-22&apos;). Operator can &apos;Force-kill worker&apos;.
+- Multiple TUIs open concurrently (per 63-23): all see same workspace view, all updates propagate.
+
+ACCEPTANCE:
+- &apos;gad tui&apos; launched in monorepo workspace shows global, get-anything-done, llm-from-scratch, magicborn, etc — every project from gad-config.toml [[roots]].
+- Each project&apos;s row/card shows live state without manual refresh.
+- Starting fleets in two different projects concurrently produces two non-conflicting fleets, both visible.
+- Operator can inspect any worker&apos;s logs without leaving the TUI.
+
+REFERENCES:
+- DECISION: GLOBAL-D-05-02
+- DEPENDS: 63-23 (TUI never refuses), 63-24 (per-project router scoping)
+- MEMORY: project_phase_64_tui_orchestrator (TUI is operator&apos;s primary interactive surface)
+- MEMORY: project_log_inference_liveness (no polling, watch logs for state)</goal>
+      <depends>63-23,63-24</depends>
+    </task>
+    <task id="63-26" type="framework" status="planned">
+      <goal>PROBLEM: gad-tui crashes during ctrl+n cycling with &apos;undefined is not an object (evaluating task.title.length)&apos; at gad-tui-windows.exe:34219.
+
+REPRO (operator 2026-04-22): launched gad tui, used ctrl+n to cycle panes, immediately crashed.
+
+OFFENDING CODE (from stack trace):
+  const title60 = task.title.length &gt; 60 ? task.title.slice(0, 57) + &apos;\u2026&apos; : task.title;
+
+ROOT CAUSE: no null-check on task.title. A task entry has title=undefined or task itself is undefined. Probable culprits:
+(1) Per-task JSON file written without title field (gad tasks add doesn&apos;t require title — only goal). Task display layer assumes title exists.
+(2) Task index (graph.json or similar) returning malformed entry — synthesis from XML/JSON merge has a hole.
+(3) ctrl+n iterates a list that includes a placeholder/sentinel without title.
+
+FIX SCOPE:
+(1) Defensive at the render site:
+  const title = task.title ?? task.goal?.split(&apos;\n&apos;)[0]?.slice(0, 80) ?? task.id ?? &apos;(untitled)&apos;;
+  const title60 = title.length &gt; 60 ? title.slice(0, 57) + &apos;\u2026&apos; : title;
+  Use goal first line as title fallback before id, since most tasks have a goal but not all have a title.
+(2) Find the source — grep packages/gad-tui/src for &apos;task.title&apos; references. Identify which read path produces the undefined-title task. Likely lib/team/task-loader or similar reading per-task JSONs.
+(3) Audit task writers (gad tasks add, gad tasks update, gad tasks promote) to confirm they all set title or have a default. Migration script for existing tasks: scan .planning/tasks/*.json, for any without title, derive from goal first line + write back.
+
+EDGE CASES:
+- Task object itself undefined (not just title): defensive prefix &apos;(task &amp;&amp; (task.title ?? …))&apos;.
+- Task.title is empty string &apos;&apos;: treat as missing, fall back to goal/id.
+- Task.title is a number / non-string: stringify first.
+- Tree mode (treeMode flag from stack trace) showing root nodes that aren&apos;t real tasks (synthetic group headers): these should have a title set by the tree-builder.
+
+ACCEPTANCE:
+- ctrl+n cycling never crashes.
+- All tasks render with SOME title (one of: title, goal first line, id, or &apos;(untitled)&apos;).
+- Task indexer warns when it loads a task without title (so we can fix the writer not the reader).
+
+REFERENCES:
+- ERRORS: gad-tui-ctrl-n-task-title-crash-2026-04-22 (will add this turn)
+- File: gad-tui bundle line 34219 (source: probably packages/gad-tui/src/components/tasks/ or similar)</goal>
+    </task>
+    <task id="63-27" type="framework" status="planned">
+      <goal>PROBLEM: gad-tui layout reflows dramatically + content jumbles when cycling panes via ctrl+n. Operator quote 2026-04-22: &apos;the UI also shifts dramatically when doing a ctrl+n and jumbles up. the actual transcript/header and etc space just isnt as wide as the status bar, the chat input and etc just need to be wider I think.&apos;
+
+REPRO: launch gad tui in any sufficiently-wide terminal. ctrl+n to cycle panes. Notice: status bar (full width) vs transcript/header/chat-input (narrower). Layout shifts on each pane switch instead of staying stable.
+
+ROOT CAUSE HYPOTHESES (verify in code):
+(1) Inner column widths use a stale/initial-mount terminal width vs a recomputed one. Width recomputed on resize event but not on pane switch.
+(2) Flex/grid template biased toward one child — sidebar or status pane stealing horizontal space from main column.
+(3) Different panes use different layout templates — switching to a &apos;narrow content&apos; pane shrinks the outer frame&apos;s child constraints.
+(4) Border / padding accounting wrong: status bar excludes padding, content includes (or vice versa) → off-by-N visible.
+
+FIX SCOPE:
+(1) Inspect packages/gad-tui/src/layout (or wherever the root layout lives — find via grep &apos;transcript\|chat-input\|status-bar&apos; in src).
+(2) Make the layout invariant: outer frame fixed to terminal width, status bar and main column share the same width, chat input fills main column width.
+(3) Recompute layout on pane switch (not just terminal resize). Or use a layout primitive (Ink Box with width=&apos;100%&apos;) that handles it.
+(4) Check that ctrl+n pane switch isn&apos;t unmounting + remounting the layout root (would re-init children with wrong sizes).
+
+EDGE CASES:
+- Terminal width changes during session: layout must reflow without jumble (existing behavior for resize).
+- Very narrow terminal (&lt;80 cols): collapse to single-column layout vs jumbling.
+- Pane with optional sidebar (e.g. fleet view): sidebar should overlay or split, not shift outer frame.
+- Tasks panel + chat panel different heights: don&apos;t let one steal the other&apos;s vertical space mid-cycle.
+
+ACCEPTANCE:
+- Status bar, header, transcript, chat input ALL at the same width as the outer terminal frame (modulo intentional padding).
+- ctrl+n cycling produces a stable layout — only the active-pane indicator changes, not the column widths.
+- Operator stops noticing layout jumble.
+
+REFERENCES:
+- ERRORS: gad-tui-ctrl-n-layout-shift-2026-04-22 (will add this turn)
+- Likely files: packages/gad-tui/src/components/, packages/gad-tui/src/layout/ (verify with grep)</goal>
     </task>
   </phase>
 

@@ -1,0 +1,25 @@
+{
+  "id": "63-24",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Decision GLOBAL-D-05-02 reference: every project is a GAD project. All per-project infrastructure scopes to the project's planning root — no exceptions, no cwd specialness.\n\nPROBLEM: today there are infrastructure files at the wrong scope:\n(1) .gad/router-logs/ at MONOREPO ROOT cwd, not per-project. Means project 1's router and project 2's router can't run concurrently — they fight over the same lockfile + log dir.\n(2) Possibly other pid-files / lockfiles / logs scoped to cwd instead of resolved projectid.\n(3) Confirmed working / per-project already: <project>/.planning/team/workers/, <project>/.planning/team/dispatcher.* — those scope correctly. The router is the asymmetry.\n\nROOT CAUSE: packages/gad-tui/src/router.ts hardcodes 'process.cwd()' for logDir + lockPath at lines 54-55, 256-257. Router doesn't know about projectid resolution. Whatever cwd the router was launched in becomes its scope.\n\nREPRO of the asymmetry it causes: ERRORS team-start-detached-spawn-projectid-global-fails-2026-04-22 — gad team start --projectid global from monorepo cwd silently kills detached worker, but --projectid get-anything-done from same cwd works. Symptom of cwd asymmetry.\n\nFIX SCOPE:\n(1) Audit every vendor file that reads/writes a pid-file, lockfile, or log dir. Search vendors for: 'pidfile', '\\.pid', 'lockfile', '\\.lock', 'router-logs', '.gad/'. Probable hits: packages/gad-tui/src/router.ts, vendor/get-anything-done/lib/team/dispatcher.cjs (already scoped via baseDir, verify), vendor/get-anything-done/lib/team/spawn.cjs.\n(2) For each, accept --projectid (or default to active session project). Resolve project's planning root via the same gadConfig.load + resolveRoots helpers vendor team commands use. Move all infra under <project-root>/.gad/ + <project-root>/.planning/.\n(3) Backwards compat: if old paths exist (.gad/router-logs/.lock at cwd), migrate or warn. After one release cycle, remove the cwd fallback.\n\nEDGE CASES:\n- Project with planning root = '.' (e.g. global) — .gad/ goes at monorepo root, same physical location as today, just resolved via projectid not cwd.\n- Project with planning root = 'vendor/X' — .gad/ goes at 'vendor/X/.gad/', not monorepo root.\n- gad command run with NO --projectid + NO active session: error clearly ('no projectid resolved — run gad startup --projectid X first'), don't fall back to cwd.\n- Symlinked project paths: resolve symlinks consistently (fs.realpathSync) so two ways to reach the same project don't create two router instances.\n- Concurrent project routers: each holds its own .gad/router-logs/.lock at its own scope, no contention.\n\nACCEPTANCE:\n- 'gad team start --projectid global' from monorepo cwd works identically to 'gad team start --projectid get-anything-done' from same cwd. No silent spawn death. Same liveness, same ergonomics.\n- Two routers running concurrently for two different projects, each with its own lockfile + logs, neither blocking the other.\n- 'find . -name .lock -o -name .pid -o -name '*.pid'' shows no infra at the wrong scope.\n\nREFERENCES:\n- ERRORS: team-start-detached-spawn-projectid-global-fails-2026-04-22 (open, blocked by this)\n- DECISION: GLOBAL-D-05-02\n- DEPENDS: 63-23 (TUI never refuses launch — must land first so per-project routers don't get blocked by stale per-project lockfiles)",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "63-23"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-22T16:02:19.506Z",
+  "updated_at": "2026-04-22T16:02:19.506Z"
+}

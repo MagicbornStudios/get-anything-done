@@ -1,0 +1,26 @@
+{
+  "id": "63-25",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Decision GLOBAL-D-05-02 reference: TUI is the unified interactive coordinator across all projects in a workspace. Operator can have project A's fleet AND project B's fleet running concurrently and view/control both from one TUI.\n\nPROBLEM TODAY: TUI is single-project at best. No way to see 'global has 1 worker IDLE, get-anything-done has 3 workers WORKING, llm-from-scratch has fleet stopped' all at once. Operator has to switch contexts mentally + run gad team status --projectid X for each project to know what's happening.\n\nUSE CASE (operator's words): 'I want people to be able to use differing runtimes in the desktop app for differing projects. like if project 1 wanted a fleet and project 2 wanted a fleet, we would be able to work on both of them with differing fleets of workers at the same time.' AND 'I just wanted it for monitoring when you are doing things behind the scenes yourself. I just want to have a look.'\n\nFIX SCOPE: TUI gains a Workspace View as its top-level orientation:\n(1) On launch, TUI iterates gad-config.toml [[roots]] entries (workspace-scoped — see DECISION GLOBAL-D-05-02 answer A). For each project, render a row/card with: name + projectid + planning-root + router state (idle/running/no-fleet) + worker count by role + total mailbox depth + last activity timestamp.\n(2) Per-project controls inline: 'Start fleet' (opens profile picker — default 1 worker, opt-in --profile loads N workers with roles), 'Stop fleet', 'Dispatch handoff', 'Open project detail view' (drills into that project's full state).\n(3) Live updates via tailing log.jsonl files + status.json file watches (chokidar or fs.watch). No polling.\n(4) Worker roles visible: when a fleet uses --profile (loads N workers with lanes like 'ui', 'backend', 'reviewer'), display each worker's role tag in the unified view.\n(5) Cross-project dispatch (advanced): operator can drag a handoff from project A's queue to project B's queue if it's mis-routed. Optional Phase 2.\n\nARCHITECTURE NOTES:\n- Don't change the data model — projects, fleets, workers are already per-project. This is a presentation + control layer over existing primitives.\n- Build on the new TUI/router split from 63-23 + per-project scoping from 63-24. Both must land first (depends).\n- The fleet 'shape' (1 vs N workers) is the existing worker_spec[]. Default --n=1, opt-in --profile loads the saved spec.\n\nEDGE CASES:\n- Project listed in gad-config.toml but planning root missing: render as 'unconfigured', let operator click 'gad startup' inline.\n- Project's router not running: render 'no fleet'. 'Start fleet' button is the entry point.\n- Project's router running but no workers: render 'router idle, 0 workers'. 'Start fleet' adds workers.\n- Worker NOT_STARTED state >60s old: show as warning ('worker w1 stuck NOT_STARTED — likely spawn issue, see 63-21'). Operator can 'Restart worker'.\n- Worker WORKING but log.jsonl untouched >300s: show as warning ('worker w1 silent — codex may be hung, see 63-22'). Operator can 'Force-kill worker'.\n- Multiple TUIs open concurrently (per 63-23): all see same workspace view, all updates propagate.\n\nACCEPTANCE:\n- 'gad tui' launched in monorepo workspace shows global, get-anything-done, llm-from-scratch, magicborn, etc — every project from gad-config.toml [[roots]].\n- Each project's row/card shows live state without manual refresh.\n- Starting fleets in two different projects concurrently produces two non-conflicting fleets, both visible.\n- Operator can inspect any worker's logs without leaving the TUI.\n\nREFERENCES:\n- DECISION: GLOBAL-D-05-02\n- DEPENDS: 63-23 (TUI never refuses), 63-24 (per-project router scoping)\n- MEMORY: project_phase_64_tui_orchestrator (TUI is operator's primary interactive surface)\n- MEMORY: project_log_inference_liveness (no polling, watch logs for state)",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "63-23",
+    "63-24"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-22T16:03:02.076Z",
+  "updated_at": "2026-04-22T16:03:02.076Z"
+}
