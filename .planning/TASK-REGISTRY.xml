@@ -2190,6 +2190,9 @@ STRENGTHENING 2026-04-19: .planning/graph.{json,html} are now gitignored — the
     <task id="63-22" type="framework" status="planned">
       <goal>GAD TUI workers liveness panel + subprocess watchdog. (1) packages/gad-tui add /workers route that tails log.jsonl per worker, computes liveness from mtime, displays badges [WRITING] [SILENT &gt;Ns] [WORKING] [IDLE] [DEAD]. Operator never needs to arm bash Monitor by hand. (2) lib/team/subprocess.cjs::runSubprocess add stderr-mtime watchdog — if no subproc activity &gt;300s and no child.exit, force-kill + logWrite work-failed reason=watchdog-timeout. Resolves silence-as-failure class (entries codex-worker-no-completion-marker, monitor-silence-not-failure, codex-hooks-hang-detached-worker).</goal>
     </task>
+    <task id="63-23" type="framework" status="planned">
+      <goal>gad tui must NEVER be blocked from launching by a stale router lockfile. Repro 2026-04-22: gad tui exits with &apos;[router] lockfile exists at .gad/router-logs/.lock — pid=26520 is still running&apos; when PID 26520 is in fact NOT alive (process exited 5+ hours earlier; lockfile orphaned because previous tui crashed/killed without cleanup). Fix: in the router init code that reads .gad/router-logs/.lock, after parsing pid, probe with process.kill(pid, 0) (POSIX) or tasklist /FI &apos;PID eq &lt;pid&gt;&apos; (Windows) to verify liveness. If pid not running, log &apos;[router] stale lockfile (pid=X dead, age=Ns) — clearing&apos; and unlink + proceed. Operator-facing rule: gad tui is the operator&apos;s primary interactive surface; treat any block on launch as a P0 bug. Same lockfile-staleness pattern likely affects gad team dispatcher pid file (.planning/team/dispatcher.pid) — sweep all pid-file consumers in vendor for the same defensive probe.</goal>
+    </task>
   </phase>
 
   <phase id="64">
