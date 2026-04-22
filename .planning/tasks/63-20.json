@@ -1,0 +1,23 @@
+{
+  "id": "63-20",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Drop AI-written heartbeat anti-pattern. lib/team/worker-loop.cjs writes last_heartbeat at top of each iteration via updateStatus() — wasted I/O AND misleading (tracks worker-loop cadence not codex liveness; loop blocks on codex's runSubprocess await for the whole task duration). Per memory project_log_inference_liveness: liveness inferred from log.jsonl mtime + last subproc-stderr ts. Fix: (a) drop last_heartbeat write from worker-loop, (b) gad team status HB(s) computes from log.jsonl mtime instead, (c) GAD TUI workers panel tails log.jsonl + status from there. Operator quote 2026-04-22: 'I didn't want the AI personally writing a heartbeat. that is inefficient. but honestly if you just launch a fleet and can see them interactively in the GAD TUI we should be monitoring via that.'",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-22T14:40:44.995Z",
+  "updated_at": "2026-04-22T14:40:44.995Z"
+}
