@@ -5,8 +5,8 @@ phase: 63
 task_id: narrative-soul-linter
 created_at: 2026-04-18T21:10:49.098Z
 created_by: unknown
-claimed_by: null
-claimed_at: null
+claimed_by: team-w2
+claimed_at: 2026-04-23T17:54:00.570Z
 completed_at: null
 priority: normal
 estimated_context: reasoning

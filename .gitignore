@@ -1,6 +1,13 @@
 node_modules/
 .DS_Store
 
+# Outer-monorepo workspace pollution — when the parent custom-portfolio
+# repo installs with pnpm from inside this submodule checkout, pnpm
+# materializes `@portfolio/*` workspace packages here. Not part of the
+# GAD framework; the canonical copy lives at the outer repo root.
+/packages/editor-core/
+/pnpm-workspace.yaml
+
 # Proto-skill workspace pollution — only the trimmed _skill-creator-output/
 # copy is committed; raw skill-creator-workspace/ trees can be very large.
 skills/proto-skills/*/skill-creator-workspace/
