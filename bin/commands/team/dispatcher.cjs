@@ -14,7 +14,7 @@ const { readConfig } = require('../../../lib/team/config.cjs');
 const { dispatcherPidPath, dispatcherLogPath, readPid, clearPid, pidAlive, runDaemon } = require('../../../lib/team/dispatcher.cjs');
 const { supervisorLog } = require('../../../lib/team/paths.cjs');
 const { appendJsonl } = require('../../../lib/team/io.cjs');
-const { pickNodeExecutable } = require('../../../lib/node-exec.cjs');
+const { pickNodeExecutable, resolveWorkerGadCli } = require('../../../lib/node-exec.cjs');
 
 function createDispatcherCommand(deps) {
   const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
@@ -48,7 +48,7 @@ function createDispatcherCommand(deps) {
       const gadBinary = path.resolve(__dirname, '..', '..', 'gad.cjs');
       const child = spawn(
         pickNodeExecutable(),
-        [gadBinary, 'team', 'dispatcher', 'run'],
+        [resolveWorkerGadCli(gadBinary, { cwd: baseDir }), 'team', 'dispatcher', 'run'],
         {
           cwd: baseDir,
           detached: true,
