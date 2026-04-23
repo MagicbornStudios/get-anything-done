@@ -1,0 +1,25 @@
+{
+  "id": "53-03",
+  "phase": "53",
+  "status": "done",
+  "goal": "First-run flow: on launch, detect claude CLI on PATH — if missing, show install prompt with one-click winget install Anthropic.Claude. Detect gad.exe on PATH — if missing, download latest from GitHub Releases into app data dir. Cache detection result per-session. Skippable via settings toggle.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "53-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "tauri-first-run",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.937Z",
+  "updated_at": "2026-04-23T00:48:01.937Z"
+}

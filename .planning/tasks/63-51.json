@@ -1,0 +1,23 @@
+{
+  "id": "63-51",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Rename /gad-update → /gad-framework-update AND add new /gad-cli-update. Current /gad-update only updates Surface 4 (skills/workflows/hooks in consumer runtime config dirs) but the name implies it updates Surface 1 (gad.exe binary on PATH). Confusion called out in install/update review 2026-04-22. Action: (1) rename skill dir vendor/get-anything-done/skills/gad-update/ → skills/gad-framework-update/ + workflow file, update frontmatter name, (2) author new skill skills/gad-cli-update/ that fetches newer gad.exe via gh release download + runs &apos;gad install self&apos; or &apos;install-gad-windows.ps1 -Artifact &lt;path&gt;&apos;, (3) add a &apos;gad update&apos; CLI dispatcher subcommand (not a skill, a real CLI verb in bin/commands/) that routes to either framework or cli update based on arg (&apos;gad update framework&apos; vs &apos;gad update cli&apos; vs &apos;gad update all&apos;), (4) update SessionStart hook gad-check-update.js to check both surfaces independently + report separately, (5) update CLAUDE.md + any cross-refs in other skills, (6) handle legacy /gad-update alias for backwards compat during transition period.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.835Z",
+  "updated_at": "2026-04-23T00:48:01.835Z"
+}

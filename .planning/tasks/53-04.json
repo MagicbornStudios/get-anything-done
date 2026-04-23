@@ -1,0 +1,25 @@
+{
+  "id": "53-04",
+  "phase": "53",
+  "status": "done",
+  "goal": "Bundled planning-app sidecar approach (D1 lean): Tauri spawns apps/planning-app Next production server as child process on ephemeral port, webview points at http://localhost:&lt;port&gt;. Shuts down child on app quit. Advantage: zero UI duplication, planning-app stays single source of truth (gad-269). Measure startup time; if &gt;3s, revisit.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "53-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "opus-claude",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-opus-4-7",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.940Z",
+  "updated_at": "2026-04-23T00:48:01.940Z"
+}

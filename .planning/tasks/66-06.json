@@ -1,0 +1,23 @@
+{
+  "id": "66-06",
+  "phase": "66",
+  "status": "done",
+  "goal": "Embed git SHA + src-hash stamp into built exe at build time. scripts/build-bun-release.mjs writes lib/build-stamp.generated.cjs with { sha, hash, builtAt } before running bun build --compile. bin/gad-version.cjs reads the stamp and exposes via &apos;gad version --verbose&apos;. Precommit hook (66-04) uses the stamp to decide staleness.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "opus-claude",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-opus-4-7",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.007Z",
+  "updated_at": "2026-04-23T00:48:02.007Z"
+}

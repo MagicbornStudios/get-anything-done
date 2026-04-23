@@ -1,0 +1,25 @@
+{
+  "id": "71-02",
+  "phase": "71",
+  "status": "done",
+  "goal": "Implement &apos;gad assets list&apos; against Supabase. Reads env (SUPABASE_URL + SERVICE_ROLE_KEY or ANON_KEY from .env / shell), constructs a @supabase/supabase-js server client, queries the assets table with optional --project / --species / --generation filters, renders columnar table via lib/table.cjs render helper. Handles empty results. Honors --json for machine-readable output. Does NOT implement upload/download/move/transfer — those stay as not-implemented placeholders from 71-01. Tests: mock supabase client, verify query shape + table output + --json path. Follow-up task for upload/download/move/transfer = 71-03.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "71-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "assets-list",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.056Z",
+  "updated_at": "2026-04-23T00:48:02.056Z"
+}

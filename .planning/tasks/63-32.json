@@ -1,0 +1,23 @@
+{
+  "id": "63-32",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Snapshot output: replace &apos;top 5 skills by relevance&apos; block with per-phase recommended skills. Today gad snapshot shows 5 equipped skills based on global relevance scoring. Operator 2026-04-22: &apos;maybe showing the list of available skills on snapshot would be good.&apos; Per-phase is more useful than global top-N because different phases pull different toolchains. Scope: (a) extend phase metadata to carry an optional &apos;recommended-skills&apos; list (editable via gad phase CLI), (b) snapshot reads the active phase&apos;s recommended-skills and shows those plus a 2-line &apos;available for this phase&apos; footer, (c) fallback to the current top-5 if no per-phase list is declared, (d) auto-detect logic: skills that appeared in the phase&apos;s task stamp-history count as recommended candidates. Cosmetic but load-bearing — snapshot is the orientation call, not a skill discovery call.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.768Z",
+  "updated_at": "2026-04-23T00:48:01.768Z"
+}

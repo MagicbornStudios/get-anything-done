@@ -1,0 +1,26 @@
+{
+  "id": "52-05",
+  "phase": "52",
+  "status": "planned",
+  "goal": "Unit tests for VirtualFileFolder adapter contract + expand/collapse state. vitest (match repo convention). Validates adapter interface stability before downstream consumers depend.",
+  "type": "test",
+  "keywords": "",
+  "depends": [
+    "52-02",
+    "52-03"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.925Z",
+  "updated_at": "2026-04-23T00:48:01.925Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "63-53",
+  "phase": "66",
+  "status": "done",
+  "goal": "Retire TASK-REGISTRY.xml as a source of truth; per-task JSON under .planning/tasks/&lt;id&gt;.json becomes the sole canonical. Operator 2026-04-22: &apos;i dont want to maintain 2 sources of tasks, so just single source of truths.&apos; Today per decision 2026-04-20 D3 the reader precedence is per-task JSON → XML → legacy STATE.md, with dual-write on all gad tasks add/update/stamp/promote calls. The XML is de facto legacy already. Action: (1) audit the codebase for any code that READS from TASK-REGISTRY.xml — reader&apos;s XML fallback, any subagent-prompt snippets, any skill workflow that greps the XML, (2) for each reader: either migrate to tasks-dir reader OR accept it as a derived-read (regen XML from JSON on-demand), (3) stop dual-writing XML: gad tasks add/update/stamp write ONLY to per-task JSON, (4) delete TASK-REGISTRY.xml files across all projects (global, get-anything-done, llm-from-scratch, etc.) once no reader needs them, (5) update vendor/get-anything-done/CLAUDE.md: remove &apos;TASK-REGISTRY.xml — single 2k-line file, edit one task block at a time&apos; (stale guidance), (6) gad tasks migrate command stays but becomes one-way import for foreign projects inheriting XML from an older GAD version. Coverage check: 547 XML entries + 519 JSON files in vendor — JSON is 95% caught up but not 100%; run gad tasks migrate --projectid get-anything-done --force before retiring XML to catch the delta.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.842Z",
+  "updated_at": "2026-04-23T01:07:15.941Z"
+}

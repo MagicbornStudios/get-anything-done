@@ -1,0 +1,23 @@
+{
+  "id": "63-54",
+  "phase": "66",
+  "status": "done",
+  "goal": "Update &apos;gad graph build&apos; help text to reflect post-D3 data sources. Today help says &apos;Generate graph.json + graph.html from .planning/ XML files&apos; but the underlying task-registry-reader.cjs prefers per-task JSON under .planning/tasks/&lt;id&gt;.json since decision 2026-04-20 D3 (task 63-11). Help text is stale. Action: (1) update the help string in bin/commands/graph.cjs (or wherever it&apos;s defined) to say &apos;from .planning/ files (per-task JSON + XML fallback + decisions + roadmap + state)&apos;, (2) grep other command help texts for stale &apos;XML&apos; / &apos;XML files&apos; references — phases, tasks, decisions, etc. likely have similar staleness, (3) add a line to vendor/get-anything-done/CLAUDE.md under data sources: &apos;Per-task JSON is canonical (D3). TASK-REGISTRY.xml is legacy fallback, slated for retirement per 63-53.&apos; Small but removes operator-facing confusion about what sources are current.",
+  "type": "docs",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.846Z",
+  "updated_at": "2026-04-23T01:07:19.161Z"
+}

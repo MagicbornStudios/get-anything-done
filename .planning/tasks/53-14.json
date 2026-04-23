@@ -1,0 +1,25 @@
+{
+  "id": "53-14",
+  "phase": "53",
+  "status": "done",
+  "goal": "Extract the bestiary UI from apps/platform/app/projects/edit/[id]/BestiaryTab.tsx into packages/bestiary-surface for cross-host reuse (apps/platform + apps/desktop).",
+  "type": "infra",
+  "keywords": "",
+  "depends": [
+    "53-13"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-4-6",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.970Z",
+  "updated_at": "2026-04-23T00:48:01.970Z"
+}

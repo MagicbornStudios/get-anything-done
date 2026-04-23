@@ -1,0 +1,23 @@
+{
+  "id": "63-38",
+  "phase": "42.5",
+  "status": "done",
+  "goal": "Rename gad-eval-spawn to align with gad-212 vocabulary refresh. Operator 2026-04-22: &apos;no idea what orchestration you are talking about. but we can rename.&apos; Clarification: gad-eval-spawn is NOT a pure CLI wrapper — it performs 9-step orchestration (parse args, run &apos;gad eval run --execute&apos; to get EXEC.json, refuse-if-duplicate, create git worktree, write .planning/.eval-runs/&lt;id&gt;.json session marker, spawn general-purpose subagent with isolation=worktree + prompt from EXEC.json, on completion run &apos;gad eval preserve&apos;, clean worktree, report status). The subagent dispatch + worktree isolation + session marker + cleanup IS the orchestration — CLI is called mid-flow, not around it. Action: rename skill + workflow + frontmatter from gad-eval-spawn → gad-generation-spawn (matches decision gad-219 &apos;gad generation spawn&apos; CLI verb). Update body to use species/generation vocabulary throughout. Keep the orchestration intact — it&apos;s the canonical plan/build seam per decision forge-09.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.788Z",
+  "updated_at": "2026-04-23T00:50:27.094Z"
+}

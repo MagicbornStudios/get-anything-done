@@ -1,0 +1,23 @@
+{
+  "id": "53-11",
+  "phase": "53",
+  "status": "done",
+  "goal": "Extract Visual Context System primitives into packages/visual-context and apply to apps/desktop shell. Three outputs in one task. (1) Move apps/planning-app/components/site/SiteSection.tsx + siblings into new @portfolio/visual-context package. (2) Refactor apps/planning-app to import from @portfolio/visual-context. (3) Wrap apps/desktop App.tsx with VisualContextProvider + SiteSection + CrudModalFooter.",
+  "type": "site",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-4-6",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "scaffold-visual-context-surface",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.963Z",
+  "updated_at": "2026-04-23T00:48:01.963Z"
+}

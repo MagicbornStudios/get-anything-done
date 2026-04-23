@@ -1,0 +1,25 @@
+{
+  "id": "53-09",
+  "phase": "53",
+  "status": "done",
+  "goal": "GitHub Actions workflow building unsigned MSI on tag push. Workflow: checkout → install bun + rust → &apos;bun tauri build --target x86_64-pc-windows-msvc&apos; → attach MSI to GitHub Release. Authenticode signing deferred to HUMAN-TODO (cert procurement).",
+  "type": "ops",
+  "keywords": "",
+  "depends": [
+    "53-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-4-6",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "ci-workflow",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.954Z",
+  "updated_at": "2026-04-23T00:48:01.954Z"
+}

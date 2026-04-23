@@ -1,0 +1,23 @@
+{
+  "id": "63-42",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Investigate why GSD dropped Claude marketplace plugin support between changelog entry 2026-01-06 (&apos;Claude Code marketplace plugin support&apos;) and 1.35.0 source tree (manifest no longer present). Unknown abandonment reason; superpowers successfully ships on marketplace so the mechanism works. Possible causes: (a) review rejected by Anthropic, (b) submission process friction, (c) plugin conflicts with existing install.js copy-install, (d) maintenance burden of dual-distribution, (e) marketplace policy change. Action: (1) git log + git show on the GSD repo to find the add + remove commits, (2) read commit messages + any linked issues, (3) check if the removed plugin.json + marketplace.json still exist in history, (4) document findings in .planning/notes/2026-04-22-gsd-marketplace-abandonment.md. If the cause is (a) or (e), we need to know before attempting the same path. If (b)-(d), we can proceed differently.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.801Z",
+  "updated_at": "2026-04-23T00:48:01.801Z"
+}

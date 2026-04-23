@@ -1,0 +1,25 @@
+{
+  "id": "52-02",
+  "phase": "52",
+  "status": "done",
+  "goal": "Design VirtualFileFolder primitive per decision gad-254. Interface: DataSourceAdapter { listChildren(path): Entry[]; readFile(path): string; stat(path): Stat }. Component accepts adapter prop, renders tree view with expand/collapse, file-click callback. Read-only per gad-246. TypeScript interfaces exported.",
+  "type": "feature",
+  "keywords": "",
+  "depends": [
+    "52-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.915Z",
+  "updated_at": "2026-04-23T00:48:01.915Z"
+}

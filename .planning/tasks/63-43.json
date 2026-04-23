@@ -1,0 +1,23 @@
+{
+  "id": "63-43",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Stand up the GitHub Releases distribution pipeline per decision gad-188 #1 (&apos;NO npm publishing ever — we ship from GitHub releases of github.com/MagicbornStudios/get-anything-done&apos;). GAD is PRIVATE code not intended for public npm. Operator has corrected this 20+ times. Overlaps with task 44-38 (44-28.B5) which rewrites /gad-update from &apos;npm view/install&apos; to &apos;gh release download &lt;tag&gt; + tarball unpack + bin/install.js&apos;. Current build pipeline: scripts/build-bun-release.mjs uses bun build --compile (supersedes decision gad-138&apos;s Node SEA approach — gad-138 is stale, needs new decision). Ships gad.exe + gad-tui.exe. Scope: (1) confirm gh release pipeline exists — gad-v1.32.0-windows-x64.exe was built per gad-188 impact note &apos;3 days stale and has never been published anywhere&apos;, so the publish step itself may be missing, (2) author local operator-triggered release script (scripts/release.mjs) that version-bumps + runs build-bun-release + gh release create + uploads artifacts, (3) rewrite gad-update workflow to pull from GitHub Releases API via gh CLI (tarball OR bun-compiled binary), (4) document install path: curl/wget from release URL OR gh release download + unpack + run bin/install.js, (5) PRIVATE alternatives evaluated + documented: GitHub Packages scoped @magicbornstudios/get-anything-done, private npm registry, direct tarball hosting — pick secondary channel if plugin-capable runtime requires npm-installable, (6) validate end-to-end on a clean machine. Prerequisite for 63-28 plugin manifests (Claude marketplace accepts git-hosted or tarball, not just npm).",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.804Z",
+  "updated_at": "2026-04-23T00:48:01.804Z"
+}

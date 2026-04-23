@@ -2,9 +2,9 @@
   "id": "44-26",
   "phase": "44",
   "status": "done",
-  "goal": "New proto-skill: generic cross-config domain-change pattern for GAD projects. Replaces the discarded phase-43-eval-vocabulary draft which was too specific to the submodule and baked in paths like apps/public/evals. Single skill entrypoint with TWO workflows selected by project config: (A) monorepo-wide rename (walks all [[planning.roots]] and [[evals.roots]] in gad-config.toml, coordinates across the union), and (B) single-project rename (scoped to one .planning/ root). Both workflows must read the project config first (`gad projects audit` or equivalent) and surface a quick config-status readout before starting. The skill must also formalize \"evals\" vocabulary into something more generic — user explicitly flagged they want the eval vocabulary itself renormalized. Deliverables: proto-skill at .planning/proto-skills/gad-cross-config-domain-change/ with both workflows, references section citing gad-config.toml shape, pre-flight config audit, git-mv-through-temp pattern, planning-doc migration, and translation-note decision template.",
-  "type": "skill",
-  "keywords": "domain-change,rename,monorepo,single-project,config-aware,proto-skill,eval-vocabulary",
+  "goal": "Document the real speech-driven visual editing workflow as a reusable methodology: loose UPDATE/DELETE prompts, landmark-first targeting (`cid` as source of truth), cleanup boundaries, and the Mermaid-leak incident as a concrete failure mode for cross-route renderer side effects.",
+  "type": "docs",
+  "keywords": "human-workflow,speech-input,landmarks,cleanup-policy,mermaid,error-log",
   "depends": [],
   "commands": [],
   "files": [],
@@ -13,11 +13,11 @@
   "runtime": "",
   "model_profile": "",
   "resolved_model": "",
-  "skill": "create-proto-skill",
+  "skill": "create-skill",
   "claimed": false,
   "claimed_at": "",
   "lease_expires_at": "",
   "resolution": "",
-  "created_at": "2026-04-20T03:05:19.092Z",
-  "updated_at": "2026-04-20T03:05:19.092Z"
+  "created_at": "2026-04-23T00:48:01.448Z",
+  "updated_at": "2026-04-23T00:48:01.448Z"
 }

@@ -1,0 +1,23 @@
+{
+  "id": "63-37",
+  "phase": "42.5",
+  "status": "planned",
+  "goal": "gad-milestone umbrella skill — keep as --audit/--close/--new/--plan-gaps/--summary dispatcher. 238-line workflow has methodology the three sub-skills (gad-audit-milestone, gad-complete-milestone, gad-new-milestone) may or may not carry in full. Action: (1) audit the umbrella workflow against the 3 (now 4 after 63-35 fold, potentially 5 if gad-plan-milestone-gaps + gad-milestone-summary fold in as subverbs) to identify unique methodology, (2) either port unique methodology into the real skills and make the umbrella a thin router, OR keep the umbrella as canonical and have sub-skills be views of it, (3) document the decision in gad-milestone SKILL.md body as &apos;routes to: --new/--complete/--audit/--plan-gaps/--summary&apos;. Operator confirmed &apos;do recommended&apos; 2026-04-22.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.785Z",
+  "updated_at": "2026-04-23T00:48:01.785Z"
+}

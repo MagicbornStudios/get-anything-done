@@ -1,0 +1,23 @@
+{
+  "id": "66-01",
+  "phase": "66",
+  "status": "done",
+  "goal": "Fix bin/commands/_loader.cjs for bundled-exe context: add scripts/build-manifest.mjs that enumerates bin/commands/*.cjs at build time and writes bin/commands/_manifest.cjs with explicit requires for each command module. Update _loader.cjs to import from _manifest when present (bundled case), fall back to readdirSync when _manifest absent (dev case). Wire the manifest generator into scripts/build-bun-release.mjs as a pre-bundle step. Success: npm run build:release produces a gad.exe where &apos;gad team --help&apos; lists all team subcommands and no &apos;Cannot find package citty&apos; errors fire.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "opus-claude",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-opus-4-7",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.991Z",
+  "updated_at": "2026-04-23T00:48:01.991Z"
+}

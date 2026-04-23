@@ -1,0 +1,25 @@
+{
+  "id": "53-17",
+  "phase": "53",
+  "status": "done",
+  "goal": "Fix apps/desktop/src-tauri/icons/icon.ico format issue that blocks &apos;tauri build&apos; / &apos;cargo check&apos;. The 53-01 scaffold dropped a placeholder icon.ico whose DIB format causes tauri-winres + RC.EXE to panic. Regenerate the icon: either (a) use the Tauri CLI &apos;pnpm tauri icon &lt;source.png&gt;&apos; which generates all platform-appropriate icon sizes from a PNG source, or (b) hand-convert a properly-formatted .ico via ImageMagick / online tool. Source: any 512x512+ PNG — pick a simple black-and-gold GAD mark if no brand asset is available, or leave a README.md placeholder pointing at where to drop the real brand asset. Success: &apos;cd apps/desktop/src-tauri &amp;&amp; cargo check&apos; passes. Do NOT actually run &apos;cargo build&apos; or &apos;tauri build&apos; — check is enough.",
+  "type": "infra",
+  "keywords": "",
+  "depends": [
+    "53-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.980Z",
+  "updated_at": "2026-04-23T00:48:01.980Z"
+}

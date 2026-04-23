@@ -1,0 +1,23 @@
+{
+  "id": "63-46",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Clean review + documentation of install/update mechanisms across four distinct surfaces: (1) GAD CLI binary gad.exe, (2) GAD TUI binary gad-tui.exe, (3) Desktop app apps/desktop (Tauri bundle), (4) Framework distribution (skills/workflows/hooks into consumer runtimes via bin/install.js). Operator 2026-04-22: &apos;you must review all the install and update for gad cli/tui, desktop, the framework itself I guess, you are too confused.&apos; Subagent dispatched to produce .planning/notes/2026-04-22-install-update-review.md covering per-surface: what it is, source location, build command, build artifact, install mechanism, install failure modes, update mechanism, update failure modes, open tasks affecting it, open decisions affecting it, overlaps + confusion risks. Plus synthesis: where overlaps are real (e.g. TUI ships in gad release), where separations are clean, where state is inconsistent (stale docs referencing SEA post-gad-278 bun migration), recommended cleanup order. Not an execution task — it&apos;s the source-of-truth map that unblocks 63-28 (plugin manifests), 63-43 (GitHub Releases pipeline), 63-44 (install.js refactor), 63-23/26/27 (TUI bugs), 05-12/13/14 (desktop bugs) without continuing to conflate them.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.815Z",
+  "updated_at": "2026-04-23T00:48:01.815Z"
+}

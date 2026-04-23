@@ -1,0 +1,23 @@
+{
+  "id": "63-49",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Collapse gad (CLI+TUI as one surface) install paths to ONE canonical — no fallback. Operator 2026-04-22: &apos;we should never get confused about our install paths and how our users are and what paths should be needed.&apos; Today three compete: (a) install-gad-windows.ps1 -Artifact &lt;path-to-gad-vX.exe&gt;, (b) &apos;gad install self [--dir &lt;path&gt;]&apos; from packaged binary, (c) &apos;gad self build &amp;&amp; gad self install&apos; local-dogfood. Different cwd/deps/failure shapes + no Mac/Linux. Action: (1) pick ONE canonical path — propose install-gad-windows.ps1 for Windows + install-gad-unix.sh for macOS/Linux (both downloaded from GitHub Release alongside the binary), (2) retire the other two paths — &apos;gad install self&apos; becomes internal-only (used by the PS1 script after download), &apos;gad self install&apos; deleted or relabeled as dev-only with clear doc string, (3) install script ALWAYS installs both gad.exe and gad-tui.exe together (per 63-50 — they are one product), errors if either is missing from the downloaded artifact, (4) single canonical doc in CLAUDE.md: &apos;Install GAD: download from GitHub Release, run install-gad-&lt;platform&gt;.&lt;ext&gt;.&apos; One path, one command, one install location. Deletes 2 code paths.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.827Z",
+  "updated_at": "2026-04-23T00:48:01.827Z"
+}

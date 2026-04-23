@@ -1,0 +1,25 @@
+{
+  "id": "66-02",
+  "phase": "66",
+  "status": "done",
+  "goal": "Remove dogfood-refresh from bin/commands/startup.cjs — delete resolveStartupFrameworkRoot, shouldDelegateStartupToTemporaryExecutable, delegateStartupToTemporaryExecutable, resolveStartupReleaseArtifactPath, runStartupSelfRefresh, runDogfoodSelfRefreshOrExit. Keep only the snapshot-invocation path. Startup becomes read-only + session-creation. Any tests that expect the refresh behavior get updated or deleted.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [
+    "66-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-4-6",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.994Z",
+  "updated_at": "2026-04-23T00:48:01.994Z"
+}

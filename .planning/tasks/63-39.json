@@ -1,0 +1,23 @@
+{
+  "id": "63-39",
+  "phase": "42.5",
+  "status": "done",
+  "goal": "Delete gad-pause-work + gad-resume-work skills; fold HANDOFF.json resumption logic into gad-handoffs. Operator 2026-04-22: &apos;yeah those can just be part of handoffs.&apos; gad-pause-work already self-describes as &apos;thin wrapper around gad-handoffs&apos;; gad-resume-work delegates to resume-project.md (326 lines) which has substantive HANDOFF.json parsing + incomplete-plan detection + interrupted-agent resumption + STATE.md reconstruction from artifacts + 5 next-action routes. Action: (1) audit resume-project.md for logic not already in gad-handoffs (HANDOFF.json parse, STATE reconstruction from artifacts, next-action route decision, incomplete-plan detect), (2) port missing pieces into gad-handoffs (new sub-verbs as needed: &apos;gad handoffs resume &lt;id&gt;&apos;, &apos;gad handoffs reconstruct-state&apos;, or integrate into existing claim/claim-next), (3) strip .continue-here.md references (retired pattern), (4) delete vendor/get-anything-done/skills/{gad-pause-work,gad-resume-work}/ + workflows/{pause-work.md,resume-work.md,resume-project.md}, (5) grep repo for references + update.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.791Z",
+  "updated_at": "2026-04-23T00:50:27.603Z"
+}

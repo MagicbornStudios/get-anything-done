@@ -1,0 +1,25 @@
+{
+  "id": "66-03",
+  "phase": "66",
+  "status": "planned",
+  "goal": "Consolidate gad self subcommands to exactly &apos;gad self build&apos; and &apos;gad self install&apos;. Remove &apos;gad self refresh&apos;. Build = node scripts/build-bun-release.mjs (Bun only, no SEA fallback). Install = copy dist/release/gad-v&lt;ver&gt;-&lt;platform&gt;-&lt;arch&gt;.exe to %LOCALAPPDATA%/Programs/gad/bin/gad.exe. On Windows lock, print clear error + exit 1 — no PS1 retry shim. Help text documents both verbs.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "66-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.998Z",
+  "updated_at": "2026-04-23T00:48:01.998Z"
+}

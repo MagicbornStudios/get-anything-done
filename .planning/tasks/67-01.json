@@ -1,0 +1,23 @@
+{
+  "id": "67-01",
+  "phase": "67",
+  "status": "done",
+  "goal": "Fix gad team commands to resolve the target .planning/team/ via --projectid (or the active session&apos;s projectid) rather than cwd. Currently &apos;gad team profile save/list/start --profile X&apos; look at &lt;cwd&gt;/.planning/team/profiles/ which breaks when cwd != project root. Edit bin/commands/team/*.cjs (profile.cjs, start.cjs, status.cjs, enqueue.cjs, dispatch.cjs) — each should accept --projectid, fall back to active session&apos;s projectid (sessionHelpers.getActiveSessionProjectId), fall back to cwd-based detection as last resort. Match pattern of gad phases/tasks which accept --projectid. Success: &apos;gad team profile save --projectid get-anything-done --name default --spec ...&apos; works from monorepo root; &apos;gad team start --projectid get-anything-done --profile default&apos; works from anywhere.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "code",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.014Z",
+  "updated_at": "2026-04-23T00:48:02.014Z"
+}

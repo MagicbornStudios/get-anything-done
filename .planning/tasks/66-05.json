@@ -1,0 +1,25 @@
+{
+  "id": "66-05",
+  "phase": "66",
+  "status": "done",
+  "goal": "Delete scripts/build-release.mjs (SEA pipeline), scripts/build-release-support.mjs if SEA-only, scripts/sea-bootstrap.cjs, and tests/release-deprecation.test.cjs. Remove SEA-related npm scripts (build:release:sea) from package.json. Update docs/release-guide.md and any prose that references SEA. Bun is the only pipeline going forward.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [
+    "66-03"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-4-6",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.004Z",
+  "updated_at": "2026-04-23T00:48:02.004Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "63-45",
+  "phase": "66",
+  "status": "done",
+  "goal": "Extend 'gad tasks update' with --type/--status/--depends/--append-goal/--phase flags. DONE 2026-04-22 as part of phase 66 CLI hygiene: update.cjs rewritten to JSON-only, all flags wired, help text shows full surface.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.811Z",
+  "updated_at": "2026-04-23T01:07:17.107Z"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "71-01",
+  "phase": "71",
+  "status": "done",
+  "goal": "Asset storage design + gad assets CLI scaffold. (1) Supabase Storage bucket layout: project-assets-&lt;project_id&gt; per-project bucket (RLS: owner RW + public read if project.visibility=public); shared-assets bucket for cross-project transfers (gated). Write a seed/migration SQL snippet that idempotently creates the bucket policies. (2) bin/commands/assets.cjs (new) with subcommands: list, upload, download, move (same project), transfer (cross project — copies storage object + writes new assets metadata row). (3) Design doc at vendor/get-anything-done/.planning/notes/2026-04-20-asset-storage-design.md covering naming conventions, URL resolution (public vs signed URLs), quota strategy, and the metadata-vs-storage consistency model. (4) Do NOT implement the CLI subcommand bodies in this task — placeholder handlers that print &apos;not implemented&apos; are fine. Just the design + scaffold. Actual implementation = 71-02.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "69-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "assets-scaffold",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.053Z",
+  "updated_at": "2026-04-23T00:48:02.053Z"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "52-03",
+  "phase": "52",
+  "status": "done",
+  "goal": "Implement LocalFileSystemAdapter using node:fs for desktop use. Also a Web-safe browser adapter for planning-app using fetch() against a dev-server endpoint. Two adapters, same DataSourceAdapter interface from 52-02.",
+  "type": "feature",
+  "keywords": "",
+  "depends": [
+    "52-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.919Z",
+  "updated_at": "2026-04-23T00:48:01.919Z"
+}

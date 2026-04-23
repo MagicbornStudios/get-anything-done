@@ -1,0 +1,25 @@
+{
+  "id": "53-06",
+  "phase": "53",
+  "status": "done",
+  "goal": "Sidenav: Dashboard / Projects / Bestiary / Publish / Settings. Each tab routes to planning-app URL (via bundled sidecar from 53-04) OR Tauri-native surface (publish wizard, settings). Keyboard navigation (Cmd+1..5). Icons via shared packages/icons or inline SVG.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "53-04"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.946Z",
+  "updated_at": "2026-04-23T00:48:01.946Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "63-33",
+  "phase": "42.5",
+  "status": "done",
+  "goal": "Re-verify skills audit COLLAPSE verdicts against workflow file content (not just SKILL.md body). The 2026-04-22 audit flagged 28 skills COLLAPSE based on thin SKILL.md bodies, but skills with AskUserQuestion in allowed-tools, workflow files &gt;100 lines, or artifact contracts in &lt;objective&gt; tags may be real structured skills whose body is thin per the canonical skill shape (decision gad-190). Known false positives already identified: gad-plant-seed (structured interactive capture with deferred consumption), gad-auto-conventions (codebase analysis → synthesis → write), gad-write-feature-doc (needs check). Scope: for each of the 28 COLLAPSE skills, (a) read its workflow file if referenced, (b) check allowed-tools for AskUserQuestion/Task/Write/Edit, (c) check for artifact contracts declared in objective or process tags, (d) reclassify as KEEP or confirm COLLAPSE. Output: .planning/notes/2026-04-22-skills-audit-reverify.md updating each verdict with evidence. Expected ~5-10 skills move from COLLAPSE back to KEEP. Also drop any proposed CLI additions that no longer make sense after reclassification.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.772Z",
+  "updated_at": "2026-04-23T00:50:13.354Z"
+}

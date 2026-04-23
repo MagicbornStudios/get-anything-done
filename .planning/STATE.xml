@@ -46,7 +46,7 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-20T01:00:41.981Z</last-updated>
+  <last-updated>2026-04-21T14:25:34.878Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
     <entry agent="unknown" at="2026-04-20T16:47:39.468Z" tags="66-01,cli-hygiene,loader,done">Phase 66-01 (loader manifest fix) shipped: scripts/build-manifest.mjs generates bin/commands/_manifest.cjs at build time, _loader.cjs prefers it + topologically sorts provides phase, evolution.dependsOn=[evolution-images] annotates the one cross-dep. Bun-compiled v1.35.0 exe now registers team + all 64 command modules. Installed. Subagent working 52-01 scaffold in parallel.</entry>

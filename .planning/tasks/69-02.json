@@ -1,0 +1,23 @@
+{
+  "id": "69-02",
+  "phase": "69",
+  "status": "done",
+  "goal": "Wire @supabase/supabase-js in apps/platform. Provide browser (createBrowserClient) and server (createServerClient, createServiceClient) factories under apps/platform/lib/supabase/. Thread Clerk JWT via getToken({ template: &apos;supabase&apos; }) so RLS sub claim matches clerk_user_id. Replace file-based marketplace-index read in /my-published with Supabase publishes query; short-circuit back to file read when NEXT_PUBLIC_SUPABASE_URL is missing. Scaffold .env.example. Document Clerk JWT template setup in apps/platform/docs/SUPABASE.md.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "supabase-clerk-integration",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.036Z",
+  "updated_at": "2026-04-23T00:48:02.036Z"
+}

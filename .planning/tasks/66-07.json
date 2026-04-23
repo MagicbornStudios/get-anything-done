@@ -1,0 +1,25 @@
+{
+  "id": "66-07",
+  "phase": "66",
+  "status": "done",
+  "goal": "Widen pre-commit staleness hash to include packages/gad-tui/src/**. Today scripts/lib/src-hash.mjs covers only vendor/get-anything-done/{bin,lib,scripts,package.json}. Result: edits to packages/gad-tui/src don&apos;t trigger rebuild+install during commits, and the operator has to manually run &apos;pnpm --filter @magicborn/gad-tui build:bun &amp;&amp; cp ...&apos;. Extend computeSrcHash() to ALSO include packages/gad-tui/src/**/*.{ts,tsx} + packages/gad-tui/package.json when running from the monorepo root. Guard: only include these paths if they exist (vendor-only installs without the monorepo skip the TUI part). Make sure the hash is computed over a stable ordering regardless of filesystem order. Verify by editing App.tsx, committing, confirming the pre-commit hook rebuilds both gad.exe AND gad-tui.exe.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "66-04"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "code",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.011Z",
+  "updated_at": "2026-04-23T00:48:02.011Z"
+}

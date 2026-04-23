@@ -477,5 +477,19 @@
     <depends>69</depends>
   </phase>
 
+  <phase id="42.5">
+    <title>Skills catalog hygiene close-out</title>
+    <goal>Close out the 2026-04-22 skills audit + re-verify + folds + renames + vocabulary refresh. Most work was executed this session via 3 parallel subagents (deletion, fold, rename+vocab). Remaining close-out: (1) fix 4 residual references to deleted slugs in reference files (gad-handoffs SKILL.md, references/project-shape.md, references/skill-shape.md, references/skill-types.md — all flagged in .planning/notes/2026-04-22-skill-deletion-report.md), (2) confirm cursor-skill-allowlist.txt budget post-deletion is under 63, (3) re-run validate-canonical-assets check, (4) stamp remaining audit-followup tasks done (63-29, 63-33, 63-34 all DONE this session), (5) update any CLAUDE.md or references that still mention retired skills. Goal: final canonical catalog 73 skills, zero dangling references, Claude visibility=open, Cursor gated with budget under 63.</goal>
+    <status>planned</status>
+    <depends>42.4</depends>
+  </phase>
+
+  <phase id="72">
+    <title>Distribution + install architecture</title>
+    <goal>Hybrid plugin manifest + copy-install distribution for GAD framework across 5 plugin-capable runtimes (Claude Code, Cursor, Gemini CLI, Codex, Opencode) and fallback copy-install for the rest (aider, continue, roo). Tasks: 63-28 (plugin manifests per superpowers pattern), 63-42 (GSD marketplace abandonment investigation), 63-43 (GitHub Releases pipeline per gad-188 — private distribution, no public npm), 63-44 (install.js 5687-line monolith refactor to one-file-one-concern modular layout), 63-48 (wire gad-tui.exe into release-binaries.yml CI), 63-49 (collapse Surface 1 install paths to ONE), 63-50 (unify gad.exe + gad-tui.exe into single binary — proven pattern per free-code/claude), 63-51 (rename /gad-update → /gad-framework-update + new /gad-cli-update), 63-52 (unify v* vs desktop-v* tag convention). Prerequisites: phase 66 (CLI hygiene + loader bundling) must land first so the build pipeline is clean. Driver: 2026-04-22 install/update review at .planning/notes/2026-04-22-install-update-review.md surfaced 3 confusion surfaces overloaded under 'install' term; 4-surface model collapsed to 3 (gad CLI+TUI, Desktop, Framework). Plugin manifests replace copy-per-runtime for marketplace-capable runtimes, halving copy surface.</goal>
+    <status>planned</status>
+    <depends>66</depends>
+  </phase>
+
 </roadmap>
 

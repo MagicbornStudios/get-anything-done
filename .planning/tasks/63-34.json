@@ -1,0 +1,23 @@
+{
+  "id": "63-34",
+  "phase": "42.5",
+  "status": "done",
+  "goal": "Deep review of tmp/superpowers/ (obra/superpowers) for runtime-agnostic plugin pattern. Cloned 2026-04-22 at tmp/superpowers/. Key artifacts to examine: (a) .claude-plugin/plugin.json + marketplace.json — Claude Code manifest shape, (b) .cursor-plugin/plugin.json — Cursor manifest shape, (c) gemini-extension.json + GEMINI.md — Gemini CLI extension pattern, (d) .opencode/plugins/superpowers.js — opencode plugin shape, (e) AGENTS.md — Codex convention, (f) hooks/hooks.json + hooks/hooks-cursor.json — per-runtime hook definition, (g) scripts/ — any install/sync tooling, (h) skills/ layout — how per-skill dirs are organized, what frontmatter pattern is used, which tools declare allowed-tools, (i) package.json — version strategy, (j) tests/ — what they test for runtime compatibility. Deliverable: .planning/notes/2026-04-22-superpowers-review.md with (1) per-runtime manifest template we can adapt, (2) skill-dir layout recommendations, (3) hook-definition pattern, (4) install flow per runtime, (5) what GAD would need to change to adopt this pattern, (6) gaps (things superpowers doesn&apos;t solve that GAD does — e.g., planning state, task registry, session handoffs). Feeds 63-28 (GAD as Claude Code plugin — now re-scoped to runtime-agnostic plugin).",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.775Z",
+  "updated_at": "2026-04-23T00:50:13.848Z"
+}

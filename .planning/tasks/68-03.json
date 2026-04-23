@@ -1,0 +1,25 @@
+{
+  "id": "68-03",
+  "phase": "68",
+  "status": "done",
+  "goal": "Copy vendor/get-anything-done/site/ marketing shell into apps/platform/app/(marketing)/ as the platform&apos;s public marketing surface. Operator decision this session (overrides gad-261): single Next app serves unauth marketing (landing, marketplace browse, articles) + authed operator surfaces (/project-editor, /my-published, /byok). (1) Copy landing home + hero + about + pricing (if exists) surfaces into apps/platform/app/(marketing)/*. (2) Reuse @portfolio/visual-context for SiteSection wrappers (already extracted in 53-11). (3) Middleware: marketing routes public, /platform/* authed. (4) Do NOT delete vendor/get-anything-done/site/ — it stays as the GAD framework&apos;s dev/landing site (different audience: framework contributors vs consumers).",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "68-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "code",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.029Z",
+  "updated_at": "2026-04-23T00:48:02.029Z"
+}

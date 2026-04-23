@@ -1,0 +1,23 @@
+{
+  "id": "52-01",
+  "phase": "52",
+  "status": "done",
+  "goal": "Scaffold packages/editor-core with package.json, tsconfig, src/index.ts exports. Peer deps on React 19. Turborepo workspace entry. Initial exports are placeholder components — 52-02 and 52-04 fill them in. Consumer smoke test: apps/planning-app imports from &apos;@repo/editor-core&apos; without error.",
+  "type": "feature",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "scaffold",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.911Z",
+  "updated_at": "2026-04-23T00:48:01.911Z"
+}

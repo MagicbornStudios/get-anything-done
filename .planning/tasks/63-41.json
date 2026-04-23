@@ -1,0 +1,23 @@
+{
+  "id": "63-41",
+  "phase": "42.5",
+  "status": "done",
+  "goal": "Delete gad-auto-conventions skill — redundant with gad-map-codebase. gad-auto-conventions produces a single .planning/CONVENTIONS.md via codebase pattern scan. gad-map-codebase produces 7 structured documents in .planning/codebase/ via 4 parallel subagents — CONVENTIONS.md is one of its outputs (Agent 3 quality focus). Operator 2026-04-22: &apos;sounds like map codebase to me.&apos; Correct: gad-auto-conventions is a subset of gad-map-codebase. Action: (1) confirm gad-map-codebase&apos;s CONVENTIONS.md output covers gad-auto-conventions&apos; intent (naming, structure, imports, state, components, types, tests), (2) add an optional --focus=conventions arg to gad-map-codebase that runs only the conventions mapper agent if operator wants the narrow output, (3) delete vendor/get-anything-done/skills/gad-auto-conventions/ + workflows/auto-conventions.md, (4) grep repo references + update.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.797Z",
+  "updated_at": "2026-04-23T00:50:28.570Z"
+}

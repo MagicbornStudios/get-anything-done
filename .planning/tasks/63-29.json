@@ -1,0 +1,23 @@
+{
+  "id": "63-29",
+  "phase": "42.5",
+  "status": "done",
+  "goal": "Skills audit — classify every skill in the catalog as (real skill / CLI wrapper / stale / duplicate) and collapse. Catalog size today: 92 canonical skills in vendor/get-anything-done/skills/ plus 283 paths across .claude/skills, .cursor/skills, .codex/skills, .agents/skills runtime mirrors. Operator 2026-04-22: &apos;I am guessing we havent done our skills audit, removing duplicates and reducing our runtime folders to just bare minimum.&apos; For each canonical SKILL.md classify: (a) REAL SKILL — structured multi-step workflow with allowed-tools, artifact contracts, subagent spawning, hook-relevant boundaries. Keep. (b) CLI WRAPPER — skill that only runs a gad subcommand and returns; no decisions, no substeps. Collapse into CLI or delete. (c) STALE — references deleted phases, replaced workflows, deprecated commands. Delete. (d) DUPLICATE — overlaps with another skill 80%+. Merge. Output: .planning/notes/2026-04-22-skills-audit.md with per-skill verdict + action + migration plan. Expect ~30-40% reduction. Feeds 63-28 (plugin content) and 63-30 (MCP tool server).",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.760Z",
+  "updated_at": "2026-04-23T00:50:08.897Z"
+}

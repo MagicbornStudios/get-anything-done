@@ -1,0 +1,26 @@
+{
+  "id": "53-18",
+  "phase": "53",
+  "status": "done",
+  "goal": "Fix pre-existing E0597 lifetime errors in apps/desktop/src-tauri/src/pty.rs. Discovered during task 53-17 icon fix and confirmed in 53-08 Clerk wiring — &apos;cargo check&apos; still fails on 2 lifetime errors after both unrelated fixes landed. Root cause likely: the PTY writer is taken+stored on the async task but the session map lock scope doesn&apos;t outlive the reader thread. Re-structure so writer/reader references have &apos;static-compatible lifetimes (Arc&lt;Mutex&lt;&gt;&gt; pattern). Success: &apos;cd apps/desktop/src-tauri &amp;&amp; cargo check&apos; exits 0. Unblocks &apos;cargo build&apos; / &apos;tauri build&apos; / CI (task 53-09). Do NOT refactor pty.rs behavior — fix lifetimes only, keep the four commands (pty_open/write/resize/close) identical.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "53-05",
+    "53-17"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.984Z",
+  "updated_at": "2026-04-23T00:48:01.984Z"
+}

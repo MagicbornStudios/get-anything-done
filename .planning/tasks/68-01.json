@@ -1,0 +1,23 @@
+{
+  "id": "68-01",
+  "phase": "68",
+  "status": "done",
+  "goal": "Rename apps/planning-app → apps/platform. Mechanical sweep. (1) git mv apps/planning-app apps/platform. (2) Update apps/platform/package.json name: @portfolio/planning-app → @portfolio/platform. (3) grep -rl &apos;@portfolio/planning-app&apos; across monorepo and replace with @portfolio/platform — touch apps/*, packages/*, vendor/*, root package.json, turbo/pnpm configs. (4) Update root package.json scripts gad:planning:* → gad:platform:* (OR keep old names as aliases for muscle memory — decide in-task). (5) Verify: pnpm install clean, pnpm --filter @portfolio/platform typecheck passes, pnpm --filter @portfolio/platform build passes if feasible without starting Next dev.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "code",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.021Z",
+  "updated_at": "2026-04-23T00:48:02.021Z"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "53-13",
+  "phase": "53",
+  "status": "done",
+  "goal": "Extract the project-editor UI from apps/platform/app/project-editor/[project]/page.tsx into packages/project-editor-surface so apps/desktop can mount the same surface via the shared package.",
+  "type": "infra",
+  "keywords": "",
+  "depends": [
+    "53-11",
+    "52-06"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-4-6",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.966Z",
+  "updated_at": "2026-04-23T00:48:01.966Z"
+}

@@ -1,0 +1,23 @@
+{
+  "id": "63-47",
+  "phase": "66",
+  "status": "done",
+  "goal": "Delete stale SEA + npx references across the repo — formal cleanup after gad-279 superseded gad-129 and gad-278 superseded gad-138. Explicit grep pre-flight: (1) grep -rn &apos;postject\\|experimental-sea\\|Node SEA\\|SEA\\b&apos; in bin/ scripts/ skills/ workflows/ references/ — list every hit, then remove or reword (SEA is retired, not &apos;deprecated escape hatch&apos;; build-bun-release.mjs writes this language into INSTALL.txt — fix the writer + any stale INSTALL.txt already shipped), (2) grep -rn &apos;npx get-anything-done\\|npm install get-anything-done\\|npm view get-anything-done\\|npx get-shit-done\\|get-shit-done-cc&apos; — remove or replace with &apos;gh release download&apos; per gad-188, (3) grep CLAUDE.md files for these patterns too, (4) vendor/get-anything-done/skills/gad-update/, skills/gad-reapply-patches/, skills/build-and-release-locally/ — known to have stale references, (5) check dist/release/INSTALL.txt if any shipped builds carry stale language. Single commit, no functional changes — doc hygiene only. Also verify: no remaining decisions cross-reference gad-129 or gad-138 as live direction; add superseded-by markers if missed.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.819Z",
+  "updated_at": "2026-04-23T01:07:18.152Z"
+}

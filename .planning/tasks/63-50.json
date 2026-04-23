@@ -1,0 +1,23 @@
+{
+  "id": "63-50",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Unify gad.exe + gad-tui.exe into a SINGLE binary with argv-based mode dispatch. Today the install dir at %LOCALAPPDATA%\\Programs\\gad\\bin\\ holds TWO separately-compiled bun binaries at ~115MB each (~230MB total, down to ~115MB after 2026-04-22 dupe deletion). Industry convention (claude, codex, gemini, opencode, free-code — all bun+TSX+React+Ink+single-binary-argv-dispatch) is ONE binary where &apos;gad&apos; (no args) enters interactive/TUI mode and &apos;gad &lt;subcommand&gt;&apos; runs non-interactive. PROVEN pattern — tmp/free-code/package.json bin &apos;claude&apos; -&gt; ./cli, entrypoint src/entrypoints/cli.tsx, bun build --compile via scripts/build.ts. Same tech stack as GAD. No spike needed. Action: (1) move packages/gad-tui/src/entry.tsx export to a default async function runTui(argv) that boots the Ink app, keep as workspace package for dev UX, (2) rewrite bin/commands/tui.cjs to require(&apos;@magicborn/gad-tui&apos;) + invoke runTui(rawArgs) — no spawnSync, no sibling .exe, (3) bin/gad.cjs: if no subcommand, route to &apos;tui&apos; subcommand — matches claude/codex convention where bare invocation = interactive, (4) scripts/build-bun-release.mjs drops the separate pnpm --filter @magicborn/gad-tui build:bun call + drops the TUI artifact copy step; single bun build --compile --target=bun-&lt;platform&gt; bin/gad.cjs produces the complete binary, (5) install script produces ONE gad.exe (per 63-49), (6) bin/commands/tui.cjs &apos;gad-tui is not installed&apos; error path deleted — impossible state, (7) legacy backward-compat: if require(&apos;@magicborn/gad-tui&apos;) throws, check for sibling gad-tui.exe and spawn (current behavior) for N releases, then drop. Effect: ~115MB saved per install, eliminates 2-artifact install problem, matches industry convention, supersedes 63-48 (TUI-in-CI becomes unnecessary once there&apos;s no separate TUI artifact).",
+  "type": "docs",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.831Z",
+  "updated_at": "2026-04-23T00:48:01.831Z"
+}

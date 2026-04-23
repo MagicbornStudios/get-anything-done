@@ -1,0 +1,25 @@
+{
+  "id": "70-02",
+  "phase": "70",
+  "status": "done",
+  "goal": "Deprecation stub on vendor /project-market route after task 70-01 moved marketplace to apps/platform. Replace the moved vendor/get-anything-done/site/app/project-market/page.tsx with a server-rendered deprecation message: &apos;The marketplace has moved to the platform app.&apos; + install/run CLI snippet (pnpm --filter @portfolio/platform dev) + a link to the new /marketplace URL. Match the pattern used by existing /planning and /projects deprecation stubs in the vendor site (decision gad-269). No component imports, just a single file.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "70-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "site-deprecation-stub",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.046Z",
+  "updated_at": "2026-04-23T00:48:02.046Z"
+}

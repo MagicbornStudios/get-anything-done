@@ -1,0 +1,23 @@
+{
+  "id": "63-52",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Unify release-tag convention between vendor repo (v*) and monorepo (desktop-v*). Today CLI + framework release on vendor repo v* tags triggering .github/workflows/release-binaries.yml; desktop releases on monorepo desktop-v* tags triggering .github/workflows/desktop-build.yml. Neither auto-triggers the other. Operator must push both tags for a &apos;complete&apos; release spanning both surfaces. Pick one: (a) cross-repo dispatch — vendor&apos;s v* tag fires a repository_dispatch to monorepo which kicks off desktop-build — single push suffices, (b) documented dual-push convention — each release needs both tags, operator explicitly cuts both, naming consistent (&apos;v1.36.0&apos; in vendor = &apos;desktop-v1.36.0&apos; in monorepo = same release), (c) version pinning — desktop embeds a gad-cli-version in tauri.conf.json, updating it requires a new desktop-v*. Action: (1) operator decide among a/b/c, (2) implement chosen path (cross-repo dispatch if (a), doc-only if (b), version-pin logic if (c)), (3) document the convention in root CLAUDE.md + vendor CLAUDE.md, (4) update release scripts to match. Blocks: clean release story for end users who want &apos;latest GAD.&apos;",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.839Z",
+  "updated_at": "2026-04-23T00:48:01.839Z"
+}

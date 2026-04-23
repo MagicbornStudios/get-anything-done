@@ -1,0 +1,23 @@
+{
+  "id": "63-40",
+  "phase": "42.5",
+  "status": "done",
+  "goal": "Vocabulary refresh pass on objective-eval-design + other skills per decision gad-212 (eval → species/generation). Concrete path for each affected skill: (1) read SKILL.md + referenced workflow, (2) identify every literal &apos;eval&apos; / &apos;evals/&apos; / &apos;/runs/&apos; / &apos;eval_mode&apos; / &apos;eval project&apos; reference, (3) substitute per context: &apos;eval&apos; as configuration/project-variant → &apos;species&apos;; &apos;eval&apos; as produced-artifact → &apos;generation&apos;; &apos;eval run&apos; command → &apos;gad generation spawn&apos; per gad-219; &apos;evals/&lt;project&gt;/&apos; path → &apos;species/&lt;project&gt;/&apos; (or per current canonical layout post-rename); &apos;eval_mode&apos; field → drop (dropped per decision 43-03); PRESERVE &apos;evaluation&apos; where academic methodology term (rubric/criteria); PRESERVE &apos;eval&apos; where it&apos;s part of a proper noun like &apos;cli-efficiency evals&apos; historical data, (4) update CLI references from &apos;gad eval X&apos; to &apos;gad species X&apos; / &apos;gad generation X&apos; per decision gad-219 command-vocabulary decision, (5) update filesystem path references, (6) commit per skill. Target skills (beyond the 6 gad-eval-* wrappers being deleted): objective-eval-design, self-eval, eval-skill-install. Deliverable: 3 skill bodies refreshed, commits per skill, cross-ref updated in related notes/decisions.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-opus",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.794Z",
+  "updated_at": "2026-04-23T00:50:28.087Z"
+}

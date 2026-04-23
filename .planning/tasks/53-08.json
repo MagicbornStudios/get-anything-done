@@ -1,0 +1,25 @@
+{
+  "id": "53-08",
+  "phase": "53",
+  "status": "done",
+  "goal": "Clerk auth integration in Tauri frontend per gad-271. Solo-operator fallback for local dev (signed out = operator-id &apos;local&apos;). Auth state syncs into sidecar env so gad publish CLI inherits GAD_OPERATOR_ID.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "53-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-sonnet-4-6",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.951Z",
+  "updated_at": "2026-04-23T00:48:01.951Z"
+}

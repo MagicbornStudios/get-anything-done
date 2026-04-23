@@ -1,0 +1,23 @@
+{
+  "id": "63-31",
+  "phase": "63",
+  "status": "planned",
+  "goal": "PostToolUse hook on Skill tool → auto-attribution via gad tasks stamp-skill. Operator 2026-04-22: &apos;if you have a tool called Skill() how come you have not been able to give good attribution via hooks for pretool or posttooluse to capture those skills and instead have made me rely on telling agents to manually attribute skills.&apos; Valid gap. Action: (a) add bin/commands/tasks.cjs subcommand &apos;gad tasks stamp-skill --from-hook&apos; that reads hook payload from stdin (Claude Code passes tool name + args) + active session id + current task id from .planning/sessions/&lt;id&gt;.json, then appends skill to the task&apos;s stamped-skills list, (b) document settings.json hook snippet registering PostToolUse on &apos;Skill&apos; → shell out to gad tasks stamp-skill --from-hook, (c) add a parallel for MCP tool calls pattern-matched on &apos;mcp__gad__*&apos; names, (d) test by invoking a skill and verifying registry reflects the attribution without agent intervention. Closes the manual-stamp loop.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.765Z",
+  "updated_at": "2026-04-23T00:48:01.765Z"
+}

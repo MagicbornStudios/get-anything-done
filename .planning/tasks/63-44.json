@@ -1,0 +1,23 @@
+{
+  "id": "63-44",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Refactor bin/install.js (5,687 lines) from monolith to strict &apos;one file = one concern&apos; modular architecture. Direct fork of GSD&apos;s install.js (6,667 lines); both projects treat this as their biggest maintenance liability. Operator 2026-04-22: &apos;i dont want a 6k install.js so that will need to be refactored to 1 file = one concern and high reusability and modularity to avoid agents stepping on each others toes.&apos; Modularity discipline: (1) each file has ONE concern and ONE public entry point, (2) files small enough that parallel agents can edit different files simultaneously without merge conflicts (target: &lt;300 lines per module, not &lt;500), (3) cross-module calls via explicit imports, no shared mutable state, no global state mutation, (4) per-runtime install LOGIC in bin/install/runtimes/&lt;runtime&gt;.cjs (one file per runtime: claude, cursor, codex, gemini, opencode, aider, continue, roo, + others), (5) CONVERTERS (tool-name translation, path rewriting, frontmatter mutation) in bin/install/converters/&lt;type&gt;.cjs (one file per converter concern — toolname, paths, frontmatter, etc.), (6) SHARED HELPERS in bin/install/lib/&lt;concern&gt;.cjs (fs-utils.cjs, diff.cjs, tarball.cjs — one file per util concern), (7) DISPATCH ladder in bin/install.js stays but shrinks to &lt;200 lines; only wires modules, doesn&apos;t implement, (8) per-runtime tests in tests/install/&lt;runtime&gt;.test.cjs — isolated from other runtimes&apos; changes, (9) per-converter tests in tests/install/converters/&lt;type&gt;.test.cjs. Rule: if a function touches more than one runtime OR more than one converter concern, split it. Parallel-agent safety check: two agents editing install/runtimes/claude.cjs and install/runtimes/cursor.cjs simultaneously should never conflict. Not a prerequisite for 63-28 but strongly recommended BEFORE 63-28 lands manifest-emit logic — adding new modes to the 5,687-line monolith guarantees toe-stepping.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.808Z",
+  "updated_at": "2026-04-23T00:48:01.808Z"
+}

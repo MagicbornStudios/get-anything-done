@@ -1,0 +1,23 @@
+{
+  "id": "70-01",
+  "phase": "70",
+  "status": "done",
+  "goal": "Move /project-market marketplace UI from vendor/get-anything-done/site/ to apps/platform/app/marketplace/. 12 files moved: page.tsx + 11 components/project-market/* → apps/platform/app/marketplace/ + apps/platform/components/marketplace/. Import rewrites: @/components/site → @gad-site/components/site, @/lib/eval-data → @gad-site/lib/eval-data, @/lib/project-config → @gad-site/lib/project-config, sibling @/components/project-market/* → @/components/marketplace/*, SiteSection → @portfolio/visual-context, cn → @/lib/cn. DevCatalogBanner dropped (vendor-site-specific dev API). AppShell nav: Marketplace entry added. PlayableTeaser CTA retargeted to http://localhost:3002/marketplace with TODO for NEXT_PUBLIC_PLATFORM_URL. Middleware: /marketplace is public by default (not in isProtected list). TASK-REGISTRY updated.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "planning-orchestration",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "claude-sonnet-4-6",
+  "skill": "code",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.042Z",
+  "updated_at": "2026-04-23T00:48:02.042Z"
+}

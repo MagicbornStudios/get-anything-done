@@ -1,0 +1,23 @@
+{
+  "id": "63-48",
+  "phase": "63",
+  "status": "planned",
+  "goal": "Wire gad-tui.exe into .github/workflows/release-binaries.yml CI pipeline. Today scripts/build-bun-release.mjs (local) inline-invokes &apos;pnpm --filter @magicborn/gad-tui build:bun&apos; but CI release workflow does not. Result: tag-push releases ship gad.exe without gad-tui.exe; users who install via gh release download get a broken &apos;gad tui&apos; command. Action: (1) read current .github/workflows/release-binaries.yml to understand matrix + build steps, (2) add gad-tui build step (pnpm --filter @magicborn/gad-tui build:bun with correct target per matrix platform), (3) upload gad-tui-v&lt;ver&gt;-&lt;platform&gt;.exe as release asset alongside gad-v&lt;ver&gt;-&lt;platform&gt;.exe, (4) test via workflow_dispatch with a real tag before relying on it, (5) update CLI&apos;s gad self install to reference the new artifact naming if needed. Fixes gap identified in install/update review 2026-04-22.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.823Z",
+  "updated_at": "2026-04-23T00:48:01.823Z"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "71-05",
+  "phase": "71",
+  "status": "done",
+  "goal": "Apply per-bucket RLS policies on storage.objects via a service-role script (can&apos;t ship via supabase db push migrations due to restricted role permissions — see HUMAN-TODO in 20260420120001_storage_buckets.sql). Deliver scripts/supabase-apply-storage-rls.mjs that (a) reads SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY from .env, (b) lists all existing project-assets-* buckets via the storage admin API, (c) for each bucket creates owner_rw policy (bucket_id match + auth.uid() in projects.owner_user_id) and public_read policy (bucket_id match + project.visibility=public), (d) creates shared_assets_public_read + shared_assets_authed_write on the shared-assets bucket. Idempotent — skip policy if exists. Include a dry-run flag. Operator runs this once after db push + whenever a new project+bucket pair is created. Document in apps/platform/docs/SUPABASE.md.",
+  "type": "ops",
+  "keywords": "",
+  "depends": [
+    "69-01",
+    "71-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "supabase-storage-rls",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.065Z",
+  "updated_at": "2026-04-23T00:48:02.065Z"
+}

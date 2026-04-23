@@ -1,0 +1,27 @@
+{
+  "id": "53-19",
+  "phase": "53",
+  "status": "done",
+  "goal": "Decouple @portfolio/marketplace-surface from hard @gad-site/lib/eval-data imports so the desktop app (Tauri) can mount ProjectMarket end-to-end. Task 53-06 discovered that use-project-market.ts + the *Band components still reach through to the vendor site&apos;s eval-data via alias, bypassing MarketplaceDataAdapter. Fix: route EVERY data read through the adapter prop. Keep FileIndexAdapter as the current web-side default; the SupabaseAdapter stub gets filled out (uses publishes join to projects/species/generations). Desktop uses an adapter backed by a gad CLI invoker (future: &apos;gad marketplace list --json&apos;). Result: MarketplaceRoute on desktop renders the full marketplace grid instead of the minimal list fallback.",
+  "type": "site",
+  "keywords": "",
+  "depends": [
+    "53-06",
+    "53-15",
+    "69-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "default",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:01.987Z",
+  "updated_at": "2026-04-23T00:48:01.987Z"
+}

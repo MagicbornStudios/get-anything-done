@@ -1,0 +1,23 @@
+{
+  "id": "69-01",
+  "phase": "69",
+  "status": "done",
+  "goal": "Write initial Supabase schema migrations under supabase/migrations/. Target project: dqsdfwcuhiiiztryrkwc (GAD). Tables: (1) users — Clerk-mirrored { clerk_user_id PK, email, display_name, created_at }. (2) projects — { id PK, owner_user_id FK, name, slug unique-per-owner, description, visibility enum(private/public/unlisted), created_at, updated_at }. (3) species — { id PK, project_id FK, name, slug, kind, dna_summary jsonb, created_at, updated_at }. (4) generations — { id PK, species_id FK, version_number, manifest jsonb, build_artifact_url, trace_url, review_score numeric(3,1), created_at }. (5) publishes — { id PK, generation_id FK, published_by_user_id FK, published_at, marketplace_status enum, scraped_metadata jsonb }. (6) assets — { id PK, project_id FK, species_id nullable FK, generation_id nullable FK, storage_path, bucket_name, mime_type, size_bytes, labels text[], created_at } — storage refs filled in phase 71. RLS: owner_user_id reads/writes own rows; public projects readable by anyone. Apply locally via &apos;pnpm supabase db push&apos; — operator confirms remote apply. Include seed data for a test project row so platform can render against real DB.",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "supabase-schema",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T00:48:02.032Z",
+  "updated_at": "2026-04-23T00:48:02.032Z"
+}
