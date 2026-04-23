@@ -1,6 +1,5 @@
 'use strict';
 
-const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
 
@@ -8,61 +7,80 @@ function createTasksUpdateCommand(deps) {
   return defineCommand({
     meta: {
       name: 'update',
-      description: 'Update task fields in TASK-REGISTRY.xml (currently supports --goal).',
+      description: 'Update task fields in .planning/tasks/<id>.json. Supports --goal / --append-goal / --type / --status / --depends / --phase.',
     },
     args: {
       id: { type: 'positional', description: 'Task id to update (e.g. 63-06)', required: true },
-      projectid: { type: 'string', description: 'Project id whose TASK-REGISTRY.xml to update', required: true },
+      projectid: { type: 'string', description: 'Project id whose task to update', required: true },
       goal: { type: 'string', description: 'Replacement goal text for the task', default: '' },
-      print: { type: 'boolean', description: 'Print the mutated XML to stdout instead of writing the file', default: false },
+      'append-goal': { type: 'string', description: 'Text to append to the existing goal (space-joined)', default: '' },
+      type: { type: 'string', description: 'New type / category (code | site | framework | cleanup | docs | …)', default: '' },
+      status: { type: 'string', description: 'New status (planned | in-progress | done | cancelled). Prefer `gad tasks stamp` for attribution.', default: '' },
+      depends: { type: 'string', description: 'Replacement depends list (comma-separated). Pass "" to clear.', default: null },
+      phase: { type: 'string', description: 'Move task to a different phase id', default: '' },
+      print: { type: 'boolean', description: 'Print the mutated task JSON to stdout instead of writing the file', default: false },
     },
     run({ args }) {
-      if (!String(args.goal || '').trim()) {
-        deps.outputError('tasks update currently requires --goal <text>.');
-        process.exit(1);
-        return;
-      }
-
       const resolved = deps.resolveProjectRootById(deps, args.projectid);
       if (!resolved) return;
       const { baseDir, root } = resolved;
-      const xmlPath = path.join(baseDir, root.path, root.planningDir, 'TASK-REGISTRY.xml');
-      if (!fs.existsSync(xmlPath)) {
-        deps.outputError(`TASK-REGISTRY.xml not found at ${xmlPath}`);
+      const planningDir = path.join(baseDir, root.path, root.planningDir);
+
+      const taskFiles = require('../../../lib/task-files.cjs');
+      if (!taskFiles.hasTasksDir(planningDir)) {
+        deps.outputError(
+          `No per-task files at ${path.relative(baseDir, taskFiles.tasksDir(planningDir))}. ` +
+          `Run: gad tasks migrate --projectid ${args.projectid}`
+        );
+        process.exit(1);
+        return;
+      }
+      const existing = taskFiles.readOne(planningDir, String(args.id));
+      if (!existing) {
+        deps.outputError(`Task not found: ${args.id} (looked at ${taskFiles.taskPath(planningDir, String(args.id))})`);
         process.exit(1);
         return;
       }
 
-      const { TaskWriterError, updateTaskGoalInXml, updateTaskGoalInFile } = require('../../../lib/task-registry-writer.cjs');
+      const patch = {};
+      if (args.goal && String(args.goal).trim()) {
+        patch.goal = String(args.goal);
+      }
+      if (args['append-goal'] && String(args['append-goal']).trim()) {
+        const addition = String(args['append-goal']).trim();
+        patch.goal = existing.goal ? `${existing.goal} ${addition}` : addition;
+      }
+      if (args.type) patch.type = String(args.type);
+      if (args.status) patch.status = String(args.status).toLowerCase();
+      if (args.phase) patch.phase = String(args.phase);
+      if (args.depends !== null && args.depends !== undefined) {
+        patch.depends = String(args.depends).split(',').map(s => s.trim()).filter(Boolean);
+      }
+
+      if (Object.keys(patch).length === 0) {
+        deps.outputError('Nothing to update. Pass at least one of --goal / --append-goal / --type / --status / --depends / --phase.');
+        process.exit(1);
+        return;
+      }
+      if (patch.goal && args.goal && args['append-goal']) {
+        deps.outputError('Pass only one of --goal / --append-goal, not both.');
+        process.exit(1);
+        return;
+      }
+
       try {
         if (args.print) {
-          const xml = fs.readFileSync(xmlPath, 'utf8');
-          const mutated = updateTaskGoalInXml(xml, { id: String(args.id), goal: String(args.goal) });
-          process.stdout.write(mutated);
+          const merged = taskFiles.normalizeTask({ ...existing, ...patch, id: existing.id });
+          process.stdout.write(JSON.stringify(merged, null, 2) + '\n');
           return;
         }
-        updateTaskGoalInFile({ filePath: xmlPath, id: String(args.id), goal: String(args.goal) });
-
-        // Dual-write to per-task JSON file (decision 2026-04-20 D3).
-        try {
-          const taskFiles = require('../../../lib/task-files.cjs');
-          const planningDir = path.join(baseDir, root.path, root.planningDir);
-          if (taskFiles.hasTasksDir(planningDir) && taskFiles.readOne(planningDir, String(args.id))) {
-            taskFiles.updateOne(planningDir, String(args.id), { goal: String(args.goal) });
-          }
-        } catch (jsonErr) {
-          console.error(`  (warning: per-task file update failed: ${jsonErr.message})`);
-        }
-
-        console.log(`Updated task ${args.id} goal (${args.projectid}).`);
+        const updated = taskFiles.updateOne(planningDir, String(args.id), patch);
+        const shown = Object.keys(patch).map(k => `${k}=${JSON.stringify(updated[k])}`).join(' ');
+        console.log(`Updated task ${args.id} (${args.projectid}): ${shown}`);
         deps.maybeRebuildGraph(baseDir, root);
       } catch (error) {
-        if (error instanceof TaskWriterError) {
-          deps.outputError(`${error.code}: ${error.message}`);
-          process.exit(1);
-          return;
-        }
-        throw error;
+        deps.outputError(`tasks update: ${error.message}`);
+        process.exit(1);
       }
     },
   });

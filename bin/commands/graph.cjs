@@ -13,7 +13,7 @@ function createGraphCommand(deps) {
   const { findRepoRoot, gadConfig, resolveRoots, graphExtractor } = deps;
 
   const build = defineCommand({
-    meta: { name: 'build', description: 'Generate graph.json + graph.html from .planning/ XML files' },
+    meta: { name: 'build', description: 'Generate graph.json + graph.html from .planning/ sources (per-task JSON + XML fallback + decisions + roadmap + state)' },
     args: {
       projectid: { type: 'string', description: 'Scope to one project', default: '' },
       json: { type: 'boolean', description: 'Output graph JSON to stdout instead of file', default: false },

@@ -311,7 +311,7 @@ const common = {
   resolveDetectedRuntimeId, printSection, buildHandoffsSection,
   resolveSnapshotRuntime, resolveSnapshotAgentInputs,
   ensureAgentLane, listAgentLanes, touchAgentLane,
-  buildAssignmentsView,
+  simplifyAgentLane, buildAssignmentsView,
   compactStateXml, compactRoadmapSection, compactTasksSection,
   evolutionPaths, resolveProtoSkillInstallRuntimes, installProtoSkillToRuntime,
   writeEvolutionScan, readEvolutionScan, protoSkillRelativePath,

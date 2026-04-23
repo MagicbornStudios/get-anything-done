@@ -48,9 +48,8 @@ function writeInstallNotes(outDir, artifactName) {
       `Artifact: ${artifactName}`,
       '',
       'Release model:',
-      '  - primary binary built with `bun build --compile`',
-      '  - GitHub Releases is the distribution source of truth',
-      '  - Node SEA pipeline is deprecated and retained only as an escape hatch',
+      '  - binary built with `bun build --compile` (single-file executable, no external runtime required)',
+      '  - GitHub Releases is the distribution source of truth (decision gad-188)',
       '',
       'Portable use:',
       process.platform === 'win32'
@@ -59,13 +58,6 @@ function writeInstallNotes(outDir, artifactName) {
       '',
     ].join('\n'),
   );
-}
-
-function maybeCopyWindowsInstaller(outDir) {
-  if (process.platform !== 'win32') return;
-  const installerSource = join(ROOT, 'scripts', 'install-gad-windows.ps1');
-  const installerDest = join(outDir, 'install-gad-windows.ps1');
-  copyFileSync(installerSource, installerDest);
 }
 
 function buildGadTui(outDir, gadVersion) {
@@ -122,7 +114,6 @@ function main() {
     { cwd: ROOT, stdio: 'inherit' },
   );
 
-  maybeCopyWindowsInstaller(args.outDir);
   writeInstallNotes(args.outDir, artifactName);
 
   console.log(`Built GAD Bun executable: ${relative(ROOT, artifactPath)}`);

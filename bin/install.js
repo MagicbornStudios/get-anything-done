@@ -4567,16 +4567,10 @@ function getOfficialBinaryCandidates() {
   if (process.platform === 'win32') {
     const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
     const installDir = path.join(localAppData, 'Programs', 'gad', 'bin');
-    candidates.push(
-      path.join(installDir, 'gad.exe'),
-      path.join(installDir, 'get-anything-done.exe')
-    );
+    candidates.push(path.join(installDir, 'gad.exe'));
   } else {
     const installDir = path.join(os.homedir(), '.local', 'bin');
-    candidates.push(
-      path.join(installDir, 'gad'),
-      path.join(installDir, 'get-anything-done')
-    );
+    candidates.push(path.join(installDir, 'gad'));
   }
 
   return [...new Set(candidates)];
@@ -5471,7 +5465,7 @@ function scaffoldPlanning(targetDir) {
   for (const [name, body] of Object.entries(files)) {
     fs.writeFileSync(path.join(planDir, name), body);
   }
-  console.log(`  ${green}✓${reset} Scaffolded ${dim}${planDir}${reset} (${Object.keys(files).length} XML files, projectid=${cyan}${projectId}${reset})`);
+  console.log(`  ${green}✓${reset} Scaffolded ${dim}${planDir}${reset} (${Object.keys(files).length} planning files, projectid=${cyan}${projectId}${reset})`);
 }
 
 // --node was cancelled as task 44-34 (see references/installer-feature-flags.md

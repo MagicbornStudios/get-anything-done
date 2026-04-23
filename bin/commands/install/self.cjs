@@ -30,7 +30,6 @@ function createInstallSelfCommand({ defineCommand }) {
       fs.mkdirSync(targetDir, { recursive: true });
       fs.copyFileSync(sourceExecutable, targetExecutable);
       if (process.platform === 'win32') {
-        fs.copyFileSync(sourceExecutable, path.join(targetDir, 'get-anything-done.exe'));
         updateWindowsUserPath(targetDir);
       }
 

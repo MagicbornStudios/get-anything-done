@@ -151,7 +151,7 @@ function createVerifyCommand(deps) {
           category: 'Conventions',
           check: 'CONVENTIONS.md exists (first implementation phase)',
           result: conventionsExists ? 'PASS' : 'FAIL',
-          evidence: conventionsExists ? 'file exists' : 'missing — create with gad:auto-conventions',
+          evidence: conventionsExists ? 'file exists' : 'missing — create with `/gad:map-codebase conventions`',
         });
       }
 

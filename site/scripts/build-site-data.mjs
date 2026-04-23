@@ -164,7 +164,6 @@ function listEvalProjectDirs() {
 }
 const WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "workflows");
 const HUMAN_WORKFLOWS_DIR = path.join(REPO_ROOT, ".planning", "human-workflows");
-const CONTEXT_FRAMEWORKS_DIR = path.join(REPO_ROOT, ".planning", "context-frameworks");
 const DATA_DIR = path.join(REPO_ROOT, "data");
 const SITE_DATA_DIR = path.join(SITE_ROOT, "data");
 const DB_JSON_FILE = path.join(SITE_DATA_DIR, "db.json");
@@ -1085,7 +1084,6 @@ function scanCatalog() {
 
   catalog.workflows = parseWorkflows();
   catalog.humanWorkflows = parseHumanWorkflows();
-  catalog.contextFrameworks = parseContextFrameworks();
   // Live/emergent synthesis reads trace events and enriches workflow entries
   // in place. Authored workflows gain `liveGraph` and `conformance`; emergent
   // workflows are appended to the same array with `origin: "emergent"`.
@@ -1195,42 +1193,6 @@ function parseHumanWorkflows() {
   console.log(
     `  [human-workflows] parsed ${out.length} human workflow(s) from ${path.relative(REPO_ROOT, HUMAN_WORKFLOWS_DIR)}`
   );
-  return out;
-}
-
-/**
- * Context frameworks (phase 42.4, decision gad-179) are bundles that
- * reference existing catalog items by slug. Each lives as a Markdown file
- * under .planning/context-frameworks/*.md with YAML frontmatter listing
- * the skills/agents/workflows it includes.
- */
-function parseContextFrameworks() {
-  const out = [];
-  if (!exists(CONTEXT_FRAMEWORKS_DIR)) return out;
-  for (const name of fs.readdirSync(CONTEXT_FRAMEWORKS_DIR).sort()) {
-    if (!name.endsWith(".md")) continue;
-    if (name === "README.md") continue;
-    const file = path.join(CONTEXT_FRAMEWORKS_DIR, name);
-    const fullSrc = fs.readFileSync(file, "utf8");
-    const { data: meta, body: src } = parseFrontmatter(fullSrc);
-    const slug = meta.slug || name.replace(/\.md$/, "");
-    const asArray = (v) => (Array.isArray(v) ? v : v == null ? [] : [String(v)]);
-    out.push({
-      slug,
-      name: meta.name || slug,
-      description: meta.description || "",
-      version: meta.version ? String(meta.version) : "0.0.0",
-      extends: meta.extends && meta.extends !== "null" ? String(meta.extends) : null,
-      skills: asArray(meta.skills).map(String),
-      agents: asArray(meta.agents).map(String),
-      workflows: asArray(meta.workflows).map(String),
-      canonicalProjects: asArray(meta.canonicalProjects || meta["canonical-projects"]).map(String),
-      bodyHtml: renderMarkdown(src),
-      bodyRaw: src,
-      file: path.relative(REPO_ROOT, file).replace(/\\/g, "/"),
-    });
-  }
-  console.log(`  [context-frameworks] parsed ${out.length} framework(s) from ${path.relative(REPO_ROOT, CONTEXT_FRAMEWORKS_DIR)}`);
   return out;
 }
 

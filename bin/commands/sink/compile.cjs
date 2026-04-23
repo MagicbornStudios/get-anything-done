@@ -5,7 +5,7 @@ const { resolveSinkScope, stampSinkCompileNote } = require('./shared.cjs');
 
 function createSinkCompileCommand({ findRepoRoot, gadConfig, resolveRoots, outputError }) {
   return defineCommand({
-    meta: { name: 'compile', description: 'Compile .planning/ XML files -> docs sink MDX' },
+    meta: { name: 'compile', description: 'Compile .planning/ sources -> docs sink MDX (per-task JSON + XML fallback + decisions + state)' },
     args: {
       projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
       all: { type: 'boolean', description: 'Compile all projects', default: false },

@@ -52,20 +52,17 @@ function createSelfCommand(_deps) {
       const destDir = path.join(localAppData, 'Programs', 'gad', 'bin');
       fs.mkdirSync(destDir, { recursive: true });
 
-      const targets = ['gad.exe', 'get-anything-done.exe'];
-      for (const name of targets) {
-        const dest = path.join(destDir, name);
-        try {
-          fs.copyFileSync(src, dest);
-          console.log(`Installed: ${dest}`);
-        } catch (err) {
-          if (err.code === 'EPERM' || err.code === 'EBUSY') {
-            process.stderr.write(`gad.exe is locked. Close all running gad processes then retry.\n`);
-          } else {
-            process.stderr.write(`Failed to install ${name}: ${err.message}\n`);
-          }
-          process.exit(1);
+      const dest = path.join(destDir, 'gad.exe');
+      try {
+        fs.copyFileSync(src, dest);
+        console.log(`Installed: ${dest}`);
+      } catch (err) {
+        if (err.code === 'EPERM' || err.code === 'EBUSY') {
+          process.stderr.write(`gad.exe is locked. Close all running gad processes then retry.\n`);
+        } else {
+          process.stderr.write(`Failed to install gad.exe: ${err.message}\n`);
         }
+        process.exit(1);
       }
 
       // Also install gad-tui if present (soft — skip+warn if absent).
