@@ -234,24 +234,16 @@ Errors: RED doesn't fail → investigate test/existing feature. GREEN doesn't pa
 See `references/tdd.md` for structure.
 </tdd_plan_execution>
 
-<precommit_failure_handling>
-## Pre-commit Hook Failure Handling
+<source_rebuild_handling>
+## Source Rebuild Handling
 
-Your commits may trigger pre-commit hooks. Auto-fix hooks handle themselves transparently — files get fixed and re-staged automatically.
+Pre-commit auto-rebuild was retired 2026-04-23 because it deadlocked during
+worker sessions. Commits no longer rebuild or reinstall `gad.exe`.
 
-**If running as a parallel executor agent (spawned by execute-phase):**
-Use `--no-verify` on all commits. Pre-commit hooks cause build lock contention when multiple agents commit simultaneously (e.g., cargo lock fights in Rust projects). The orchestrator validates once after all agents complete.
-
-**If running as the sole executor (sequential mode):**
-If a commit is BLOCKED by a hook:
-
-1. The `git commit` command fails with hook error output
-2. Read the error — it tells you exactly which hook and what failed
-3. Fix the issue (type error, lint violation, secret leak, etc.)
-4. `git add` the fixed files
-5. Retry the commit
-6. Budget 1-2 retry cycles per commit
-</precommit_failure_handling>
+If you change source that ships in the executable, run
+`gad self build && gad self install` manually after the worker process exits and
+the CLI is no longer locked.
+</source_rebuild_handling>
 
 <task_commit>
 ## Task Commit Protocol

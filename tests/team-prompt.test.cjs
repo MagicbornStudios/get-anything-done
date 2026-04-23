@@ -25,6 +25,6 @@ describe('team worker prompt', () => {
     assert.ok(constraintIndex < disciplineIndex, 'constraint precedes discipline');
     assert.match(prompt, /Do NOT run `gad self install` or `gad self build`/);
     assert.match(prompt, /node vendor\/get-anything-done\/bin\/gad\.cjs <args>/);
-    assert.match(prompt, /git commit --no-verify/);
+    assert.match(prompt, /Pre-commit auto-rebuild was retired 2026-04-23/);
   });
 });

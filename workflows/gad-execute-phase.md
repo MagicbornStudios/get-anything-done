@@ -273,11 +273,11 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
        </objective>
 
        <parallel_execution>
-       You are running as a PARALLEL executor agent. Use --no-verify on all git
-       commits to avoid pre-commit hook contention with other agents. The
-       orchestrator validates hooks once after all agents complete.
-       For gad-tools commits: add --no-verify flag.
-       For direct git commits: use git commit --no-verify -m "..."
+       You are running as a PARALLEL executor agent. Avoid commands that rebuild
+       or install the locked `gad.exe` from inside the worker process.
+       Pre-commit auto-rebuild was retired 2026-04-23 because it deadlocked
+       during worker sessions. Use `gad self build && gad self install`
+       manually after source changes, outside the locked worker process.
        </parallel_execution>
 
        <execution_context>
@@ -360,15 +360,12 @@ Execute each selected wave in sequence. Within a wave: parallel if `PARALLELIZAT
    **This fallback applies automatically to all runtimes.** Claude Code's Task() normally
    returns synchronously, but the fallback ensures resilience if it doesn't.
 
-4. **Post-wave hook validation (parallel mode only):**
+4. **Post-wave source rebuild check (parallel mode only):**
 
-   When agents committed with `--no-verify`, run pre-commit hooks once after the wave:
-   ```bash
-   # Run project's pre-commit hooks on the current state
-   git diff --cached --quiet || git stash  # stash any unstaged changes
-   git hook run pre-commit 2>&1 || echo "⚠ Pre-commit hooks failed — review before continuing"
-   ```
-   If hooks fail: report the failure and ask "Fix hook issues now?" or "Continue to next wave?"
+   Pre-commit auto-rebuild was retired 2026-04-23 because it deadlocked during
+   worker sessions. If the wave changed source that ships in the executable,
+   run `gad self build && gad self install` manually after workers exit and the
+   CLI is no longer locked.
 
 4.5. **Worktree cleanup (when `isolation="worktree"` was used):**
 

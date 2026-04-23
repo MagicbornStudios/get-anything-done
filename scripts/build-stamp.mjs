@@ -9,9 +9,7 @@
  *
  * The src hash is a deterministic SHA-256 over the sorted list of
  * {path, size, mtime-as-content-hash} triples for bin/, lib/, scripts/, and
- * package.json — everything that can meaningfully affect behavior. It's the
- * staleness primitive the pre-commit hook (task 66-04) uses to decide whether
- * a rebuild is required.
+ * package.json — everything that can meaningfully affect behavior.
  *
  * Loaded by lib/framework-version.cjs as the source of truth when present;
  * runtime git query is the fallback for dev (unbundled) contexts.

@@ -2,9 +2,8 @@
  * src-hash.mjs — shared helper that computes the deterministic src_hash for
  * the GAD working tree.
  *
- * Imported by both scripts/build-stamp.mjs (build time) and
- * scripts/check-staleness.mjs (pre-commit hook).  Both must produce
- * byte-identical hashes for the same working tree state.
+ * Imported by scripts/build-stamp.mjs at build time. Manual rebuild checks use
+ * the same deterministic input set.
  *
  * Hash inputs: sorted {path, content} triples for bin/, lib/, scripts/,
  * package.json — skipping .generated / _manifest / node_modules / dist /

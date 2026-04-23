@@ -62,8 +62,10 @@ gad-tools commit "docs: initialize [project-name] ([N] phases)" --files .plannin
 Each task gets its own commit immediately after completion.
 
 > **Parallel agents:** When running as a parallel executor (spawned by execute-phase),
-> use `--no-verify` on all commits to avoid pre-commit hook lock contention.
-> The orchestrator validates hooks once after all agents complete.
+> avoid commands that rebuild or install the locked `gad.exe` from inside the
+> worker process. Pre-commit auto-rebuild was retired 2026-04-23 because it
+> deadlocked during worker sessions. Use `gad self build && gad self install`
+> manually after source changes, outside the locked worker process.
 
 ```
 {type}({phase}-{plan}): {task-name}
