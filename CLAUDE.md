@@ -57,8 +57,11 @@ this command brings any drifted working copies back in line.
   ```sh
   gad state log "Closed 44-13 — projects init bug fix" --tags "44-13" --projectid get-anything-done
   ```
-- **TASK-REGISTRY.xml** — single 2k-line file, edit one task block at a
-  time, never bulk-rewrite. Use `gad tasks` CLI when possible.
+- **Tasks** — per-task JSON files at `.planning/tasks/<id>.json` are
+  the sole source of truth (63-53, 2026-04-22). Use `gad tasks add /
+  update / stamp / promote` — never hand-edit the JSON. Legacy
+  `TASK-REGISTRY.xml` was retired; `gad tasks migrate` remains as a
+  one-shot import path for older projects inheriting XML.
 - **Notes** in `.planning/notes/` — filename pattern is
   `YYYY-MM-DD[-<agent>]-<slug>.md`. Use `gad note add <slug>` (not direct
   `Write` to the dir) — it auto-fills the agent slug from `$GAD_AGENT_NAME`.

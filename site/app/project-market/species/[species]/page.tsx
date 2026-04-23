@@ -208,11 +208,6 @@ export default async function SpeciesDetailPage({
                             score {g.score.toFixed(2)}
                           </span>
                         )}
-                        {g.contextFramework && (
-                          <span className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                            {g.contextFramework}
-                          </span>
-                        )}
                       </div>
                       <Link
                         href={g.playableUrl}

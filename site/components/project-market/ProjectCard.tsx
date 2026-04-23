@@ -109,12 +109,7 @@ export function ProjectCard({ project }: Props) {
               {project.techStack}
             </Badge>
           )}
-          {project.contextFramework && project.contextFramework !== project.species && (
-            <Badge variant="outline" className="border-purple-500/40 bg-purple-500/10 text-[10px] text-purple-300">
-              {project.contextFramework}
-            </Badge>
-          )}
-          {project.workflow && project.workflow !== project.contextFramework && (
+          {project.workflow && (
             <Badge
               variant="outline"
               className={cn(
