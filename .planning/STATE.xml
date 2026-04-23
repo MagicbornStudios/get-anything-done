@@ -46,9 +46,10 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-23T03:19:13.211Z</last-updated>
+  <last-updated>2026-04-23T13:13:40.725Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="opus-claude" at="2026-04-23T13:15:31.344Z" tags="phase-close,phase-cancel,backlog-audit">Cancelled 5 superseded phases: 33 (reverse-engineer eval), 36 (per-eval-repo + gad eval start/auto/finish — superseded by phase 43 species/generation rework), 37 (gad project CLI — superseded), 50 + 50.1 (apps/portfolio deprecated). Also stamped done: 63-11, 63-14, 63-17, 63-18, 63-19, 66-03 (close-out sweep for already-shipped work). Spot-checked 66 (loader fix + pre-commit hook + self-commands all shipped) and 67 (gad team --projectid + gad tui as subcommand both in 1.35.0) — look substantially done, full audit pending per-task.</entry>
     <entry agent="opus-claude" at="2026-04-23T02:39:27.175Z" tags="phase-close,42.2,42.3,42.4,hygiene">Closed phases 42.2 / 42.3 / 42.4 — all tasks done/cancelled, phase status was stuck at planned. STATE current-phase still 42.4; operator picks next thread (43 domain rename, or open new phase for M4.9 gap-close).</entry>
     <entry agent="unknown" at="2026-04-20T16:47:39.468Z" tags="66-01,cli-hygiene,loader,done">Phase 66-01 (loader manifest fix) shipped: scripts/build-manifest.mjs generates bin/commands/_manifest.cjs at build time, _loader.cjs prefers it + topologically sorts provides phase, evolution.dependsOn=[evolution-images] annotates the one cross-dep. Bun-compiled v1.35.0 exe now registers team + all 64 command modules. Installed. Subagent working 52-01 scaffold in parallel.</entry>
     <entry agent="opus-claude" at="2026-04-19T18:50:52.968Z">sweep F (post-failure-callout): extracted 9 cmd families (phases, decisions, handoffs, readers, refs, narrative, start, subagents, agents, site). bin/gad.cjs 18181 to 16689 (-1492 LOC, factory pattern). all smokes + targeted tests pass.</entry>

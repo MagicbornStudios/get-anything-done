@@ -209,8 +209,8 @@
   </phase>
   <phase id="33">
     <title>Reverse-engineer eval + methodology evaluation</title>
-    <goal>Run reverse-engineer eval on grime-time and visualeditor-payloadcms targets. Methodology must be tied to buildable project with artifacts. Two-phase eval: produce requirements then build from them. Decisions: GAD-D-96, GAD-D-133.</goal>
-    <status>planned</status>
+    <goal>Run reverse-engineer eval on grime-time and visualeditor-payloadcms targets. Methodology must be tied to buildable project with artifacts. Two-phase eval: produce requirements then build from them. Decisions: GAD-D-96, GAD-D-133. [CANCELLED 2026-04-23: operator direction — grime-time not happening, phase not completed.]</goal>
+    <status>cancelled</status>
     <depends>31</depends>
   </phase>
 <phase id="34">
@@ -227,14 +227,14 @@
   </phase>
   <phase id="36">
     <title>Per-eval-repo architecture + gad eval start/auto/finish + gad env</title>
-    <goal>Restructure the eval framework around per-eval GitHub repositories. Each eval project gets its own private GitHub repo; runs live as directories (round-N/vM/) inside it. The main monorepo only stores lightweight metadata. Split gad eval run into gad eval start (scaffold + handoff), gad eval auto (autonomous via coding agent CLI), gad eval finish (preserve + push). Add gad env status / gad env agents for runtime availability checks (claude, codex, cursor-agent, gh). Remove dead skill_invocation hook code that was never wired up. Deprecate gad eval suite in favor of project-centric run-round (lands in phase 37). Decisions: GAD-D-139, GAD-D-140, GAD-D-141, GAD-D-142, GAD-D-143.</goal>
-    <status>planned</status>
+    <goal>Restructure the eval framework around per-eval GitHub repositories. Each eval project gets its own private GitHub repo; runs live as directories (round-N/vM/) inside it. The main monorepo only stores lightweight metadata. Split gad eval run into gad eval start (scaffold + handoff), gad eval auto (autonomous via coding agent CLI), gad eval finish (preserve + push). Add gad env status / gad env agents for runtime availability checks (claude, codex, cursor-agent, gh). Remove dead skill_invocation hook code that was never wired up. Deprecate gad eval suite in favor of project-centric run-round (lands in phase 37). Decisions: GAD-D-139, GAD-D-140, GAD-D-141, GAD-D-142, GAD-D-143. [SUPERSEDED 2026-04-23: phase 43 domain rename shipped a different architecture (species/generation vocabulary). `gad eval` now deprecated alias for `gad species` / `gad generation`. `gad env` became BYOK secrets. None of the `start/auto/finish` subcommands shipped in this shape.]</goal>
+    <status>cancelled</status>
     <depends>35</depends>
   </phase>
   <phase id="37">
     <title>gad project — top-level project lifecycle command</title>
-    <goal>Ship gad project as a top-level CLI for real projects AND evals. Subcommands: create (scaffold AGENTS.md + .planning/ + .agents/, optional --claude --codex --cursor flags), update-requirements (trigger new round, auto-create gad+bare eval variants), install-skill (add skill to project, create injected-condition eval within current round), add-content (content-driven condition eval), run-round (execute all evals in a round, optional --runtime for autonomous). Bootstrap a project from an existing eval's round via --from-eval. Project detail page shows all possible eval variants (created or not-yet-created) so users can see the matrix status. Depends on per-eval-repo architecture (phase 36) for install-skill to know where to inject. Decisions: GAD-D-132.</goal>
-    <status>planned</status>
+    <goal>Ship gad project as a top-level CLI for real projects AND evals. Subcommands: create (scaffold AGENTS.md + .planning/ + .agents/, optional --claude --codex --cursor flags), update-requirements (trigger new round, auto-create gad+bare eval variants), install-skill (add skill to project, create injected-condition eval within current round), add-content (content-driven condition eval), run-round (execute all evals in a round, optional --runtime for autonomous). Bootstrap a project from an existing eval's round via --from-eval. Project detail page shows all possible eval variants (created or not-yet-created) so users can see the matrix status. Depends on per-eval-repo architecture (phase 36) for install-skill to know where to inject. Decisions: GAD-D-132. [SUPERSEDED 2026-04-23: depends on phase 36 which was cancelled. Actual shape is `gad projects` (plural) with different subcommand surface per species/generation rework (phase 43). `gad project` singular command not shipped.]</goal>
+    <status>cancelled</status>
     <depends>36</depends>
   </phase>
   <phase id="38">
@@ -339,15 +339,15 @@
 
   <phase id="50">
     <title>apps/portfolio-v2 as pilot species personal-portfolio</title>
-    <goal>Treat apps/portfolio-v2 (operator personal site — broken pieces + great content) as pilot species personal-portfolio. Wire through GAD. Current Vercel deploy = current generation. Per operator: just a normal landing site + some security for private stuff + easy VCS rework + articles + resumes + projects. First real-site dogfood of the project/species/generation model on a non-eval site.</goal>
-    <status>planned</status>
+    <goal>Treat apps/portfolio-v2 (operator personal site — broken pieces + great content) as pilot species personal-portfolio. Wire through GAD. Current Vercel deploy = current generation. Per operator: just a normal landing site + some security for private stuff + easy VCS rework + articles + resumes + projects. First real-site dogfood of the project/species/generation model on a non-eval site. [CANCELLED 2026-04-23: apps/portfolio and apps/species/portfolio-v2 both deprecated (memory feedback_never_mention_portfolio). Superseded by apps/platform + apps/desktop split per gad-280.]</goal>
+    <status>cancelled</status>
     <depends></depends>
   </phase>
 
   <phase id="50.1">
     <title>apps/portfolio → RE target species</title>
-    <goal>Set up apps/portfolio as a public reverse-engineering eval species per gad-235. First-class RE species support: species.json kind=reverse-engineer, framework fitness signal = quality of planning docs produced from the existing codebase. Proves the framework can produce planning docs on non-trivial input.</goal>
-    <status>planned</status>
+    <goal>Set up apps/portfolio as a public reverse-engineering eval species per gad-235. First-class RE species support: species.json kind=reverse-engineer, framework fitness signal = quality of planning docs produced from the existing codebase. Proves the framework can produce planning docs on non-trivial input. [CANCELLED 2026-04-23: apps/portfolio deprecated per memory. RE capability can be exercised on non-portfolio projects when needed.]</goal>
+    <status>cancelled</status>
     <depends></depends>
   </phase>
 
