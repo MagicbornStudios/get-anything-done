@@ -3689,11 +3689,13 @@ export interface SearchEntry {
   body: string;
 }
 
+const SEARCH_INDEX_JSON = ${JSON.stringify(JSON.stringify(extras.searchIndex ?? []))};
+
 /**
  * Flat search index over every structured entry on the site. Body is
  * lowercased at prebuild so the client matcher only does substring checks.
  */
-export const SEARCH_INDEX: SearchEntry[] = ${JSON.stringify(extras.searchIndex ?? [], null, 2)};
+export const SEARCH_INDEX: SearchEntry[] = JSON.parse(SEARCH_INDEX_JSON);
 
 export interface TaskPressureRecord {
   /** Count of <requirement> elements (including inside <addendum>) */
@@ -4046,5 +4048,4 @@ function validateSiteData() {
 }
 
 main();
-
 
