@@ -70,6 +70,33 @@ validating an installed CLI:
 gad self build && gad self install
 ```
 
+`gad self install` now uses a Windows-safe rename-swap pattern for both
+`gad.exe` and `gad-tui.exe`: if the destination binary already exists, the
+installer renames it to `<name>.old-<timestamp>`, copies the new binary into
+place, and then best-effort deletes `.old-*` files older than 7 days. This
+lets a running process finish on its original file handle while new shells pick
+up the fresh binary immediately.
+
+Manual verification on Windows:
+
+```powershell
+gad tui
+# keep the TUI running in terminal 1
+
+# terminal 2
+gad self install
+Get-ChildItem $env:LOCALAPPDATA\Programs\gad\bin\gad*.old-*
+gad version
+```
+
+Expected result:
+
+- `gad self install` succeeds without the old lock error.
+- The already-running TUI keeps running.
+- A fresh `gad version` uses the newly installed binary.
+- `%LOCALAPPDATA%\Programs\gad\bin\` contains the new executable plus at least
+  one `.old-<timestamp>` file until cleanup ages it out.
+
 ## Skills
 
 Skills are not published through the executable release. They remain GitHub-hosted and are

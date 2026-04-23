@@ -10,6 +10,74 @@ const fs = require('fs');
 const { spawnSync } = require('child_process');
 const { defineCommand } = require('citty');
 
+const DEFAULT_OLD_BINARY_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function isRetriableInstallLockError(err) {
+  return Boolean(err && (err.code === 'EBUSY' || err.code === 'EPERM'));
+}
+
+function sleepSync(ms) {
+  if (!ms || ms <= 0) return;
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function renameWithRetry(src, dest, { label = path.basename(src), retries = 2, delayMs = 75 } = {}) {
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      fs.renameSync(src, dest);
+      return;
+    } catch (err) {
+      if (!isRetriableInstallLockError(err) || attempt === retries) {
+        if (isRetriableInstallLockError(err)) {
+          throw new Error(`Failed to rename running ${label}: ${err.message}`);
+        }
+        throw err;
+      }
+      sleepSync(delayMs);
+    }
+  }
+}
+
+function cleanupOldBinaries(dir, binaryName, maxAgeMs = DEFAULT_OLD_BINARY_MAX_AGE_MS, nowMs = Date.now()) {
+  if (!fs.existsSync(dir)) return;
+  const prefix = `${binaryName}.old-`;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.startsWith(prefix)) continue;
+    const fullPath = path.join(dir, entry.name);
+    try {
+      const stat = fs.statSync(fullPath);
+      if ((nowMs - stat.mtimeMs) > maxAgeMs) fs.unlinkSync(fullPath);
+    } catch {
+      // Best-effort cleanup only.
+    }
+  }
+}
+
+function installBinaryWithRenameSwap(src, dest, { label = path.basename(dest), cleanupMaxAgeMs = DEFAULT_OLD_BINARY_MAX_AGE_MS } = {}) {
+  let renamedOldPath = null;
+
+  if (fs.existsSync(dest)) {
+    renamedOldPath = `${dest}.old-${Date.now()}`;
+    renameWithRetry(dest, renamedOldPath, { label });
+    cleanupOldBinaries(path.dirname(dest), path.basename(dest), cleanupMaxAgeMs);
+  }
+
+  try {
+    fs.copyFileSync(src, dest);
+  } catch (err) {
+    if (renamedOldPath && !fs.existsSync(dest) && fs.existsSync(renamedOldPath)) {
+      try {
+        fs.renameSync(renamedOldPath, dest);
+      } catch {
+        // Best-effort rollback if the new copy never lands.
+      }
+    }
+    throw new Error(`Failed to install ${label}: ${err.message}`);
+  }
+
+  return renamedOldPath;
+}
+
 function createSelfCommand(_deps) {
   const gadDir = path.join(__dirname, '..', '..');
   const pkg = JSON.parse(fs.readFileSync(path.join(gadDir, 'package.json'), 'utf8'));
@@ -54,14 +122,10 @@ function createSelfCommand(_deps) {
 
       const dest = path.join(destDir, 'gad.exe');
       try {
-        fs.copyFileSync(src, dest);
+        installBinaryWithRenameSwap(src, dest, { label: 'gad.exe' });
         console.log(`Installed: ${dest}`);
       } catch (err) {
-        if (err.code === 'EPERM' || err.code === 'EBUSY') {
-          process.stderr.write(`gad.exe is locked. Close all running gad processes then retry.\n`);
-        } else {
-          process.stderr.write(`Failed to install gad.exe: ${err.message}\n`);
-        }
+        process.stderr.write(`${err.message}\n`);
         process.exit(1);
       }
 
@@ -70,10 +134,10 @@ function createSelfCommand(_deps) {
       if (fs.existsSync(tuiSrc)) {
         const tuiDest = path.join(destDir, 'gad-tui.exe');
         try {
-          fs.copyFileSync(tuiSrc, tuiDest);
+          installBinaryWithRenameSwap(tuiSrc, tuiDest, { label: 'gad-tui.exe' });
           console.log(`Installed: ${tuiDest}`);
         } catch (err) {
-          process.stderr.write(`[warn] Failed to install gad-tui.exe: ${err.message}\n`);
+          process.stderr.write(`[warn] ${err.message}\n`);
         }
       } else {
         process.stderr.write(`[info] gad-tui not bundled in this release. Run \`gad self build\` after building the TUI to include it.\n`);
@@ -144,6 +208,13 @@ function createSelfEvalCommand(deps) {
 }
 
 module.exports = { createSelfCommand, createSelfEvalCommand };
+module.exports._private = {
+  DEFAULT_OLD_BINARY_MAX_AGE_MS,
+  cleanupOldBinaries,
+  installBinaryWithRenameSwap,
+  isRetriableInstallLockError,
+  renameWithRetry,
+};
 module.exports.register = (ctx) => ({
   self: createSelfCommand({}),
   'self-eval': createSelfEvalCommand(ctx.common),
