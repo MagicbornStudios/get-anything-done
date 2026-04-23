@@ -121,6 +121,7 @@ tmp/
 # start` / worker cycle. Sources kept tracked: config.json, profiles/*.
 .planning/team/dispatch.seq
 .planning/team/dispatcher.log.jsonl
+.planning/team/dispatcher.pid
 .planning/team/supervisor.log.jsonl
 .planning/team/workers/*/log.jsonl
 .planning/team/workers/*/log-fg.out
