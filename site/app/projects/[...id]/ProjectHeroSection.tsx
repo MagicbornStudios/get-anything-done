@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, Download, ExternalLink, Package, Pencil } from "lucide-react";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

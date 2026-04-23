@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { runtimeLabel } from "@/lib/run-process-metrics-runtime-label";

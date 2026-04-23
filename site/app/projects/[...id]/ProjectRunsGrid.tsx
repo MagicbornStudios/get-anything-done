@@ -1,6 +1,6 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { ProjectRunCard } from "./ProjectRunCard";
 

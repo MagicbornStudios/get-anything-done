@@ -1,6 +1,6 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { WORKFLOW_LABELS, type EvalRunRecord } from "@/lib/eval-data";
 import { Badge } from "@/components/ui/badge";
 import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";

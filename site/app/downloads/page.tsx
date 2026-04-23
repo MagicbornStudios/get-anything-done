@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { Terminal, Package, LayoutGrid, Braces, Layers, PanelTop, Search, Keyboard, Eye, Box } from "lucide-react";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { Badge } from "@/components/ui/badge";
 import { MarketingShell, SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 import Templates from "@/components/landing/templates/Templates";

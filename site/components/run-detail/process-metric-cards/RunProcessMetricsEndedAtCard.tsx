@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtTimestamp } from "@/components/landing/playable/playable-shared";
 

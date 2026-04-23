@@ -1,7 +1,7 @@
 import type { EvalRunRecord } from "@/lib/eval-data";
 import type { EvalProjectMeta } from "@/lib/eval-data";
 import { BROOD_SKILL_AGGREGATION } from "@/lib/eval-data";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { SKILLS } from "@/lib/catalog.generated";
 import { scopedSkillsFor } from "./project-detail-shared";
 import { latestProjectRun, buildProjectSkillScopeRows } from "./project-skill-scope-model";

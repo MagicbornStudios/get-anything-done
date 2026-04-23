@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ClientDebugShell } from "@/components/debug/ClientDebugShell";
-import { DevIdProvider } from "@/components/devid/DevIdProvider";
-import { KeyboardShortcutsProvider } from "@/components/devid/KeyboardShortcuts";
+import { DevIdProvider } from "@portfolio/visual-context";
+import { KeyboardShortcutsProvider } from "@portfolio/visual-context";
 import { GlobalScrollbarBehavior } from "@/components/layout/GlobalScrollbarBehavior";
 import { ProjectProvider } from "@/components/ProjectContext";
 import { Toaster } from "@/components/ui/sonner";

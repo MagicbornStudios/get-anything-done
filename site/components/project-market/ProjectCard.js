@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProjectCard = ProjectCard;
 const jsx_runtime_1 = require("react/jsx-runtime");
-const Identified_1 = require("@/components/devid/Identified");
+const Identified_1 = require("@portfolio/visual-context");
 const link_1 = __importDefault(require("next/link"));
 const lucide_react_1 = require("lucide-react");
 const badge_1 = require("@/components/ui/badge");

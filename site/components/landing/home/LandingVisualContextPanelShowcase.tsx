@@ -10,11 +10,11 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import {
   DEV_PANEL_BRAND_MARK,
   DEV_PANEL_LABEL,
-} from "@/components/devid/dev-panel-constants";
+} from "@portfolio/visual-context";
 import { cn } from "@/lib/utils";
 
 const DEMO_HANDOFF_PAGE = "http://localhost:3000/";

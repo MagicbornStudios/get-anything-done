@@ -1,5 +1,5 @@
 import { ArrowRight, type LucideIcon } from "lucide-react";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 
 export type LoopStep = {
   key: string;

@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { SiteSection } from "@/components/site";
 
 /**

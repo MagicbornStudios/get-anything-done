@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { GlobalSearchFooter } from "@/components/search/global-search/GlobalSearchFooter";
 import { GlobalSearchInputBar } from "@/components/search/global-search/GlobalSearchInputBar";
 import { GlobalSearchScrollBody } from "@/components/search/global-search/GlobalSearchScrollBody";

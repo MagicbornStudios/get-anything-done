@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { MarketingShell, SiteSection } from "@/components/site";
 import type { DetailShellProps } from "./detail-shell-shared";
 import DetailShellBackLink from "./DetailShellBackLink";

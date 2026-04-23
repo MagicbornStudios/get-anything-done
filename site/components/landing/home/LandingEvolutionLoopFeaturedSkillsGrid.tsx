@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { LandingEvolutionLoopFeaturedSkillCard } from "./LandingEvolutionLoopFeaturedSkillCard";
 
 const FEATURED_SKILL_IDS = [

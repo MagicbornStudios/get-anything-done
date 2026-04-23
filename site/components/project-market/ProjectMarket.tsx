@@ -7,7 +7,7 @@ import { ProjectMarketGrid } from "@/components/project-market/ProjectMarketGrid
 import { ProjectMarketRuns } from "@/components/project-market/ProjectMarketRuns";
 import { ProjectMarketSpeciesBand } from "@/components/project-market/ProjectMarketSpeciesBand";
 import { useProjectMarket } from "@/components/project-market/use-project-market";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { SiteSection } from "@/components/site";
 
 interface ProjectMarketProps {

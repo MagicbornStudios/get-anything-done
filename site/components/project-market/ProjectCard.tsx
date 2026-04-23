@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import Link from "next/link";
 import { Star, Gamepad2, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

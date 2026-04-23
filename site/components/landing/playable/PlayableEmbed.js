@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PlayableEmbed = PlayableEmbed;
 const jsx_runtime_1 = require("react/jsx-runtime");
-const Identified_1 = require("@/components/devid/Identified");
+const Identified_1 = require("@portfolio/visual-context");
 const lucide_react_1 = require("lucide-react");
 const button_1 = require("@/components/ui/button");
 const card_1 = require("@/components/ui/card");

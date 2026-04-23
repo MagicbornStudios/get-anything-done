@@ -1,5 +1,5 @@
 import { Github } from "lucide-react";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 

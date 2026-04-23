@@ -1,7 +1,7 @@
 import { AgentHandoffCycleCopy } from "@/components/landing/agent-handoff-cycle/AgentHandoffCycleCopy";
 import { AgentHandoffCycleDiagram } from "@/components/landing/agent-handoff-cycle/AgentHandoffCycleDiagram";
 import { AgentHandoffCycleMedia } from "@/components/landing/agent-handoff-cycle/AgentHandoffCycleMedia";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { SiteSection } from "@/components/site";
 
 export default function AgentHandoffCycle() {

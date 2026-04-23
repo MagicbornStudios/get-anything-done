@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
-import { Identified } from "@/components/devid/Identified";
-import { ShellBandDevPanelSlot } from "@/components/devid/ShellBandDevPanelSlot";
+import { Identified } from "@portfolio/visual-context";
+import { ShellBandDevPanelSlot } from "@portfolio/visual-context";
 
 export function MarketingShell({ children }: { children: ReactNode }) {
   return (

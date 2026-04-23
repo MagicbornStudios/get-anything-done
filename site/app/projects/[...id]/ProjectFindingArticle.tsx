@@ -1,6 +1,6 @@
 "use client";
 
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { Badge } from "@/components/ui/badge";
 import type { Finding } from "@/lib/catalog.generated";
 

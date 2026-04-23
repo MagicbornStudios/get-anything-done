@@ -1,7 +1,7 @@
 "use client";
 
 import { Store } from "lucide-react";
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
 
 export function ProjectMarketHeader() {

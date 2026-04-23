@@ -2,10 +2,10 @@
 
 import type { MouseEvent, ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { BandDevPanel } from "@/components/devid/BandDevPanel";
-import { BandDevPanelGate } from "@/components/devid/BandDevPanelGate";
-import { DevIdBandProvider } from "@/components/devid/DevIdBandContext";
-import { useDevId } from "@/components/devid/DevIdProvider";
+import { BandDevPanel } from "@portfolio/visual-context";
+import { BandDevPanelGate } from "@portfolio/visual-context";
+import { DevIdBandProvider } from "@portfolio/visual-context";
+import { useDevId } from "@portfolio/visual-context";
 import { cn } from "@/lib/utils";
 
 export type SiteSectionProps = {
@@ -189,4 +189,3 @@ export function SiteSection({
     </SiteSectionSurface>
   );
 }
-

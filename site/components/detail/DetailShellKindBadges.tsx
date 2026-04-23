@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import { Badge } from "@/components/ui/badge";
 import type { DetailShellProps } from "./detail-shell-shared";
 import { KIND_LABELS } from "./detail-shell-shared";

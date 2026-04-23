@@ -1,4 +1,4 @@
-import { Identified } from "@/components/devid/Identified";
+import { Identified } from "@portfolio/visual-context";
 import type { DetailShellProps } from "./detail-shell-shared";
 import { Card, CardContent } from "@/components/ui/card";
 
