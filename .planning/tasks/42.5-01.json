@@ -1,0 +1,23 @@
+{
+  "id": "42.5-01",
+  "phase": "42.5",
+  "status": "done",
+  "goal": "Close out skills catalog hygiene: remove retired-skill references, confirm Cursor budget, validate canonical assets, and close phase 42.5.",
+  "type": "cleanup",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "team-w1",
+  "agent_role": "executor",
+  "runtime": "codex-cli",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "gad-handoffs",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "Closed skills catalog hygiene: active retired-skill references removed, Cursor budget verified under 63, canonical assets passed, runtime mirrors pruned.",
+  "created_at": "2026-04-23T16:22:15.907Z",
+  "updated_at": "2026-04-23T16:22:26.518Z"
+}

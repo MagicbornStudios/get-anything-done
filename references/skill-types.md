@@ -30,7 +30,7 @@ framework` (e.g. `gad-evolution-evolve`). Common pairings:
 
 - `gad-verify-work` — `lane: [dev, prod]`, `type: workflow`. Cross-lane workflows are common.
 - `gad-validate-phase` — `lane: [dev, prod]`, `type: captured-answer`. The `prod`-side `captured-answer` cell ("release checklists") generalizes to phase-validation checklists.
-- `gad-reverse-engineer` — `lane: [dev, meta]`, `type: meta-framework`. Spans dev work and framework hygiene; classified by dominant shape (framework behavior wins when both apply). (Previously `gad-auto-conventions` also sat here; folded into `gad-map-codebase` 2026-04-22, task 63-41.)
+- `gad-reverse-engineer` — `lane: [dev, meta]`, `type: meta-framework`. Spans dev work and framework hygiene; classified by dominant shape (framework behavior wins when both apply).
 
 When a skill genuinely sits across two lanes, classify by the dominant *shape* it instantiates on the host, not by the lane bias of the matrix's example slot.
 
