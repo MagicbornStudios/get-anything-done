@@ -48,7 +48,7 @@ Evaluate `$ARGUMENTS` against these routing rules. Apply the **first matching** 
 | Running all remaining phases automatically | `/gad:autonomous` | Full autonomous execution |
 | A review or quality concern about existing work | `/gad:verify-work` | Needs verification |
 | Checking progress, status, "where am I" | `/gad:progress` | Status check |
-| Resuming work, "pick up where I left off" | `/gad:resume-work` | Session restoration |
+| Resuming work, "pick up where I left off" | `gad snapshot` + `gad handoffs list --mine-first` | Session restoration (see `skills/gad-handoffs` resume protocol) |
 | A note, idea, or "remember to..." | `/gad:add-todo` | Capture for later |
 | Adding tests, "write tests", "test coverage" | `/gad:add-tests` | Test generation |
 | Completing a milestone, shipping, releasing | `/gad:complete-milestone` | Milestone lifecycle |

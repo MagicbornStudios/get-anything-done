@@ -256,7 +256,7 @@ time — deviations must be justified in a decision entry.
 - The public `name:` frontmatter value is `gad:<name>` (colon form —
   matches slash-command invocation).
 - The workflow file is `workflows/<name>.md` (no `gad-` prefix). Exception:
-  a few legacy canonical workflows like `gad-debug.md`, `gad-eval-run.md`,
+  a few legacy canonical workflows like `gad-debug.md`,
   `gad-execute-phase.md`, `gad-map-codebase.md`, `gad-new-project.md`,
   `gad-plan-phase.md` retain their `gad-` prefix. For new skills, default
   to unprefixed.

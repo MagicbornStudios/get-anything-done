@@ -119,7 +119,7 @@ Create a new thread:
 
 <notes>
 - Threads are NOT phase-scoped — they exist independently of the roadmap
-- Lighter weight than /gad:pause-work — no phase state, no plan context
+- Lighter weight than filing a `gad handoffs create` — no phase state, no plan context
 - The value is in Context and Next Steps — a cold-start session can pick up immediately
 - Threads can be promoted to phases or backlog items when they mature:
   /gad:add-phase or /gad:add-backlog with context from the thread

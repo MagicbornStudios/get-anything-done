@@ -1,6 +1,6 @@
 ---
 name: build-and-release-locally
-description: Cut a new GAD release — version bump, CHANGELOG entry, Node SEA rebuild, git tag, and `gh release create` with artifacts attached. Operator-triggered only, no CI, no npm publish. Trigger this skill whenever the user asks to "cut a release", "ship v<N>", "publish a new release", "bump the version", or any variation that means "the canonical GAD repo should have a new downloadable installer artifact on GitHub Releases." Canonical-repo-only: refuses to run outside the MagicbornStudios/get-anything-done clone. See decision gad-188 (44-28 umbrella — distribution is GitHub Releases + executable download, no GitHub Actions).
+description: Cut a new GAD release — version bump, CHANGELOG entry, `bun build --compile` rebuild, git tag, and `gh release create` with artifacts attached. Operator-triggered only, no CI, no npm publish. Trigger this skill whenever the user asks to "cut a release", "ship v<N>", "publish a new release", "bump the version", or any variation that means "the canonical GAD repo should have a new downloadable installer artifact on GitHub Releases." Canonical-repo-only: refuses to run outside the MagicbornStudios/get-anything-done clone. See decisions gad-188 (distribution is GitHub Releases + executable download, no GitHub Actions), gad-278 (bun build --compile is canonical), gad-279 (gad-129 superseded, no public npm).
 lane: prod
 type: captured-answer
 ---
@@ -29,7 +29,7 @@ This is the procedure for cutting a GAD release from the operator's workstation.
 2. **Branch check.** Confirm `git branch --show-current` is `main` and `git status --porcelain` is empty. Releases come from a clean `main`. If there are uncommitted changes, list them and stop — the operator decides whether to commit/stash/discard before you proceed.
 3. **Tool availability.** Confirm `node --version`, `gh --version`, and `git --version` all return. If `gh` is missing or unauthenticated (`gh auth status`), stop and print the install/auth instructions.
 4. **Fetch.** Run `git fetch --tags` so local tag state matches the remote. If a tag with the target version already exists, refuse — version bumps must be monotonic.
-5. **Dependencies.** Run `npm install` (or confirm `node_modules/` + `node_modules/.bin/postject` exists). The SEA build depends on `postject` being installed locally.
+5. **Dependencies.** Run `npm install` (or confirm `node_modules/` is up to date). Bun must be on PATH — `bun --version` should return `>=1.3.11`. The release build shells out to `bun build --compile`.
 
 ## Procedure
 
@@ -88,17 +88,15 @@ Keep it concise but thorough. A release with 300+ commits warrants a long change
 npm run build:release
 ```
 
-This runs `scripts/build-release.mjs` which:
+This runs `scripts/build-bun-release.mjs` which:
 
-1. Calls `scripts/build-hooks.js` (compile hook shims).
-2. Calls `scripts/build-cli.mjs` (bundle CLI entrypoints).
-3. Calls `scripts/build-release-support.mjs` (build the support tree of skills, commands, templates, references bundled into the SEA blob).
-4. Generates `sea-config-<platform>-<arch>.json` via `--experimental-sea-config` and emits `sea-prep-<platform>-<arch>.blob`.
-5. Copies `process.execPath` (the running Node binary) to `dist/release/gad-v<version>-<platform>-<arch>.exe`.
-6. Injects the SEA blob into the executable via `postject` using the SEA sentinel fuse constant (see `SEA_SENTINEL` in `scripts/build-release.mjs` — do NOT quote the literal value in any file that lands in the release-support tree; the sentinel string must only appear once in the final binary, so any skill/doc/template that embeds a copy will break the build via postject's "Multiple occurrences of sentinel" sanity check).
-7. On Windows, also copies `scripts/install-gad-windows.ps1` and writes a fresh `dist/release/INSTALL.txt` with the correct artifact name and invocation instructions.
+1. Calls `scripts/build-manifest.mjs` — generates the static require manifest so `bun build --compile` can statically trace `bin/commands/*.cjs` modules.
+2. Calls `scripts/build-stamp.mjs` — freezes git SHA + src hash into the exe so `gad version` reports correctly from the compiled binary.
+3. Soft-invokes `pnpm --filter @magicborn/gad-tui build:bun` — builds the TUI binary into `packages/gad-tui/dist/gad-tui-<platform>.exe` and copies it to `dist/release/gad-tui-v<version>-<platform>-<arch>.exe`. If the TUI build fails, it warn-skips and the CLI release ships without the TUI (a known gap tracked as task 63-48 / 63-50).
+4. Runs `bun build --compile --target=bun-<platform>-<arch>` on `bin/gad.cjs` and outputs `dist/release/gad-v<version>-<platform>-<arch>.exe`.
+5. Writes `dist/release/INSTALL.txt` with the correct artifact name and invocation instructions (single-file exe, no external runtime required).
 
-Cross-platform note: `build-release.mjs` refuses to cross-build. Windows artifacts must be built on Windows, macOS on macOS, Linux on Linux. If the operator needs multi-platform artifacts, they must run the skill on each target OS and upload to the same tag.
+Cross-platform note: `build-bun-release.mjs` runs bun's cross-compile via `--target=bun-<platform>-<arch>` flags, so one machine can produce artifacts for Windows / macOS / Linux. Matrix: `{windows,macos,linux} x {x64,arm64}`. To build for a non-host platform, pass `--platform` / `--arch` flags to the script.
 
 **Verify the build** before committing:
 
@@ -108,7 +106,7 @@ ls -la dist/release/
 ./dist/release/gad-v<version>-<platform>-<arch> --version  # on macOS/Linux
 ```
 
-The version output must match the version you just bumped to. If it reports the old version, the SEA blob did not rebuild — investigate `scripts/build-release-support.mjs` and the esbuild cache.
+The version output must match the version you just bumped to. If it reports the old version, the bun cache did not invalidate — run `rm -rf dist/ && npm run build:release` to force a clean rebuild.
 
 ### Step 5 — Commit the release
 
@@ -183,14 +181,14 @@ Commit the planning-doc updates separately from the release commit — the relea
 
 | Failure | Cause | Fix |
 |---|---|---|
-| `postject: command not found` | `node_modules/.bin/postject` missing | `npm install` from vendor root |
-| `Cross-platform SEA builds must run on the target platform/arch` | Operator passed `--platform` / `--arch` that doesn't match the host | Re-run on the target OS, or drop the flags |
+| `bun: command not found` | Bun not on PATH | Install bun: `npm install -g bun` or `curl -fsSL https://bun.sh/install \| bash` |
+| `bun: version too old` | Bun <1.3.11 | Upgrade bun: `bun upgrade` |
 | `gh: command not found` | `gh` CLI not installed | Install from `https://cli.github.com` |
 | `gh auth status: not logged in` | `gh` not authenticated | Run `gh auth login`, pick HTTPS or SSH, follow the prompts |
 | Release exists, upload fails with 422 | Previous run uploaded bad artifacts | `gh release upload <tag> ... --clobber` (already the default in `publish-release.mjs`) |
-| Exe reports old version after rebuild | Stale SEA blob, esbuild cache, or support-tree pre-cache | `rm -rf dist/ && npm run build:release` |
-| postject: `Multiple occurrences of sentinel found in the binary` | A bundled file in the release-support tree embeds the SEA sentinel literal. Sentinel must appear once (in the placeholder region). See `TROUBLESHOOTING.md` for the debug-grep command + incident history. | Rule: never quote the sentinel in any file bundled under `skills/`, `commands/`, `templates/`, `references/`, `agents/`, `hooks/`, `workflows/`. Reference it symbolically (`SEA_SENTINEL` constant in `scripts/build-release.mjs`). |
-| `esbuild: No loader is configured for ".node" files` | Native binaries from optional deps (`@huggingface/transformers`, onnxruntime, sharp) leaking into the SEA bundle. | `scripts/build-cli.mjs` must list those as `external`. Packaged exe runs without embeddings; falls back to Jaccard ranking in snapshot. |
+| Exe reports old version after rebuild | Stale bun build cache | `rm -rf dist/ node_modules/.cache && npm run build:release` |
+| TUI not in release | `pnpm --filter @magicborn/gad-tui build:bun` soft-skipped (bun version, missing workspace package, etc.) | Fix the underlying TUI build issue; tracked as task 63-48 (CI) + 63-50 (unify to single binary) |
+| `bun build: error: couldn't resolve ...` | Dynamic require pattern opaque to bun's static analysis | Check `scripts/build-manifest.mjs` is emitting the static manifest before bun compile |
 | Tag push rejected | Someone else tagged first, or local is behind | `git pull --rebase origin main && git fetch --tags` and re-verify version |
 | Build-release succeeds but exe won't launch on Windows | Windows Defender or SmartScreen blocked an unsigned binary | Expected for unsigned releases; instruct consumers to right-click → Properties → Unblock. Code-signing is a separate decision not covered here. |
 

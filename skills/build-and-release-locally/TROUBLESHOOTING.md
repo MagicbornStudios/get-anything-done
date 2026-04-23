@@ -4,61 +4,81 @@ Detailed debug paths moved out of SKILL.md for token efficiency. Most
 operators never read this — only consulted when the specific failure
 appears.
 
-## postject: "Multiple occurrences of sentinel found in the binary"
+## Historical note (2026-04-22 cleanup)
 
-**What's happening.** The SEA sentinel is a magic byte string that must
-appear EXACTLY ONCE in the final executable — in the placeholder region
-of the Node binary that postject overwrites with our blob.
+This file previously documented Node SEA + postject failure modes
+(sentinel collision, .node loader issues). Those are obsolete after
+decision gad-278 migrated the build pipeline to `bun build --compile`.
+The SEA code paths, scripts (`build-release.mjs`,
+`build-release-support.mjs`), and dependency on `postject` are gone.
 
-When postject injects the blob as a PE resource on Windows, the blob's
-bytes land in a resource section of the final binary. If the blob itself
-contains the sentinel string (because some file in the release-support
-tree — a skill, doc, template — literally quotes the sentinel), postject's
-post-inject sanity re-scan finds two copies and aborts.
+If an agent is trying to diagnose a SEA-era error message, they are
+almost certainly running an outdated skill copy — the canonical build
+skill was rewritten 2026-04-22. Re-install via `gad install all
+--<runtime>` from the current vendor checkout.
 
-**Debug it.** Find which file embeds the literal:
+## `bun build: couldn't resolve ...`
+
+Bun's static analyzer cannot trace dynamic `require(...)` patterns with
+computed paths. `bin/commands/*.cjs` is dynamically loaded via a
+discovery loader in `bin/gad.cjs`, so the compiler needs a static
+require manifest to know which files to bundle.
+
+**Fix:** `scripts/build-manifest.mjs` runs as a pre-bundle step in
+`scripts/build-bun-release.mjs`. It enumerates `bin/commands/*.cjs` and
+emits a static require manifest consumed by bun's compile pass. If you
+see the resolve error, verify the manifest step is running first and
+that the emitted manifest file exists before `bun build --compile` is
+invoked.
+
+## Exe reports stale version
+
+Bun's compile cache can retain a prior build's artifacts when
+package.json version bumps without source changes in `bin/gad.cjs`.
+
+**Fix:** `rm -rf dist/ node_modules/.cache && npm run build:release`
+forces a clean rebuild. `scripts/build-stamp.mjs` freezes git SHA + src
+hash into the compiled binary — if those change, the build is fresh.
+
+## TUI binary missing from release
+
+`scripts/build-bun-release.mjs` soft-invokes `pnpm --filter
+@magicborn/gad-tui build:bun`. If the TUI build fails, the CLI release
+still succeeds and ships without the TUI.
+
+**Fix:** Run the TUI build directly to see the real error:
 
 ```sh
-node -e "
-  const fs = require('fs');
-  const b = fs.readFileSync('dist/release/sea-prep-win32-x64.blob');
-  const n = Buffer.from('NODE_SEA_FUSE_' + '<hex>');  // replace <hex> with the sentinel fuse hex
-  let i = 0;
-  while ((i = b.indexOf(n, i)) !== -1) {
-    console.log(i, b.slice(Math.max(0, i - 80), i + 60).toString().replace(/[^\x20-\x7e]/g, '.'));
-    i++;
-  }
-"
+pnpm --filter @magicborn/gad-tui build:bun
 ```
 
-The printed context (±80 bytes) will identify the offending source file.
+Tracked as task 63-48 (wire into CI) and 63-50 (unify into single
+binary — eliminates this failure mode entirely).
 
-**Fix.** Either remove the literal or break it with string concatenation
-so it doesn't appear as a contiguous byte sequence on disk.
+## `gh release create` fails with 422 on re-upload
 
-**Incident history.** 2026-04-14 — initially misdiagnosed as a Node
-version bug. Confirmed via the debug command above; both hits were in
-`skills/build-and-release-locally/SKILL.md` (included twice: once from
-`skills/` and once from `dist/release-support/get-anything-done/skills/`).
-The skill now only references the sentinel symbolically.
+Previous run uploaded bad artifacts under the same tag.
 
-## `esbuild: No loader is configured for ".node" files`
+**Fix:** `gh release upload <tag> <files> --clobber` overwrites. The
+`scripts/publish-release.mjs` helper uses `--clobber` by default.
 
-Optional embedding backend (`@huggingface/transformers`) transitively
-pulls native `.node` binaries that esbuild can't bundle.
+## Windows Defender / SmartScreen blocks the exe
 
-Fix (applied 2026-04-14): add to the esbuild `external` list in
-`scripts/build-cli.mjs`:
+The release binaries are unsigned. Defender heuristic-flags them on
+first run.
 
-- `@huggingface/transformers`
-- `onnxruntime-node`
-- `onnxruntime-common`
-- `onnxruntime-web`
-- `sharp`
+**Fix (consumer):** Right-click the exe → Properties → Unblock →
+Apply. Code-signing certificates are a HUMAN-TODO not yet addressed.
 
-If the failure regresses after a dependency upgrade, re-check that list
-against the new `package.json` + `node_modules/@huggingface/transformers/`
-to see what new native deps appeared.
+## Build succeeds but binary won't launch on target OS
 
-The packaged exe runs without embeddings — snapshot falls back to Jaccard
-ranking in that state.
+Cross-compiled bun binaries occasionally have native-module linking
+issues. `bun build --compile` handles most cases but some native deps
+(e.g. sharp, onnxruntime) embed platform-specific .node files that
+don't cross-compile cleanly.
+
+**Fix:** Build on the target OS directly, OR list the problematic
+module in bun's externals and provide the .node file alongside the
+release. For GAD today, embeddings (@huggingface/transformers +
+onnxruntime) are intentionally excluded from the release binary — the
+packaged CLI falls back to Jaccard ranking for snapshot.

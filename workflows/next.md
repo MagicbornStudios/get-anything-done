@@ -66,8 +66,8 @@ If all phases are complete:
 → Next action: `/gad:complete-milestone`
 
 **Route 8: Paused → resume**
-If STATE.md shows paused_at:
-→ Next action: `/gad:resume-work`
+If STATE.xml `<next-action>` or a pending open handoff indicates paused work:
+→ Next action: `gad snapshot --projectid <id>` then `gad handoffs list --mine-first --projectid <id>` (resume protocol in `skills/gad-handoffs/SKILL.md`)
 </step>
 
 <step name="show_and_execute">

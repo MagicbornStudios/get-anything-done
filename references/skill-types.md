@@ -10,7 +10,7 @@ system.* Agents pick a skill by looking at both axes.
 |---|---|---|---|
 | `system-requirements` | Installs a contract + UX pattern into any host codebase. Small, falsifiable requirements set; host-agnostic. Virus-like. | `type: system-requirements` | `gad-visual-context-system`, `scaffold-visual-context-surface` |
 | `captured-answer` | "When you hit X, do Y, because Z." Fix recipe or decision capture. Scoped to one repeatable problem. | `type: captured-answer` | most `gad-add-*`, `gad-debug`, recipe fixes |
-| `workflow` | Long-form procedure the skill delegates to. Thin SKILL.md + sibling `workflow.md` carrying the steps. Bundle. | `type: workflow` | `gad-visual-context-system` (thin SKILL → `workflows/visual-context-system.md`), `gad-pause-work` |
+| `workflow` | Long-form procedure the skill delegates to. Thin SKILL.md + sibling `workflow.md` carrying the steps. Bundle. | `type: workflow` | `gad-visual-context-system` (thin SKILL → `workflows/visual-context-system.md`), `gad-handoffs` |
 | `command-wrapper` | Thin adapter over a CLI or script. No methodology beyond "here's how to invoke this command correctly". | `type: command-wrapper` | `gad-update`, `eval-run` |
 | `meta-framework` | Framework-on-framework. Creates/evolves/sheds other skills, reindexes catalogs, versions GAD itself. Always `lane: meta`. | `type: meta-framework` | `create-skill`, `gad-evolution-evolve`, `framework-upgrade` |
 
@@ -24,13 +24,13 @@ framework` (e.g. `gad-evolution-evolve`). Common pairings:
 | **captured-answer** | most fix recipes | release checklists | framework-only recipes |
 | **workflow** | plan/execute/verify | release/ship | evolve/promote/shed |
 | **command-wrapper** | `gad-do` | `gad-update` | `gad-skill-creator` |
-| **meta-framework** | rare; surfaces when lane spans `[dev, meta]` (e.g. `gad-reverse-engineer`, `gad-auto-conventions`) | — | all create/shed/evolve |
+| **meta-framework** | rare; surfaces when lane spans `[dev, meta]` (e.g. `gad-reverse-engineer`) | — | all create/shed/evolve |
 
 **Observed lane-type pairings worth noting** (from 2026-04-18 wave 3-5 type-tag pass):
 
 - `gad-verify-work` — `lane: [dev, prod]`, `type: workflow`. Cross-lane workflows are common.
 - `gad-validate-phase` — `lane: [dev, prod]`, `type: captured-answer`. The `prod`-side `captured-answer` cell ("release checklists") generalizes to phase-validation checklists.
-- `gad-reverse-engineer` and `gad-auto-conventions` — `lane: [dev, meta]`, `type: meta-framework`. Span dev work and framework hygiene; classified by dominant shape (framework behavior wins when both apply).
+- `gad-reverse-engineer` — `lane: [dev, meta]`, `type: meta-framework`. Spans dev work and framework hygiene; classified by dominant shape (framework behavior wins when both apply). (Previously `gad-auto-conventions` also sat here; folded into `gad-map-codebase` 2026-04-22, task 63-41.)
 
 When a skill genuinely sits across two lanes, classify by the dominant *shape* it instantiates on the host, not by the lane bias of the matrix's example slot.
 

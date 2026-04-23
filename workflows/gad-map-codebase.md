@@ -6,6 +6,33 @@ Each agent has fresh context, explores a specific focus area, and **writes docum
 Output: .planning/codebase/ folder with 7 structured documents about the codebase state.
 </purpose>
 
+<scope_argument>
+An optional scope argument narrows the orchestrator to a single mapper focus and its documents. Absent → run all four focus areas (full 7-document output).
+
+| Scope | Focus | Documents written |
+|---|---|---|
+| `tech` | Agent 1 only | STACK.md, INTEGRATIONS.md |
+| `arch` | Agent 2 only | ARCHITECTURE.md, STRUCTURE.md |
+| `quality` or `conventions` | Agent 3 only | CONVENTIONS.md, TESTING.md |
+| `concerns` | Agent 4 only | CONCERNS.md |
+
+Invocation:
+
+```
+/gad:map-codebase quality         # or 'conventions' alias
+/gad:map-codebase tech
+/gad:map-codebase                 # all four
+```
+
+When a scope is supplied, skip non-matching `Task(...)` spawns in `spawn_agents` (or non-matching passes in `sequential_mapping`), and `verify_output` expects only the subset.
+
+**Why `conventions` is an alias for `quality`:** the retired
+`gad-auto-conventions` skill (folded 2026-04-22, task 63-41) produced only
+`.planning/CONVENTIONS.md`. Agent 3 already writes a superset (conventions
++ testing), so the alias preserves that entry point without a second
+skill.
+</scope_argument>
+
 <legacy_methodology>
 The older long-form `map-codebase` skill carried the practical document contract and should be treated as workflow guidance:
 

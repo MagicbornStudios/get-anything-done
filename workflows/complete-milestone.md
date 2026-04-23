@@ -397,7 +397,23 @@ mv .planning/phases/{phase-dir} .planning/milestones/v[X.Y]-phases/
 ```
 Verify: `✅ Phase directories archived to .planning/milestones/v[X.Y]-phases/`
 
-If "Skip": Phase directories remain in `.planning/phases/` as raw execution history. Use `/gad:cleanup` later to archive retroactively.
+If "Skip": Phase directories remain in `.planning/phases/` as raw execution history.
+
+**Retroactive archival** — if on a later run the user wants to archive a previously-skipped milestone's phases, re-run this step inline. Given a target `v[X.Y]`:
+
+```bash
+# Determine phase membership from the archived roadmap snapshot
+cat .planning/milestones/v[X.Y]-ROADMAP.md   # extract phase numbers/names
+# List current phase dirs and match against membership
+ls -d .planning/phases/*/ 2>/dev/null
+# Archive the matching dirs
+mkdir -p .planning/milestones/v[X.Y]-phases
+mv .planning/phases/{dir} .planning/milestones/v[X.Y]-phases/
+# Commit
+gad-tools commit "chore: archive phase directories for v[X.Y]" --files .planning/milestones/ .planning/phases/
+```
+
+Skip any phase dir whose parent milestone already has a `-phases` archive.
 
 After archival, the AI still handles:
 - Reorganizing ROADMAP.md with milestone grouping (requires judgment)

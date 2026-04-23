@@ -893,13 +893,18 @@ ls .planning/milestones/v${milestone_version}-ROADMAP.md 2>/dev/null || true
 
 If the archive file does not exist, go to handle_blocker: "Complete milestone did not produce expected archive files."
 
-**5c. Cleanup**
+**5c. Cleanup (retroactive phase archival)**
 
-```
-Skill(skill="gad:cleanup")
+Phase-directory archival is now inlined in `/gad:complete-milestone`'s `archive_milestone` step. If an earlier milestone was completed with "Skip — keep phases in place", archive them now per the "Retroactive archival" block in `workflows/complete-milestone.md`:
+
+```bash
+# For each completed milestone without a -phases archive dir:
+ls -d .planning/milestones/v*-phases 2>/dev/null
+# Determine membership from v[X.Y]-ROADMAP.md, mkdir -p the archive,
+# mv matching .planning/phases/*/ into it, commit.
 ```
 
-Cleanup shows its own dry-run and asks user for approval internally — this is an acceptable pause per CTRL-01 since it's an explicit decision about file deletion.
+This step shows a dry-run before moving files and requires user approval (CTRL-01) since it's an explicit decision about archival.
 
 **5d. Final Completion**
 

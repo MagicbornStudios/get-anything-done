@@ -491,7 +491,7 @@ Ready to plan the next milestone.
 - Phase complete but next phase not planned → offer `/gad:plan-phase [next] ${GAD_WS}`
 - All work complete → offer milestone completion
 - Blockers present → highlight before offering to continue
-- Handoff file exists → mention it, offer `/gad:resume-work ${GAD_WS}`
+- Open handoffs exist → mention them, offer `gad handoffs list --mine-first --projectid ${GAD_PROJECT_ID:-<id>}` (see `skills/gad-handoffs`)
   </step>
 
 </process>

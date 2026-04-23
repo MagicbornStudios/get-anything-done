@@ -73,7 +73,7 @@ informational and never fails on absence.
 | `PROJECT.xml` | Reserved for a future phase that standardizes project identity. Currently unused. |
 | `DOCS-MAP.xml` | Framework/doc-heavy projects with many cross-references that benefit from an explicit map. Currently only `get-anything-done` uses it. |
 | `AGENTS.md` | Project-specific agent loop instructions that override the repo-root `CLAUDE.md`. Only `global` uses it. |
-| `CONVENTIONS.md` | Project-specific enforced coding/doc conventions. Produced by `/gad-auto-conventions` in a phase 01 post-scaffold pass. |
+| `CONVENTIONS.md` | Project-specific enforced coding/doc conventions. Produced by `/gad:map-codebase conventions` in a phase 01 post-scaffold pass (Agent 3 quality focus). |
 | `README.md` | Human-authored overview of the planning dir itself. Rare. |
 
 ### Directories
@@ -88,7 +88,7 @@ informational and never fails on absence.
 | `todos/` | Parking lot for todos captured via `/gad-add-todo` or `/gad-note`. |
 | `debug/` | Persistent debugging state per `/gad-debug`. |
 | `reports/` | Session / audit / self-eval output. |
-| `sessions/` | Session handoff files from `/gad-pause-work` / `/gad-resume-work`. |
+| `sessions/` | Per-agent session state from `gad startup` / `gad session new` (local-only, gitignored). Handoff queue lives separately in `handoffs/{open,claimed,closed}/` — see `skills/gad-handoffs`. |
 | `specs/` | Long-form specifications that don't fit in `REQUIREMENTS.xml` (framework projects only). |
 | `context-frameworks/` | Framework meta only (`get-anything-done`). |
 | `codebase/` | Output of `/gad-map-codebase`. |
@@ -97,7 +97,7 @@ informational and never fails on absence.
 | `templates/` | Project-local templates (distinct from canonical framework `templates/`). |
 | `quick/` | Ad-hoc scratchpad. |
 | `skills/` | **Deprecated project-local skill staging** — use `proto-skills/` instead (see §4). |
-| `.eval-runs/` | Transient session markers from `gad:eval-spawn`. Runtime-only, git-ignored. |
+| `.generation-runs/` | Transient session markers from `gad:generation-spawn`. Runtime-only, git-ignored. |
 
 ## 4. Legacy / deprecated names
 

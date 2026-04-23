@@ -7,7 +7,8 @@ type: meta-framework
 
 # self-eval
 
-Score how well GAD performed on its own development. This is the brownfield eval that uses real work data, not isolated game experiments.
+Score how well GAD performed on its own development. This is the brownfield evaluation that
+uses real work data, not isolated game generations.
 
 ## Context
 
@@ -23,7 +24,7 @@ What percentage of tool calls target .planning/ files vs source code?
 - > 40% = 0.1 (framework is the bottleneck)
 
 ### 2. Loop compliance (0.0 – 1.0)
-How many sessions follow the GAD loop? (snapshot → work → update docs → commit)
+How many sessions follow the GAD loop? (snapshot — work — update docs — commit)
 - Check: does each session start with `gad snapshot`?
 - Check: are planning docs updated before or with each commit?
 - Score = compliant sessions / total sessions
@@ -50,7 +51,7 @@ What shipped per round? Not a numeric score — a narrative:
 - Features shipped
 - Bugs fixed
 - Decisions made
-- Evals run
+- Generations spawned
 - Site pages published
 
 ## How to compute
@@ -71,4 +72,14 @@ SELF-EVAL-ROUND-N.md in .planning/ with:
 
 ## Integration with the site
 
-Self-eval reports should appear alongside game eval reports on the landing page. The "Results" section should show both controlled (game evals) and real-world (self-eval) data. This is what makes the Freedom hypothesis credible — we're not just testing on toys.
+Self-eval reports should appear alongside species/generation evaluation reports on the
+landing page. The "Results" section should show both controlled (species generations) and
+real-world (self-eval) data. This is what makes the Freedom hypothesis credible — we're
+not just testing on toys.
+
+## Vocabulary note (post decision gad-212)
+
+"Self-eval" retains the methodology sense of "evaluation" — the act of scoring GAD against
+its own rubric. Where this skill refers to produced artifacts in the species/generation
+system (e.g. the "game evals" on escape-the-dungeon), those now read as "species
+generations" per gad-212 + gad-219.
