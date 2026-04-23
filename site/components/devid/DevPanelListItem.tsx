@@ -4,6 +4,7 @@ import type { MouseEvent } from "react";
 import { Copy, Landmark, MessageSquare, Mic } from "lucide-react";
 import { DevChromeHoverHint, type VcPanelCorner } from "@/components/devid/DevChromeHoverHint";
 import type { RegistryEntry } from "./SectionRegistry";
+import { Identified } from "./Identified";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +38,14 @@ export function DevPanelListItem({
   onMicToggle: () => void;
   onPrompt: () => void;
 }) {
+  const rowCid = `visual-context-panel-row-${entry.cid}`;
+
   return (
-    <div
+    <Identified
+      as="DevPanelListRow"
+      cid={rowCid}
+      register={false}
+      depth={1}
       className={cn(
         "flex items-center gap-1 rounded border p-0.5",
         active
@@ -123,6 +130,6 @@ export function DevPanelListItem({
           <MessageSquare size={10} />
         </Button>
       </DevChromeHoverHint>
-    </div>
+    </Identified>
   );
 }

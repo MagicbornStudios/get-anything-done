@@ -3,6 +3,7 @@
 import { Copy, Eye, MessageSquare } from "lucide-react";
 import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
 import { cn } from "@/lib/utils";
+import { Identified } from "./Identified";
 import type { RegistryEntry } from "./SectionRegistry";
 
 type SectionRegistryListRowProps = {
@@ -25,9 +26,15 @@ export function SectionRegistryListRow({
   onPrompt,
 }: SectionRegistryListRowProps) {
   const isHl = highlightCid === entry.cid;
+  const rowCid = `section-registry-row-${entry.cid}`;
 
   return (
-    <li
+    <Identified
+      as="SectionRegistryListRow"
+      tag="li"
+      cid={rowCid}
+      register={false}
+      depth={1}
       className={cn(
         "group/cid flex items-center gap-1 rounded-md px-1 py-1 text-[11px] transition-colors",
         isHl ? "bg-accent/15" : "hover:bg-card/60",
@@ -98,6 +105,6 @@ export function SectionRegistryListRow({
       {justCopied === entry.cid && (
         <span className="shrink-0 text-[9px] uppercase tracking-wider text-emerald-400">copied</span>
       )}
-    </li>
+    </Identified>
   );
 }

@@ -46,7 +46,7 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-21T14:25:34.878Z</last-updated>
+  <last-updated>2026-04-23T03:19:13.211Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
     <entry agent="opus-claude" at="2026-04-23T02:39:27.175Z" tags="phase-close,42.2,42.3,42.4,hygiene">Closed phases 42.2 / 42.3 / 42.4 — all tasks done/cancelled, phase status was stuck at planned. STATE current-phase still 42.4; operator picks next thread (43 domain rename, or open new phase for M4.9 gap-close).</entry>
