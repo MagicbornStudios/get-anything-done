@@ -288,7 +288,7 @@
   <phase id="43">
     <title>Domain rename + project/species schema unification</title>
     <goal>Two changes in one atomic pass. (1) **Schema unification**: today's separate eval projects (escape-the-dungeon, escape-the-dungeon-bare, escape-the-dungeon-emergent) merge under one parent **project** ("Escape the Dungeon") that contains three **species** rows (gad, bare, emergent). The marketplace lists projects; project detail shows species; each species shows its generations. (2) **Domain rename**: rounds → evolutions (timeline of broods); each v1, v2… within a species → generation; all generations across species at the same round → brood; the skill manifest baked into a species → DNA; the bundle a generation produces (build + planning + trace + commits + reviews) → spawn. Touch: gad.json files (introduce `parent_project` field or merge the directory layout itself; preserve existing artifact paths to avoid breaking eval preservation), build-site-data.mjs (group by parent project, expose new types), all site components and pages (display strings, nav, hero copy), gad CLI commands and help text, AGENTS.md and the Loop docs, ROADMAP/STATE/DECISIONS prose. Single commit so we never half-rename. Display strings + types + grouping only — eval preservation paths stay stable.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>42</depends>
   </phase>
   <phase id="44">
@@ -300,19 +300,19 @@
   <phase id="44.5">
     <title>Project Editor + Brood Editor + DNA Editor — local-dev gamified species/brood/generation workspace</title>
     <goal>After the marketplace lands (phase 44), build a local-dev-only Project Editor surface that contains the Brood Editor as its species-level inner surface. The editor is the operator's workspace for authoring projects, defining recipes, running species, and viewing the resulting broods of generations. Discuss-phase 2026-04-15 locked terminology + visual primitives + draft/published model in decision gad-189. Vocabulary: **Recipe** = reusable template for producing a species. **Species** = recipe attached to a concrete project. **Generation** = one concrete run of a species. **Brood** = the accumulated population of generations for a species. **Bestiary** = UI view of every species + its brood across a project. Scope: (1) **New editor route** `/projects/[id]/edit` (or `/project-editor/[id]`), dev-gated via `NODE_ENV=development`. NOT the existing `/projects/[...id]` catch-all — that remains a read-only listing detail surface. (2) **Split viewport** — left pane: bestiary grid or React Flow graph of species + broods; right pane: iframe live preview of the currently-selected generation's preserved build; bottom pane: config inspector with minecraft-style inventory grid for the species's gad.json/recipe. (3) **Visual primitives**: animated trait bars, radar chart per species (6-8 trait axes, prototype), visual diff tree with glow on changed traits between generations, minecraft inventory grid for config, in-game bestiary cards. Gamified feel comes from primitives, not a literal game engine. (4) **Visual Context System is mandatory** per decision gad-186/187 + the operator's hard requirement: every section gets an explicit `SiteSection cid="*-site-section"` literal, every interactive element is grep-able, and the panel + modal-footer CRUD loop must work on every surface before the feature is considered done. No exceptions for game-styled components. (5) **Draft/published model** (decision gad-189): new `published: false` boolean on `project.json` (reserved on `species.json`). `/project-market` filters to published; `/projects/[...id]` listing detail shows both; editor shows all. (6) **Dev-server command bridge** (permissive first, allowlist hardening pass second) behind a dev-only API route. (7) **File-system adapter** for round-trip editing of `project.json`, `species.json`, `gad.json`, per-species overrides. (8) **Recipe CRUD** — operator defines recipes inside project data; running a recipe produces a generation that accumulates in the species's brood. (9) **Bestiary view** — read-only history of generations rendered as bestiary cards. (10) **Data source update for existing listing** — `project-skills-scope-section-site-section` on `/projects/[...id]` stays on the listing but its data changes from project-level skill catalog to brood/generation-aggregated skill usage. Dogfood target: `projects/project-editor/project-editor/` (scaffolded 2026-04-15 via task 44-14 with baseline species inheriting from app-forge v1). Explicit non-goals: no Vercel-hosted mutation path (decision gad-170), no sprite-based game engine, no split into separate `/project-editor` and `/species-editor` routes (the editor is one surface with inline expansion). **(11) DNA Editor pane** (decision gad-198, 2026-04-15): sibling pane alongside Bestiary showing the project's skill genome in four states — DNA (integrated into `.claude/skills/`), Expressed (`.gad-try/` sandboxes = epigenetic), Mutations (`.planning/proto-skills/` candidates), Shed pile (flagged via shed score or manual). Every row is a cid-registered SiteSection; every action row button runs a CLI command through the 44.5-02 dev bridge (`gad try`, `gad evolution promote`, `gad evolution shed`, `gad try cleanup`, copy-prompt-to-clipboard, iframe-preview trial artifacts). Built using the `scaffold-visual-context-surface` skill promoted 2026-04-15 — its first real application. Supersedes the need for a separate skill-management surface and unifies install/try/proto/shed/promote into one lifecycle view.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>44</depends>
   </phase>
   <phase id="45">
     <title>Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model</title>
     <goal>The big polish pass after the rename and marketplace land. Refresh the visual identity, type ramp, color palette, hero copy, About page, README, and external-facing docs around the new species/generation/DNA/evolution language. Make the site read playfully (e.g. "the bare species' generation 4 evolved a fitter descendant that crushed the earlier run"). Audit every public-facing string. Includes site-wide consistency check: same word for same concept everywhere. Logo + favicon refresh if needed. Standalone phase because it's a focused design + copy effort, not a code refactor. Must drop any remaining "GAD+emergent" framing per decision gad-166 and treat findings as articles/whitepapers per decision gad-169.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>44,44.5</depends>
   </phase>
   <phase id="46">
     <title>Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning</title>
     <goal>Redesign the landing site from 25+ routes to 9 focused public pages (decisions gad-207..211). Consolidate gad workspace into gad projects. Add SpriteAnimation component. Scaffold species-level .planning/ dirs on species create. Expand /downloads as VCS component showcase + installer hub. Build /how-it-works methodology page absorbing glossary, formulas, standards, eval-guide content. Define project-level assets convention and generation data salvage pipeline.</goal>
-    <status>active</status>
+    <status>done</status>
     <depends>44.5</depends>
   </phase>
 
@@ -361,7 +361,7 @@
   <phase id="52">
     <title>packages/editor-core — read-only code view + virtual file folder</title>
     <goal>Shared primitive package. CodeView component (read-only per gad-246). VirtualFileFolder primitive per gad-254 with pluggable data source adapter (local FS vs Supabase). Used by apps/platform AND apps/desktop.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends></depends>
   </phase>
 
@@ -402,8 +402,8 @@
 
   <phase id="58">
     <title>Daily teachings system — pipeline + site integration</title>
-    <goal>Wire the teachings/ catalog into user-facing surfaces. (1) Snapshot footer: add a one-line 'tip of the day' reference to gad snapshot output (~60 chars, zero token cost beyond that line). (2) GitHub Actions daily-tip.yml tested end-to-end with OPENAI_API_KEY secret. (3) Site /teachings route under phase 46 — card grid, category filter, search, difficulty badges. (4) Optional weekly recap generator. (5) Document contribution path for static tips in teachings/README.md. Content backlog is fed by llm-from-scratch project (decision llm-004 / gad-256) + daily generator.</goal>
-    <status>planned</status>
+    <goal>Wire the teachings/ catalog into user-facing surfaces. (1) Snapshot footer: add a one-line 'tip of the day' reference to gad snapshot output (~60 chars, zero token cost beyond that line). (2) GitHub Actions daily-tip.yml tested end-to-end with OPENAI_API_KEY secret. (3) Site /teachings route under phase 46 — card grid, category filter, search, difficulty badges. (4) Optional weekly recap generator. (5) Document contribution path for static tips in teachings/README.md. Content backlog is fed by llm-from-scratch project (decision llm-004 / gad-256) + daily generator. [CANCELLED 2026-04-23: operator direction — not needed.]</goal>
+    <status>cancelled</status>
     <depends>46</depends>
   </phase>
 
@@ -480,7 +480,7 @@
   <phase id="42.5">
     <title>Skills catalog hygiene close-out</title>
     <goal>Close out the 2026-04-22 skills audit + re-verify + folds + renames + vocabulary refresh. Most work was executed this session via 3 parallel subagents (deletion, fold, rename+vocab). Remaining close-out: (1) fix 4 residual references to deleted slugs in reference files (gad-handoffs SKILL.md, references/project-shape.md, references/skill-shape.md, references/skill-types.md — all flagged in .planning/notes/2026-04-22-skill-deletion-report.md), (2) confirm cursor-skill-allowlist.txt budget post-deletion is under 63, (3) re-run validate-canonical-assets check, (4) stamp remaining audit-followup tasks done (63-29, 63-33, 63-34 all DONE this session), (5) update any CLAUDE.md or references that still mention retired skills. Goal: final canonical catalog 73 skills, zero dangling references, Claude visibility=open, Cursor gated with budget under 63.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>42.4</depends>
   </phase>
 
