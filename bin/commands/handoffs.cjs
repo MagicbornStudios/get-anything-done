@@ -26,7 +26,34 @@ const {
 } = require('../../lib/handoffs.cjs');
 
 function createHandoffsCommand(deps) {
-  const { findRepoRoot, outputError, render, shouldUseJson, detectRuntimeIdentity } = deps;
+  const {
+    findRepoRoot,
+    outputError,
+    render,
+    shouldUseJson,
+    detectRuntimeIdentity,
+    gadConfig,
+    resolveRoots,
+  } = deps;
+
+  function resolveTargetRoot(projectid) {
+    const baseDir = findRepoRoot();
+    if (!gadConfig || typeof gadConfig.load !== 'function' || typeof resolveRoots !== 'function') {
+      return { baseDir, projectid: projectid || '' };
+    }
+
+    const config = gadConfig.load(baseDir);
+    const roots = resolveRoots({ projectid: projectid || '' }, baseDir, config.roots);
+    if (!Array.isArray(roots) || roots.length === 0) {
+      return { baseDir, projectid: projectid || '' };
+    }
+
+    const root = roots[0];
+    return {
+      baseDir: path.resolve(baseDir, root.path || '.'),
+      projectid: root.id || projectid || '',
+    };
+  }
 
   const handoffsListCmd = defineCommand({
     meta: { name: 'list', description: 'List handoffs (default: open bucket)' },
@@ -237,7 +264,7 @@ function createHandoffsCommand(deps) {
   const handoffsCreateCmd = defineCommand({
     meta: { name: 'create', description: 'Create a new handoff in open/' },
     args: {
-      projectid: { type: 'string', description: 'Project id', required: true },
+      projectid: { type: 'string', description: 'Project id (defaults to session / cwd scope)', default: '' },
       phase: { type: 'string', description: 'Phase id (e.g. 60)', required: true },
       'task-id': { type: 'string', description: 'Task id (optional)', default: '' },
       priority: { type: 'string', description: 'low | normal | high', default: 'normal' },
@@ -246,11 +273,11 @@ function createHandoffsCommand(deps) {
       'runtime-preference': { type: 'string', description: 'Runtime hint (e.g. claude-code)', default: '' },
     },
     run({ args }) {
-      const baseDir = findRepoRoot();
+      const target = resolveTargetRoot(args.projectid);
       try {
         const result = createHandoff({
-          baseDir,
-          projectid: String(args.projectid),
+          baseDir: target.baseDir,
+          projectid: String(args.projectid || target.projectid),
           phase: String(args.phase),
           taskId: args['task-id'] || undefined,
           priority: String(args.priority || 'normal'),
@@ -260,7 +287,7 @@ function createHandoffsCommand(deps) {
           runtimePreference: args['runtime-preference'] || undefined,
         });
         console.log(`Created: ${result.id}`);
-        console.log(`Path:    ${path.relative(baseDir, result.filePath)}`);
+        console.log(`Path:    ${path.relative(findRepoRoot(), result.filePath)}`);
       } catch (e) {
         if (e instanceof HandoffError) {
           outputError(e.message);
@@ -288,7 +315,7 @@ function createHandoffsCommand(deps) {
       priority: { type: 'string', description: 'low | normal | high', default: 'normal' },
     },
     run({ args }) {
-      const baseDir = findRepoRoot();
+      const target = resolveTargetRoot(args.projectid);
       const files = String(args.files || '')
         .split(',')
         .map((s) => s.trim())
@@ -313,7 +340,7 @@ function createHandoffsCommand(deps) {
 
       try {
         const result = createHandoff({
-          baseDir,
+          baseDir: target.baseDir,
           projectid: String(args.projectid),
           phase: String(args.phase),
           taskId: String(args['task-id']),
@@ -339,7 +366,7 @@ function createHandoffsCommand(deps) {
         console.log(`Created closeout: ${result.id}`);
         console.log(`Task:    ${args['task-id']} (${args.projectid}:${args.phase})`);
         console.log(`Commit:  ${args.commit}`);
-        console.log(`Path:    ${path.relative(baseDir, result.filePath)}`);
+        console.log(`Path:    ${path.relative(findRepoRoot(), result.filePath)}`);
         console.log('');
         console.log(`Receiving lane sweep: \`gad handoffs list --projectid ${args.projectid}\``);
       } catch (e) {

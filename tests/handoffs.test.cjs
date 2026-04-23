@@ -8,7 +8,10 @@
 const { test, describe } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
+const fs = require('fs');
 
+const { createHandoffsCommand } = require('../bin/commands/handoffs.cjs');
+const { createTempDir, cleanup } = require('./helpers.cjs');
 const {
   HandoffError,
   parseFrontmatter,
@@ -126,6 +129,133 @@ describe('parseFrontmatter', () => {
     const { frontmatter, body } = parseFrontmatter(text);
     assert.deepStrictEqual(frontmatter, {});
     assert.strictEqual(body, 'Just body text.');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// command-level create path resolution
+// ---------------------------------------------------------------------------
+
+function captureConsole(fn) {
+  const logs = [];
+  const originalLog = console.log;
+  console.log = (...args) => logs.push(args.join(' '));
+  try {
+    fn();
+  } finally {
+    console.log = originalLog;
+  }
+  return logs.join('\n');
+}
+
+describe('handoffs create command', () => {
+  test('explicit --projectid resolves write path to that project root', () => {
+    const tmpDir = createTempDir('gad-handoffs-command-');
+    fs.mkdirSync(path.join(tmpDir, 'vendor', 'get-anything-done'), { recursive: true });
+    const command = createHandoffsCommand({
+      findRepoRoot() {
+        return tmpDir;
+      },
+      outputError(message) {
+        throw new Error(message);
+      },
+      render() {
+        throw new Error('render should not be used in create command test');
+      },
+      shouldUseJson() {
+        return false;
+      },
+      detectRuntimeIdentity() {
+        return { id: 'codex-cli' };
+      },
+      gadConfig: {
+        load() {
+          return {
+            roots: [
+              { id: 'global', path: '.' },
+              { id: 'get-anything-done', path: 'vendor/get-anything-done' },
+            ],
+          };
+        },
+      },
+      resolveRoots(args, baseDir, allRoots) {
+        return allRoots.filter((root) => root.id === args.projectid);
+      },
+    });
+
+    try {
+      const output = captureConsole(() => command.subCommands.create.run({
+        args: {
+          projectid: 'global',
+          phase: '05',
+          'task-id': '',
+          priority: 'normal',
+          context: 'mechanical',
+          body: 'body',
+          'runtime-preference': '',
+        },
+        rawArgs: [],
+      }));
+
+      assert.match(output, /Path:\s+\.planning[\\/]handoffs[\\/]open[\\/]/);
+      assert.doesNotMatch(output, /vendor[\\/]get-anything-done[\\/]\.planning[\\/]handoffs[\\/]open[\\/]/);
+    } finally {
+      cleanup(tmpDir);
+    }
+  });
+
+  test('missing --projectid preserves session or cwd-scoped root resolution', () => {
+    const tmpDir = createTempDir('gad-handoffs-command-');
+    fs.mkdirSync(path.join(tmpDir, 'vendor', 'get-anything-done'), { recursive: true });
+    const command = createHandoffsCommand({
+      findRepoRoot() {
+        return tmpDir;
+      },
+      outputError(message) {
+        throw new Error(message);
+      },
+      render() {
+        throw new Error('render should not be used in create command test');
+      },
+      shouldUseJson() {
+        return false;
+      },
+      detectRuntimeIdentity() {
+        return { id: 'codex-cli' };
+      },
+      gadConfig: {
+        load() {
+          return {
+            roots: [
+              { id: 'global', path: '.' },
+              { id: 'get-anything-done', path: 'vendor/get-anything-done' },
+            ],
+          };
+        },
+      },
+      resolveRoots() {
+        return [{ id: 'get-anything-done', path: 'vendor/get-anything-done' }];
+      },
+    });
+
+    try {
+      const output = captureConsole(() => command.subCommands.create.run({
+        args: {
+          projectid: '',
+          phase: '63',
+          'task-id': '',
+          priority: 'normal',
+          context: 'mechanical',
+          body: 'body',
+          'runtime-preference': '',
+        },
+        rawArgs: [],
+      }));
+
+      assert.match(output, /Path:\s+vendor[\\/]get-anything-done[\\/]\.planning[\\/]handoffs[\\/]open[\\/]/);
+    } finally {
+      cleanup(tmpDir);
+    }
   });
 });
 
