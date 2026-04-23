@@ -49,6 +49,7 @@
   <last-updated>2026-04-21T14:25:34.878Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="opus-claude" at="2026-04-23T02:39:27.175Z" tags="phase-close,42.2,42.3,42.4,hygiene">Closed phases 42.2 / 42.3 / 42.4 — all tasks done/cancelled, phase status was stuck at planned. STATE current-phase still 42.4; operator picks next thread (43 domain rename, or open new phase for M4.9 gap-close).</entry>
     <entry agent="unknown" at="2026-04-20T16:47:39.468Z" tags="66-01,cli-hygiene,loader,done">Phase 66-01 (loader manifest fix) shipped: scripts/build-manifest.mjs generates bin/commands/_manifest.cjs at build time, _loader.cjs prefers it + topologically sorts provides phase, evolution.dependsOn=[evolution-images] annotates the one cross-dep. Bun-compiled v1.35.0 exe now registers team + all 64 command modules. Installed. Subagent working 52-01 scaffold in parallel.</entry>
     <entry agent="opus-claude" at="2026-04-19T18:50:52.968Z">sweep F (post-failure-callout): extracted 9 cmd families (phases, decisions, handoffs, readers, refs, narrative, start, subagents, agents, site). bin/gad.cjs 18181 to 16689 (-1492 LOC, factory pattern). all smokes + targeted tests pass.</entry>
     <entry agent="opus-claude" at="2026-04-19T18:26:09.769Z" tags="sweep-e,refactor,modular-commands">sweep E shipped: extracted state/note/todos to bin/commands/ (factory pattern). gad.cjs 18437 -&gt; 18181 LOC. Smoke + targeted tests pass. Pattern documented in CLAUDE.md.</entry>
