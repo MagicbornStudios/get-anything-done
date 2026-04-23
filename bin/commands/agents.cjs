@@ -16,7 +16,7 @@ function createAgentsCommand(deps) {
     meta: {
       name: 'status',
       description:
-        'Unified view of installed runtimes, OMX/Codex state, router daemon, recent subagent runs, and pending handoffs per runtime.',
+        'Unified view of installed runtimes, GAD team state, router daemon, recent subagent runs, and pending handoffs per runtime.',
     },
     args: {
       'no-probe': { type: 'boolean', description: 'Skip binary probes (which/where). Faster, less info.', default: false },
@@ -75,9 +75,9 @@ function createAgentsCommand(deps) {
       }
       console.log('');
 
-      console.log('-- GAD TEAM / OMX WORKFLOW LAYER ------------------------------');
+      console.log('-- GAD TEAM WORKFLOW LAYER -----------------------------------');
       if (!omx) {
-        console.log('No .planning/team/state.json (or legacy .omx/state/team-state.json) — team mode not active.');
+        console.log('No .planning/team/state.json — team mode not active.');
       } else {
         console.log(`  active:       ${omx.active ? 'yes' : 'no'}`);
         console.log(`  mode:         ${omx.mode || '-'}`);
@@ -85,7 +85,7 @@ function createAgentsCommand(deps) {
         console.log(`  age:          ${formatAge(omx.ageMs)}`);
         console.log(`  iteration:    ${omx.iteration == null ? '-' : omx.iteration}`);
         if (omx.ageMs != null && omx.ageMs > 30 * 60 * 1000) {
-          console.log(`  note:         stale (>${Math.floor(omx.ageMs / 60000)}min); Codex may have crashed or idled.`);
+          console.log(`  note:         stale (>${Math.floor(omx.ageMs / 60000)}min); team leader may have crashed or idled.`);
         }
       }
       console.log('');

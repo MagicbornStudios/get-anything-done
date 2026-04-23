@@ -1,0 +1,13 @@
+{
+  "id": "w3",
+  "role": "executor",
+  "lane": "backend",
+  "runtime": "claude-code",
+  "runtime_cmd": "claude -p",
+  "pid": null,
+  "started_at": "2026-04-20T19:12:40.903Z",
+  "last_heartbeat": "2026-04-20T19:12:40.907Z",
+  "current_ref": null,
+  "state": "STOPPED",
+  "stopped_at": "2026-04-20T19:12:40.919Z"
+}

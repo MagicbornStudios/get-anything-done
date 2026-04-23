@@ -6,7 +6,6 @@ import {
   Brain,
   ChevronRight,
   Dna,
-  ExternalLink,
   Gauge,
   GitBranch,
   Layers,
@@ -721,98 +720,6 @@ export default function HowItWorksPage() {
         </div>
       </SiteSection>
 
-      {/* ---- Section 5: Standards & References ---- */}
-      <SiteSection cid="how-it-works-standards" tone="muted">
-        <div className="mx-auto max-w-4xl space-y-8 py-12">
-          <SiteSectionHeading
-            icon={BookOpen}
-            kicker="Section 5"
-            title="Standards & References"
-            preset="section"
-          />
-          <SiteProse>
-            GAD inherits from and builds on these foundations.
-          </SiteProse>
-
-          <div
-            data-cid="standards-list"
-            className="grid grid-cols-1 gap-4 sm:grid-cols-2"
-          >
-            <Card>
-              <CardTitle>Anthropic Agent Guide</CardTitle>
-              <CardBody>
-                <p>
-                  The{" "}
-                  <a
-                    href="https://www.anthropic.com/engineering/building-effective-agents"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-accent underline underline-offset-2 hover:text-accent/80"
-                  >
-                    Complete Guide to Building AI Agents
-                    <ExternalLink size={12} aria-hidden />
-                  </a>{" "}
-                  defines augmented LLM patterns, orchestration loops, and
-                  tool-use conventions. GAD's loop is a direct implementation
-                  of the "agents" pattern from this guide.
-                </p>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardTitle>agentskills.io</CardTitle>
-              <CardBody>
-                <p>
-                  The{" "}
-                  <a
-                    href="https://agentskills.io"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-accent underline underline-offset-2 hover:text-accent/80"
-                  >
-                    skill shape specification
-                    <ExternalLink size={12} aria-hidden />
-                  </a>{" "}
-                  defines how portable agent skills are structured — trigger
-                  conditions, workflow steps, and metadata. GAD skills follow
-                  this shape.
-                </p>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardTitle>GAD Conventions</CardTitle>
-              <CardBody>
-                <p>
-                  Planning XML (STATE.xml, ROADMAP.xml, TASK-REGISTRY.xml,
-                  DECISIONS.xml), the snapshot protocol, skill shape with
-                  trigger/workflow/metadata, and the five-doc loop that keeps
-                  agent state durable across sessions.
-                </p>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardTitle>Source Code</CardTitle>
-              <CardBody>
-                <p>
-                  The framework is open source.{" "}
-                  <a
-                    href="https://github.com/bgarraud/get-anything-done"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-accent underline underline-offset-2 hover:text-accent/80"
-                  >
-                    GitHub repository
-                    <ExternalLink size={12} aria-hidden />
-                  </a>{" "}
-                  — CLI, skills, species runner, and this site.
-                </p>
-              </CardBody>
-            </Card>
-          </div>
-        </div>
-      </SiteSection>
     </MarketingShell>
   );
 }

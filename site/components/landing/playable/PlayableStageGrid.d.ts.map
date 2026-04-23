@@ -1,0 +1,1 @@
+{"version":3,"file":"PlayableStageGrid.d.ts","sourceRoot":"","sources":["PlayableStageGrid.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,SAAS,EAAE,MAAM,OAAO,CAAC;AAGvC,MAAM,MAAM,sBAAsB,GAAG;IACnC,QAAQ,EAAE,SAAS,CAAC;IACpB,SAAS,CAAC,EAAE,MAAM,CAAC;CACpB,CAAC;AAEF,iGAAiG;AACjG,wBAAgB,iBAAiB,CAAC,EAAE,QAAQ,EAAE,SAAS,EAAE,EAAE,sBAAsB,2CAWhF"}

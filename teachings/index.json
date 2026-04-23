@@ -729,6 +729,23 @@
         "security-aead-aad-01",
         "security-passphrase-verifier-01"
       ]
+    },
+    {
+      "id": "context-engineering-always-measure-token-costs-2026-04-21",
+      "title": "Always Measure Token Costs",
+      "category": "context-engineering",
+      "difficulty": "intermediate",
+      "tags": [
+        "openai",
+        "gpt",
+        "usd",
+        "cli",
+        "api",
+        "tiktoken"
+      ],
+      "source": "generated",
+      "date": "2026-04-21",
+      "path": "generated/2026/04/21.md"
     }
   ]
 }

@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { FilePenLine, FileX2 } from "lucide-react";
+import { MarkdownEditor } from "@portfolio/visual-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DevChromeHoverHint } from "@/components/devid/DevChromeHoverHint";
-import { HandoffMarkdownEditor } from "@/components/devid/HandoffMarkdownEditor";
 import { Identified } from "@/components/devid/Identified";
 import { absolutePageUrl } from "@/components/devid/absolutePageUrl";
 import {
@@ -81,7 +81,7 @@ export function LandingHandoffTemplatesShowcase() {
         className={cn("mt-3 flex min-h-[min(28rem,55vh)] flex-col overflow-hidden rounded-2xl border border-border/70 bg-muted/15 shadow-inner shadow-black/20")}
       >
         <TabsContent value="update" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
-          <HandoffMarkdownEditor
+          <MarkdownEditor
             key={`landing-upd-${pageUrl}`}
             initialDoc={updateTemplate}
             onChange={() => {}}
@@ -91,7 +91,7 @@ export function LandingHandoffTemplatesShowcase() {
           />
         </TabsContent>
         <TabsContent value="delete" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden data-[state=inactive]:hidden">
-          <HandoffMarkdownEditor
+          <MarkdownEditor
             key={`landing-del-${pageUrl}`}
             initialDoc={deleteTemplate}
             onChange={() => {}}

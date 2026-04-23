@@ -1,16 +1,16 @@
 {
   "id": "63-26",
   "phase": "63",
-  "status": "planned",
+  "status": "done",
   "goal": "PROBLEM: gad-tui crashes during ctrl+n cycling with &apos;undefined is not an object (evaluating task.title.length)&apos; at gad-tui-windows.exe:34219.\n\nREPRO (operator 2026-04-22): launched gad tui, used ctrl+n to cycle panes, immediately crashed.\n\nOFFENDING CODE (from stack trace):\n  const title60 = task.title.length &gt; 60 ? task.title.slice(0, 57) + &apos;\\u2026&apos; : task.title;\n\nROOT CAUSE: no null-check on task.title. A task entry has title=undefined or task itself is undefined. Probable culprits:\n(1) Per-task JSON file written without title field (gad tasks add doesn&apos;t require title — only goal). Task display layer assumes title exists.\n(2) Task index (graph.json or similar) returning malformed entry — synthesis from XML/JSON merge has a hole.\n(3) ctrl+n iterates a list that includes a placeholder/sentinel without title.\n\nFIX SCOPE:\n(1) Defensive at the render site:\n  const title = task.title ?? task.goal?.split(&apos;\\n&apos;)[0]?.slice(0, 80) ?? task.id ?? &apos;(untitled)&apos;;\n  const title60 = title.length &gt; 60 ? title.slice(0, 57) + &apos;\\u2026&apos; : title;\n  Use goal first line as title fallback before id, since most tasks have a goal but not all have a title.\n(2) Find the source — grep packages/gad-tui/src for &apos;task.title&apos; references. Identify which read path produces the undefined-title task. Likely lib/team/task-loader or similar reading per-task JSONs.\n(3) Audit task writers (gad tasks add, gad tasks update, gad tasks promote) to confirm they all set title or have a default. Migration script for existing tasks: scan .planning/tasks/*.json, for any without title, derive from goal first line + write back.\n\nEDGE CASES:\n- Task object itself undefined (not just title): defensive prefix &apos;(task &amp;&amp; (task.title ?? …))&apos;.\n- Task.title is empty string &apos;&apos;: treat as missing, fall back to goal/id.\n- Task.title is a number / non-string: stringify first.\n- Tree mode (treeMode flag from stack trace) showing root nodes that aren&apos;t real tasks (synthetic group headers): these should have a title set by the tree-builder.\n\nACCEPTANCE:\n- ctrl+n cycling never crashes.\n- All tasks render with SOME title (one of: title, goal first line, id, or &apos;(untitled)&apos;).\n- Task indexer warns when it loads a task without title (so we can fix the writer not the reader).\n\nREFERENCES:\n- ERRORS: gad-tui-ctrl-n-task-title-crash-2026-04-22 (will add this turn)\n- File: gad-tui bundle line 34219 (source: probably packages/gad-tui/src/components/tasks/ or similar)",
   "type": "framework",
   "keywords": "",
   "depends": [],
   "commands": [],
   "files": [],
-  "agent_id": "",
+  "agent_id": "claude-opus",
   "agent_role": "",
-  "runtime": "",
+  "runtime": "claude-code",
   "model_profile": "",
   "resolved_model": "",
   "skill": "",
@@ -19,5 +19,5 @@
   "lease_expires_at": "",
   "resolution": "",
   "created_at": "2026-04-23T00:48:01.750Z",
-  "updated_at": "2026-04-23T00:48:01.750Z"
+  "updated_at": "2026-04-23T01:41:39.094Z"
 }

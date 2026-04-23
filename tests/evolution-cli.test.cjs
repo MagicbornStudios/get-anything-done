@@ -34,15 +34,27 @@ function writePlanning(tmpDir) {
     '',
   ].join('\n'), 'utf8');
   fs.writeFileSync(path.join(tmpDir, '.planning', 'DECISIONS.xml'), '<decisions />\n', 'utf8');
-  fs.writeFileSync(path.join(tmpDir, '.planning', 'TASK-REGISTRY.xml'), [
-    '<task-registry>',
-    '  <phase id="55">',
-    '    <task id="55-01" status="done" skill="gad-plan-phase" type="framework"><goal>Do planning work.</goal></task>',
-    '    <task id="55-02" status="done" skill="gad-plan-phase" type="framework"><goal>Repeat the same pattern.</goal></task>',
-    '  </phase>',
-    '</task-registry>',
-    '',
-  ].join('\n'), 'utf8');
+  // Post-63-53: per-task JSON is the sole source of truth.
+  const tasksDir = path.join(tmpDir, '.planning', 'tasks');
+  fs.mkdirSync(tasksDir, { recursive: true });
+  fs.writeFileSync(path.join(tasksDir, '55-01.json'), JSON.stringify({
+    id: '55-01', phase: '55', status: 'done',
+    goal: 'Do planning work.', type: 'framework',
+    skill: 'gad-plan-phase', depends: [], commands: [], files: [],
+    agent_id: '', agent_role: '', runtime: '',
+    claimed: false, claimed_at: '', lease_expires_at: '',
+    created_at: '2026-04-22T00:00:00.000Z',
+    updated_at: '2026-04-22T00:00:00.000Z',
+  }, null, 2), 'utf8');
+  fs.writeFileSync(path.join(tasksDir, '55-02.json'), JSON.stringify({
+    id: '55-02', phase: '55', status: 'done',
+    goal: 'Repeat the same pattern.', type: 'framework',
+    skill: 'gad-plan-phase', depends: [], commands: [], files: [],
+    agent_id: '', agent_role: '', runtime: '',
+    claimed: false, claimed_at: '', lease_expires_at: '',
+    created_at: '2026-04-22T00:00:00.000Z',
+    updated_at: '2026-04-22T00:00:00.000Z',
+  }, null, 2), 'utf8');
 }
 
 function writeSkill(rootDir, id, lines) {

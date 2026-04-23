@@ -1,16 +1,16 @@
 {
   "id": "63-23",
   "phase": "63",
-  "status": "planned",
+  "status": "done",
   "goal": "Decision GLOBAL-D-05-02 reference: TUI is the operator&apos;s interactive coordinator (chat + dispatch + viewer + commands), not a viewer. It must NEVER refuse to start. Multi-instance allowed; if a router is already running for this workspace, attach + share state instead of competing.\n\nREPRO (2026-04-22): operator ran &apos;gad tui&apos;. Got: &apos;[router] lockfile exists at C:/Users/benja/Documents/custom_portfolio/.gad/router-logs/.lock — pid=26520 is still running.&apos; Verified PID 26520 NOT alive (tasklist empty). Lockfile timestamp 5h+ stale. Operator forced to manually &apos;rm .gad/router-logs/.lock&apos; to launch. ERRORS entry: gad-tui-stale-router-lockfile-blocks-launch-2026-04-22.\n\nROOT CAUSE: TUI is currently bundled with router (start TUI → start router → singleton lock at .gad/router-logs/.lock). Two problems: (a) lockfile orphans when prior TUI crashes without cleanup, (b) operator can&apos;t peek at active workers while another TUI session is open (prevents the &apos;I just want to look while claude works&apos; flow).\n\nFIX SCOPE: split TUI from router. Three pieces:\n(1) Router becomes a standalone singleton process per workspace (or per-project — see 63-24). Lockfile still valid for router, but with eager liveness probe before refusing: parse pid from lockfile, probe via process.kill(pid, 0) on POSIX or &apos;tasklist /FI &quot;PID eq &lt;pid&gt;&quot;&apos; on Windows. If pid dead OR lockfile age &gt; N seconds AND pid dead, log &apos;[router] stale lockfile (pid=X dead, age=Ns) — clearing&apos; and unlink + proceed.\n(2) TUI becomes standalone — no lockfile of its own. On launch: probe for running router (read .gad/router-logs/.lock, check liveness). If running: ATTACH (tail router-logs, talk to router via IPC — named pipe / unix socket / shared file). If not running: spawn one as detached background process AND open TUI as separate viewer.\n(3) Files to inspect: packages/gad-tui/src/router.ts (lockfile logic at lines 18, 19, 54, 55, 256, 257, 356), packages/gad-tui/src/server/serve.ts, packages/gad-tui/src/server/TuiServer.ts.\n\nEDGE CASES:\n- Lockfile exists, pid alive, lockfile age &lt; 60s: another TUI just opened; attach.\n- Lockfile exists, pid alive, lockfile age &gt; some threshold: still attach (long-running TUI is normal — operator left it open).\n- Lockfile exists, pid dead, lockfile age any: clear + start fresh router + open TUI.\n- Lockfile missing: start fresh router + open TUI.\n- Multiple TUIs concurrently: all attach to the same router; each sees same state.\n- IPC failure (router alive but doesn&apos;t respond): timeout after Ns, log warning, fall back to read-only mode (TUI still opens, just can&apos;t dispatch).\n\nACCEPTANCE: &apos;gad tui&apos; command never exits with a lockfile-related error. Two concurrent &apos;gad tui&apos; processes both render full state. Killing one doesn&apos;t affect the other. After all TUIs close, router stays running until explicit &apos;gad router stop&apos; or workspace close.\n\nPID-FILE SWEEP (separate audit): all vendor pid-file consumers (gad team dispatcher .planning/team/dispatcher.pid, possibly others) need the same eager-probe pattern. Grep for &apos;pidfile\\|\\.pid\\|lockfile\\|\\.lock&apos; in vendor/get-anything-done/lib + bin to find them.\n\nREFERENCES:\n- ERRORS: gad-tui-stale-router-lockfile-blocks-launch-2026-04-22 (open, blocks this task)\n- DECISION: GLOBAL-D-05-02 — every project is a GAD project, TUI is the unified coordinator\n- MEMORY: project_phase_64_tui_orchestrator (TUI is operator&apos;s primary interactive surface)",
   "type": "framework",
   "keywords": "",
   "depends": [],
   "commands": [],
   "files": [],
-  "agent_id": "",
+  "agent_id": "claude-opus",
   "agent_role": "",
-  "runtime": "",
+  "runtime": "claude-code",
   "model_profile": "",
   "resolved_model": "",
   "skill": "",
@@ -19,5 +19,5 @@
   "lease_expires_at": "",
   "resolution": "",
   "created_at": "2026-04-23T00:48:01.740Z",
-  "updated_at": "2026-04-23T00:48:01.740Z"
+  "updated_at": "2026-04-23T01:41:40.106Z"
 }

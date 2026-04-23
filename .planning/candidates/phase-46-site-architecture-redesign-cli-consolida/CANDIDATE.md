@@ -2,11 +2,11 @@
 status: candidate
 source_phase: "46"
 source_phase_title: "Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning"
-pressure_score: 23.63
-tasks_total: 8
-tasks_done: 8
-crosscuts: 3
-created_on: "2026-04-17"
+pressure_score: 33.91
+tasks_total: 11
+tasks_done: 11
+crosscuts: 4
+created_on: "2026-04-23"
 created_by: compute-self-eval
 ---
 
@@ -16,7 +16,7 @@ created_by: compute-self-eval
 
 ```
 get-anything-done | 46 | Site architecture redesign + CLI consolidation — 9-route public page map, workspace elimination, sprite animation, species planning
-selection pressure: 23.63  (8 tasks, 8 done, 3 crosscuts)
+selection pressure: 33.91  (11 tasks, 11 done, 4 crosscuts)
 ```
 
 ## Tasks
@@ -30,6 +30,9 @@ selection pressure: 23.63  (8 tasks, 8 done, 3 crosscuts)
 46-06 done Expand /downloads page: three sections — installer+CLI, VCS component registry (npx-installable showcase with live demos), planning packs. Decision gad-207.
 46-07 done Build /how-it-works content: GAD loop diagram, species/generation/DNA model explainer, scoring methodology, standards references. Absorbs content from removed /eval-guide, /formulas, /standards routes.
 46-08 done Verify build passes after route removal + nav trim. Fix broken imports from deleted routes. Full type-check + VCS audit.
+46-09 done Teachings reader routes — /teachings index (card grid by category, difficulty + date + tags) and /teachings/[slug] detail (marked markdown render, frontmatter stripped, backrefs panel for implementation/decisions/phases/related). Server components read teachings/index.json + per-tip md bodies from teachings/static/**. Decision gad-264 promoted this into active phase 46 scope. Acceptance: curl /teachings returns 200 with tip titles visible; curl /teachings/&lt;slug&gt; returns 200 with rendered body. Verified against all 6 indexed tips.
+46-10 done Fix gad tip reindex ENOENT on installed binary. teachings-reader.cjs now resolves TEACHINGS_DIR by walking up from cwd looking for a gad-config.toml repo root and preferring vendor/get-anything-done/teachings/ (or direct teachings/) on that root before falling back to the bundled runtime location. GAD_TEACHINGS_DIR env override added for testing. Source CLI verified — 'node vendor/get-anything-done/bin/gad.cjs tip reindex' now writes to the user repo's teachings/ instead of the read-only runtime bundle. Installed binary picks up the fix on next reinstall (deferred: current gad.exe is still held open by this session).
+46-15 done Submodule audit — mb-cli-framework, grime-time-site, repub-builder, claw-code, magicborn, get-anything-done. Scope each: last commit upstream vs. ours, production usage vs. dead references, whether still needed as submodule or should be pulled in-tree / deleted. Initial scan 2026-04-18: mb-cli-framework has 103 live references (packages/magicborn-cli tests + docs + vendor-registry + ink-tui) — KEEP. grime-time-site / repub-builder / claw-code status unknown, user suspects unused now that PayloadCMS pivot was dropped. Deliverable: references/submodule-audit-2026-04.md with KEEP/INLINE/DROP recommendation per submodule. Follow-up tasks for any DROP + gitmodules cleanup.
 ```
 
 ## What this candidate is for

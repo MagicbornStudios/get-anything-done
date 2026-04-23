@@ -1,0 +1,21 @@
+{
+  "workers": 1,
+  "roles": [
+    "executor"
+  ],
+  "workers_spec": [
+    {
+      "id": "w1",
+      "role": "executor",
+      "lane": null,
+      "runtime": "codex-cli",
+      "runtime_cmd": null
+    }
+  ],
+  "runtime": "codex-cli",
+  "runtime_cmd": "codex exec --skip-git-repo-check --sandbox danger-full-access --ask-for-approval never",
+  "autopause_threshold": 20,
+  "tick_ms": 2000,
+  "created_at": "2026-04-21T22:55:40.616Z",
+  "supervisor_pid": 27896
+}

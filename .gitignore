@@ -50,7 +50,9 @@ philosophy.md
 .github/skills/get-shit-done
 .github/copilot-instructions.md
 
-# Transient eval-spawn session markers (skill: gad:eval-spawn, task 42.4-13)
+# Transient generation-spawn session markers (skill: gad:generation-spawn, tasks 42.4-13 + 63-38)
+.planning/.generation-runs/
+# Legacy path — kept ignored while any stale markers remain on disk
 .planning/.eval-runs/
 .bg-shell/
 

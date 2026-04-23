@@ -45,28 +45,21 @@ function writeFixtureProject(tmpDir) {
     'utf8',
   );
 
-  fs.writeFileSync(
-    path.join(tmpDir, '.planning', 'TASK-REGISTRY.xml'),
-    `<?xml version="1.0" encoding="UTF-8"?>
-<task-registry>
-  <phase id="41">
-    <task id="41-01" status="planned">
-      <goal>Build the query slice.</goal>
-      <keywords>sdk,query</keywords>
-    </task>
-    <task id="41-02" status="planned">
-      <goal>Ship scoped snapshots.</goal>
-      <keywords>snapshot,scope</keywords>
-    </task>
-    <task id="41-03" status="planned">
-      <goal>Add task claims.</goal>
-      <keywords>tasks,claims</keywords>
-    </task>
-  </phase>
-</task-registry>
-`,
-    'utf8',
-  );
+  // Post-63-53: per-task JSON is the sole source of truth.
+  const tasksDir = path.join(tmpDir, '.planning', 'tasks');
+  fs.mkdirSync(tasksDir, { recursive: true });
+  const mkTask = (id, goal, keywords) => ({
+    id, phase: '41', status: 'planned', goal,
+    type: '', keywords, depends: [], commands: [], files: [],
+    agent_id: '', agent_role: '', runtime: '',
+    model_profile: '', resolved_model: '', skill: '',
+    claimed: false, claimed_at: '', lease_expires_at: '', resolution: '',
+    created_at: '2026-04-22T00:00:00.000Z',
+    updated_at: '2026-04-22T00:00:00.000Z',
+  });
+  fs.writeFileSync(path.join(tasksDir, '41-01.json'), JSON.stringify(mkTask('41-01', 'Build the query slice.', 'sdk,query'), null, 2));
+  fs.writeFileSync(path.join(tasksDir, '41-02.json'), JSON.stringify(mkTask('41-02', 'Ship scoped snapshots.', 'snapshot,scope'), null, 2));
+  fs.writeFileSync(path.join(tasksDir, '41-03.json'), JSON.stringify(mkTask('41-03', 'Add task claims.', 'tasks,claims'), null, 2));
 
   fs.writeFileSync(
     path.join(tmpDir, '.planning', 'DECISIONS.xml'),

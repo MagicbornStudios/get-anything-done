@@ -33,7 +33,11 @@ function makeTempRoot(files) {
 // Known fields for each schema — every field must be present in parsed output
 const STATE_FIELDS    = ['projectId', 'path', 'planningDir', 'currentPhase', 'milestone', 'status', 'openTasks', 'phasesComplete', 'phasesTotal', 'lastActivity', 'nextAction'];
 const PHASE_FIELDS    = ['id', 'title', 'goal', 'status', 'depends', 'milestone', 'plans', 'requirements', 'description'];
-const TASK_FIELDS     = ['id', 'agentId', 'goal', 'status', 'phase', 'keywords', 'depends', 'commands', 'files'];
+const TASK_FIELDS     = [
+  'id', 'agentId', 'agentRole', 'runtime', 'modelProfile', 'resolvedModel',
+  'claimed', 'claimedAt', 'leaseExpiresAt', 'skill', 'type',
+  'goal', 'status', 'phase', 'keywords', 'depends', 'commands', 'files',
+];
 const DECISION_FIELDS = ['id', 'title', 'summary', 'impact', 'references'];
 const REQ_FIELDS      = ['kind', 'docPath', 'description'];
 
@@ -211,71 +215,83 @@ describe('roadmap-reader — ROADMAP.xml field coverage', () => {
 // TASK-REGISTRY.xml
 // ---------------------------------------------------------------------------
 
-describe('task-registry-reader — TASK-REGISTRY.xml field coverage', () => {
+describe('task-registry-reader — per-task JSON field coverage', () => {
   const { readTasks } = require('../lib/task-registry-reader.cjs');
 
-  const TASK_XML = `<?xml version="1.0" encoding="UTF-8"?>
-<task-registry>
-  <phase id="01">
-    <task id="01-01" agent-id="claude" status="done">
-      <goal>Bootstrap the project structure.</goal>
-      <keywords>bootstrap,init</keywords>
-      <commands>
-        <command>pnpm run build</command>
-        <command>pnpm run lint</command>
-      </commands>
-      <depends></depends>
-    </task>
-    <task id="01-02" agent-id="" status="in-progress">
-      <goal>Add logging layer.</goal>
-      <keywords>logging</keywords>
-      <commands>
-        <command>pnpm test</command>
-      </commands>
-      <depends>01-01</depends>
-    </task>
-  </phase>
-</task-registry>`;
+  // Post-63-53: per-task JSON is the sole source of truth. Fixture
+  // factory writes two JSON tasks into .planning/tasks/.
+  function makeTaskRoot() {
+    const fs = require('fs');
+    const path = require('path');
+    const { dir, root } = makeTempRoot({});
+    const tasksDir = path.join(dir, root.path, root.planningDir, 'tasks');
+    fs.mkdirSync(tasksDir, { recursive: true });
+    fs.writeFileSync(path.join(tasksDir, '01-01.json'), JSON.stringify({
+      id: '01-01',
+      phase: '01',
+      status: 'done',
+      goal: 'Bootstrap the project structure.',
+      keywords: 'bootstrap,init',
+      depends: [],
+      commands: ['pnpm run build', 'pnpm run lint'],
+      agent_id: 'claude',
+      created_at: '2026-04-22T00:00:00.000Z',
+      updated_at: '2026-04-22T00:00:00.000Z',
+    }, null, 2));
+    fs.writeFileSync(path.join(tasksDir, '01-02.json'), JSON.stringify({
+      id: '01-02',
+      phase: '01',
+      status: 'in-progress',
+      goal: 'Add logging layer.',
+      keywords: 'logging',
+      depends: ['01-01'],
+      commands: ['pnpm test'],
+      agent_id: '',
+      created_at: '2026-04-22T00:00:00.000Z',
+      updated_at: '2026-04-22T00:00:00.000Z',
+    }, null, 2));
+    return { dir, root };
+  }
 
   test('parses id', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     assert.equal(tasks[0].id, '01-01', 'id');
   });
 
   test('parses agent-id', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     assert.equal(tasks[0].agentId, 'claude', 'agentId');
   });
 
   test('parses status', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     assert.equal(tasks[0].status, 'done', 'status done');
     assert.equal(tasks[1].status, 'in-progress', 'status in-progress');
   });
 
   test('parses goal', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     assert.ok(tasks[0].goal.includes('Bootstrap'), 'goal');
   });
 
   test('parses keywords', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     assert.equal(tasks[0].keywords, 'bootstrap,init', 'keywords');
   });
 
   test('parses depends', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     assert.equal(tasks[1].depends, '01-01', 'depends');
   });
 
   test('parses commands list', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     assert.ok(Array.isArray(tasks[0].commands), 'commands is array');
     assert.equal(tasks[0].commands.length, 2, 'two commands');
@@ -284,20 +300,20 @@ describe('task-registry-reader — TASK-REGISTRY.xml field coverage', () => {
   });
 
   test('parses phase from id prefix', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     assert.equal(tasks[0].phase, '01', 'phase derived from id');
   });
 
   test('filter by status works', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const done = readTasks(root, dir, { status: 'done' });
     assert.equal(done.length, 1, 'one done task');
     assert.equal(done[0].id, '01-01');
   });
 
   test('no unknown fields (no misc)', () => {
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': TASK_XML });
+    const { dir, root } = makeTaskRoot();
     const tasks = readTasks(root, dir);
     const unknownKeys = Object.keys(tasks[0]).filter(k => !TASK_FIELDS.includes(k));
     assert.deepEqual(unknownKeys, [], `Unexpected keys in task: ${unknownKeys.join(', ')}`);
@@ -466,8 +482,16 @@ describe('parsers — no null/undefined for named fields', () => {
   });
 
   test('task fields are not undefined', () => {
+    const fs = require('fs');
+    const path = require('path');
     const { readTasks } = require('../lib/task-registry-reader.cjs');
-    const { dir, root } = makeTempRoot({ 'TASK-REGISTRY.xml': `<task-registry><phase id="01"><task id="01-01" agent-id="" status="done"><goal>test</goal><keywords></keywords><commands></commands><depends></depends></task></phase></task-registry>` });
+    const { dir, root } = makeTempRoot({});
+    const tasksDir = path.join(dir, root.path, root.planningDir, 'tasks');
+    fs.mkdirSync(tasksDir, { recursive: true });
+    fs.writeFileSync(path.join(tasksDir, '01-01.json'), JSON.stringify({
+      id: '01-01', phase: '01', status: 'done', goal: 'test',
+      keywords: '', depends: [], commands: [], agent_id: '',
+    }));
     const tasks = readTasks(root, dir);
     for (const field of ['id', 'agentId', 'goal', 'status', 'phase', 'keywords', 'depends', 'commands']) {
       assert.notEqual(tasks[0][field], undefined, `task.${field} must not be undefined`);

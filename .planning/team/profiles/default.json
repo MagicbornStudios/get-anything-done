@@ -1,0 +1,26 @@
+{
+  "description": "3 claude-code workers — cli/ui/backend lanes — set up 2026-04-20 for parallel dispatch during phase 52/53/66 work",
+  "runtime": "claude-code",
+  "workers_spec": [
+    {
+      "id": "w1",
+      "role": "executor",
+      "lane": "cli",
+      "runtime": "claude-code"
+    },
+    {
+      "id": "w2",
+      "role": "executor",
+      "lane": "ui",
+      "runtime": "claude-code"
+    },
+    {
+      "id": "w3",
+      "role": "executor",
+      "lane": "backend",
+      "runtime": "claude-code"
+    }
+  ],
+  "name": "default",
+  "created_at": "2026-04-20T18:32:26.207Z"
+}

@@ -1,0 +1,20 @@
+{
+  "description": "GAD framework maintenance — CLI, skills, tests. Codex owns CLI, claude owns skills + framework design.",
+  "runtime": "claude-code",
+  "workers_spec": [
+    {
+      "id": "codex-cli",
+      "role": "executor",
+      "lane": "cli",
+      "runtime": "codex-cli"
+    },
+    {
+      "id": "claude-fw",
+      "role": "reasoner",
+      "lane": "skills-framework",
+      "runtime": "claude-code"
+    }
+  ],
+  "name": "gad-framework",
+  "created_at": "2026-04-21T17:18:49.819Z"
+}

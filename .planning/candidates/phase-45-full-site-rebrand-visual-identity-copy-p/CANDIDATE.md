@@ -4,9 +4,9 @@ source_phase: "45"
 source_phase_title: "Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model"
 pressure_score: 58.71
 tasks_total: 21
-tasks_done: 10
+tasks_done: 21
 crosscuts: 7
-created_on: "2026-04-17"
+created_on: "2026-04-23"
 created_by: compute-self-eval
 ---
 
@@ -16,7 +16,7 @@ created_by: compute-self-eval
 
 ```
 get-anything-done | 45 | Full site rebrand — visual identity, copy pass, hero rewrite around evolutionary model
-selection pressure: 58.71  (21 tasks, 10 done, 7 crosscuts)
+selection pressure: 58.71  (21 tasks, 21 done, 7 crosscuts)
 ```
 
 ## Tasks
@@ -24,25 +24,25 @@ selection pressure: 58.71  (21 tasks, 10 done, 7 crosscuts)
 ```
 45-01 done Project detail tab shell — add tabbed navigation (Overview, Planning, Evolution, System) to /projects/[...id] with URL search param ?tab= routing.
 45-02 done Per-project data adapter — server-side loader that reads .planning/ XML files for a given projectId and returns tasks, decisions, phases, requirements, notes as typed props.
-45-03 planned Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/system returning JSON.
+45-03 done Per-project API routes for planning data — GET /api/dev/evals/projects/[id]/planning and /api/dev/evals/projects/[id]/system returning JSON.
 45-04 done Vocabulary constants file — single-source mapping of internal terms to display terms per decisions gad-166, gad-169, gad-189. Exports VOCAB object used by all components.
 45-05 done Art of War epigraph registry — curated quotes mapped to section contexts (hero, planning, evolution, system, findings, scoring) with original + adapted variants.
-45-06 planned Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire into Planning tab.
+45-06 done Migrate PlanningTasksTab to project-scoped — accept projectId prop, fetch per-project data from Wave 1 adapter, wire into Planning tab.
 45-07 done Migrate PlanningDecisionsTab to project-scoped — accept projectId prop, render per-project decisions under Planning tab.
 45-08 done Migrate PlanningRoadmapTab + GanttSection to project-scoped — roadmap phases and Gantt timeline for one project.
-45-09 planned Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.
-45-10 planned Migrate Evolution tab components — PlanningWorkflowsTab + PlanningSkillCandidatesTab become per-project Evolution tab showing workflow patterns and proto-skills.
-45-11 planned Migrate System tab components — PlanningSystemStatCards + PlanningSystemRuntimeActivityPanel become per-project System tab fed by self-eval.json and trace data via command bridge.
-45-12 planned Rewire /planning route — replace monolithic planning page with cross-project dashboard or redirect to /projects. Content now lives per-project.
+45-09 done Migrate PlanningRequirementsTab + PlanningNotesTab to project-scoped rendering under Planning tab.
+45-10 done Migrate Evolution tab components — PlanningWorkflowsTab + PlanningSkillCandidatesTab become per-project Evolution tab showing workflow patterns and proto-skills.
+45-11 done Migrate System tab components — PlanningSystemStatCards + PlanningSystemRuntimeActivityPanel become per-project System tab fed by self-eval.json and trace data via command bridge.
+45-12 done Rewire /planning route — replace monolithic planning page with cross-project dashboard or redirect to /projects. Content now lives per-project.
 45-13 done Landing page composition — rewrite project detail Overview tab as marketing landing: workflow visualizations, human review scores, stats bar, findings as whitepaper cards, VCS showcase.
-45-14 planned Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved.
+45-14 done Type ramp + color palette refresh — clear hierarchy across project/species/generation levels, growth gradients, DNA base pair dots, phylogeny timeline. Dark theme + accent system preserved.
 45-15 done Vocabulary audit — systematic grep + replace of banned terms in all public-facing site/ components. eval project→Species, run→Generation, GAD+emergent→remove.
 45-16 done Hero copy rewrite + Art of War epigraphs — evolutionary language in hero section, epigraphs on section dividers, playful evolutionary metaphors throughout.
-45-17 planned Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metadata references.
+45-17 done Logo + favicon refresh — evolutionary-themed design (helix, phylogeny tree, or similar). Update favicon, OG image, metadata references.
 45-18 done Marketplace integration verification — /project-market cards link to new project detail Overview tab, published/draft filter works, landing page content visible.
-45-19 planned Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/*.tsx for orphaned files.
-45-20 planned Full build + VCS audit — npm run build passes, all new components have data-cid attributes, VCS grep confirms every new section is discoverable.
-45-21 planned README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing, treat findings as articles/whitepapers.
+45-19 done Dead import cleanup — remove unused /planning components superseded by project-scoped versions. Audit site/app/planning/*.tsx for orphaned files.
+45-20 done Full build + VCS audit — npm run build passes, all new components have data-cid attributes, VCS grep confirms every new section is discoverable.
+45-21 done README + external docs copy pass — update all external-facing docs to evolutionary vocabulary, drop GAD+emergent framing, treat findings as articles/whitepapers.
 ```
 
 ## What this candidate is for

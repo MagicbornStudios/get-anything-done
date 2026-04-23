@@ -1,5 +1,5 @@
 {
-  "scannedAt": "2026-04-20T01:43:03.787Z",
+  "scannedAt": "2026-04-21T14:25:07.091Z",
   "projectid": "get-anything-done",
   "candidates": [
     {
@@ -32,6 +32,38 @@
     },
     {
       "id": "phase-46-site-architecture-redesign-cli-consolida",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-51-apps-platform-scaffold-clerk-supabase-da",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-53-apps-desktop-tauri-shell-editors-termina",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-59-planning-app-split-gad-planning-serve-ga",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-60-per-project-byok-encrypted-env-gad-secre",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-63-agent-state-session-hygiene",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-65-2026-04-19-multi-agent-sprint-27-item-tu",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-68-monorepo-reorg-rename-planning-app-platf",
+      "source": "existing-candidate-dir"
+    },
+    {
+      "id": "phase-70-marketplace-move-vendor-project-market-a",
       "source": "existing-candidate-dir"
     },
     {
@@ -125,8 +157,8 @@
       "source": "phase-signal"
     },
     {
-      "id": "phase-31-repeated-work",
-      "phase": "31",
+      "id": "phase-29-repeated-work",
+      "phase": "29",
       "reason": "4 done tasks, 1 real attributed skills",
       "source": "phase-signal"
     },
@@ -137,8 +169,8 @@
       "source": "phase-signal"
     },
     {
-      "id": "phase-29-repeated-work",
-      "phase": "29",
+      "id": "phase-31-repeated-work",
+      "phase": "31",
       "reason": "4 done tasks, 1 real attributed skills",
       "source": "phase-signal"
     },
@@ -155,15 +187,15 @@
       "source": "phase-signal"
     },
     {
-      "id": "phase-41-repeated-work",
-      "phase": "41",
-      "reason": "4 done tasks, 1 real attributed skills",
-      "source": "phase-signal"
-    },
-    {
       "id": "phase-39-repeated-work",
       "phase": "39",
       "reason": "6 done tasks, 0 real attributed skills",
+      "source": "phase-signal"
+    },
+    {
+      "id": "phase-41-repeated-work",
+      "phase": "41",
+      "reason": "4 done tasks, 1 real attributed skills",
       "source": "phase-signal"
     },
     {
@@ -223,7 +255,7 @@
     {
       "id": "phase-63-repeated-work",
       "phase": "63",
-      "reason": "10 done tasks, 0 real attributed skills",
+      "reason": "16 done tasks, 1 real attributed skills",
       "source": "phase-signal"
     },
     {
@@ -309,14 +341,6 @@
     {
       "id": "gad-complete-milestone",
       "type": "prompt",
-      "lane": [
-        "dev"
-      ],
-      "reason": "unused, unreferenced, and not meta-framework"
-    },
-    {
-      "id": "gad-discuss-phase",
-      "type": "workflow",
       "lane": [
         "dev"
       ],
@@ -767,9 +791,9 @@
     }
   ],
   "usageSummary": {
-    "totalRuns": 54,
-    "uniqueSkillsUsed": 13,
-    "unusedSkills": 83,
-    "attributedButMissing": 3
+    "totalRuns": 84,
+    "uniqueSkillsUsed": 32,
+    "unusedSkills": 82,
+    "attributedButMissing": 21
   }
 }

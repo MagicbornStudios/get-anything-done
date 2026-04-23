@@ -1,16 +1,16 @@
 {
   "id": "63-28",
   "phase": "63",
-  "status": "planned",
+  "status": "done",
   "goal": "Layer superpowers-style per-runtime manifest emission on top of GAD&apos;s existing copy-install (hybrid architecture per GSD+superpowers review 2026-04-22). Today gad install --claude/--cursor/--codex/--gemini/--opencode copy-transforms skills into each runtime&apos;s expected dir via bin/install.js (5,687-line fork of GSD&apos;s install.js). Consumer updates stomp customizations; catalog 93 skills × N runtimes = massive copy surface. Hybrid approach: KEEP copy-install as fallback for plugin-less runtimes (aider, continue, roo, others that don&apos;t speak plugin manifests); ADD per-runtime manifests for PLUGIN-CAPABLE runtimes (Claude Code, Cursor, Gemini CLI, Codex, Opencode — these runtimes accept plugin manifest files as native load mechanism). Scope: (1) author .claude-plugin/plugin.json + marketplace.json (per superpowers pattern), (2) .cursor-plugin/plugin.json, (3) gemini-extension.json + GEMINI.md (Gemini CLI uses @./ imports for context files), (4) AGENTS.md as Codex pointer (minimal: just point at CLAUDE.md — superpowers does a 9-byte symlink), (5) .opencode/plugins/gad.js mutating opencode config singleton, (6) hooks/session-start polyglot script + hooks.json / hooks-cursor.json env-var-switched JSON emitters, (7) .version-bump.json + audit script keeping manifests in lockstep (superpowers&apos; bump-version.sh pattern), (8) refactor bin/install.js to emit manifests for plugin-capable runtimes instead of copy-transform (copy stays for fallback runtimes). DEPENDENCIES: 63-43 (GitHub Releases pipeline must work first — manifests need a release source to point consumers at; GAD is PRIVATE code per gad-188 so never public npm, but Claude marketplace accepts git-hosted or tarball sources) + 63-42 (GSD marketplace abandonment investigation — know why they dropped it before we walk the same path) + 63-44 (install.js refactor strongly recommended — don&apos;t add manifest logic to the 5,687-line monolith). Distribution can also use GitHub Packages scoped @magicbornstudios/get-anything-done if a plugin-capable runtime requires npm-installable — private registry only, never public. Gaps to fill that superpowers doesn&apos;t: automated Cursor/Codex/Gemini test harnesses (superpowers ships with manual-only), Windows-friendly hooks (superpowers uses bash with silent Windows failover via run-hook.cmd polyglot). References: .planning/notes/2026-04-22-superpowers-review.md + .planning/notes/2026-04-22-gsd-distribution-review.md. DO NOT propose public npm publishing — decision gad-188 forbids it, operator has corrected this 20+ times.",
   "type": "framework",
   "keywords": "",
   "depends": [],
   "commands": [],
   "files": [],
-  "agent_id": "",
+  "agent_id": "claude-opus",
   "agent_role": "",
-  "runtime": "",
+  "runtime": "claude-code",
   "model_profile": "",
   "resolved_model": "",
   "skill": "",
@@ -19,5 +19,5 @@
   "lease_expires_at": "",
   "resolution": "",
   "created_at": "2026-04-23T00:48:01.757Z",
-  "updated_at": "2026-04-23T00:48:01.757Z"
+  "updated_at": "2026-04-23T01:32:28.791Z"
 }
