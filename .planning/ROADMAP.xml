@@ -368,7 +368,7 @@
   <phase id="53">
     <title>apps/desktop Tauri shell — editors + terminal-as-chat + CLI bridge</title>
     <goal>Scaffold apps/desktop with Tauri. Host editors mounted from editor-core. Embedded terminal widget wraps a child PTY that runs the user's chosen coding agent CLI (Claude Code, Cursor, etc.) — that terminal IS the chat. CLI install bridge: detect already-installed CLIs, optionally install missing ones. Release as signed .exe.</goal>
-    <status>planned</status>
+    <status>done</status>
     <depends>52</depends>
   </phase>
 

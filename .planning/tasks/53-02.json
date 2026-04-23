@@ -1,7 +1,7 @@
 {
   "id": "53-02",
   "phase": "53",
-  "status": "planned",
+  "status": "done",
   "goal": "Tauri sidecar binding for gad.exe. src-tauri/tauri.conf.json declares gad binary as sidecar resource. Rust #[tauri::command] wrappers for common subcommands (projects list, publish list, skill list, tasks list) returning parsed JSON (gad --json flag). Frontend hook useGadCommand() wraps invoke() with loading/error state.",
   "type": "site",
   "keywords": "",
@@ -11,9 +11,9 @@
   ],
   "commands": [],
   "files": [],
-  "agent_id": "",
-  "agent_role": "",
-  "runtime": "",
+  "agent_id": "team-w1",
+  "agent_role": "executor",
+  "runtime": "codex-cli",
   "model_profile": "",
   "resolved_model": "",
   "skill": "",
@@ -22,5 +22,5 @@
   "lease_expires_at": "",
   "resolution": "",
   "created_at": "2026-04-23T00:48:01.934Z",
-  "updated_at": "2026-04-23T00:48:01.934Z"
+  "updated_at": "2026-04-23T16:06:52.024Z"
 }

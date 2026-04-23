@@ -570,6 +570,25 @@
       "updatedAt": "2026-04-19T23:11:12.955Z",
       "lastSeenAt": "2026-04-19T23:11:12.958Z",
       "leaseExpiresAt": null
+    },
+    {
+      "agentId": "team-w1",
+      "agentRole": "executor",
+      "runtime": "codex-cli",
+      "runtimeSessionId": "83c82f171da04ad48145570a51a002da",
+      "parentAgentId": null,
+      "rootAgentId": "team-w1",
+      "depth": 0,
+      "modelProfile": null,
+      "resolvedModel": null,
+      "humanOperator": false,
+      "status": "released",
+      "claimedTaskIds": [],
+      "claimedPhaseIds": [],
+      "createdAt": "2026-04-23T15:45:39.610Z",
+      "updatedAt": "2026-04-23T16:06:52.041Z",
+      "lastSeenAt": "2026-04-23T16:06:52.041Z",
+      "leaseExpiresAt": null
     }
   ],
   "sequenceByKey": {
