@@ -75,9 +75,9 @@ function createAgentsCommand(deps) {
       }
       console.log('');
 
-      console.log('-- OMX / CODEX WORKFLOW LAYER ---------------------------------');
+      console.log('-- GAD TEAM / OMX WORKFLOW LAYER ------------------------------');
       if (!omx) {
-        console.log('No .omx/state/team-state.json — OMX not in use, or state dir absent.');
+        console.log('No .planning/team/state.json (or legacy .omx/state/team-state.json) — team mode not active.');
       } else {
         console.log(`  active:       ${omx.active ? 'yes' : 'no'}`);
         console.log(`  mode:         ${omx.mode || '-'}`);
