@@ -8,6 +8,7 @@
 const path = require('path');
 const fs = require('fs');
 const { defineCommand } = require('citty');
+const { generateOpenAiImage } = require('../../lib/openai-image.cjs');
 
 function firstExistingImagePath(dir, candidates = []) {
   for (const rel of candidates) {
@@ -140,28 +141,11 @@ function loadLocalEnvFile(repoRoot, relPath = '.env') {
   }
 }
 
-async function generateImageWithOpenAI({ apiKey, model, prompt, size }) {
-  const res = await fetch('https://api.openai.com/v1/images/generations', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model, prompt, size, n: 1 }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`OpenAI image generation failed (${res.status}): ${body.slice(0, 400)}`);
-  }
-  const json = await res.json();
-  const b64 = json?.data?.[0]?.b64_json;
-  if (b64) return Buffer.from(b64, 'base64');
-  const url = json?.data?.[0]?.url;
-  if (url) {
-    const imgRes = await fetch(url);
-    if (!imgRes.ok) throw new Error(`OpenAI image URL fetch failed (${imgRes.status})`);
-    const arr = await imgRes.arrayBuffer();
-    return Buffer.from(arr);
-  }
-  throw new Error('OpenAI response did not include data[0].b64_json or data[0].url');
-}
+// `generateImageWithOpenAI` moved into lib/openai-image.cjs so the new
+// `gad generate image` + `gad media` commands (and the desktop app via
+// sidecar) can reuse the same HTTP path. The local binding below is
+// preserved as a thin alias to minimise churn at call sites.
+const generateImageWithOpenAI = generateOpenAiImage;
 
 function createEvolutionImagesCommand(deps) {
   const { splitCsvList, getProtoSkillGlobalDir, listSkillDirs, readSkillFrontmatter } = deps;
