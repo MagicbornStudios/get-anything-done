@@ -17,6 +17,7 @@ const { createTasksPromoteCommand } = require('./tasks/promote.cjs');
 const { createTasksUpdateCommand } = require('./tasks/update.cjs');
 const { createTasksMigrateCommand } = require('./tasks/migrate.cjs');
 const { createTasksStampCommand } = require('./tasks/stamp.cjs');
+const { createTasksAuditCommand } = require('./tasks/audit.cjs');
 
 function createTasksCommand(deps) {
   const commandDeps = {
@@ -39,6 +40,7 @@ function createTasksCommand(deps) {
       promote: createTasksPromoteCommand(commandDeps),
       migrate: createTasksMigrateCommand(commandDeps),
       stamp: createTasksStampCommand(commandDeps),
+      audit: createTasksAuditCommand(commandDeps),
     },
   });
 }
