@@ -1,0 +1,25 @@
+{
+  "id": "49-03",
+  "phase": "49",
+  "status": "planned",
+  "goal": "Apply selected theme to shadcn CSS variables app-wide in apps/desktop. Theme context provider at root; ThemeProvider reads from tweakcn-openai store. All shadcn components (buttons, cards, inputs, etc.) pick up custom palette. Verify dev: cycle through 3 presets + one custom, confirm all surfaces update.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "49-02"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T13:51:45.353Z",
+  "updated_at": "2026-04-23T13:51:45.353Z"
+}

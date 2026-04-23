@@ -1,0 +1,26 @@
+{
+  "id": "49-01",
+  "phase": "49",
+  "status": "planned",
+  "goal": "apps/desktop Settings route — create /settings/theme surface. Tauri webview + shadcn. SiteSection cid registration per Visual Context System mandate. Empty shell — editor mount lands in 49-02.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "47-04",
+    "48-01"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T13:51:43.024Z",
+  "updated_at": "2026-04-23T13:51:43.024Z"
+}

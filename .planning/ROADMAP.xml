@@ -318,21 +318,21 @@
 
   <phase id="47">
     <title>TweakCN lib extraction → packages/tweakcn-openai</title>
-    <goal>Slice the editor surface out of the B2Gdevs/TweakCN-OpenAI fork (currently a full Next.js app) into a publishable package. Extract: theme engine, stores (zustand), editor routes as mountable React components. Peer deps on React 19 + ai sdk. Publish flow via pnpm pack / optional npm publish. Consumer apps (GAD site, platform) import it without pulling the whole Next.js app.</goal>
+    <goal>Slice the editor surface out of the B2Gdevs/TweakCN-OpenAI fork (github.com/B2Gdevs/TweakCN-OpenAI — operator-owned) into a publishable package. Extract: theme engine, stores (zustand), editor routes as mountable React components. Peer deps on React 19 + ai sdk. Publish flow via pnpm pack (no public npm per gad-188). Consumer: **apps/desktop** Settings surface (re-targeted 2026-04-23 from original GAD landing site target — Tauri WebView2 + shadcn compatible). Must preserve TweakCN's theme copy-paste export so users can take their customized theme elsewhere.</goal>
     <status>planned</status>
     <depends></depends>
   </phase>
 
   <phase id="48">
     <title>TweakCN BYOK flow — client sessionStorage + UI banner</title>
-    <goal>Implement BYOK per gad-244. UI captures OpenAI key on first generate, stores in sessionStorage (tab-scoped), sends inline per request, server never persists. Explicit banner. Optional 24h encrypted localStorage toggle (Web Crypto device-bound key), default off. Zero server-side key storage, zero Redis.</goal>
+    <goal>Implement BYOK per gad-244. UI captures OpenAI key on first generate, stores in sessionStorage (tab-scoped), sends inline per request, server never persists. Explicit banner. Optional 24h encrypted localStorage toggle (Web Crypto device-bound key), default off. Zero server-side key storage, zero Redis. Target: **apps/desktop** Settings (re-targeted 2026-04-23). Tauri webview localStorage works — same BYOK pattern as browser. Optional: tap into gad env BYOK store (per-project encrypted env, phase 60) so desktop users can persist OpenAI key securely per-project instead of per-tab.</goal>
     <status>planned</status>
     <depends>47</depends>
   </phase>
 
   <phase id="49">
-    <title>GAD site Theme nav — mount TweakCN lib</title>
-    <goal>Add "Theme" nav item to the GAD marketing site (vendor/get-anything-done/site). Mount extracted tweakcn editor under /theme. Wire BYOK flow from phase 48. Users can try TweakCN-OpenAI directly inside the GAD site using their own key — zero maintenance for us.</goal>
+    <title>apps/desktop Settings — mount TweakCN theme editor</title>
+    <goal>[RE-TARGETED 2026-04-23: originally GAD marketing site /theme; operator decision — move to apps/desktop Settings instead.] Add Theme section under apps/desktop Settings route. Mount extracted tweakcn-openai editor (phase 47) + BYOK flow (phase 48). Users customize their shadcn theme, preview against desktop UI live, and copy-paste the resulting theme JSON/CSS to take elsewhere (preserving TweakCN's native export behavior). Theme context applied app-wide via shadcn CSS variables. No server persistence — theme state in local Tauri store / sessionStorage.</goal>
     <status>planned</status>
     <depends>47,48</depends>
   </phase>

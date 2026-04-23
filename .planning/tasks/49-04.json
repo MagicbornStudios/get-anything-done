@@ -1,0 +1,25 @@
+{
+  "id": "49-04",
+  "phase": "49",
+  "status": "planned",
+  "goal": "Verify TweakCN's native copy-paste export still works after extraction. Copy button emits theme JSON (tweakcn format) + CSS (shadcn format). User can paste into another shadcn project. Add 'Export' panel with both formats visible + copy buttons. Acceptance: operator generates a theme, clicks export, pastes into a fresh shadcn/ui starter, theme applies correctly.",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "49-03"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T13:51:46.494Z",
+  "updated_at": "2026-04-23T13:51:46.494Z"
+}

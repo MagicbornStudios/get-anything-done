@@ -1,0 +1,23 @@
+{
+  "id": "48-01",
+  "phase": "48",
+  "status": "planned",
+  "goal": "BYOK hook: useOpenAIKey() — sessionStorage tab-scoped, validate format, inline-per-request. Banner component explaining key-never-leaves-client. Optional: useEncryptedLocalStorage with Web Crypto device-bound key (24h TTL, default off).",
+  "type": "code",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-23T13:51:40.471Z",
+  "updated_at": "2026-04-23T13:51:40.471Z"
+}
