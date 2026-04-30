@@ -101,4 +101,28 @@
     <reference>.planning/.gad-log/ (no entry created during the failed dispatch)</reference>
     <reference>sites/7greens/.planning/phases/01-foundation/ (empty stub dirs left behind)</reference>
   </entry>
+
+  <entry id="codex-tempfile-prompt-anti-pattern-2026-04-30" date="2026-04-30" status="open" kind="orchestration">
+    <summary>Dispatched Codex via `gad runtime launch` with prompt files written to `C:/Users/benja/AppData/Local/Temp/codex-*.md` and referenced in `--launch-args`. Operator flagged: "we dont do it like this. we have mailboxes in our planning folders for gad projects."</summary>
+    <context>
+      During 7greens site-polish + workspace-cleanup work on 2026-04-30, the orchestrator (Claude Opus 4.7) dispatched two Codex agents in parallel. Each prompt was written to a temp file in `%LOCALAPPDATA%\Temp\` and the launch-args told Codex to "Read /tmp/codex-*.md and execute it." This worked mechanically — Codex ran — but bypassed the canonical handoff queue (`<projectplanning>/handoffs/open/`) and the team mailbox pattern that's been validated across earlier sessions.
+    </context>
+    <failure>
+      Two anti-patterns combined:
+      (1) Prompt content stored OUTSIDE the project's `.planning/` directory — temp files vanish on reboot, are not under version control, are invisible to other agents inspecting the project, and don't get audited via `gad handoffs list`.
+      (2) Bypassed the work-stealing handoff queue. The handoff queue + dispatcher routing pattern is the canonical cross-runtime work-passing mechanism (memory: handoff queue pattern validated 2026-04-18). Skipping it disconnects the Codex run from the project's audit trail.
+      Result: the dispatch was mechanically successful but is invisible to anyone re-entering the project, has no provenance, and trains the wrong reflex for future orchestration.
+    </failure>
+    <rule>
+      For all multi-runtime dispatch (Claude → Codex, Claude → Gemini, etc.):
+      1. Create the handoff with `gad handoffs create --projectid &lt;id&gt; --phase &lt;n&gt; --runtime-preference &lt;runtime&gt; --body "&lt;markdown&gt;"`. The body lives at `&lt;projectplanning&gt;/handoffs/open/&lt;filename&gt;.md` — version-controlled, auditable, source-of-truth.
+      2. Reference the handoff file PATH in `--launch-args`, not a tempfile: `exec --full-auto 'Read &lt;projectplanning&gt;/handoffs/open/&lt;filename&gt;.md and execute it'`.
+      3. After Codex completes, mark the handoff closed via `gad handoffs complete &lt;id&gt;` (or close the loop manually).
+      4. NEVER write dispatch prompts to system temp dirs. If a prompt is too long for `--launch-args` inline, the handoff queue IS the right place — that's its purpose.
+      Note: `gad team` standing-worker dispatch is the eventual-correct path (dispatcher watches `handoffs/open/` and routes to worker mailboxes), but its Windows spawn bug is unresolved as of 2026-04-30. Until then, use `gad runtime launch` ONE-OFF dispatches that POINT AT a handoff file in `.planning/handoffs/open/`. Same audit trail, no team-mode required.
+    </rule>
+    <reference>vendor/get-anything-done/CLAUDE.md (Standing-worker dispatch section)</reference>
+    <reference>C:/Users/benja/.claude/projects/C--Users-benja-Documents-custom-portfolio/memory/feedback_handoff_queue_validated.md</reference>
+    <reference>C:/Users/benja/.claude/projects/C--Users-benja-Documents-custom-portfolio/memory/project_gad_team_mailbox_system.md</reference>
+  </entry>
 </errors-and-attempts>
