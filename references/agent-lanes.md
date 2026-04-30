@@ -106,8 +106,9 @@ Agents read this on startup and assume the mapped soul's voice for that project.
    stable ownership (e.g. a perpetual eval-runner).
 2. When a cross-lane edit becomes promoted — i.e. claude-code permanently
    takes over a file cursor used to own — how do we record the move?
-   Recommend: decision-log entry (`gad decisions add`) referencing both lanes
+   Recommend: decision-log entry (`gad decisions add <id> --projectid <id> --summary "..."`) referencing both lanes
    and the new row in the table above.
+   Note: `--title` is optional; if omitted it is derived from the first sentence of `--summary` (max 60 chars).
 3. Per-phase lane overrides: during phase 44.5 (Project Editor), cursor
    temporarily owns `apps/planning-app/` UI surfaces. Today: informal, called
    out in phase goals. If this becomes frequent, add an "active overrides"

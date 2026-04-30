@@ -1,0 +1,23 @@
+{
+  "id": "74-01",
+  "phase": "74",
+  "status": "done",
+  "goal": "Fix projects init to detect existing MD planning artifacts and skip XML scaffold creation; only register project and exit without --force",
+  "type": "",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-friction-fixes",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-30T17:16:51.568Z",
+  "updated_at": "2026-04-30T17:26:02.340Z"
+}

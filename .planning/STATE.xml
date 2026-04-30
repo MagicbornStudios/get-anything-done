@@ -49,6 +49,7 @@
   <last-updated>2026-04-23T13:13:40.725Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="claude-friction-fixes" at="2026-04-30T17:26:15.675Z" tags="74-01,74-02,74-03,74">74-01/02/03 done — projects init MD-sentinel guard, phases-add gitbash warn, decisions add --title optional</entry>
     <entry agent="claude-tools-builder" at="2026-04-30T17:06:40.869Z" tags="73-01,gad-tools">73-01 done — gad-tools.cjs: added 40+ missing workflow verbs, config tests 17→58/58 passing, smoke tests pass</entry>
     <entry agent="claude-phases-cleanup" at="2026-04-30T16:53:21.122Z" tags="63-55,TASK-REGISTRY-cleanup">63-55 done — removed TASK-REGISTRY.xml hard prerequisite from phases add; ensurePhaseInFile now conditional on file presence; tests updated to cover no-XML primary path</entry>
     <entry agent="unknown" at="2026-04-30T16:49:41.729Z" tags="phases,close">Closed phase 99 via gad phases close - 0 tasks done, 0 cancelled.</entry>

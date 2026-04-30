@@ -4,6 +4,22 @@ const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
 
+// MD planning artifact filenames that indicate an operator-written planning
+// scaffold already exists. If any of these are present, `gad projects init`
+// must NOT overwrite or shadow them with XML equivalents unless --force is
+// explicitly supplied.
+const MD_SENTINEL_FILES = ['PROJECT.md', 'ROADMAP.md', 'REQUIREMENTS.md', 'STATE.md'];
+
+// XML files that duplicate the purpose of MD sentinels.  When an MD sentinel
+// is present we skip the corresponding XML file (and the phantom Phase 00
+// stub that lives inside ROADMAP.xml).
+const MD_TO_XML_EQUIVALENTS = {
+  'ROADMAP.md': 'ROADMAP.xml',
+  'STATE.md': 'STATE.xml',
+  'REQUIREMENTS.md': 'REQUIREMENTS.xml',
+  'PROJECT.md': null, // no direct XML twin — just skip the mention
+};
+
 function createProjectsInitCommand(deps) {
   const {
     findRepoRoot,
@@ -22,6 +38,7 @@ function createProjectsInitCommand(deps) {
       path: { type: 'string', description: 'Project path (default: cwd)', default: '' },
       format: { type: 'string', description: 'Scaffold format: xml (default) or md (legacy)', default: 'xml' },
       force: { type: 'boolean', description: 'Overwrite existing files', default: false },
+      'xml-scaffold': { type: 'boolean', description: 'Force XML scaffold even when MD planning artifacts exist', default: false },
     },
     run({ args }) {
       const projectPath = path.resolve(args.path || process.cwd());
@@ -40,6 +57,52 @@ function createProjectsInitCommand(deps) {
 
       fs.mkdirSync(planDir, { recursive: true });
 
+      // -----------------------------------------------------------------------
+      // MD-sentinel detection (Friction 1 fix — task 74-01)
+      //
+      // If the operator ran a `/gad:new-project` workflow (or hand-wrote their
+      // own planning docs) before calling `gad projects init`, the .planning/
+      // directory may already contain MD planning artifacts.  In that case we
+      // must not overwrite them or create XML twins that shadow them.
+      //
+      // Override behaviour:
+      //   --xml-scaffold  → ignore sentinels, write XML scaffold as if fresh
+      //   --force         → skip collision check (historical semantics), but
+      //                     STILL respect MD sentinels unless --xml-scaffold is
+      //                     also supplied.
+      // -----------------------------------------------------------------------
+      const forceXml = Boolean(args['xml-scaffold']);
+      const presentMdSentinels = MD_SENTINEL_FILES.filter(
+        (f) => fs.existsSync(path.join(planDir, f)),
+      );
+      const hasMdPlanning = presentMdSentinels.length > 0;
+
+      if (hasMdPlanning && !forceXml) {
+        // Existing MD planning detected.  Register the project and exit without
+        // writing any XML scaffold or Phase 00 stub.
+        console.log(`✓ Existing MD planning artifacts detected in ${planDir}:`);
+        for (const f of presentMdSentinels) console.log(`    ${f}`);
+        console.log('  Skipping XML scaffold — use --xml-scaffold to override.');
+
+        const relPath = normalizePath(path.relative(baseDir, projectPath) || '.');
+        if (!config.roots.find((root) => normalizePath(root.path) === relPath)) {
+          config.roots.push({ id: projectId, path: relPath, planningDir: '.planning', discover: false });
+          writeRootsToToml(baseDir, config.roots, config, { gadConfig, resolveTomlPath: deps.resolveTomlPath });
+          console.log(`  Registered as [${projectId}] at path "${relPath}" in ${path.join(baseDir, 'gad-config.toml')}`);
+        } else {
+          console.log(`  Already registered as [${projectId}].`);
+        }
+
+        console.log('');
+        console.log('Next steps:');
+        console.log(`  gad projects audit --projectid ${projectId}    # verify canonical shape`);
+        console.log(`  gad phases add 00 --projectid ${projectId} --title "Bootstrap" --goal "Define scope"  # if needed`);
+        return;
+      }
+
+      // -----------------------------------------------------------------------
+      // Standard XML scaffold path (no MD sentinels, or --xml-scaffold forced)
+      // -----------------------------------------------------------------------
       const targets = format === 'xml'
         ? INIT_XML_FILES.slice()
         : ['STATE.md', 'ROADMAP.md', 'REQUIREMENTS.md', 'PROJECT.md', 'TASK-REGISTRY.xml', 'DECISIONS.xml', 'ERRORS-AND-ATTEMPTS.xml'];

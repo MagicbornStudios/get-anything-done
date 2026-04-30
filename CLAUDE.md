@@ -72,6 +72,14 @@ this command brings any drifted working copies back in line.
 - **Long-form context** (designs, postmortems, planning artifacts) → notes
   via `gad note add`. **One-line state changes** (started/finished/handed-off
   a task) → `gad state log`. Don't conflate them.
+- **Decisions** → `gad decisions add <id> --projectid <id> --summary "..."`.
+  `--title` is optional; if omitted it is derived from the first sentence of
+  `--summary` (max 60 chars) with an info message.  Example:
+
+  ```sh
+  gad decisions add gad-234 --projectid get-anything-done \
+    --summary "Prefer forgiving CLI over strict required flags to reduce workflow friction."
+  ```
 
 ## Sessions / startup
 

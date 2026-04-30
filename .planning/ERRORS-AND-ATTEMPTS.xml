@@ -64,4 +64,12 @@
     <reference>tests/gad-tools-models.test.cjs:64</reference>
     <reference>lib/model-profiles.cjs:normalizeOverride</reference>
   </entry>
+  <entry id="74-preexisting-commands-test-stats-checkcommit" date="2026-04-30" phase="74" task="74-01" status="open" kind="framework">
+    <summary>tests/commands.test.cjs: 75 pre-existing failures — "Unknown command: stats" and "Unknown command: check-commit" in gad-tools calls</summary>
+    <context>Verified before and after phase-74 changes by running node --test tests/commands.test.cjs. Both runs report exactly 75 failures, 0 passes. Failures involve Unknown command: stats and Unknown command: check-commit/progress subcommand json. Unrelated to friction-fix scope.</context>
+    <failure>AssertionError: Command failed: Error: Unknown command: stats / check-commit. Pre-existed before phase 74.</failure>
+    <rule>tests/commands.test.cjs requires gad-tools commands (stats, check-commit) that are not yet implemented. Do not treat as regression from CLI argv or decisions changes. Track against phase 73 (gad-tools verb gaps).</rule>
+    <reference>tests/commands.test.cjs</reference>
+    <reference>.planning/tasks/73-01.json</reference>
+  </entry>
 </errors-and-attempts>

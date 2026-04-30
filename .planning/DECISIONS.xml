@@ -2135,5 +2135,6 @@ Operator priority statement: "I just need it working right now. If we can put it
     <impact>(1) Memory project_omx_is_operators_tool.md needs rewrite — OMX was treated as 'operator's codex workflow' but going forward codex is just another runtime. (2) agent-lanes.md updated to lane-by-function not lane-by-runtime. (3) CLAUDE.md vendor section: any 'codex owns X' language removed. (4) Handoff queue / team dispatch routes by lane, not runtime — runtime is a preference, not a privilege. (5) Phase 63 G6 gray area resolved: no .omx/ read-only policy because .omx/ doesn't exist post-gad-282.</impact>
   </decision>
 
+
 </decisions>
 

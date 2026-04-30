@@ -347,5 +347,8 @@ const main = defineCommand({
 const __argvInjectors = require('../lib/argv-injectors.cjs');
 __argvInjectors.applyDefaultSubcommandInjectors();
 __argvInjectors.extractActiveSkillFlag();
+// Warn if any freeform string arg looks like git-bash path-munged a leading slash
+// (task 74-02). Runs after subcommand injection so positionals are stable.
+__argvInjectors.warnGitBashMungedArgs(process.argv);
 
 runMain(main);

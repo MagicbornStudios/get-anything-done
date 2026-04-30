@@ -52,6 +52,12 @@
         "path": ".",
         "planningDir": ".planning",
         "enabled": true
+      },
+      {
+        "id": "test-md-sentinel",
+        "path": "../../../../AppData/Local/Temp/tmp.lZU0rvB0LV",
+        "planningDir": ".planning",
+        "enabled": true
       }
     ],
     "docs_path": null

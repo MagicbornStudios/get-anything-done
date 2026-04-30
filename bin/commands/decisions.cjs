@@ -122,11 +122,25 @@ function createDecisionsCommand(deps) {
     },
   });
 
+  /**
+   * Derive a short title from summary text (task 74-03).
+   * Takes the first sentence (up to the first ". " or "." at end) and
+   * truncates to 60 chars.  Used when --title is omitted.
+   */
+  function deriveTitleFromSummary(summary) {
+    const s = String(summary || '').trim();
+    // First sentence boundary: period followed by space, or period at end
+    const sentenceEnd = s.search(/\.\s|\.$/);
+    const sentence = sentenceEnd !== -1 ? s.slice(0, sentenceEnd + 1) : s;
+    return sentence.length > 60 ? sentence.slice(0, 57) + '...' : sentence;
+  }
+
   const decisionsAddCmd = defineCommand({
     meta: { name: 'add', description: 'Append a <decision> to DECISIONS.xml. Fails if id collides.' },
     args: {
       id: { type: 'positional', description: 'Decision id (e.g. gad-233)', required: true },
-      title: { type: 'string', description: 'Short decision title', required: true },
+      // --title is optional: if omitted, derived from the first sentence of --summary (max 60 chars).
+      title: { type: 'string', description: 'Short decision title (derived from --summary if omitted)', default: '' },
       summary: { type: 'string', description: 'Full summary text', required: true },
       impact: { type: 'string', description: 'Impact statement (optional)', default: '' },
       date: { type: 'string', description: 'Decision date (YYYY-MM-DD, optional)', default: '' },
@@ -146,6 +160,16 @@ function createDecisionsCommand(deps) {
         return;
       }
       const root = roots[0];
+
+      // --title is optional: derive from summary first sentence if not supplied.
+      let title = String(args.title || '').trim();
+      if (!title) {
+        title = deriveTitleFromSummary(args.summary);
+        process.stderr.write(
+          `gad: --title not provided, derived from summary first sentence: "${title}"\n`,
+        );
+      }
+
       const references = String(args.refs || '')
         .split(',')
         .map(s => s.trim())
@@ -153,13 +177,13 @@ function createDecisionsCommand(deps) {
       try {
         const result = writeDecision(root, baseDir, {
           id: String(args.id),
-          title: String(args.title),
+          title,
           summary: String(args.summary),
           impact: String(args.impact || ''),
           date: String(args.date || ''),
           references,
         });
-        console.log(`Added decision ${args.id}: ${args.title}`);
+        console.log(`Added decision ${args.id}: ${title}`);
         console.log(`File:    ${path.relative(baseDir, result.filePath)}`);
         console.log(`Total:   ${result.count} decision(s)`);
         maybeRebuildGraph(baseDir, root);

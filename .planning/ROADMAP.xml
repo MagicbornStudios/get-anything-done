@@ -499,5 +499,12 @@
     <depends>72</depends>
   </phase>
 
+  <phase id="74">
+    <title>CLI friction fixes — init/phases/decisions</title>
+    <goal>Fix three friction points surfaced during new-project workflow: (1) projects init overwrites MD artifacts, (2) phases add silently accepts git-bash path-munged args, (3) decisions add requires --title when --summary should suffice.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
 </roadmap>
 
