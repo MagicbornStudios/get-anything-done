@@ -1,5 +1,5 @@
 import { Dna, GitBranch, Star, Clock } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection } from "@/components/site";
 import { EVAL_PROJECTS, type EvalRunRecord } from "@/lib/eval-data";
 import { VOCAB, countLabel } from "@/lib/vocabulary";

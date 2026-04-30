@@ -11,7 +11,7 @@ import { PlayableReviewLegend } from "@/components/landing/playable/PlayableRevi
 import { PlayableRunGroups } from "@/components/landing/playable/PlayableRunGroups";
 import { runKey } from "@/components/landing/playable/playable-shared";
 import { usePlayableArchive } from "@/components/landing/playable/use-playable-archive";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection } from "@/components/site";
 
 export default function Playable() {

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { Github, Menu, X } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { GlobalSearch } from "@/components/search/global-search/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import { NAV_GITHUB_HREF } from "@/components/landing/nav/nav-shared";

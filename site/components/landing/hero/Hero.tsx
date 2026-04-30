@@ -6,7 +6,7 @@ import { HeroHeadline } from "@/components/landing/hero/HeroHeadline";
 import { HeroLead } from "@/components/landing/hero/HeroLead";
 import { HeroStatsGrid } from "@/components/landing/hero/HeroStatsGrid";
 import { getHeroStats } from "@/components/landing/hero/hero-stats";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 
 /**
  * Hero rewrite 2026-04-09 per decisions gad-74, gad-75, gad-76.

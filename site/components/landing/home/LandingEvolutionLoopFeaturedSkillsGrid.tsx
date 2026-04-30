@@ -1,4 +1,4 @@
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { LandingEvolutionLoopFeaturedSkillCard } from "./LandingEvolutionLoopFeaturedSkillCard";
 
 const FEATURED_SKILL_IDS = [

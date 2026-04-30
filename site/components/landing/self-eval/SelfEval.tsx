@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import selfEvalData from "@/data/self-eval.json";
 import { SiteProse, SiteSection, SiteSectionHeading } from "@/components/site";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SelfEvalMetricCard } from "./SelfEvalMetricCard";
 import { SelfEvalToolBar } from "./SelfEvalToolBar";
 

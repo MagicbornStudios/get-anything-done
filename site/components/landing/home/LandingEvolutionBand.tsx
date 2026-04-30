@@ -1,4 +1,4 @@
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection, SiteSectionIntro } from "@/components/site";
 import { cn } from "@/lib/utils";
 import { EvolutionVeinBackdrop } from "./EvolutionVeinBackdrop";

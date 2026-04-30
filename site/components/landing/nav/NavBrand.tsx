@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { Button } from "@/components/ui/button";
 
 export function NavBrand() {

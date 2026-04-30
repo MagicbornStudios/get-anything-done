@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import Nav from "@/components/landing/nav/Nav";
 import Footer from "@/components/landing/Footer";
-import { Identified } from "@portfolio/visual-context";
-import { ShellBandDevPanelSlot } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
+import { ShellBandDevPanelSlot } from "gad-visual-context";
 
 export function MarketingShell({ children }: { children: ReactNode }) {
   return (

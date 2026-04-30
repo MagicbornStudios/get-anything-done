@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import fs from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { MarketingShell, SiteSection } from "@/components/site";
 
 export const metadata = {

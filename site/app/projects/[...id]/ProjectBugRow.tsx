@@ -1,6 +1,6 @@
 "use client";
 
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { Badge } from "@/components/ui/badge";
 import type { BugRecord } from "@/lib/eval-data";
 

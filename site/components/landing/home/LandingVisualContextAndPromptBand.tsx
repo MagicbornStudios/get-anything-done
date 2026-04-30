@@ -1,4 +1,4 @@
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection, SiteProse } from "@/components/site";
 import { LandingHandoffTemplatesShowcase } from "@/components/landing/home/LandingHandoffTemplatesShowcase";
 import { LandingVisualContextPanelShowcase } from "@/components/landing/home/LandingVisualContextPanelShowcase";

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Rocket, Loader2, X, AlertTriangle, FolderOpen, FileCheck2, PauseCircle } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection } from "@/components/site";
 import { cn } from "@/lib/utils";
 

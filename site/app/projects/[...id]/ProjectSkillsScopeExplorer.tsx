@@ -12,7 +12,7 @@ import {
   Maximize2,
   XCircle,
 } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,7 +32,7 @@ import {
   SkillPackageFileTreeInteractive,
 } from "./SkillPackageFileTree";
 import { ReadonlyCodeMirror } from "./ReadonlyCodeMirror";
-import { DevIdModalContextFooter } from "@portfolio/visual-context";
+import { DevIdModalContextFooter } from "gad-visual-context";
 
 /** 0–100 for telemetry; default to 0 when no trigger signal exists yet. */
 function derivedUsagePercent(row: ProjectSkillScopeRow): number | null {

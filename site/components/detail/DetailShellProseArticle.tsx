@@ -1,4 +1,4 @@
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 
 export default function DetailShellProseArticle({ bodyHtml }: { bodyHtml: string }) {
   return (

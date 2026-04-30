@@ -2,10 +2,10 @@
 
 import type { MouseEvent, ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { BandDevPanel } from "@portfolio/visual-context";
-import { BandDevPanelGate } from "@portfolio/visual-context";
-import { DevIdBandProvider } from "@portfolio/visual-context";
-import { useDevId } from "@portfolio/visual-context";
+import { BandDevPanel } from "gad-visual-context";
+import { BandDevPanelGate } from "gad-visual-context";
+import { DevIdBandProvider } from "gad-visual-context";
+import { useDevId } from "gad-visual-context";
 import { cn } from "@/lib/utils";
 
 export type SiteSectionProps = {

@@ -1,5 +1,5 @@
 import { Activity, Beaker, FileText, PackageCheck, Scissors } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import {
   LandingEvolutionLoopStepCard,
   type LoopStep,

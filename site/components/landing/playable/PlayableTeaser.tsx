@@ -20,7 +20,7 @@ import { roundForRun } from "@/components/landing/hypothesis-tracks/hypothesis-t
 import { WORKFLOW_LABELS } from "@/lib/eval-data";
 import { cn } from "@/lib/utils";
 import { platformUrl } from "@/lib/platform-url";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection, SiteSectionIntro } from "@/components/site";
 
 /**

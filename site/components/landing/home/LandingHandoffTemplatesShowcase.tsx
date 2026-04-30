@@ -3,16 +3,16 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { FilePenLine, FileX2 } from "lucide-react";
-import { MarkdownEditor } from "@portfolio/visual-context";
+import { MarkdownEditor } from "gad-visual-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DevChromeHoverHint } from "@portfolio/visual-context";
-import { Identified } from "@portfolio/visual-context";
-import { absolutePageUrl } from "@portfolio/visual-context";
+import { DevChromeHoverHint } from "gad-visual-context";
+import { Identified } from "gad-visual-context";
+import { absolutePageUrl } from "gad-visual-context";
 import {
   buildDeletePromptMerged,
   buildUpdateLockedPrefixMerged,
-} from "@portfolio/visual-context";
-import type { RegistryEntry } from "@portfolio/visual-context";
+} from "gad-visual-context";
+import type { RegistryEntry } from "gad-visual-context";
 import { cn } from "@/lib/utils";
 
 /** Demo target: Agent handoff cycle band on the home page (matches live `SiteSection` dev-id shape). */

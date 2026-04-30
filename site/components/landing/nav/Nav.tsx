@@ -6,7 +6,7 @@ import { NavBrand } from "@/components/landing/nav/NavBrand";
 import { NavDesktop } from "@/components/landing/nav/NavDesktop";
 import { NavMobileMenu } from "@/components/landing/nav/NavMobileMenu";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 
 export default function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);

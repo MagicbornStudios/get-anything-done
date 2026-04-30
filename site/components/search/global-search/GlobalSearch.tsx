@@ -3,7 +3,7 @@
 import {
   Dialog,
 } from "@/components/ui/dialog";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { GlobalSearchModal } from "@/components/search/global-search/GlobalSearchModal";
 import { GlobalSearchTrigger } from "@/components/search/global-search/GlobalSearchTrigger";
 import { useGlobalSearch } from "@/components/search/global-search/use-global-search";

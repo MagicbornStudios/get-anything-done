@@ -1,4 +1,4 @@
-﻿import { Identified } from "@portfolio/visual-context";
+﻿import { Identified } from "gad-visual-context";
 import { TemplatesEvalSection } from "@/components/landing/templates/TemplatesEvalSection";
 import { TemplatesGadPack } from "@/components/landing/templates/TemplatesGadPack";
 import { TemplatesIntro } from "@/components/landing/templates/TemplatesIntro";

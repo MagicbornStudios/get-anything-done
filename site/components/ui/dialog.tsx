@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { useDevIdBandCid } from "@portfolio/visual-context";
+import { useDevIdBandCid } from "gad-visual-context";
 import { cn } from "@/lib/utils";
 
 const Dialog = DialogPrimitive.Root;

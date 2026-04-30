@@ -1,4 +1,4 @@
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import Link from "next/link";
 import { FileCode2, Gamepad2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

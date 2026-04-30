@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Download, ExternalLink, PlayCircle } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection, SiteSectionIntro } from "@/components/site";
 import VideoEmbed from "@/components/video/VideoEmbed";
 import { getComposition } from "@/remotion/registry";

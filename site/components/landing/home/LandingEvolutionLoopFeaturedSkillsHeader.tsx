@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PackageCheck } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 
 /**
  * Header block that introduces the featured SKILL.md tiles below it:

@@ -8,7 +8,7 @@ import {
   PackageCheck,
   Scissors,
 } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection, SiteSectionIntro } from "@/components/site";
 import { SKILLS, GITHUB_REPO } from "@/lib/catalog.generated";
 

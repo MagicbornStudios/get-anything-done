@@ -7,7 +7,7 @@ import { HypothesisTracksDomainSelector } from "@/components/landing/hypothesis-
 import { HypothesisTracksIntro } from "@/components/landing/hypothesis-tracks/HypothesisTracksIntro";
 import { HypothesisTracksRelatedLinks } from "@/components/landing/hypothesis-tracks/HypothesisTracksRelatedLinks";
 import { buildTrackData } from "@/components/landing/hypothesis-tracks/hypothesis-tracks-shared";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 
 /**
  * Landing-page section rendering the interactive hypothesis-tracks chart.

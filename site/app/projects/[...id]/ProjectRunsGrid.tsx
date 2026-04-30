@@ -1,6 +1,6 @@
 "use client";
 
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import type { EvalRunRecord } from "@/lib/eval-data";
 import { ProjectRunCard } from "./ProjectRunCard";
 

@@ -1,4 +1,4 @@
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { MarketingShell, SiteSection } from "@/components/site";
 import type { DetailShellProps } from "./detail-shell-shared";
 import DetailShellBackLink from "./DetailShellBackLink";

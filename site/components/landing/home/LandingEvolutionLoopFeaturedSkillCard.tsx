@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Download } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SKILLS, GITHUB_REPO } from "@/lib/catalog.generated";
 
 const GITHUB_RAW_PREFIX = `${GITHUB_REPO}/blob/main/`;

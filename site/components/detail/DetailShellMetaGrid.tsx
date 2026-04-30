@@ -1,4 +1,4 @@
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import type { DetailShellProps } from "./detail-shell-shared";
 import { Card, CardContent } from "@/components/ui/card";
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Download, ExternalLink, Film } from "lucide-react";
-import { Identified } from "@portfolio/visual-context";
+import { Identified } from "gad-visual-context";
 import { SiteSection, SiteSectionIntro } from "@/components/site";
 import { Button } from "@/components/ui/button";
 import { GSD_UPSTREAM, handoffCycleWatchUrl } from "@/components/landing/gsd-upstream-media";
