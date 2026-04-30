@@ -20,7 +20,7 @@ function writeConfig(tmpDir) {
   fs.writeFileSync(path.join(tmpDir, 'gad-config.toml'), body, 'utf8');
 }
 
-function writePlanningSkeleton(tmpDir) {
+function writeRoadmap(tmpDir) {
   fs.writeFileSync(
     path.join(tmpDir, '.planning', 'ROADMAP.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>
@@ -35,6 +35,9 @@ function writePlanningSkeleton(tmpDir) {
 `,
     'utf8',
   );
+}
+
+function writeLegacyRegistry(tmpDir) {
   fs.writeFileSync(
     path.join(tmpDir, '.planning', 'TASK-REGISTRY.xml'),
     `<?xml version="1.0" encoding="UTF-8"?>
@@ -50,13 +53,55 @@ function writePlanningSkeleton(tmpDir) {
   );
 }
 
-describe('gad phases add syncs TASK-REGISTRY phase containers', () => {
+describe('gad phases add — primary path (no TASK-REGISTRY.xml)', () => {
+  // Post-63-53: projects use per-task JSON; TASK-REGISTRY.xml is absent.
+  // phases add must succeed without it.
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = createTempProject('gad-phases-noxmlreg-');
+    writeConfig(tmpDir);
+    writeRoadmap(tmpDir);
+    // No TASK-REGISTRY.xml — this is the modern state.
+  });
+
+  afterEach(() => {
+    cleanup(tmpDir);
+  });
+
+  test('phases add succeeds with no TASK-REGISTRY.xml present', () => {
+    const result = runGadCli([
+      'phases',
+      'add',
+      '02',
+      '--projectid',
+      'sample',
+      '--title',
+      'Phase 02',
+      '--goal',
+      'Implement phase sync.',
+    ], tmpDir);
+
+    assert.equal(result.success, true, `phases add should succeed without TASK-REGISTRY.xml: ${result.error}`);
+    assert.match(result.output, /Added phase 02/i);
+
+    const roadmapXml = fs.readFileSync(path.join(tmpDir, '.planning', 'ROADMAP.xml'), 'utf8');
+    assert.match(roadmapXml, /<phase id="02">[\s\S]*?<title>Phase 02<\/title>/);
+    // No TASK-REGISTRY.xml should be created
+    assert.equal(fs.existsSync(path.join(tmpDir, '.planning', 'TASK-REGISTRY.xml')), false);
+  });
+});
+
+describe('gad phases add — legacy compat (TASK-REGISTRY.xml present)', () => {
+  // Pre-migration projects still have TASK-REGISTRY.xml. phases add should
+  // mirror the empty phase container into it for backward compatibility.
   let tmpDir;
 
   beforeEach(() => {
     tmpDir = createTempProject('gad-phases-sync-');
     writeConfig(tmpDir);
-    writePlanningSkeleton(tmpDir);
+    writeRoadmap(tmpDir);
+    writeLegacyRegistry(tmpDir);
   });
 
   afterEach(() => {

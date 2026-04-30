@@ -1,0 +1,23 @@
+{
+  "id": "63-55",
+  "phase": "63",
+  "status": "done",
+  "goal": "Remove TASK-REGISTRY.xml hard prerequisite from phases add command — post-63-53 cleanup. Drop existence check, make ensurePhaseInFile conditional on file presence (legacy compat only). Update tests to cover no-XML primary path.",
+  "type": "",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-phases-cleanup",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-30T16:52:58.352Z",
+  "updated_at": "2026-04-30T16:53:08.915Z"
+}

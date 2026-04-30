@@ -491,5 +491,13 @@
     <depends>66</depends>
   </phase>
 
+
+  <phase id="73">
+    <title>gad-tools: implement missing workflow verbs</title>
+    <goal>Add all missing gad-tools subcommands used by the 47 workflow files so /gad:new-project and sibling workflows run end-to-end without errors. Verbs to add: init new-project, init execute-phase, init plan-phase, init milestone-op, init new-milestone, init quick, init map-codebase, init progress, init todos, init manager, init list-workspaces, init new-workspace, init remove-workspace, init verify-work, config-new-project, config-ensure-section, generate-claude-md, generate-claude-profile, generate-dev-preferences, generate-slug, resolve-model, commit-to-subrepo, docs-init, milestone complete, phase-plan-index, phases list, profile-questionnaire, profile-sample, scan-sessions, state-snapshot, state add-blocker, state add-decision, state advance-plan, state begin-phase, state record-metric, state update-progress, roadmap update-plan-progress, requirements mark-complete, verify artifacts/key-links/schema-drift, validate health, progress bar, uat render-checkpoint, audit-uat, todo match-phase, summary-extract, workstream, write-profile, frontmatter get.</goal>
+    <status>planned</status>
+    <depends>72</depends>
+  </phase>
+
 </roadmap>
 

@@ -1,0 +1,3 @@
+# TASK-REGISTRY.xml removal from phases add prerequisite check
+
+Design decision: Path A (Pure JSON). The phases add command checked for TASK-REGISTRY.xml existence and hard-failed when absent. Post-63-53, tasks live in .planning/tasks/<id>.json; TASK-REGISTRY.xml is retired. Fix: remove the existence check; make ensurePhaseInFile call conditional on file presence (legacy sync only, not mandatory). No phase-registry file needed — phases derive task list via task-files.cjs glob. The ensurePhaseInFile call becomes a best-effort legacy-compat path (only fires when TASK-REGISTRY.xml already exists). Tests for the registry sync behavior stay but are updated to reflect the no-XML-needed path as primary.

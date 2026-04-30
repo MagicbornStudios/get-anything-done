@@ -242,12 +242,10 @@ function createPhasesCommand(deps) {
         return;
       }
       const root = roots[0];
+      // TASK-REGISTRY.xml was retired in 63-53 (2026-04-22). Tasks now live
+      // in .planning/tasks/<id>.json. No longer a hard prerequisite.
       const taskRegistryPath = path.join(baseDir, root.path, root.planningDir, 'TASK-REGISTRY.xml');
-      if (!fs.existsSync(taskRegistryPath)) {
-        outputError(`TASK-REGISTRY.xml not found at ${path.relative(baseDir, taskRegistryPath)}`);
-        process.exit(1);
-        return;
-      }
+      const hasLegacyRegistry = fs.existsSync(taskRegistryPath);
       const roadmapPath = path.join(baseDir, root.path, root.planningDir, 'ROADMAP.xml');
       let roadmapBackup = null;
       let phaseWritten = false;
@@ -262,15 +260,19 @@ function createPhasesCommand(deps) {
           milestone: String(args.milestone || ''),
         });
         phaseWritten = true;
-        const { ensurePhaseInFile } = require('../../lib/task-registry-writer.cjs');
-        const registrySync = ensurePhaseInFile({
-          filePath: taskRegistryPath,
-          phaseId: String(args.id),
-        });
         console.log(`Added phase ${args.id}: ${args.title}`);
         console.log(`File:    ${path.relative(baseDir, result.filePath)}`);
         console.log(`Total:   ${result.count} phase(s)`);
-        console.log(`Task registry phase sync: ${registrySync.inserted ? 'inserted' : 'already-present'}`);
+        // Legacy compat: if TASK-REGISTRY.xml still exists (pre-migration project),
+        // mirror the empty phase container into it so old readers don't lose phase context.
+        if (hasLegacyRegistry) {
+          const { ensurePhaseInFile } = require('../../lib/task-registry-writer.cjs');
+          const registrySync = ensurePhaseInFile({
+            filePath: taskRegistryPath,
+            phaseId: String(args.id),
+          });
+          console.log(`Task registry phase sync: ${registrySync.inserted ? 'inserted' : 'already-present'}`);
+        }
         maybeRebuildGraph(baseDir, root);
       } catch (e) {
         if (phaseWritten && roadmapBackup != null) {

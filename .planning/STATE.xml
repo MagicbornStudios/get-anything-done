@@ -49,6 +49,8 @@
   <last-updated>2026-04-23T13:13:40.725Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="claude-phases-cleanup" at="2026-04-30T16:53:21.122Z" tags="63-55,TASK-REGISTRY-cleanup">63-55 done — removed TASK-REGISTRY.xml hard prerequisite from phases add; ensurePhaseInFile now conditional on file presence; tests updated to cover no-XML primary path</entry>
+    <entry agent="unknown" at="2026-04-30T16:49:41.729Z" tags="phases,close">Closed phase 99 via gad phases close - 0 tasks done, 0 cancelled.</entry>
     <entry agent="opus-claude" at="2026-04-23T16:25:31.174Z" tags="44.5,reopen,paper-close-error,project-editor">REOPENED phase 44.5 (Project Editor / Brood Editor / DNA Editor) — operator 2026-04-23: 'project-editor still not done and its regression fixed along with additions'. I paper-closed it earlier based on 24/24 task stamps but didn't verify operational state. Apology. Remaining work: regressions + feature additions that weren't captured as tasks.</entry>
     <entry agent="team-w1" at="2026-04-23T16:22:34.585Z" tags="phases,close">Closed phase 42.5 via gad phases close - 11 tasks done, 0 cancelled.</entry>
     <entry agent="team-w1" at="2026-04-23T16:22:26.533Z" tags="42.5,skills-catalog,handoff-closeout">Phase 42.5 close-out verified by team-w1: canonical catalog 73 skills, active retired-skill references clean, Claude open at 73, Cursor gated at 46 workspace / 58 combined, validate-canonical-assets passed.</entry>
