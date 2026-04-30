@@ -1,0 +1,23 @@
+{
+  "id": "73-01",
+  "phase": "73",
+  "status": "done",
+  "goal": "Implement all missing gad-tools verbs: init new-project (with JSON output), init *-op variants, config-new-project, config-ensure-section, generate-claude-md, generate-dev-preferences, resolve-model, commit-to-subrepo, state-snapshot, state extended subcommands, roadmap update-plan-progress, requirements mark-complete, verify/validate/uat subcommands, milestone complete, phases list, phase-plan-index, profile-questionnaire, profile-sample, write-profile, generate-claude-profile, generate-slug, scan-sessions, docs-init, progress bar, audit-uat, todo match-phase, summary-extract, workstream, frontmatter get — all backed by gad-config.toml + XML readers where possible, otherwise stubbed with clear error",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-tools-builder",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-30T16:46:37.174Z",
+  "updated_at": "2026-04-30T17:06:29.224Z"
+}

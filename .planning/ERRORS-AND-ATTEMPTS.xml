@@ -55,4 +55,13 @@
     <reference>vendor/get-anything-done/site/components/workflow/WorkflowMermaidDiagram.tsx</reference>
     <reference>vendor/get-anything-done/references/visual-context-panel-methodology.md</reference>
   </entry>
+
+  <entry id="73-preexisting-model-override-test" date="2026-04-30" phase="73" task="73-01" status="open" kind="framework">
+    <summary>gad-tools-models test: 'honors explicit model overrides' fails pre-existing — resolveAgentModel returns alias not full ID</summary>
+    <context>Test at line 64 passes model_overrides={gad-planner: 'claude-sonnet-4-6'} and expects planner_model to be 'claude-sonnet-4-6', but resolveAgentModel returns 'sonnet' alias instead of full model ID string.</context>
+    <failure>AssertionError: actual 'sonnet' expected 'claude-sonnet-4-6'. Pre-existed before phase 73 work.</failure>
+    <rule>resolveAgentModel returns short aliases (sonnet, haiku, inherit) not full model IDs. Tests expecting full IDs must fix normalizeOverride to pass through unknown strings, or match alias behavior.</rule>
+    <reference>tests/gad-tools-models.test.cjs:64</reference>
+    <reference>lib/model-profiles.cjs:normalizeOverride</reference>
+  </entry>
 </errors-and-attempts>
