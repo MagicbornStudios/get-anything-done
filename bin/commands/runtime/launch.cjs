@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const { spawnSync } = require('child_process');
 const { defineCommand } = require('citty');
 const {
@@ -12,6 +14,56 @@ const {
   launchRuntimeInNewShellWindows,
 } = require('../../../lib/runtime-launch.cjs');
 const { toSelectionTrace } = require('../../../lib/runtime-context-helpers.cjs');
+
+/**
+ * Write a pre-launch dispatch record to .planning/.gad-log/runtime-launch-<ts>.jsonl
+ * so orchestrators can detect silent failures by tailing the log dir.
+ */
+function writeDispatchLog(logDir, record) {
+  if (!logDir) return;
+  try {
+    fs.mkdirSync(logDir, { recursive: true });
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const logFile = path.join(logDir, `runtime-launch-${ts}.jsonl`);
+    fs.writeFileSync(logFile, JSON.stringify(record) + '\n', 'utf8');
+  } catch { /* non-fatal — don't block launch */ }
+}
+
+/**
+ * Derive the project-scoped log directory.
+ * For non-root projects this lands in <projectPath>/.planning/.gad-log/.
+ * Falls back to the monorepo-level .planning/.gad-log/ when not available.
+ */
+function resolveDispatchLogDir(context) {
+  try {
+    if (context.root && context.baseDir) {
+      const projectPath = path.resolve(context.baseDir, context.root.path || '.');
+      return path.join(projectPath, '.planning', '.gad-log');
+    }
+    if (context.baseDir) {
+      return path.join(context.baseDir, '.planning', '.gad-log');
+    }
+  } catch { /* non-fatal */ }
+  return null;
+}
+
+/**
+ * Resolve the CWD for the spawned runtime process.
+ * For non-root projects, use the project directory so the agent's
+ * cwd-relative assumptions (e.g. reading local .planning/) are correct.
+ * Falls back to runtimeRepoRoot when the project path can't be resolved.
+ */
+function resolveRuntimeCwd(context) {
+  try {
+    if (context.root && context.baseDir && context.root.path) {
+      const projectPath = path.resolve(context.baseDir, context.root.path);
+      if (projectPath !== context.runtimeRepoRoot && fs.existsSync(projectPath)) {
+        return projectPath;
+      }
+    }
+  } catch { /* non-fatal */ }
+  return context.runtimeRepoRoot;
+}
 
 function createRuntimeLaunchCommand({
   resolveGadRuntimeContext,
@@ -44,6 +96,39 @@ function createRuntimeLaunchCommand({
     },
     async run({ args }) {
       try {
+        // --- Item 1: Reject contradictory flag combinations ---
+        const sameShellFlag = Boolean(getRuntimeArg(args, 'same-shell', false));
+        const newShellFlag = Boolean(getRuntimeArg(args, 'new-shell', true));
+        // --same-shell and --no-new-shell are semantically identical; reject
+        // only when the user explicitly sets BOTH --same-shell AND --new-shell.
+        // citty exposes 'new-shell' as true by default; we must detect an
+        // explicit --new-shell vs the default value. We treat the combination
+        // as contradictory only when --same-shell=true AND new-shell is
+        // explicitly passed as a truthy raw flag (checked via raw argv).
+        const rawArgv = process.argv;
+        const explicitNewShell = rawArgv.includes('--new-shell') || rawArgv.includes('--new-shell=true');
+        const explicitNoNewShell = rawArgv.includes('--no-new-shell') || rawArgv.includes('--new-shell=false');
+
+        if (sameShellFlag && explicitNewShell) {
+          outputError('Contradictory flags: --same-shell and --new-shell are mutually exclusive. Use one or the other.');
+          process.exitCode = 1;
+          return;
+        }
+
+        const explicitId = getRuntimeArg(args, 'id', '');
+        const explicitRuntime = getRuntimeArg(args, 'runtime', '');
+        const explicitForceRuntime = getRuntimeArg(args, 'force-runtime', '');
+        if (explicitId && explicitForceRuntime && normalizeRuntimeLaunchId(explicitId) !== normalizeRuntimeLaunchId(explicitForceRuntime)) {
+          outputError(`Contradictory flags: --id ${explicitId} and --force-runtime ${explicitForceRuntime} resolve to different runtimes. Pass only one.`);
+          process.exitCode = 1;
+          return;
+        }
+        if (explicitRuntime && explicitForceRuntime && normalizeRuntimeLaunchId(explicitRuntime) !== normalizeRuntimeLaunchId(explicitForceRuntime)) {
+          outputError(`Contradictory flags: --runtime ${explicitRuntime} and --force-runtime ${explicitForceRuntime} resolve to different runtimes. Pass only one.`);
+          process.exitCode = 1;
+          return;
+        }
+
         const context = await resolveGadRuntimeContext({
           projectId: args.projectid,
           sessionId: args.sessionid,
@@ -54,10 +139,10 @@ function createRuntimeLaunchCommand({
         });
         const core = context.core;
 
-        const explicitId = normalizeRuntimeLaunchId(getRuntimeArg(args, 'id', '') || getRuntimeArg(args, 'runtime', ''));
+        const resolvedExplicitId = normalizeRuntimeLaunchId(getRuntimeArg(args, 'id', '') || getRuntimeArg(args, 'runtime', ''));
         const forceRuntime = normalizeRuntimeLaunchId(getRuntimeArg(args, 'force-runtime', ''));
         const selectionRuntimeIds = resolveRuntimeIds(args, core).map((id) => normalizeRuntimeLaunchId(id));
-        let selectedRuntime = explicitId || forceRuntime || '';
+        let selectedRuntime = resolvedExplicitId || forceRuntime || '';
         let selectionTrace = null;
 
         if (!selectedRuntime) {
@@ -111,8 +196,11 @@ function createRuntimeLaunchCommand({
         const launchSpec = buildInteractiveRuntimeLaunchSpec(selectedRuntime, context.runtimeRepoRoot);
         const extraRuntimeArgs = resolveRuntimeLaunchExtraArgs(args);
         const launchArgs = [...(launchSpec.args || []), ...extraRuntimeArgs];
-        const sameShell = Boolean(getRuntimeArg(args, 'same-shell', false));
-        const launchInNewShell = sameShell ? false : Boolean(getRuntimeArg(args, 'new-shell', true));
+
+        // Resolve effective shell mode (item 1 already handled explicit contradictions above)
+        const sameShell = sameShellFlag || explicitNoNewShell;
+        const launchInNewShell = sameShell ? false : newShellFlag;
+
         const dryRun = Boolean(getRuntimeArg(args, 'dry-run', false));
         const skipHealthCheck = Boolean(getRuntimeArg(args, 'skip-health-check', false)) || dryRun;
         const auth = core.authStatusByRuntime([selectedRuntime])[selectedRuntime];
@@ -133,6 +221,9 @@ function createRuntimeLaunchCommand({
           }
         }
 
+        // --- Item 4: Project-scoped CWD instead of monorepo root ---
+        const runtimeCwd = resolveRuntimeCwd(context);
+
         const payload = {
           projectId: context.projectId,
           sessionId: context.sessionId,
@@ -143,7 +234,7 @@ function createRuntimeLaunchCommand({
           dryRun,
           command: launchSpec.command,
           args: launchArgs,
-          cwd: context.runtimeRepoRoot,
+          cwd: runtimeCwd,
           extraArgs: extraRuntimeArgs,
           healthCheckSkipped: skipHealthCheck,
           health: {
@@ -172,6 +263,30 @@ function createRuntimeLaunchCommand({
           return;
         }
 
+        // --- Item 2: Pre-launch dispatch log ---
+        const logDir = resolveDispatchLogDir(context);
+        const dispatchRecord = {
+          event: 'runtime-launch-dispatch',
+          ts: new Date().toISOString(),
+          projectId: context.projectId,
+          sessionId: context.sessionId,
+          runtime: selectedRuntime,
+          command: launchSpec.command,
+          argv: launchArgs,
+          cwd: runtimeCwd,
+          launchInNewShell,
+          sameShell,
+          envKeys: Object.keys(process.env).filter((k) => !k.match(/token|secret|key|pass|auth|api/i)),
+          callerPid: process.pid,
+          callerPpid: (typeof process.ppid === 'number' ? process.ppid : null),
+        };
+        writeDispatchLog(logDir, dispatchRecord);
+
+        // --- Item 3: Echo resolved argv to stderr ---
+        process.stderr.write(
+          `[gad runtime launch] dispatch: ${JSON.stringify([launchSpec.command, ...launchArgs])}\n`,
+        );
+
         if (launchInNewShell) {
           if (process.platform !== 'win32') {
             throw new Error('New-shell launch is currently implemented for Windows only. Use --same-shell on this platform.');
@@ -179,7 +294,7 @@ function createRuntimeLaunchCommand({
           launchRuntimeInNewShellWindows({
             command: launchSpec.command,
             args: launchArgs,
-            cwd: context.runtimeRepoRoot,
+            cwd: runtimeCwd,
             runtimeId: selectedRuntime,
           });
           if (!args.json && !shouldUseJson()) {
@@ -189,7 +304,7 @@ function createRuntimeLaunchCommand({
         }
 
         const child = spawnSync(launchSpec.command, launchArgs, {
-          cwd: context.runtimeRepoRoot,
+          cwd: runtimeCwd,
           env: process.env,
           stdio: 'inherit',
           shell: false,

@@ -506,5 +506,12 @@
     <depends></depends>
   </phase>
 
+  <phase id="75">
+    <title>runtime launch hardening</title>
+    <goal>Eliminate silent failures in gad runtime launch: reject contradictory flags, write pre-launch dispatch log, echo resolved argv to stderr, set correct project CWD for non-root projects, add smoke test.</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
 </roadmap>
 

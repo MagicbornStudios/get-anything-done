@@ -73,7 +73,7 @@
     <reference>.planning/tasks/73-01.json</reference>
   </entry>
 
-  <entry id="codex-runtime-launch-silent-fail-2026-04-30" date="2026-04-30" status="open" kind="framework">
+  <entry id="codex-runtime-launch-silent-fail-2026-04-30" date="2026-04-30" status="resolved" resolved-by="75-01 75-02 75-03 75-04 75-05" resolved-date="2026-04-30" kind="framework">
     <summary>`gad runtime launch --force-runtime codex-cli --no-new-shell --same-shell` accepted contradictory flags, exited 0, wrote no output, and Codex never executed. Operator was AFK; orchestrator only noticed when checking output file (0 bytes).</summary>
     <context>
       Working on 7greens project (sites/7greens) bootstrap during Phase 01 execution on 2026-04-30. Dispatched Codex via:

@@ -1,0 +1,23 @@
+{
+  "id": "75-03",
+  "phase": "75",
+  "status": "done",
+  "goal": "Echo resolved argv array to stderr at INFO level before spawn",
+  "type": "",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [],
+  "agent_id": "claude-runtime-fix",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "resolution": "",
+  "created_at": "2026-04-30T18:48:26.855Z",
+  "updated_at": "2026-04-30T18:51:40.970Z"
+}
