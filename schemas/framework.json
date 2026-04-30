@@ -1,0 +1,174 @@
+{
+  "name": "framework",
+  "description": "The GAD framework itself at vendor/get-anything-done/ — source + planning",
+  "entries": [
+    {
+      "path": "package.json",
+      "role": "framework package metadata and scripts",
+      "format": "json",
+      "required": true,
+      "generator": "manual"
+    },
+    {
+      "path": "CLAUDE.md",
+      "role": "agent instructions specific to editing the GAD submodule (lane rules, diff hygiene)",
+      "format": "md",
+      "required": true,
+      "generator": "manual"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "role": "release history and migration notes",
+      "format": "md",
+      "required": true,
+      "generator": "manual"
+    },
+    {
+      "path": ".planning/ROADMAP.xml",
+      "role": "GAD framework roadmap (phases, milestones)",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/STATE.xml",
+      "role": "live framework state — next-action pointer and state log",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/DECISIONS.xml",
+      "role": "framework design decision ledger",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/ERRORS-AND-ATTEMPTS.xml",
+      "role": "framework failure log — tooling traps, bad dispatch paths, Windows-specific blockers",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/DOCS-MAP.xml",
+      "role": "documentation map — which docs exist and where they sink",
+      "format": "xml",
+      "required": false,
+      "generator": "gad docs compile"
+    },
+    {
+      "path": ".planning/config.json",
+      "role": "framework project identity config (id=get-anything-done)",
+      "format": "json",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/gad-config.toml",
+      "role": "framework-level GAD config (mode, features, workflow flags)",
+      "format": "toml",
+      "required": false,
+      "generator": "templates/planning-config.toml"
+    }
+  ],
+  "directories": [
+    {
+      "path": "bin/",
+      "role": "CLI entry points — gad.cjs dispatcher + gad-config.cjs"
+    },
+    {
+      "path": "bin/commands/",
+      "role": "modular command modules — one file per command family, auto-discovered by _loader.cjs"
+    },
+    {
+      "path": "lib/",
+      "role": "shared runtime library — readers, writers, helpers, schema parsers"
+    },
+    {
+      "path": "skills/",
+      "role": "built-in GAD skills (Markdown frontmatter, invokable by gad skill run)"
+    },
+    {
+      "path": "schemas/",
+      "role": "canonical planning file-tree schemas (project.json, monorepo.json, framework.json)"
+    },
+    {
+      "path": "templates/",
+      "role": "project init templates — project.md, roadmap.md, requirements.md, config.json, etc."
+    },
+    {
+      "path": "tests/",
+      "role": "unit and integration tests (node --test)"
+    },
+    {
+      "path": "evals/",
+      "role": "eval projects for regression testing agent behavior"
+    },
+    {
+      "path": "docs/",
+      "role": "compiled docs output (output of gad docs compile)"
+    },
+    {
+      "path": "references/",
+      "role": "reference docs — communication-style, agent-lanes, workflow conventions"
+    },
+    {
+      "path": "workflows/",
+      "role": "workflow spec documents (gad, bare, emergent patterns)"
+    },
+    {
+      "path": ".planning/",
+      "role": "framework planning artifacts"
+    },
+    {
+      "path": ".planning/phases/",
+      "role": "per-phase context and artifacts"
+    },
+    {
+      "path": ".planning/tasks/",
+      "role": "per-task JSON files — canonical task registry"
+    },
+    {
+      "path": ".planning/notes/",
+      "role": "agent notes and findings"
+    },
+    {
+      "path": ".planning/research/",
+      "role": "framework research artifacts"
+    },
+    {
+      "path": ".planning/handoffs/",
+      "role": "cross-agent handoff queue"
+    },
+    {
+      "path": ".planning/candidates/",
+      "role": "candidate phase briefs not yet committed to roadmap"
+    },
+    {
+      "path": ".planning/specs/",
+      "role": "formal specifications for complex subsystems"
+    },
+    {
+      "path": ".planning/workflows/",
+      "role": "workflow evolution artifacts (emergent patterns, retrospectives)"
+    },
+    {
+      "path": ".planning/proto-skills/",
+      "role": "proto-skill development artifacts and battery results"
+    },
+    {
+      "path": ".planning/context-frameworks/",
+      "role": "context framework development artifacts (phase 42.4)"
+    },
+    {
+      "path": ".planning/team/",
+      "role": "gad team runtime state"
+    },
+    {
+      "path": ".planning/archive/",
+      "role": "archived phases and superseded artifacts"
+    }
+  ]
+}

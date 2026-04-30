@@ -1,0 +1,175 @@
+{
+  "name": "monorepo",
+  "description": "Multi-project monorepo root (parent repo containing apps/, packages/, sites/, projects/, vendor/)",
+  "entries": [
+    {
+      "path": "gad-config.toml",
+      "role": "workspace-level GAD config — planning.roots registry, features, workflow flags",
+      "format": "toml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": "pnpm-workspace.yaml",
+      "role": "pnpm workspace declaration — lists all package globs",
+      "format": "yaml",
+      "required": true,
+      "generator": "manual"
+    },
+    {
+      "path": "package.json",
+      "role": "root package.json — workspace scripts and dev dependencies",
+      "format": "json",
+      "required": true,
+      "generator": "manual"
+    },
+    {
+      "path": ".planning/config.json",
+      "role": "global project identity config (id=global)",
+      "format": "json",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/ROADMAP.xml",
+      "role": "cross-cutting monorepo roadmap",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/STATE.xml",
+      "role": "live monorepo state — next-action pointer and state log",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/DECISIONS.xml",
+      "role": "cross-cutting decision ledger",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/ERRORS-AND-ATTEMPTS.xml",
+      "role": "cross-cutting failure log for monorepo-wide blockers and tooling traps",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/REQUIREMENTS.xml",
+      "role": "monorepo-level requirements (optional; usually per-project)",
+      "format": "xml",
+      "required": false,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/HUMAN-TODOS.xml",
+      "role": "human-only action items that agents cannot complete (credentials, deploys, etc.)",
+      "format": "xml",
+      "required": false,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/TASK-REGISTRY.xml",
+      "role": "legacy global task registry (pre-63-53); tasks/ dir is canonical now",
+      "format": "xml",
+      "required": false,
+      "generator": "gad projects init"
+    },
+    {
+      "path": "CLAUDE.md",
+      "role": "Claude Code session contract — agent instructions, GAD loop, lane map",
+      "format": "md",
+      "required": true,
+      "generator": "templates/claude-md.md"
+    },
+    {
+      "path": "SOUL.md",
+      "role": "active agent soul pointer (narrative persona, optional)",
+      "format": "md",
+      "required": false,
+      "generator": "gad narrative enter"
+    }
+  ],
+  "directories": [
+    {
+      "path": "apps/",
+      "role": "deployable applications (Next.js, Tauri, etc.)"
+    },
+    {
+      "path": "packages/",
+      "role": "shared internal packages (UI components, libraries)"
+    },
+    {
+      "path": "packages-shared/",
+      "role": "cross-workspace shared packages (runtime-substrate-types, server-template)"
+    },
+    {
+      "path": "sites/",
+      "role": "standalone site projects (each with own .planning/)"
+    },
+    {
+      "path": "projects/",
+      "role": "long-running sub-projects with full GAD planning (magicborn, llm-from-scratch, etc.)"
+    },
+    {
+      "path": "vendor/",
+      "role": "vendored submodules and frameworks (get-anything-done, mb-cli-framework, etc.)"
+    },
+    {
+      "path": "docs/",
+      "role": "compiled docs sink — output of gad docs compile"
+    },
+    {
+      "path": "scripts/",
+      "role": "monorepo-level build and maintenance scripts"
+    },
+    {
+      "path": "skills/",
+      "role": "root-level GAD skills (operator-curated, supplements vendor/get-anything-done/skills/)"
+    },
+    {
+      "path": ".planning/",
+      "role": "global project planning artifacts (id=global)"
+    },
+    {
+      "path": ".planning/phases/",
+      "role": "per-phase context and artifacts"
+    },
+    {
+      "path": ".planning/tasks/",
+      "role": "per-task JSON files — canonical task registry"
+    },
+    {
+      "path": ".planning/notes/",
+      "role": "freeform agent notes"
+    },
+    {
+      "path": ".planning/handoffs/",
+      "role": "cross-lane work-stealing queue — open/, claimed/, closed/"
+    },
+    {
+      "path": ".planning/team/",
+      "role": "gad team runtime state — workers/, profiles/, dispatch.seq"
+    },
+    {
+      "path": ".planning/codebase/",
+      "role": "structural codebase docs — APPS.md, STRUCTURE.md, WORKSPACES.md, etc."
+    },
+    {
+      "path": ".planning/reports/",
+      "role": "generated reports (session summaries, audits)"
+    },
+    {
+      "path": ".planning/candidates/",
+      "role": "candidate phase and feature briefs not yet committed to roadmap"
+    },
+    {
+      "path": ".planning/debug/",
+      "role": "debug notes and reproduction cases"
+    }
+  ]
+}

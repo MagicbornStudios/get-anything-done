@@ -1,0 +1,125 @@
+{
+  "name": "project",
+  "description": "Single GAD-managed project / submodule (sites/<name>/, projects/<name>/, or standalone)",
+  "entries": [
+    {
+      "path": ".planning/PROJECT.md",
+      "role": "project context — what is being built, for whom, core value",
+      "format": "md",
+      "required": true,
+      "generator": "templates/project.md"
+    },
+    {
+      "path": ".planning/ROADMAP.xml",
+      "role": "phased execution plan (XML canonical; .md allowed as human-readable mirror)",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/STATE.xml",
+      "role": "live project state — next-action pointer and state log",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/DECISIONS.xml",
+      "role": "decision ledger — rationale and impact for architectural choices",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/ERRORS-AND-ATTEMPTS.xml",
+      "role": "failure log — anti-patterns, blockers, and lessons for future agents",
+      "format": "xml",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/TASK-REGISTRY.xml",
+      "role": "task registry (legacy XML; canonical form is .planning/tasks/*.json since 63-53)",
+      "format": "xml",
+      "required": false,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/REQUIREMENTS.md",
+      "role": "functional and non-functional requirements for the project",
+      "format": "md",
+      "required": false,
+      "generator": "templates/requirements.md"
+    },
+    {
+      "path": ".planning/REQUIREMENTS.xml",
+      "role": "requirements in XML format (parallel to .md form; used by gad snapshot)",
+      "format": "xml",
+      "required": false,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/config.json",
+      "role": "project identity config — id, name, slug, model profile",
+      "format": "json",
+      "required": true,
+      "generator": "gad projects init"
+    },
+    {
+      "path": ".planning/gad-config.toml",
+      "role": "project-level GAD config overrides (optional; root gad-config.toml is canonical)",
+      "format": "toml",
+      "required": false,
+      "generator": "templates/planning-config.toml"
+    },
+    {
+      "path": ".planning/phases/<N>-<slug>/<NN>-CONTEXT.md",
+      "role": "per-phase locked decisions from /gad:discuss-phase",
+      "format": "md",
+      "required": false,
+      "generator": "/gad:discuss-phase"
+    }
+  ],
+  "directories": [
+    {
+      "path": ".planning/",
+      "role": "root planning directory — all GAD artifacts live here"
+    },
+    {
+      "path": ".planning/phases/",
+      "role": "per-phase context and artifacts (e.g. 01-discovery/01-CONTEXT.md)"
+    },
+    {
+      "path": ".planning/tasks/",
+      "role": "per-task JSON files (<phase>-<nn>.json) — canonical task registry since 63-53"
+    },
+    {
+      "path": ".planning/notes/",
+      "role": "freeform agent notes (YYYY-MM-DD[-<agent>]-<slug>.md)"
+    },
+    {
+      "path": ".planning/research/",
+      "role": "domain research artifacts (Markdown, diagrams, references)"
+    },
+    {
+      "path": ".planning/handoffs/",
+      "role": "work-stealing queue — open/, claimed/, closed/ subdirs"
+    },
+    {
+      "path": ".planning/handoffs/open/",
+      "role": "unclaimed handoffs awaiting an agent"
+    },
+    {
+      "path": ".planning/handoffs/claimed/",
+      "role": "handoffs currently being worked by an agent"
+    },
+    {
+      "path": ".planning/handoffs/closed/",
+      "role": "completed handoffs (audit trail)"
+    },
+    {
+      "path": ".planning/sessions/",
+      "role": "local-only agent session state — not committed"
+    }
+  ]
+}
