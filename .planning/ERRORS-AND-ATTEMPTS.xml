@@ -72,4 +72,33 @@
     <reference>tests/commands.test.cjs</reference>
     <reference>.planning/tasks/73-01.json</reference>
   </entry>
+
+  <entry id="codex-runtime-launch-silent-fail-2026-04-30" date="2026-04-30" status="open" kind="framework">
+    <summary>`gad runtime launch --force-runtime codex-cli --no-new-shell --same-shell` accepted contradictory flags, exited 0, wrote no output, and Codex never executed. Operator was AFK; orchestrator only noticed when checking output file (0 bytes).</summary>
+    <context>
+      Working on 7greens project (sites/7greens) bootstrap during Phase 01 execution on 2026-04-30. Dispatched Codex via:
+
+        gad runtime launch \
+          --projectid 7greens \
+          --force-runtime codex-cli \
+          --no-new-shell --same-shell \
+          --launch-args "exec --full-auto --skip-git-repo-check '...prompt...'" \
+          (run_in_background=true via Bash)
+
+      `--no-new-shell` and `--same-shell` are documented as opposite intents. CLI accepted both, no warning. Background bash exited cleanly. Codex never wrote any files; output file was 0 bytes. The runtime harness produced empty .planning/sites/7greens/.planning/phases/01-foundation/ stub directories (likely from session-bootstrap side effects), then nothing. The orchestrator (Claude Opus 4.7) wasted ~5 min waiting before realizing the dispatch had silently failed and pivoting to direct file writes.
+    </context>
+    <failure>
+      Three compounding issues:
+      (1) `--no-new-shell` and `--same-shell` are mutually exclusive but the CLI does not validate or error when both are set — silently picks one (or neither) and proceeds.
+      (2) When the chosen path fails (e.g. spawn refused, auth missing, codex-cli not found), the runtime harness exits 0 with no diagnostics in stderr or in `.planning/.gad-log/`. There is no signal upstream that "codex never ran."
+      (3) For `--launch-args` containing a long quoted prompt, single-quoted strings interact poorly with bash arg parsing on Windows; the actual prompt that reaches `codex exec` may be truncated or mangled, but no echo of the resolved command is emitted unless `--dry-run` is used.
+      The combination means a confidently-spawned Codex agent that "did nothing" looks identical (from the orchestrator's view) to a normal slow startup.
+    </failure>
+    <rule>
+      `gad runtime launch` must (a) reject mutually exclusive flags with a non-zero exit and a clear error, and (b) write a "dispatch attempted" entry to `.planning/.gad-log/runtime-launch-*.jsonl` BEFORE the runtime is invoked, including the resolved command, so failures are observable. When `--launch-args` is a long string, the harness should echo the resolved argv to stderr at INFO level so orchestrators can confirm the prompt arrived intact. Until those land, orchestrators dispatching Codex via `gad runtime launch` should ALSO `tail -f .planning/.gad-log/` and confirm a corresponding session entry appears within 30s; absence == silent failure, switch to direct execution.
+    </rule>
+    <reference>bin/commands/runtime/launch.cjs (or wherever runtime launch is wired)</reference>
+    <reference>.planning/.gad-log/ (no entry created during the failed dispatch)</reference>
+    <reference>sites/7greens/.planning/phases/01-foundation/ (empty stub dirs left behind)</reference>
+  </entry>
 </errors-and-attempts>
