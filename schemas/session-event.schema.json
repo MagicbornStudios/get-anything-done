@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gad.tools/schemas/session-event.schema.json",
+  "title": "GAD session telemetry event (v1)",
+  "description": "One line of .planning/.sessions/<id>/events.jsonl. See vendor/get-anything-done/references/session-telemetry-schema.md for full doc.",
+  "type": "object",
+  "required": ["ts", "kind", "session_id", "schema_version"],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC with millisecond precision"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^s-\\d{8}-[a-f0-9]{8}$",
+      "description": "s-YYYYMMDD-<uuid8>"
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "session-start",
+        "session-end",
+        "step-start",
+        "step-end",
+        "tool-call",
+        "decomposition",
+        "pressure-event",
+        "attribution-link"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "title": "session-start",
+      "properties": {
+        "kind": { "const": "session-start" },
+        "runtime": {
+          "type": "string",
+          "enum": ["claude-code", "codex-cli", "cursor", "gemini-cli", "opencode", "other"]
+        },
+        "projectid": { "type": "string", "minLength": 1 },
+        "intent": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "parent_session_id": {
+          "type": ["string", "null"],
+          "pattern": "^s-\\d{8}-[a-f0-9]{8}$"
+        },
+        "model_profile": { "type": ["string", "null"] },
+        "agent_id": { "type": ["string", "null"] },
+        "claimed_handoff": { "type": ["string", "null"] }
+      },
+      "required": ["runtime", "projectid", "intent"]
+    },
+    {
+      "title": "session-end",
+      "properties": {
+        "kind": { "const": "session-end" },
+        "outcome": {
+          "type": "string",
+          "enum": ["completed", "paused", "failed", "compacted"]
+        },
+        "total_steps": { "type": "integer", "minimum": 0 },
+        "total_retries": { "type": "integer", "minimum": 0 },
+        "durable_artifacts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "auto_compact_count": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["outcome", "total_steps", "total_retries"]
+    },
+    {
+      "title": "step-start",
+      "properties": {
+        "kind": { "const": "step-start" },
+        "step_id": { "type": "string", "pattern": "^st-\\d+$" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "parent_step": {
+          "type": ["string", "null"],
+          "pattern": "^st-\\d+$"
+        }
+      },
+      "required": ["step_id", "label", "parent_step"]
+    },
+    {
+      "title": "step-end",
+      "properties": {
+        "kind": { "const": "step-end" },
+        "step_id": { "type": "string", "pattern": "^st-\\d+$" },
+        "outcome": {
+          "type": "string",
+          "enum": ["ok", "retry", "error", "abandoned"]
+        },
+        "retries": { "type": "integer", "minimum": 0 },
+        "duration_ms": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["step_id", "outcome", "retries", "duration_ms"]
+    },
+    {
+      "title": "tool-call",
+      "properties": {
+        "kind": { "const": "tool-call" },
+        "step_id": { "type": "string", "pattern": "^st-\\d+$" },
+        "tool": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "maxLength": 500 },
+        "ok": { "type": "boolean" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "output_excerpt": { "type": "string", "maxLength": 500 }
+      },
+      "required": ["step_id", "tool", "target", "ok", "duration_ms"]
+    },
+    {
+      "title": "decomposition",
+      "properties": {
+        "kind": { "const": "decomposition" },
+        "parent_step": {
+          "type": ["string", "null"],
+          "pattern": "^st-\\d+$"
+        },
+        "children": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^st-\\d+$" },
+          "minItems": 1
+        }
+      },
+      "required": ["parent_step", "children"]
+    },
+    {
+      "title": "pressure-event",
+      "properties": {
+        "kind": { "const": "pressure-event" },
+        "step_id": { "type": "string", "pattern": "^st-\\d+$" },
+        "category": {
+          "type": "string",
+          "enum": [
+            "retry",
+            "file-modified",
+            "hook-block",
+            "tool-error",
+            "rate-limit",
+            "deviation",
+            "recovery",
+            "ratelimit-rotation"
+          ]
+        },
+        "weight": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "context": { "type": "string", "maxLength": 200 }
+      },
+      "required": ["step_id", "category", "weight", "context"]
+    },
+    {
+      "title": "attribution-link",
+      "properties": {
+        "kind": { "const": "attribution-link" },
+        "step_id": { "type": "string", "pattern": "^st-\\d+$" },
+        "artifact_kind": {
+          "type": "string",
+          "enum": [
+            "task-stamp",
+            "decision-add",
+            "handoff-complete",
+            "state-log",
+            "note-add"
+          ]
+        },
+        "artifact_id": { "type": "string", "minLength": 1 },
+        "agent": { "type": "string", "minLength": 1 }
+      },
+      "required": ["step_id", "artifact_kind", "artifact_id", "agent"]
+    }
+  ]
+}
