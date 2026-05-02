@@ -3156,18 +3156,18 @@ function uninstall(isGlobal, runtime = 'claude') {
 
     // Also clean up legacy commands/gad/ from older GAD installs
     const legacyGsdDir = path.join(targetDir, 'commands', 'gsd');
-    if (fs.existsSync(legacyCommandsDir)) {
+    if (fs.existsSync(legacyGsdDir)) {
       // Preserve user-generated files before legacy wipe (#1423)
-      const devPrefsPath = path.join(legacyCommandsDir, 'dev-preferences.md');
+      const devPrefsPath = path.join(legacyGsdDir, 'dev-preferences.md');
       const preservedDevPrefs = fs.existsSync(devPrefsPath) ? fs.readFileSync(devPrefsPath, 'utf-8') : null;
 
-      fs.rmSync(legacyCommandsDir, { recursive: true });
+      fs.rmSync(legacyGsdDir, { recursive: true });
       removedCount++;
       console.log(`  ${green}✓${reset} Removed legacy commands/gad/`);
 
       if (preservedDevPrefs) {
         try {
-          fs.mkdirSync(legacyCommandsDir, { recursive: true });
+          fs.mkdirSync(legacyGsdDir, { recursive: true });
           fs.writeFileSync(devPrefsPath, preservedDevPrefs);
           console.log(`  ${green}✓${reset} Preserved commands/gad/dev-preferences.md`);
         } catch (err) {

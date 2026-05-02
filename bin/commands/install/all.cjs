@@ -25,6 +25,49 @@ const FLAG_KEYS = [
   'force-statusline',
 ];
 
+const RUNTIME_FLAG_KEYS = [
+  'claude',
+  'opencode',
+  'gemini',
+  'cursor',
+  'codex',
+  'copilot',
+  'antigravity',
+  'windsurf',
+  'augment',
+];
+
+function collectInstallFlagArgs(args, { implicitAll = false } = {}) {
+  const flagArgs = [];
+  const explicitRuntimeRequested = RUNTIME_FLAG_KEYS.some((key) => args[key]);
+
+  if (implicitAll || args.all || !explicitRuntimeRequested) {
+    flagArgs.push('--all');
+  }
+
+  for (const key of FLAG_KEYS) {
+    if (key === 'all') continue;
+    if (args[key]) flagArgs.push(`--${key}`);
+  }
+
+  if (args['config-dir']) {
+    flagArgs.push('--config-dir', args['config-dir']);
+  }
+
+  return flagArgs;
+}
+
+function runInstallDelegation(args, { implicitAll = false } = {}) {
+  const installerPath = path.resolve(__dirname, '..', '..', 'install.js');
+  const flagArgs = collectInstallFlagArgs(args, { implicitAll });
+  const command = isPackagedExecutableRuntime() ? getPackagedExecutablePath() : process.execPath;
+  const commandArgs = isPackagedExecutableRuntime()
+    ? ['__gad_internal_install__', ...flagArgs]
+    : [installerPath, ...flagArgs];
+  const result = spawnSync(command, commandArgs, { stdio: 'inherit', env: process.env });
+  process.exit(result.status || 0);
+}
+
 function createInstallAllCommand({ defineCommand }) {
   return defineCommand({
     meta: {
@@ -40,33 +83,8 @@ function createInstallAllCommand({ defineCommand }) {
       'force-statusline': { type: 'boolean' },
       'config-dir': { type: 'string', description: 'Custom runtime config directory', default: '' },
     },
-    run: ({ args }) => {
-      const installerPath = path.resolve(__dirname, '..', '..', 'install.js');
-      const flagArgs = [];
-
-      for (const key of FLAG_KEYS) {
-        if (args[key]) flagArgs.push(`--${key}`);
-      }
-
-      if (args['config-dir']) {
-        flagArgs.push('--config-dir', args['config-dir']);
-      }
-
-      if (flagArgs.length === 0) {
-        console.log('Usage: gad install all [runtime flags] [--local|--global] [--config-dir <path>]');
-        console.log('       passes through to bin/install.js');
-        console.log('       runtimes: --claude --opencode --gemini --codex --copilot --antigravity --cursor --windsurf --augment --all');
-        return;
-      }
-
-      const command = isPackagedExecutableRuntime() ? getPackagedExecutablePath() : process.execPath;
-      const commandArgs = isPackagedExecutableRuntime()
-        ? ['__gad_internal_install__', ...flagArgs]
-        : [installerPath, ...flagArgs];
-      const result = spawnSync(command, commandArgs, { stdio: 'inherit', env: process.env });
-      process.exit(result.status || 0);
-    },
+    run: ({ args }) => runInstallDelegation(args, { implicitAll: true }),
   });
 }
 
-module.exports = { createInstallAllCommand };
+module.exports = { createInstallAllCommand, runInstallDelegation };

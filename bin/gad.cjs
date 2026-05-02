@@ -106,6 +106,11 @@ const graphExtractor = require('../lib/graph-extractor.cjs');
 
 const pkg = require('../package.json');
 
+if (process.argv[2] === '__gad_internal_install__') {
+  process.argv.splice(2, 1);
+  require('./install.js');
+} else {
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -352,3 +357,4 @@ __argvInjectors.extractActiveSkillFlag();
 __argvInjectors.warnGitBashMungedArgs(process.argv);
 
 runMain(main);
+}
