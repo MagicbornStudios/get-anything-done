@@ -337,7 +337,80 @@ const common = {
   registerLoadSessions: (fn) => { __loadSessionsRef = fn; },
 };
 
-const { subCommands } = require('./commands/_loader.cjs').load({ common, extras: {} });
+function toPascalCase(name) {
+  return String(name || '')
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+}
+
+function mergeCommandEntries(target, entries, sourceLabel, sourceMap) {
+  for (const [name, command] of Object.entries(entries || {})) {
+    if (Object.prototype.hasOwnProperty.call(target, name)) {
+      const prior = sourceMap.get(name) || 'unknown source';
+      throw new Error(`Duplicate gad command registration: ${name} (${prior} vs ${sourceLabel})`);
+    }
+    target[name] = command;
+    sourceMap.set(name, sourceLabel);
+  }
+}
+
+function loadProjectCommands(commonDeps) {
+  const baseDir = findRepoRoot();
+  const config = gadConfig.load(baseDir);
+  const entries = {};
+
+  for (const root of config.roots || []) {
+    const planningDir = root.planningDir || '.planning';
+    const projectRoot = path.resolve(baseDir, root.path || '.');
+    const commandsDir = path.join(projectRoot, planningDir, 'commands');
+    if (!fs.existsSync(commandsDir)) continue;
+
+    const files = fs.readdirSync(commandsDir, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith('.cjs'))
+      .map((entry) => entry.name)
+      .sort();
+
+    for (const file of files) {
+      const commandName = file.replace(/\.cjs$/, '');
+      const commandPath = path.join(commandsDir, file);
+      const mod = require(commandPath);
+      const expectedFactoryName = `create${toPascalCase(commandName)}Command`;
+      let factory = typeof mod[expectedFactoryName] === 'function' ? mod[expectedFactoryName] : null;
+      if (!factory) {
+        const matches = Object.entries(mod)
+          .filter(([key, value]) => /^create[A-Z].*Command$/.test(key) && typeof value === 'function');
+        if (matches.length === 1) {
+          factory = matches[0][1];
+        } else {
+          const rel = path.relative(baseDir, commandPath);
+          throw new Error(
+            `Project command ${rel} must export ${expectedFactoryName}(deps) returning a defineCommand object.`,
+          );
+        }
+      }
+
+      const command = factory({
+        ...commonDeps,
+        defineCommand,
+        projectRoot,
+        project: root,
+        commandName,
+        commandPath,
+        commandsDir,
+      });
+      entries[commandName] = command;
+    }
+  }
+
+  return entries;
+}
+
+const builtInLoad = require('./commands/_loader.cjs').load({ common, extras: {} });
+const subCommands = builtInLoad.subCommands;
+const commandSources = new Map(Object.keys(subCommands).map((name) => [name, 'built-in commands']));
+mergeCommandEntries(subCommands, loadProjectCommands(common), 'project commands', commandSources);
 
 const main = defineCommand({
   meta: {
