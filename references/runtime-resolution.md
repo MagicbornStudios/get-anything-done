@@ -29,8 +29,8 @@ Reference implementations:
 |---|---|---|
 | gemini-cli | `scripts/gad-gemini-trial.mjs` | `scripts/runtime-adapters/gemini-cli.mjs` |
 | cursor-cli | `scripts/gad-cursor-trial.mjs` | `scripts/runtime-adapters/cursor-cli.mjs` |
-| codex-cli | (TODO — currently relies on global `codex`) | `scripts/runtime-adapters/codex-cli.mjs` |
-| opencode | (TODO) | `scripts/runtime-adapters/opencode.mjs` |
+| codex-cli | `scripts/gad-codex-trial.mjs` | `scripts/runtime-adapters/codex-cli.mjs` |
+| opencode | `scripts/gad-opencode-trial.mjs` | `scripts/runtime-adapters/opencode.mjs` |
 | claude-code | (handled by Claude Code itself; no wrapper needed) | `scripts/runtime-adapters/claude-code.mjs` |
 
 ## Update ritual
@@ -54,7 +54,7 @@ A runtime stays current via three layers:
 | `runtime-versions.json` not yet authored | No pinned canonical versions; wrappers fall through to global PATH | Phase 95 task |
 | `gad runtime update` not implemented | Manual update still requires direct `npm i -g` | Phase 95 task |
 | `tmp/<runtime>/` directories not created at install time | Wrappers always fall through to user-local + PATH | Phase 95 task |
-| codex-cli + opencode wrappers not authored | Those runtimes use raw global PATH today | Phase 95 backlog |
+| codex-cli + opencode wrappers not pinned yet | New wrappers exist, but vendored `tmp/<runtime>/` payloads are still absent by default | Phase 95 follow-up |
 
 ## Operator-side install commands (current state)
 
@@ -66,8 +66,11 @@ node scripts/gad-gemini-trial.mjs -- --version
 # Resolves at %LOCALAPPDATA%\cursor-agent\cursor-agent.cmd on Windows
 '/c/Users/benja/AppData/Local/cursor-agent/cursor-agent.cmd' --version
 
-# codex-cli — npm install (still relies on global PATH)
-npm install -g @openai/codex-cli
+# codex-cli — vendored > user-local > PATH > pnpm dlx
+node scripts/gad-codex-trial.mjs -- --version
+
+# opencode — vendored > user-local > PATH > pnpm dlx
+node scripts/gad-opencode-trial.mjs -- --version
 
 # claude-code — installed via Claude Code app + CLI extension
 ```
