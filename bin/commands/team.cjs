@@ -24,7 +24,10 @@ const { createScaleCommand }    = require('./team/scale.cjs');
 
 function createTeamCommands(deps) {
   return defineCommand({
-    meta: { name: 'team', description: 'Multi-agent orchestration via mailbox queue. See .planning/notes/2026-04-20-gad-team-mailbox-design.md' },
+    meta: {
+      name: 'team',
+      description: 'Multi-agent orchestration via mailbox queue. Worker polling uses tick_ms with runtime overrides (gemini-cli 8000ms, codex-cli 2000ms by default). See .planning/notes/2026-04-20-gad-team-mailbox-design.md',
+    },
     subCommands: {
       start:    createStartCommand(deps),
       stop:     createStopCommand(deps),

@@ -7,7 +7,13 @@ const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
 
-const { readConfig, writeConfig, resolveRuntimeCmd, DEFAULT_TICK_MS } = require('../../../lib/team/config.cjs');
+const {
+  readConfig,
+  writeConfig,
+  resolveRuntimeCmd,
+  DEFAULT_TICK_MS,
+  DEFAULT_RUNTIME_TICK_OVERRIDES,
+} = require('../../../lib/team/config.cjs');
 const { writeStatus } = require('../../../lib/team/status.cjs');
 const { spawnWorker } = require('../../../lib/team/spawn.cjs');
 const { profilesRoot, workerDir, workerMailbox, workerOutDir, configPath, workerLog, teamRoot, supervisorLog } = require('../../../lib/team/paths.cjs');
@@ -28,7 +34,10 @@ function createStartCommand(deps) {
   }
 
   return defineCommand({
-    meta: { name: 'start', description: 'Create team config + spawn N detached worker subprocesses. Idempotent: refuses if team already running.' },
+    meta: {
+      name: 'start',
+      description: 'Create team config + spawn N detached worker subprocesses. Default worker poll cadence: gemini-cli 8000ms, codex-cli 2000ms, otherwise tick_ms.',
+    },
     args: {
       projectid: { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' },
       n: { type: 'string', description: 'Number of workers (default 2). Ignored when --profile is given.', default: '2' },
@@ -73,6 +82,7 @@ function createStartCommand(deps) {
           runtime_cmd: args['runtime-cmd'] || null,
           autopause_threshold: Number(process.env.GAD_AUTOPAUSE_THRESHOLD || 20),
           tick_ms: Number(process.env.GAD_TEAM_TICK_MS || DEFAULT_TICK_MS),
+          runtime_tick_overrides: { ...DEFAULT_RUNTIME_TICK_OVERRIDES },
           created_at: new Date().toISOString(),
           supervisor_pid: process.pid,
         };

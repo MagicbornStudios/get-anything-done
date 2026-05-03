@@ -37,3 +37,36 @@ test('resolveRuntimeCmd wraps codex runtime when telemetry env is enabled', () =
     'node scripts/codex-session-emit.cjs -- codex exec -c features.codex_hooks=false -c notify=[] --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox',
   );
 });
+
+test('resolveTickMs uses runtime override for gemini workers', () => {
+  process.env = { ...originalEnv };
+  const { resolveTickMs } = loadConfig();
+  const tickMs = resolveTickMs({
+    tick_ms: 2000,
+    runtime_tick_overrides: { 'gemini-cli': 8000, 'codex-cli': 2000 },
+    workers_spec: [{ id: 'w5', role: 'executor', runtime: 'gemini-cli', runtime_cmd: null }],
+  }, 'w5');
+  assert.equal(tickMs, 8000);
+});
+
+test('resolveTickMs falls back to global tick for runtimes without an override', () => {
+  process.env = { ...originalEnv };
+  const { resolveTickMs } = loadConfig();
+  const tickMs = resolveTickMs({
+    tick_ms: 3500,
+    runtime_tick_overrides: { 'gemini-cli': 8000 },
+    workers_spec: [{ id: 'w1', role: 'executor', runtime: 'claude-code', runtime_cmd: null }],
+  }, 'w1');
+  assert.equal(tickMs, 3500);
+});
+
+test('resolveTickMs prefers runtime-specific override for gemini workers', () => {
+  process.env = { ...originalEnv };
+  const { resolveTickMs } = loadConfig();
+  const tickMs = resolveTickMs({
+    tick_ms: 2000,
+    runtime_tick_overrides: { 'gemini-cli': 8000, 'codex-cli': 2000 },
+    workers_spec: [{ id: 'w3', role: 'executor', runtime: 'gemini-cli', runtime_cmd: null }],
+  }, 'w3');
+  assert.equal(tickMs, 8000);
+});
