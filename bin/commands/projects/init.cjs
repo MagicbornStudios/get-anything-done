@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
+const { scaffoldProjectInitInstructions } = require('./init-contract.cjs');
 
 // MD planning artifact filenames that indicate an operator-written planning
 // scaffold already exists. If any of these are present, `gad projects init`
@@ -48,6 +49,11 @@ function createProjectsInitCommand(deps) {
       const projectId = (args.projectid || projectName).toLowerCase().replace(/[^a-z0-9-]/g, '-');
       const planDir = path.join(projectPath, '.planning');
       const format = (args.format || 'xml').toLowerCase();
+      const initVars = {
+        project_id: projectId,
+        project_name: projectName,
+        project_upper: projectId.toUpperCase(),
+      };
 
       if (format !== 'xml' && format !== 'md') {
         console.error(`✗ Unknown --format "${args.format}". Expected xml or md.`);
@@ -91,6 +97,17 @@ function createProjectsInitCommand(deps) {
           console.log(`  Registered as [${projectId}] at path "${relPath}" in ${path.join(baseDir, 'gad-config.toml')}`);
         } else {
           console.log(`  Already registered as [${projectId}].`);
+        }
+
+        const instructionResults = scaffoldProjectInitInstructions(projectPath, initVars);
+        console.log('  Initial instructions:');
+        for (const result of instructionResults) {
+          if (result.existed) {
+            console.log(`    Preserved ${path.relative(projectPath, result.targetPath)}; wrote ${path.relative(projectPath, result.outputPath)}`);
+            console.log(`      ${result.compareHint}`);
+          } else {
+            console.log(`    Created ${path.relative(projectPath, result.outputPath)}`);
+          }
         }
 
         console.log('');
@@ -153,6 +170,17 @@ function createProjectsInitCommand(deps) {
       console.log(`  Project id: ${projectId}`);
       console.log(`  Files written (${written.length}):`);
       for (const file of written) console.log(`    ${file}`);
+
+      const instructionResults = scaffoldProjectInitInstructions(projectPath, initVars);
+      console.log('  Initial instructions:');
+      for (const result of instructionResults) {
+        if (result.existed) {
+          console.log(`    Preserved ${path.relative(projectPath, result.targetPath)}; wrote ${path.relative(projectPath, result.outputPath)}`);
+          console.log(`      ${result.compareHint}`);
+        } else {
+          console.log(`    Created ${path.relative(projectPath, result.outputPath)}`);
+        }
+      }
 
       const relPath = normalizePath(path.relative(baseDir, projectPath) || '.');
       if (!config.roots.find((root) => normalizePath(root.path) === relPath)) {

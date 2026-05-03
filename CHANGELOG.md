@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- `gad projects init` now scaffolds a full initial-instructions bundle alongside the canonical XML ledgers: root `AGENTS.md`, mirrored `CLAUDE.md`, `SOUL.md`, and `.planning/AGENTS.md`. Existing instruction files are preserved and the generated refresh lands as `.<file>.gad-init` with a merge hint.
+
 ## [1.35.0] - 2026-04-18
 
 Release focused on moving distribution off the SEA-first path while shipping the current codex/runtime queue: Bun becomes the primary binary build path, startup stops performing self-refresh side effects, and the framework gains the new handoff, evolution, publish, and hygiene surfaces accumulated since `v1.34.3`.

@@ -7,8 +7,8 @@
  *      into a copy of the canonical tree; asserts sibling workflow split,
  *      frontmatter pointer rewrite, and sentinel gate.
  *   B. Consumer init — `gad projects init` in a tmp dir; asserts .planning/
- *      scaffold materializes with valid XML for the four required files
- *      (STATE, ROADMAP, TASK-REGISTRY, DECISIONS).
+ *      scaffold materializes with valid XML plus the initial-instructions
+ *      package (AGENTS.md, CLAUDE.md, SOUL.md, .planning/AGENTS.md).
  *   C. Runtime install — `gad install all --claude --local` in the initialized
  *      tmp consumer; asserts ".claude/skills/gad-<name>/SKILL.md" files land
  *      with valid frontmatter and that frontmatter `workflow:` pointers
@@ -142,7 +142,7 @@ describe('Flow B — gad projects init (consumer scaffold)', () => {
     cleanup(consumerDir);
   });
 
-  test('creates .planning/ with the four canonical XML files', () => {
+  test('creates .planning/ with XML plus the initial-instructions package', () => {
     const result = runGadCli(
       [
         'projects',
@@ -173,6 +173,59 @@ describe('Flow B — gad projects init (consumer scaffold)', () => {
       assert.ok(fs.existsSync(fp), `${file} present`);
       const content = fs.readFileSync(fp, 'utf8');
       assert.match(content, /^<\?xml version="1\.0"/, `${file} has valid XML declaration`);
+    }
+
+    const agentsPath = path.join(consumerDir, 'AGENTS.md');
+    const claudePath = path.join(consumerDir, 'CLAUDE.md');
+    const soulPath = path.join(consumerDir, 'SOUL.md');
+    const planningAgentsPath = path.join(planning, 'AGENTS.md');
+
+    for (const fp of [agentsPath, claudePath, soulPath, planningAgentsPath]) {
+      assert.ok(fs.existsSync(fp), `${path.relative(consumerDir, fp)} present`);
+    }
+
+    const agentsBody = fs.readFileSync(agentsPath, 'utf8');
+    assert.match(agentsBody, /Project id: `test-consumer`/);
+    assert.match(agentsBody, /Gilgamesh of Uruk/);
+    assert.match(agentsBody, /TEST-CONSUMER-D-<n>/);
+    assert.match(agentsBody, /gad snapshot --projectid test-consumer/);
+
+    const planningAgentsBody = fs.readFileSync(planningAgentsPath, 'utf8');
+    assert.match(planningAgentsBody, /This file applies only inside `.planning\/`\./);
+  });
+
+  test('preserves existing instruction files and writes .gad-init fallbacks', () => {
+    fs.writeFileSync(path.join(consumerDir, 'AGENTS.md'), '# Existing agent contract\n');
+    fs.writeFileSync(path.join(consumerDir, 'CLAUDE.md'), '# Existing claude contract\n');
+    fs.writeFileSync(path.join(consumerDir, 'SOUL.md'), '# Existing soul\n');
+    fs.writeFileSync(path.join(consumerDir, '.planning', 'AGENTS.md'), '# Existing planning agent contract\n');
+
+    const rerun = runGadCli(
+      [
+        'projects',
+        'init',
+        '--name',
+        'Test Consumer',
+        '--projectid',
+        'test-consumer',
+        '--path',
+        consumerDir,
+        '--force',
+      ],
+      consumerDir,
+    );
+    assert.ok(rerun.success, `rerun failed: ${rerun.error}`);
+    assert.match(rerun.output, /Preserved AGENTS\.md; wrote \.AGENTS\.md\.gad-init/);
+    assert.match(rerun.output, /Preserved CLAUDE\.md; wrote \.CLAUDE\.md\.gad-init/);
+    assert.match(rerun.output, /Preserved SOUL\.md; wrote \.SOUL\.md\.gad-init/);
+
+    for (const fp of [
+      path.join(consumerDir, '.AGENTS.md.gad-init'),
+      path.join(consumerDir, '.CLAUDE.md.gad-init'),
+      path.join(consumerDir, '.SOUL.md.gad-init'),
+      path.join(consumerDir, '.planning', '.AGENTS.md.gad-init'),
+    ]) {
+      assert.ok(fs.existsSync(fp), `${path.relative(consumerDir, fp)} present`);
     }
   });
 });
@@ -348,15 +401,19 @@ describe('Flow D — bin/install.js --claude --new-project <tmp>', () => {
     });
     assert.deepStrictEqual(escapes, [], 'no installed skill escapes the project folder');
 
-    // 6. Boot contract files must exist with GAD markers at the project root.
-    for (const fileName of ['CLAUDE.md', 'AGENTS.md']) {
+    // 6. Initial instruction files must exist at the project root and planning dir.
+    for (const fileName of ['CLAUDE.md', 'AGENTS.md', 'SOUL.md']) {
       const fp = path.join(projectDir, fileName);
       assert.ok(fs.existsSync(fp), `${fileName} created at project root`);
       const body = fs.readFileSync(fp, 'utf8');
-      assert.match(body, /<!-- GAD:boot-start -->/, `${fileName} has GAD:boot-start marker`);
-      assert.match(body, /<!-- GAD:boot-end -->/, `${fileName} has GAD:boot-end marker`);
-      assert.match(body, /gad snapshot --projectid my-gad-project/, `${fileName} embeds project id`);
+      if (fileName === 'SOUL.md') {
+        assert.match(body, /Gilgamesh of Uruk/, 'SOUL.md points at the default soul');
+      } else {
+        assert.match(body, /gad snapshot --projectid my-gad-project/, `${fileName} embeds project id`);
+      }
     }
+    const planningAgents = path.join(projectDir, '.planning', 'AGENTS.md');
+    assert.ok(fs.existsSync(planningAgents), '.planning/AGENTS.md created');
 
     // 7. Hooks referenced in settings.json must resolve on disk (fix for
     // the silent no-op found while answering "where is CLAUDE.md?").
@@ -379,9 +436,11 @@ describe('Flow D — bin/install.js --claude --new-project <tmp>', () => {
     }
   });
 
-  test('re-running against existing CLAUDE.md with GAD markers replaces only the bounded block', () => {
+  test('re-running preserves existing instruction files', () => {
     // Seed a pre-existing CLAUDE.md with custom header + stale GAD block + custom footer.
     const claudeMdPath = path.join(projectDir, 'CLAUDE.md');
+    const agentsMdPath = path.join(projectDir, 'AGENTS.md');
+    const soulPath = path.join(projectDir, 'SOUL.md');
     const seeded = [
       '# Custom project',
       '',
@@ -397,6 +456,8 @@ describe('Flow D — bin/install.js --claude --new-project <tmp>', () => {
       '',
     ].join('\n');
     fs.writeFileSync(claudeMdPath, seeded);
+    fs.writeFileSync(agentsMdPath, '# Custom agents contract\n');
+    fs.writeFileSync(soulPath, '# Custom soul\n');
 
     // Re-run the installer against the same folder.
     try {
@@ -410,10 +471,12 @@ describe('Flow D — bin/install.js --claude --new-project <tmp>', () => {
     }
 
     const body = fs.readFileSync(claudeMdPath, 'utf8');
-    assert.match(body, /^# Custom project/, 'user header preserved');
+    assert.match(fs.readFileSync(agentsMdPath, 'utf8'), /^# Custom agents contract/, 'existing AGENTS.md preserved');
+    assert.match(fs.readFileSync(soulPath, 'utf8'), /^# Custom soul/, 'existing SOUL.md preserved');
+    assert.match(body, /^# Custom project/, 'existing CLAUDE.md preserved');
     assert.match(body, /User header paragraph — MUST SURVIVE/, 'user header paragraph preserved');
     assert.match(body, /## User footer/, 'user footer preserved');
-    assert.doesNotMatch(body, /STALE GAD CONTENT/, 'stale GAD block removed');
-    assert.match(body, /gad snapshot --projectid my-gad-project/, 'fresh GAD block injected');
+    assert.match(body, /STALE GAD CONTENT/, 'existing CLAUDE.md left untouched');
+    assert.equal(fs.existsSync(path.join(projectDir, '.CLAUDE.md.gad-init')), false, 'installer rerun does not force a new CLAUDE mirror when .planning already exists');
   });
 });

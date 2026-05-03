@@ -89,3 +89,6 @@ source hint: pattern anchor: Profile Header
 - Prompts missing route or source hint.
 - Clipboard copy has no user feedback.
 - Ids are not searchable in source.
+
+## Terms
+Quick Prompt - Prompt template with ids to inject user input into on capture.  4 different templates using CRUD verbs.

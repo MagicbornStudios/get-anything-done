@@ -104,13 +104,99 @@ function createSiteCommand(deps) {
     },
   });
 
+  const siteNewCmd = defineCommand({
+    meta: {
+      name: 'new',
+      description: 'Bootstrap a new customer site from template',
+    },
+    args: {
+      slug: { type: 'positional', description: 'Slug for the new site (e.g. test-tenant)', required: true },
+      name: { type: 'string', description: 'Site name. Defaults to slug.', default: '' },
+    },
+    run({ args }) {
+      const fs = require('fs');
+      const { execSync } = require('child_process');
+
+      const repoRoot = deps.findRepoRoot();
+      const templateDir = path.join(repoRoot, 'vendor/get-anything-done/templates/customer-site');
+      const targetDir = path.join(repoRoot, 'sites', args.slug);
+
+      if (fs.existsSync(targetDir)) {
+        outputError(`Target directory already exists: ${targetDir}`);
+        return;
+      }
+
+      console.log(`[gad site new] bootstrapping sites/${args.slug} ...`);
+
+      try {
+        // 1. Copy template
+        fs.cpSync(templateDir, targetDir, { recursive: true });
+
+        // 2. Replace tokens
+        const siteName = args.name || args.slug;
+        const tenantId = `tenant-${args.slug}`;
+
+        function replaceInFile(filePath) {
+          if (fs.statSync(filePath).isDirectory()) return;
+          // Skip binary files if any (very basic check)
+          const ext = path.extname(filePath);
+          if (['.png', '.jpg', '.ico', '.pdf'].includes(ext)) return;
+
+          let content = fs.readFileSync(filePath, 'utf8');
+          let changed = false;
+          if (content.includes('{{SITE_NAME}}')) {
+            content = content.replace(/{{SITE_NAME}}/g, siteName);
+            changed = true;
+          }
+          if (content.includes('{{TENANT_ID}}')) {
+            content = content.replace(/{{TENANT_ID}}/g, tenantId);
+            changed = true;
+          }
+          if (changed) {
+            fs.writeFileSync(filePath, content, 'utf8');
+          }
+        }
+
+        function walk(dir) {
+          const files = fs.readdirSync(dir);
+          for (const file of files) {
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+              walk(fullPath);
+            } else {
+              replaceInFile(fullPath);
+            }
+          }
+        }
+
+        walk(targetDir);
+
+        // Update package.json name
+        const pkgPath = path.join(targetDir, 'package.json');
+        if (fs.existsSync(pkgPath)) {
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+          pkg.name = `@gad-sites/${args.slug}`;
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2), 'utf8');
+        }
+
+        // 3. pnpm install
+        console.log(`[gad site new] running pnpm install ...`);
+        execSync('pnpm install', { cwd: repoRoot, stdio: 'inherit' });
+
+        console.log(`[gad site new] done! New site at sites/${args.slug}`);
+      } catch (err) {
+        outputError(`Failed to bootstrap site: ${err.message}`);
+      }
+    },
+  });
+
   return defineCommand({
     meta: {
       name: 'site',
       description:
         'GAD planning / landing site (Next.js app under vendor/get-anything-done/site): compile static extract or serve it. Not preserved generation builds — use `gad play` or `gad generation open` for those.',
     },
-    subCommands: { compile: siteCompileCmd, serve: siteServeCmd },
+    subCommands: { compile: siteCompileCmd, serve: siteServeCmd, new: siteNewCmd },
   });
 }
 

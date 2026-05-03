@@ -5050,25 +5050,33 @@ function runOnboardFlow(runtimes, targetFolder, isInteractive) {
     console.warn(`  ${yellow}⚠ .planning/ scaffold step failed: ${err.message}${reset}`);
   }
 
-  // Step 3b: write CLAUDE.md / AGENTS.md boot contracts.
-  // Scripted path defaults to 'append' — safe non-destructive for existing
-  // files, replaces only the bounded <!-- GAD:boot --> block if present.
-  // Interactive path sets bootContractMode via the onboarding prompt when
-  // existing files are detected; defaults to 'append' there too.
+  // Step 3b: `gad projects init` now owns the initial-instructions scaffold.
+  // Keep the older boot-contract writer only as a fallback for binaries that
+  // predate the AGENTS/CLAUDE/SOUL/project-planning scaffold.
   try {
     const projectName = path.basename(targetFolder);
     const projectId = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
-    const mode = process.env.GAD_ONBOARD_BOOT_MODE || 'append';
-    const bootResults = writeBootContracts(targetFolder, projectId, projectName, mode);
-    for (const r of bootResults) {
-      const label = {
-        'created': `${green}✓${reset} Created`,
-        'overwritten': `${yellow}↻${reset} Overwrote`,
-        'replaced-block': `${green}✓${reset} Updated GAD block in`,
-        'prepended': `${green}✓${reset} Prepended GAD block to`,
-        'skipped': `${dim}•${reset} Skipped existing`,
-      }[r.action] || r.action;
-      console.log(`  ${label} ${path.relative(targetFolder, r.path)}`);
+    const instructionPaths = [
+      path.join(targetFolder, 'AGENTS.md'),
+      path.join(targetFolder, 'CLAUDE.md'),
+      path.join(targetFolder, 'SOUL.md'),
+      path.join(targetFolder, '.planning', 'AGENTS.md'),
+    ];
+    if (instructionPaths.every((p) => fs.existsSync(p))) {
+      console.log(`  ${green}✓${reset} Initial instructions scaffolded by gad projects init`);
+    } else {
+      const mode = process.env.GAD_ONBOARD_BOOT_MODE || 'append';
+      const bootResults = writeBootContracts(targetFolder, projectId, projectName, mode);
+      for (const r of bootResults) {
+        const label = {
+          'created': `${green}✓${reset} Created`,
+          'overwritten': `${yellow}↻${reset} Overwrote`,
+          'replaced-block': `${green}✓${reset} Updated GAD block in`,
+          'prepended': `${green}✓${reset} Prepended GAD block to`,
+          'skipped': `${dim}•${reset} Skipped existing`,
+        }[r.action] || r.action;
+        console.log(`  ${label} ${path.relative(targetFolder, r.path)}`);
+      }
     }
   } catch (err) {
     console.warn(`  ${yellow}⚠ boot contract write failed: ${err.message}${reset}`);
