@@ -49,6 +49,17 @@ test('resolveRuntimeCmd keeps cursor runtime unwrapped when telemetry env is uns
   assert.equal(cmd, 'node scripts/gad-cursor-trial.mjs -- --print --output-format json');
 });
 
+test('resolveRuntimeCmd defaults opencode workers to the headless run wrapper', () => {
+  process.env = { ...originalEnv };
+  delete process.env.GAD_SESSION_TELEMETRY;
+  const { resolveRuntimeCmd } = loadConfig();
+  const cmd = resolveRuntimeCmd({
+    runtime: 'opencode',
+    workers_spec: [{ id: 'w7', role: 'executor', runtime: 'opencode', runtime_cmd: null }],
+  }, 'w7');
+  assert.equal(cmd, 'node scripts/gad-opencode-trial.mjs -- run --format json');
+});
+
 test('resolveRuntimeCmd wraps cursor runtime when telemetry env is enabled', () => {
   process.env = { ...originalEnv, GAD_SESSION_TELEMETRY: '1' };
   const { resolveRuntimeCmd } = loadConfig();
