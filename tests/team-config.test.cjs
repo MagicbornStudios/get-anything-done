@@ -38,6 +38,30 @@ test('resolveRuntimeCmd wraps codex runtime when telemetry env is enabled', () =
   );
 });
 
+test('resolveRuntimeCmd keeps cursor runtime unwrapped when telemetry env is unset', () => {
+  process.env = { ...originalEnv };
+  delete process.env.GAD_SESSION_TELEMETRY;
+  const { resolveRuntimeCmd } = loadConfig();
+  const cmd = resolveRuntimeCmd({
+    runtime: 'cursor-cli',
+    workers_spec: [{ id: 'w6', role: 'executor', runtime: 'cursor-cli', runtime_cmd: null }],
+  }, 'w6');
+  assert.equal(cmd, 'node scripts/gad-cursor-trial.mjs -- --print --output-format json');
+});
+
+test('resolveRuntimeCmd wraps cursor runtime when telemetry env is enabled', () => {
+  process.env = { ...originalEnv, GAD_SESSION_TELEMETRY: '1' };
+  const { resolveRuntimeCmd } = loadConfig();
+  const cmd = resolveRuntimeCmd({
+    runtime: 'cursor-cli',
+    workers_spec: [{ id: 'w6', role: 'executor', runtime: 'cursor-cli', runtime_cmd: 'node scripts/gad-cursor-trial.mjs -- --print --output-format json' }],
+  }, 'w6');
+  assert.equal(
+    cmd,
+    'node scripts/cursor-session-emit.cjs -- node scripts/gad-cursor-trial.mjs -- --print --output-format json',
+  );
+});
+
 test('resolveTickMs uses runtime override for gemini workers', () => {
   process.env = { ...originalEnv };
   const { resolveTickMs } = loadConfig();

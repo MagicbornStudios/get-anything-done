@@ -1,7 +1,7 @@
 # Cursor adapter
 
-Phase 89-04 adds a Cursor-side whiteboard emitter at `scripts/cursor-session-emit.mjs`.
-It sits in front of `cursor-agent`, proxies the child stdio unchanged, and writes
+Phase 89-04 adds a Cursor-side whiteboard emitter at `scripts/cursor-session-emit.cjs`.
+It sits in front of the normal Cursor runtime command, proxies child stdio unchanged, and writes
 `.planning/.sessions/<id>/events.jsonl` in the 89-01 schema.
 
 ## Why this shape
@@ -17,13 +17,20 @@ two rules:
 
 That keeps the wrapper useful even if message-level formatting shifts.
 
+The adapter mirrors the Codex opt-in path from 89-03: when `GAD_SESSION_TELEMETRY=1` is
+set, the team runtime wraps the normal Cursor command with
+`node scripts/cursor-session-emit.cjs -- ...`. When the env var is unset, workers call the
+raw runtime command directly and incur no telemetry overhead.
+
 ## Entry points
 
-- Direct wrapper: `node scripts/cursor-session-emit.mjs --projectid global --intent "..." -- cursor-agent ...`
-- Normal GAD path: `node scripts/gad-cursor-trial.mjs -- ...`
+- Team worker opt-in: `GAD_SESSION_TELEMETRY=1 node vendor/get-anything-done/bin/gad.cjs team work ...`
+- Direct wrapper: `cat prompt.md | node scripts/cursor-session-emit.cjs -- node scripts/gad-cursor-trial.mjs -- --print --output-format json`
+- Raw runtime path (no telemetry): `node scripts/gad-cursor-trial.mjs -- --print --output-format json`
 
-`gad-cursor-trial.mjs` now delegates to the emitter and passes the resolved Cursor binary
-plus the headless prompt args through unchanged.
+`gad-cursor-trial.mjs` is the no-overhead launcher: it resolves the packaged/local
+`cursor-agent`, loads repo-root env, and executes the headless command directly. The
+telemetry wrapper is layered around that launcher only when the env gate is enabled.
 
 ## Event model
 
@@ -37,10 +44,9 @@ The current adapter emits:
 - `step-end`
 - `session-end`
 
-It deliberately does **not** synthesize decomposition trees yet. Cursor's public headless
-surface gives us tool metadata reliably, but not a stable "planned children" event the way
-the schema's `decomposition` kind wants. A future upgrade can add that once Cursor exposes
-it cleanly.
+It deliberately does **not** synthesize decomposition trees yet. Cursor's headless JSON
+stream gives us tool metadata reliably, but not a stable planned-children event the way the
+schema's `decomposition` kind wants.
 
 ## Attribution inference
 
@@ -49,6 +55,7 @@ The adapter watches Bash-like tool inputs for durable GAD writes:
 - `gad tasks stamp <id>` -> `task-stamp`
 - `gad decisions add <id>` -> `decision-add`
 - `gad handoffs complete <id>` -> `handoff-complete`
+- `gad state log` -> `state-log`
 - `gad note add <slug>` -> `note-add`
 
 The emitted `artifact_id` is taken directly from the command line token.
@@ -64,7 +71,7 @@ The emitted `artifact_id` is taken directly from the command line token.
 
 Committed sample session:
 
-- `vendor/get-anything-done/tests/fixtures/cursor-session.sample.jsonl`
+- `vendor/get-anything-done/tests/fixtures/cursor-session-sample.jsonl`
 
 Regression coverage:
 
