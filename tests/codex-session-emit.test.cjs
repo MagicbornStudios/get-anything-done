@@ -31,10 +31,12 @@ test('codex-session-emit writes session telemetry from synthetic codex stderr', 
     `err.write('\\\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\WindowsPowerShell\\\\\\\\v1.0\\\\\\\\powershell.exe\\\" -NoProfile -Command \\'node vendor/get-anything-done/bin/gad.cjs handoffs complete ${handoffId}\\' in C:\\\\Users\\\\benja\\\\Documents\\\\custom_portfolio\\n');`,
     "err.write('patch: completed\\n');",
     "err.write('scripts/codex-session-emit.cjs\\n');",
+    "err.write('exec\\n');",
+    `err.write('\\\"C:\\\\\\\\Windows\\\\\\\\System32\\\\\\\\WindowsPowerShell\\\\\\\\v1.0\\\\\\\\powershell.exe\\\" -NoProfile -Command \\'Get-Content .env\\' in C:\\\\Users\\\\benja\\\\Documents\\\\custom_portfolio\\n');`,
     "err.write('2026-05-03T02:30:04.000Z ERROR codex_core::tools::router: error=Exit code: 1\\n');",
     "err.write('Wall time: 1 seconds\\n');",
     "err.write('Output:\\n');",
-    "err.write('Authorization: Bearer sk-test-super-secret\\n\\n');",
+    "err.write('Authorization: Bearer sk-test-super-secret\\nOPENAI_API_KEY=sk-test-super-secret\\n\\n');",
     "process.stdout.write('synthetic stdout ok\\n');",
   ].join('\n');
 
@@ -73,7 +75,10 @@ test('codex-session-emit writes session telemetry from synthetic codex stderr', 
   assert.equal(events[0].claimed_handoff, handoffId);
   assert.equal(events[1].kind, 'step-start');
   assert.ok(events.some((event) => event.kind === 'tool-call' && event.tool === 'Read' && event.ok === true));
-  assert.ok(events.some((event) => event.kind === 'tool-call' && event.tool === 'Bash' && event.ok === true));
+  const failedBash = events.find((event) => event.kind === 'tool-call' && event.tool === 'Read' && event.ok === false);
+  assert.ok(failedBash, 'failed Bash tool-call emitted');
+  assert.ok(failedBash.output_excerpt, 'failed Bash includes excerpt');
+  assert.ok(!failedBash.output_excerpt.includes('sk-test-super-secret'), 'tool-call excerpt scrubbed');
   assert.ok(events.some((event) => event.kind === 'tool-call' && event.tool === 'Edit' && event.target === 'scripts/codex-session-emit.cjs'));
   assert.ok(events.some((event) => event.kind === 'attribution-link' && event.artifact_id === handoffId));
   const pressure = events.find((event) => event.kind === 'pressure-event');
