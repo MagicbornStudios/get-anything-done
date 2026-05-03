@@ -47,8 +47,6 @@ describe('team runtime account rotation', () => {
       runSubprocess: require(SUBPROCESS_PATH).runSubprocess,
       getActiveRuntimeAccount: require(RATE_LIMIT_PATH).getActiveRuntimeAccount,
       rotateRuntimeAccount: require(RATE_LIMIT_PATH).rotateRuntimeAccount,
-      parkRuntime: require(RATE_LIMIT_PATH).parkRuntime,
-      isParked: require(RATE_LIMIT_PATH).isParked,
       claimHandoff: require(HANDOFFS_PATH).claimHandoff,
       readHandoff: require(HANDOFFS_PATH).readHandoff,
       unclaimHandoff: require(HANDOFFS_PATH).unclaimHandoff,
@@ -65,8 +63,6 @@ describe('team runtime account rotation', () => {
     require(SUBPROCESS_PATH).runSubprocess = originals.runSubprocess;
     require(RATE_LIMIT_PATH).getActiveRuntimeAccount = originals.getActiveRuntimeAccount;
     require(RATE_LIMIT_PATH).rotateRuntimeAccount = originals.rotateRuntimeAccount;
-    require(RATE_LIMIT_PATH).parkRuntime = originals.parkRuntime;
-    require(RATE_LIMIT_PATH).isParked = originals.isParked;
     require(HANDOFFS_PATH).claimHandoff = originals.claimHandoff;
     require(HANDOFFS_PATH).readHandoff = originals.readHandoff;
     require(HANDOFFS_PATH).unclaimHandoff = originals.unclaimHandoff;
@@ -74,7 +70,7 @@ describe('team runtime account rotation', () => {
     cleanup(tmpDir);
   });
 
-  test('logs runtime-account-rotated before parking a runtime', async () => {
+  test('logs runtime-account-rotated before requeueing a handoff', async () => {
     const eventOrder = [];
     const stopFlag = path.join(tmpDir, '.planning', 'team', 'workers', 'w5', 'stop.flag');
     let mailboxPopped = false;
@@ -95,7 +91,6 @@ describe('team runtime account rotation', () => {
     require(MAILBOX_PATH).markFailed = () => {};
     require(PROMPT_PATH).composePrompt = () => 'prompt';
     require(STATUS_PATH).updateStatus = () => {};
-    require(RATE_LIMIT_PATH).isParked = () => false;
     require(RATE_LIMIT_PATH).getActiveRuntimeAccount = () => ({
       label: 'primary',
       index: 0,
@@ -111,13 +106,11 @@ describe('team runtime account rotation', () => {
       }
       return null;
     };
-    require(RATE_LIMIT_PATH).parkRuntime = () => {
-      eventOrder.push('parkRuntime');
-      return { until: Date.now() + 1000 };
-    };
     require(HANDOFFS_PATH).claimHandoff = () => {};
     require(HANDOFFS_PATH).readHandoff = () => ({ body: 'body' });
-    require(HANDOFFS_PATH).unclaimHandoff = () => {};
+    require(HANDOFFS_PATH).unclaimHandoff = () => {
+      eventOrder.push('unclaimHandoff');
+    };
     require(SUBPROCESS_PATH).runSubprocess = async (_baseDir, _workerId, _runtimeCmd, _promptFile, _logWrite, runtimeEnv) => {
       runCount += 1;
       if (runCount === 1) {
@@ -133,9 +126,9 @@ describe('team runtime account rotation', () => {
     await runWorker(tmpDir, 'w5');
 
     const rotatedIdx = eventOrder.indexOf('log:runtime-account-rotated');
-    const parkIdx = eventOrder.indexOf('parkRuntime');
+    const requeueIdx = eventOrder.indexOf('unclaimHandoff');
     assert.ok(rotatedIdx >= 0, 'rotation event logged');
-    assert.ok(parkIdx >= 0, 'parkRuntime called');
-    assert.ok(rotatedIdx < parkIdx, `expected rotation before park, got ${eventOrder.join(' -> ')}`);
+    assert.ok(requeueIdx >= 0, 'handoff requeued');
+    assert.ok(rotatedIdx < requeueIdx, `expected rotation before requeue, got ${eventOrder.join(' -> ')}`);
   });
 });

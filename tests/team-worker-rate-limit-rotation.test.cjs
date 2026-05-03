@@ -10,6 +10,7 @@ const { handleRateLimitedHandoff } = require('../lib/team/worker-loop.cjs');
 const {
   getActiveRuntimeAccount,
   rotateRuntimeAccount,
+  cooldownPath,
   runtimeAccountsPath,
 } = require('../lib/team/rate-limit.cjs');
 
@@ -57,7 +58,7 @@ test('resolves active account env and rotates to the next configured account', (
   assert.equal(rotated.env.CODEX_HOME, secondaryDir);
 });
 
-test('logs runtime-account-rotated before parking when accounts are exhausted', () => {
+test('logs runtime-account-rotated before requeue when accounts are exhausted', () => {
   const baseDir = makeTempDir();
   const primaryDir = path.join(baseDir, 'accounts', 'codex-primary');
   const secondaryDir = path.join(baseDir, 'accounts', 'codex-secondary');
@@ -102,11 +103,12 @@ test('logs runtime-account-rotated before parking when accounts are exhausted', 
     logWrite,
     attemptedAccountIndexes: [0, 1],
   });
-  assert.equal(second.action, 'parked');
+  assert.equal(second.action, 'requeued');
 
   const rotatedIdx = events.findIndex((entry) => entry.kind === 'runtime-account-rotated');
-  const parkedIdx = events.findIndex((entry) => entry.kind === 'runtime-rate-limited');
+  const requeuedIdx = events.findIndex((entry) => entry.kind === 'runtime-rate-limit-on-call');
   assert.notEqual(rotatedIdx, -1, 'rotation event should be logged');
-  assert.notEqual(parkedIdx, -1, 'park event should be logged');
-  assert.ok(rotatedIdx < parkedIdx, 'rotation should be logged before parking');
+  assert.notEqual(requeuedIdx, -1, 'rate-limit event should be logged');
+  assert.ok(rotatedIdx < requeuedIdx, 'rotation should be logged before requeue');
+  assert.equal(fs.existsSync(cooldownPath(baseDir)), false, 'just-try-it should not write cooldown state');
 });

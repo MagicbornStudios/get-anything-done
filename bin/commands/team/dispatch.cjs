@@ -35,13 +35,15 @@ function createDispatchCommand(deps) {
       if (ids.length === 0) { outputError('No workers configured. Run `gad team start` first.'); process.exit(1); }
       const cfg = readConfig(baseDir) || {};
       const { listHandoffs } = require('../../../lib/handoffs.cjs');
-      const { sortHandoffsForPickup } = require('../../../lib/agent-detect.cjs');
+      const { sortHandoffsForPickup, runtimeAffinityRank } = require('../../../lib/agent-detect.cjs');
+      const { loadGlobalFallbacks, isHandoffExhausted } = require('../../../lib/team/rate-limit.cjs');
       const open = listHandoffs({ baseDir, bucket: 'open' });
       const queued = listMailboxRefs(baseDir, ids);
-      const candidates = open.filter(h => !queued.has(h.id));
+      const candidates = open.filter(h => !queued.has(h.id) && !isHandoffExhausted(h.frontmatter));
       if (candidates.length === 0) { console.log(`No new open handoffs to dispatch (${open.length} open, ${queued.size} already queued).`); return; }
 
-      const sorted = sortHandoffsForPickup(candidates, cfg.runtime || null);
+      const globalFallbacks = loadGlobalFallbacks(baseDir);
+      const sorted = sortHandoffsForPickup(candidates, cfg.runtime || null, { globalFallbacks });
       let assigned = 0;
       for (const h of sorted) {
         const hlane = h.frontmatter && h.frontmatter.lane;
@@ -50,7 +52,12 @@ function createDispatchCommand(deps) {
           .map(id => ({ id, spec: workerSpec(cfg, id), depth: mailboxDepth(baseDir, id) }))
           .filter(w => matchesLane(w.spec.lane, hlane));
         const pool = laneMatches.length > 0 ? laneMatches : ids.map(id => ({ id, spec: workerSpec(cfg, id), depth: mailboxDepth(baseDir, id) }));
-        pool.sort((a, b) => a.depth - b.depth);
+        pool.sort((a, b) => {
+          const aAffinity = runtimeAffinityRank(h.frontmatter, a.spec.runtime, { globalFallbacks });
+          const bAffinity = runtimeAffinityRank(h.frontmatter, b.spec.runtime, { globalFallbacks });
+          if (aAffinity !== bAffinity) return aAffinity - bAffinity;
+          return a.depth - b.depth;
+        });
         const target = pool[0].id;
         const msg = {
           kind: 'handoff', ref: h.id,

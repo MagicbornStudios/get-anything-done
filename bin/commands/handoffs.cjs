@@ -228,6 +228,7 @@ function createHandoffsCommand(deps) {
     run({ args }) {
       const baseDir = findRepoRoot();
       const { sortHandoffsForPickup, isHandoffCompatible, priorityRank } = require('../../lib/agent-detect.cjs');
+      const { loadGlobalFallbacks, isHandoffExhausted } = require('../../lib/team/rate-limit.cjs');
       const runtime = (args.runtime || detectRuntimeIdentity().id || process.env.GAD_AGENT || '').trim();
       if (!runtime || runtime === 'unknown') {
         outputError('Could not detect runtime. Pass --runtime <id> or set GAD_RUNTIME.');
@@ -239,8 +240,10 @@ function createHandoffsCommand(deps) {
         bucket: 'open',
         projectid: args.projectid || undefined,
       });
+      const globalFallbacks = loadGlobalFallbacks(baseDir);
       const compatible = all.filter((h) =>
-        isHandoffCompatible(h.frontmatter && h.frontmatter.runtime_preference, runtime)
+        !isHandoffExhausted(h.frontmatter)
+        && isHandoffCompatible(h.frontmatter, runtime)
         && priorityRank(h.frontmatter && h.frontmatter.priority) <= maxRank,
       );
       if (compatible.length === 0) {
@@ -251,7 +254,7 @@ function createHandoffsCommand(deps) {
         }
         process.exit(all.length === 0 ? 0 : 2);
       }
-      const sorted = sortHandoffsForPickup(compatible, runtime);
+      const sorted = sortHandoffsForPickup(compatible, runtime, { globalFallbacks });
       const pick = sorted[0];
       if (args['dry-run']) {
         if (args.json) {
@@ -300,9 +303,15 @@ function createHandoffsCommand(deps) {
       context: { type: 'string', description: 'mechanical | reasoning', default: 'mechanical' },
       body: { type: 'string', description: 'Handoff body (markdown)', required: true },
       'runtime-preference': { type: 'string', description: 'Runtime hint (e.g. claude-code)', default: '' },
+      'runtime-fallbacks': { type: 'string', description: 'Comma-separated fallback runtimes override', default: '' },
+      'runtime-required': { type: 'boolean', description: 'Treat runtime_preference as a hard requirement', default: false },
     },
     run({ args }) {
       const target = resolveTargetRoot(args.projectid);
+      const runtimeFallbacks = String(args['runtime-fallbacks'] || '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean);
       try {
         const result = createHandoff({
           baseDir: target.baseDir,
@@ -314,6 +323,8 @@ function createHandoffsCommand(deps) {
           body: String(args.body),
           createdBy: process.env.GAD_AGENT || 'unknown',
           runtimePreference: args['runtime-preference'] || undefined,
+          runtimeFallbacks,
+          runtimeRequired: args['runtime-required'] === true,
         });
         console.log(`Created: ${result.id}`);
         console.log(`Path:    ${path.relative(findRepoRoot(), result.filePath)}`);
