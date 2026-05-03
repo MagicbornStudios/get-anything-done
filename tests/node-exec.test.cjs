@@ -129,12 +129,12 @@ describe('node-exec packaged runtime detection', () => {
     };
 
     const { spawnWorker } = require('../lib/team/spawn.cjs');
-    const pid = spawnWorker(tmpDir, 'w1', installedGad);
+    const pid = spawnWorker(tmpDir, 'w1', installedGad, { cliArgs: ['--projectid', 'global'] });
 
     assert.strictEqual(pid, 12345);
     assert.strictEqual(spawnCalls.length, 1);
     assert.strictEqual(spawnCalls[0].command, 'node');
-    assert.deepStrictEqual(spawnCalls[0].args, [sourceCli, 'team', 'work', '--worker-id', 'w1']);
+    assert.deepStrictEqual(spawnCalls[0].args, [sourceCli, 'team', 'work', '--worker-id', 'w1', '--projectid', 'global']);
 
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
@@ -175,8 +175,8 @@ describe('node-exec packaged runtime detection', () => {
     assert.strictEqual(spawnCalls[0].command, 'node');
     assert.strictEqual(spawnCalls[0].args[0], sourceCli);
     assert.deepStrictEqual(
-      spawnCalls[0].args.slice(-3),
-      ['team', 'dispatcher', 'run'],
+      spawnCalls[0].args.slice(-5),
+      ['team', 'dispatcher', 'run', '--projectid', 'global'],
     );
 
     fs.rmSync(tmpDir, { recursive: true, force: true });

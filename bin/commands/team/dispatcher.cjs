@@ -19,14 +19,14 @@ const { pickNodeExecutable, resolveWorkerGadCli } = require('../../../lib/node-e
 function createDispatcherCommand(deps) {
   const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
 
-  function resolveTeamBaseDir(args) {
+  function resolveTeamTarget(args) {
     const repoRoot = findRepoRoot();
     const config = gadConfig.load(repoRoot);
     const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
     const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
     const root = roots[0];
-    if (!root) return repoRoot;
-    return path.join(repoRoot, root.path);
+    if (!root) return { baseDir: repoRoot, projectid: pidArg || '' };
+    return { baseDir: path.join(repoRoot, root.path), projectid: root.id || pidArg || '' };
   }
 
   const PROJECTID_ARG = { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' };
@@ -35,7 +35,7 @@ function createDispatcherCommand(deps) {
     meta: { name: 'start', description: 'Spawn a detached dispatcher daemon that watches .planning/handoffs/open/ and routes new handoffs into worker mailboxes.' },
     args: { projectid: PROJECTID_ARG },
     run({ args }) {
-      const baseDir = resolveTeamBaseDir(args);
+      const { baseDir, projectid } = resolveTeamTarget(args);
       if (!readConfig(baseDir)) { outputError('No team configured. Run `gad team start` first.'); process.exit(1); }
       const current = readPid(baseDir);
       if (current && pidAlive(current.pid)) {
@@ -48,7 +48,7 @@ function createDispatcherCommand(deps) {
       const gadBinary = path.resolve(__dirname, '..', '..', 'gad.cjs');
       const child = spawn(
         pickNodeExecutable(),
-        [resolveWorkerGadCli(gadBinary, { cwd: baseDir }), 'team', 'dispatcher', 'run'],
+        [resolveWorkerGadCli(gadBinary, { cwd: baseDir }), 'team', 'dispatcher', 'run', ...(projectid ? ['--projectid', projectid] : [])],
         {
           cwd: baseDir,
           detached: true,
@@ -68,7 +68,7 @@ function createDispatcherCommand(deps) {
     meta: { name: 'stop', description: 'Signal the dispatcher daemon to exit.' },
     args: { projectid: PROJECTID_ARG },
     run({ args }) {
-      const baseDir = resolveTeamBaseDir(args);
+      const { baseDir } = resolveTeamTarget(args);
       const current = readPid(baseDir);
       if (!current) { console.log('Dispatcher not running (no pid file).'); return; }
       if (!pidAlive(current.pid)) {
@@ -90,7 +90,7 @@ function createDispatcherCommand(deps) {
       json: { type: 'boolean', default: false },
     },
     run({ args }) {
-      const baseDir = resolveTeamBaseDir(args);
+      const { baseDir } = resolveTeamTarget(args);
       const current = readPid(baseDir);
       const alive = current && pidAlive(current.pid);
       if (args.json) {
@@ -107,7 +107,7 @@ function createDispatcherCommand(deps) {
     meta: { name: 'run', description: 'Internal: daemon loop entry. Invoked by `dispatcher start` as a detached subprocess.' },
     args: { projectid: PROJECTID_ARG },
     async run({ args }) {
-      const baseDir = resolveTeamBaseDir(args);
+      const { baseDir } = resolveTeamTarget(args);
       await runDaemon(baseDir);
     },
   });

@@ -15,14 +15,14 @@ const { stopFlagPath, supervisorLog, workerDir } = require('../../../lib/team/pa
 function createRestartCommand(deps) {
   const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
 
-  function resolveTeamBaseDir(args) {
+  function resolveTeamTarget(args) {
     const repoRoot = findRepoRoot();
     const config = gadConfig.load(repoRoot);
     const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
     const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
     const root = roots[0];
-    if (!root) return repoRoot;
-    return path.join(repoRoot, root.path);
+    if (!root) return { baseDir: repoRoot, projectid: pidArg || '' };
+    return { baseDir: path.join(repoRoot, root.path), projectid: root.id || pidArg || '' };
   }
 
   return defineCommand({
@@ -33,7 +33,7 @@ function createRestartCommand(deps) {
       'wait-ms': { type: 'string', default: '10000' },
     },
     async run({ args }) {
-      const baseDir = resolveTeamBaseDir(args);
+      const { baseDir, projectid } = resolveTeamTarget(args);
       const id = String(args['worker-id']);
       if (!readConfig(baseDir)) { outputError('No team configured.'); process.exit(1); }
       if (!fs.existsSync(workerDir(baseDir, id))) { outputError(`Unknown worker: ${id}`); process.exit(1); }
@@ -49,7 +49,7 @@ function createRestartCommand(deps) {
         await new Promise(r => setTimeout(r, 300));
       }
       const gadBinary = path.resolve(__dirname, '..', '..', 'gad.cjs');
-      const pid = spawnWorker(baseDir, id, gadBinary);
+      const pid = spawnWorker(baseDir, id, gadBinary, { cliArgs: projectid ? ['--projectid', projectid] : [] });
       appendJsonl(supervisorLog(baseDir), { ts: new Date().toISOString(), kind: 'restart-spawn', worker_id: id, pid });
       console.log(`Respawned ${id} pid=${pid}`);
     },

@@ -17,14 +17,14 @@ const { readProfile, profileToConfig, listProfiles } = require('../../../lib/tea
 function createStartCommand(deps) {
   const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
 
-  function resolveTeamBaseDir(args) {
+  function resolveTeamTarget(args) {
     const repoRoot = findRepoRoot();
     const config = gadConfig.load(repoRoot);
     const pidArg = args && args.projectid ? args.projectid : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
     const roots = resolveRoots({ projectid: pidArg }, repoRoot, config.roots);
     const root = roots[0];
-    if (!root) return repoRoot;
-    return path.join(repoRoot, root.path);
+    if (!root) return { baseDir: repoRoot, projectid: pidArg || '' };
+    return { baseDir: path.join(repoRoot, root.path), projectid: root.id || pidArg || '' };
   }
 
   return defineCommand({
@@ -39,7 +39,7 @@ function createStartCommand(deps) {
       'no-spawn': { type: 'boolean', description: 'Write config only, do not spawn (for debug)', default: false },
     },
     run({ args }) {
-      const baseDir = resolveTeamBaseDir(args);
+      const { baseDir, projectid } = resolveTeamTarget(args);
       if (readConfig(baseDir)) {
         console.log(`Team already configured under ${path.relative(baseDir, teamRoot(baseDir))}.`);
         console.log(`Run \`gad team stop --all\` and remove ${path.relative(baseDir, configPath(baseDir))} before starting a new team.`);
@@ -93,7 +93,7 @@ function createStartCommand(deps) {
           current_ref: null, state: 'NOT_STARTED',
         });
         if (args['no-spawn']) continue;
-        const pid = spawnWorker(baseDir, id, gadBinary);
+        const pid = spawnWorker(baseDir, id, gadBinary, { cliArgs: projectid ? ['--projectid', projectid] : [] });
         spawned.push({ id, pid });
       }
       appendJsonl(supervisorLog(baseDir), { ts: new Date().toISOString(), kind: 'start', config: cfg, spawned });
