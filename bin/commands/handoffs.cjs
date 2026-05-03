@@ -22,6 +22,7 @@ const {
   readHandoff,
   claimHandoff,
   completeHandoff,
+  unclaimHandoff,
   createHandoff,
 } = require('../../lib/handoffs.cjs');
 
@@ -172,6 +173,34 @@ function createHandoffsCommand(deps) {
       try {
         const destPath = completeHandoff({ baseDir, id: String(args.id) });
         console.log(`Completed: ${args.id}`);
+        console.log(`Path:      ${path.relative(baseDir, destPath)}`);
+      } catch (e) {
+        if (e instanceof HandoffError) {
+          outputError(e.message);
+          process.exit(1);
+        }
+        throw e;
+      }
+    },
+  });
+
+  const handoffsUnclaimCmd = defineCommand({
+    meta: { name: 'unclaim', description: 'Return a claimed handoff to open (moves claimed→open)' },
+    args: {
+      id: { type: 'positional', description: 'Handoff id', required: true },
+      reason: { type: 'string', description: 'Reason for unclaiming', default: '' },
+      by: { type: 'string', description: 'Agent/runtime recording the unclaim', default: '' },
+    },
+    run({ args }) {
+      const baseDir = findRepoRoot();
+      try {
+        const destPath = unclaimHandoff({
+          baseDir,
+          id: String(args.id),
+          reason: args.reason || '',
+          by: args.by || process.env.GAD_AGENT || '',
+        });
+        console.log(`Unclaimed: ${args.id}`);
         console.log(`Path:      ${path.relative(baseDir, destPath)}`);
       } catch (e) {
         if (e instanceof HandoffError) {
@@ -380,12 +409,13 @@ function createHandoffsCommand(deps) {
   });
 
   return defineCommand({
-    meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, complete, create, create-closeout' },
+    meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, unclaim, complete, create, create-closeout' },
     subCommands: {
       list: handoffsListCmd,
       show: handoffsShowCmd,
       claim: handoffsClaimCmd,
       'claim-next': handoffsClaimNextCmd,
+      unclaim: handoffsUnclaimCmd,
       complete: handoffsCompleteCmd,
       create: handoffsCreateCmd,
       'create-closeout': handoffsCreateCloseoutCmd,
