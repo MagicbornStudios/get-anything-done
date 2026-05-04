@@ -192,16 +192,18 @@ function renderPressureSegment(snapshot) {
   const score = Math.max(0, Math.min(1, Number(snapshot.score) || 0));
   const filled = Math.max(0, Math.min(PRESSURE_SEGMENTS, Math.round(score * PRESSURE_SEGMENTS)));
   const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(PRESSURE_SEGMENTS - filled);
-  const base = ` \u26A1 [${bar}] ${score.toFixed(2)}`;
+  // Display as 0-100 integer (operator standing rule 2026-05-04).
+  const score100 = Math.round(score * 100);
+  const base = ` \u26A1 [${bar}] ${score100}`;
 
-  // Purple is the pressure-system identity color (distinct from gad-tui
-  // gold/red palette which is reserved for action surfaces). Severity
-  // is conveyed by fill density + brightness/blink, not hue change —
-  // operators read severity from bar length, not from a color shift.
-  if (score > 0.85) return ` \x1b[5;95m${base} EVOLVE NOW\x1b[0m`;
-  if (score >= 0.7) return ` \x1b[1;95m${base} evo!\x1b[0m`;
-  if (score >= 0.4) return ` \x1b[95m${base}\x1b[0m`;
-  return ` \x1b[2;95m${base}\x1b[0m`;
+  // Color gradient with severity escalation (operator 2026-05-04:
+  // 'changing colors based on how full of pressure it is').
+  // Palette aligned with TUI gold/red identity.
+  if (score100 >= 85) return ` \x1b[5;91m${base} EVOLVE NOW\x1b[0m`;
+  if (score100 >= 70) return ` \x1b[1;91m${base} evo!\x1b[0m`;
+  if (score100 >= 50) return ` \x1b[1;33m${base}\x1b[0m`;
+  if (score100 >= 25) return ` \x1b[33m${base}\x1b[0m`;
+  return ` \x1b[2;37m${base}\x1b[0m`;
 }
 
 function renderStatusline(data) {
