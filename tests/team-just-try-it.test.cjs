@@ -8,7 +8,12 @@ const path = require('node:path');
 const { createTempDir, cleanup } = require('./helpers.cjs');
 const handoffs = require('../lib/handoffs.cjs');
 const { handleRateLimitedHandoff } = require('../lib/team/worker-loop.cjs');
-const { cooldownPath, isHandoffExhausted } = require('../lib/team/rate-limit.cjs');
+const {
+  cooldownPath,
+  isHandoffExhausted,
+  isHandoffExhaustedForRuntime,
+  isHandoffExhaustedForRuntimes,
+} = require('../lib/team/rate-limit.cjs');
 const { isHandoffCompatible, runtimeAffinityRank, sortHandoffsForPickup } = require('../lib/agent-detect.cjs');
 
 const tempDirs = [];
@@ -95,4 +100,70 @@ test('three rate-limit unclaims exhaust the handoff', () => {
       { reason: 'rate-limit' },
     ],
   }), true);
+});
+
+test('per-runtime exhaustion: gemini-bounced handoff still eligible for codex/opencode', () => {
+  const handoff = {
+    unclaim_history: [
+      { reason: 'rate-limit', runtime: 'gemini-cli' },
+      { reason: 'rate-limit', runtime: 'gemini-cli' },
+      { reason: 'rate-limit', runtime: 'gemini-cli' },
+    ],
+  };
+  assert.equal(isHandoffExhaustedForRuntime(handoff, 'gemini-cli'), true);
+  assert.equal(isHandoffExhaustedForRuntime(handoff, 'codex-cli'), false);
+  assert.equal(isHandoffExhaustedForRuntime(handoff, 'opencode'), false);
+});
+
+test('per-runtime: legacy entries without runtime field are inert when no mapper provided', () => {
+  const legacyHandoff = {
+    unclaim_history: [
+      { reason: 'rate-limit', by: 'team-w2' },
+      { reason: 'rate-limit', by: 'team-w2' },
+      { reason: 'rate-limit', by: 'team-w2' },
+    ],
+  };
+  assert.equal(isHandoffExhaustedForRuntime(legacyHandoff, 'codex-cli'), false);
+  assert.equal(isHandoffExhaustedForRuntime(legacyHandoff, 'gemini-cli'), false);
+  // Legacy global check still flags it (back-compat preserved):
+  assert.equal(isHandoffExhausted(legacyHandoff), true);
+});
+
+test('per-runtime: legacy entries get attributed via byToRuntime mapper', () => {
+  const legacyHandoff = {
+    unclaim_history: [
+      { reason: 'rate-limit', by: 'team-w2' },
+      { reason: 'rate-limit', by: 'team-w2' },
+      { reason: 'rate-limit', by: 'team-w2' },
+    ],
+  };
+  // Mapper: team-w2 is the gemini worker.
+  const byToRuntime = (by) => (by === 'team-w2' ? 'gemini-cli' : null);
+  assert.equal(
+    isHandoffExhaustedForRuntime(legacyHandoff, 'gemini-cli', { byToRuntime }),
+    true,
+    'gemini-cli should be exhausted via mapper',
+  );
+  assert.equal(
+    isHandoffExhaustedForRuntime(legacyHandoff, 'codex-cli', { byToRuntime }),
+    false,
+    'codex-cli should NOT be exhausted (different runtime via mapper)',
+  );
+});
+
+test('team-level: exhausted only when EVERY configured runtime hits cap', () => {
+  const handoff = {
+    unclaim_history: [
+      { reason: 'rate-limit', runtime: 'gemini-cli' },
+      { reason: 'rate-limit', runtime: 'gemini-cli' },
+      { reason: 'rate-limit', runtime: 'gemini-cli' },
+    ],
+  };
+  // Gemini exhausted but team still has codex+opencode → not team-exhausted:
+  assert.equal(
+    isHandoffExhaustedForRuntimes(handoff, ['codex-cli', 'opencode', 'gemini-cli']),
+    false,
+  );
+  // Lone gemini team → team-exhausted:
+  assert.equal(isHandoffExhaustedForRuntimes(handoff, ['gemini-cli']), true);
 });

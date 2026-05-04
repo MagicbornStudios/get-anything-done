@@ -36,10 +36,26 @@ function createDispatchCommand(deps) {
       const cfg = readConfig(baseDir) || {};
       const { listHandoffs } = require('../../../lib/handoffs.cjs');
       const { sortHandoffsForPickup, runtimeAffinityRank } = require('../../../lib/agent-detect.cjs');
-      const { loadGlobalFallbacks, isHandoffExhausted } = require('../../../lib/team/rate-limit.cjs');
+      const { loadGlobalFallbacks, isHandoffExhaustedForRuntimes } = require('../../../lib/team/rate-limit.cjs');
       const open = listHandoffs({ baseDir, bucket: 'open' });
       const queued = listMailboxRefs(baseDir, ids);
-      const candidates = open.filter(h => !queued.has(h.id) && !isHandoffExhausted(h.frontmatter));
+      // Per-team exhaustion: only skip if EVERY configured worker's runtime
+      // has hit cap on this handoff. Single-runtime exhaustion no longer
+      // blocks the queue. Legacy unclaim entries (no runtime field) get
+      // mapped to current worker's runtime via workerSpec for back-compat.
+      const teamRuntimes = Array.from(new Set(
+        ids.map((id) => (workerSpec(cfg, id) || {}).runtime).filter(Boolean),
+      ));
+      const byToRuntime = (by) => {
+        if (typeof by !== 'string' || !by.startsWith('team-')) return null;
+        const id = by.slice('team-'.length);
+        const spec = workerSpec(cfg, id);
+        return (spec && spec.runtime) || null;
+      };
+      const candidates = open.filter(h =>
+        !queued.has(h.id)
+        && !isHandoffExhaustedForRuntimes(h.frontmatter, teamRuntimes, { byToRuntime }),
+      );
       if (candidates.length === 0) { console.log(`No new open handoffs to dispatch (${open.length} open, ${queued.size} already queued).`); return; }
 
       const globalFallbacks = loadGlobalFallbacks(baseDir);
