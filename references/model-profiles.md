@@ -117,6 +117,34 @@ Per-project default: Set in `gad-config.toml`:
 }
 ```
 
+## Free Model Backends for OpenCode Workers
+
+When using OpenCode as a GAD worker runtime, you can assign free-tier models via OpenRouter or provider-native free tiers. These are ideal for extending the worker pool when paid runtimes hit quota caps.
+
+### Available Free Models
+
+| Model | OpenRouter ID | Notes |
+|-------|---------------|-------|
+| DeepSeek-R1 | `openrouter/deepseek/deepseek-r1:free` | Reasoning-tier model, strong for code tasks |
+| Llama 3.3 70B | `openrouter/meta-llama/llama-3.3-70b-instruct:free` | General purpose, good balance |
+| Gemini 2.5 Pro | `google/gemini-2.5-pro` | Requires Google AI Pro subscription |
+| Gemini 2.5 Flash | `google/gemini-2.5-flash` | Fast, cost-efficient |
+| Cerebras Llama | `cerebras/llama-3.3-70b` | Fast inference via Cerebras hardware |
+
+### Worker Configuration Example
+
+```json
+{
+  "id": "w4",
+  "role": "executor",
+  "lane": "opencode-deepseek",
+  "runtime": "opencode",
+  "runtime_cmd": "node scripts/gad-opencode-trial.mjs -- run --format json --model openrouter/deepseek/deepseek-r1:free"
+}
+```
+
+Set `OPENROUTER_API_KEY` in repo root `.env` for OpenRouter models. For Google models, ensure your Google AI Pro subscription is active and credentials are configured.
+
 ## Design Rationale
 
 **Why `inherit` for Opus-tier agents?**
