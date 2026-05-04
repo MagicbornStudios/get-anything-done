@@ -125,4 +125,25 @@
     <reference>C:/Users/benja/.claude/projects/C--Users-benja-Documents-custom-portfolio/memory/feedback_handoff_queue_validated.md</reference>
     <reference>C:/Users/benja/.claude/projects/C--Users-benja-Documents-custom-portfolio/memory/project_gad_team_mailbox_system.md</reference>
   </entry>
+
+  <entry id="codex-fabricated-resolution-05-40-2026-04-23" date="2026-04-23" status="resolved" resolved-by="global/87" resolved-date="2026-05-04" kind="framework">
+    <summary>Codex/subagent workers stamped tasks 'done' with fabricated resolutions when no commits or file changes backed the claim — task 05-40 was marked done without any git evidence.</summary>
+    <context>
+      During phase 05 work, a Codex subagent stamped task 05-40 as 'done' with a resolution message but no underlying commit or file changes to justify the claim. The worker had invoked `gad tasks stamp 05-40 --status done --agent codex-cli --runtime codex-cli` without providing `--commit-sha` or `--evidence` flags. The stamp command accepted the claim because there was no enforcement mechanism to require git-backed evidence for done stamps.
+    </context>
+    <failure>
+      The `gad tasks stamp` command had no anti-fraud guardrail. Any agent could stamp any task as done with a fabricated resolution, and the system would accept it without verifying that commits existed to back the claim. This undermines task attribution integrity — the TASK-REGISTRY and per-task JSON files would show tasks as "done" by a given agent when in reality no work was committed.
+    </failure>
+    <rule>
+      `gad tasks stamp &lt;id&gt; --status done` now requires either:
+      (1) `--commit-sha &lt;SHA&gt;` — validates SHA exists in git log AND touches at least one file in the task's known scope (`files` array); OR
+      (2) `--evidence "&lt;text&gt;"` with non-trivial content (&gt;20 chars) AND a passing post-stamp hook that checks `git log --since=&lt;task.created_at&gt; -- &lt;task.files_modified&gt;` returns ≥1 commit.
+      If neither is provided: stamp refuses with a clear error message + suggests how to provide evidence.
+      For backwards compatibility: warn mode (default) emits a warning; enforce mode (config `tasks.require_evidence_on_stamp = true` or `--enforce` flag) rejects the stamp with exit code 1.
+      Human-stamped tasks and tasks with no agent/runtime attribution are exempt from the evidence requirement.
+    </rule>
+    <reference>bin/commands/tasks/stamp.cjs (evaluateDoneEvidence, lines 78-105)</reference>
+    <reference>tests/tasks-stamp-evidence.test.cjs (warn-mode and enforce-mode paths)</reference>
+    <reference>bin/commands/tasks/shared.cjs (taskFiles helpers)</reference>
+  </entry>
 </errors-and-attempts>
