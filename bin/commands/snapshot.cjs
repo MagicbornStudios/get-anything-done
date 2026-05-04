@@ -12,6 +12,21 @@ const { handleScopedSnapshot } = require('./snapshot/scoped.cjs');
 const { handleSprintSnapshot } = require('./snapshot/sprint.cjs');
 const { handleTerseSnapshot } = require('./snapshot/terse.cjs');
 
+// Refresh the pressure cache that the statusline reads. Cheap (few ms) and
+// keeps the pressure bar in sync with the snapshot the operator just saw.
+// Skipped under --no-side-effects. compute.cjs is currently a stub
+// (task 107-06 fills in the real entropy math); once filled, this call
+// surfaces real pressure to every active session's statusline on each
+// snapshot refresh.
+function refreshPressureCache(projectid) {
+  try {
+    const { writePressureCache } = require('../../lib/entropy/compute.cjs');
+    writePressureCache(projectid || 'unknown');
+  } catch {
+    // Best-effort: never let a stale entropy module break snapshot.
+  }
+}
+
 function createSnapshotCommand(deps) {
   const commandDeps = {
     ...deps,
@@ -46,19 +61,25 @@ function createSnapshotCommand(deps) {
     run({ args }) {
       const context = resolveSnapshotContext(commandDeps, args);
       if (!context) return;
-      if (args.terse) {
-        handleTerseSnapshot(commandDeps, context, args);
-        return;
+      try {
+        if (args.terse) {
+          handleTerseSnapshot(commandDeps, context, args);
+          return;
+        }
+        if (context.useFull) {
+          handleFullSnapshot(commandDeps, context, args);
+          return;
+        }
+        if (context.scope.isScoped) {
+          handleScopedSnapshot(commandDeps, context, args);
+          return;
+        }
+        handleSprintSnapshot(commandDeps, context, args);
+      } finally {
+        if (!args['no-side-effects']) {
+          refreshPressureCache(args.projectid || args.project || (context && context.projectid));
+        }
       }
-      if (context.useFull) {
-        handleFullSnapshot(commandDeps, context, args);
-        return;
-      }
-      if (context.scope.isScoped) {
-        handleScopedSnapshot(commandDeps, context, args);
-        return;
-      }
-      handleSprintSnapshot(commandDeps, context, args);
     },
   });
 }
