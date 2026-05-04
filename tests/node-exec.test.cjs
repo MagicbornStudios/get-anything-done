@@ -112,6 +112,32 @@ describe('node-exec packaged runtime detection', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
+  test('buildDetachedGadSpawn uses node plus monorepo source CLI with explicit detached options', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-node-exec-worker-plan-'));
+    const sourceCli = path.join(tmpDir, 'vendor', 'get-anything-done', 'bin', 'gad.cjs');
+    const installedGad = 'C:\\Users\\benja\\AppData\\Local\\Programs\\gad\\bin\\gad.exe';
+    fs.mkdirSync(path.dirname(sourceCli), { recursive: true });
+    fs.writeFileSync(sourceCli, '#!/usr/bin/env node\n');
+
+    process.env.GAD_PACKAGED_EXECUTABLE = installedGad;
+    setExecPath('C:\\bun\\bin\\bun.exe');
+
+    const { buildDetachedGadSpawn } = require('../lib/team/spawn.cjs');
+    const plan = buildDetachedGadSpawn(tmpDir, installedGad, ['team', 'work', '--worker-id', 'w1'], 42, { GAD_TEAM_WORKER_ID: 'w1' });
+
+    assert.strictEqual(plan.command, 'node');
+    assert.deepStrictEqual(plan.args, [sourceCli, 'team', 'work', '--worker-id', 'w1']);
+    assert.strictEqual(plan.options.cwd, tmpDir);
+    assert.strictEqual(plan.options.detached, true);
+    assert.deepStrictEqual(plan.options.stdio, ['ignore', 42, 42]);
+    assert.strictEqual(plan.options.shell, false);
+    assert.strictEqual(plan.options.argv0, 'node');
+    assert.strictEqual(plan.options.windowsVerbatimArguments, false);
+    assert.strictEqual(plan.options.env.GAD_TEAM_WORKER_ID, 'w1');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
   test('spawnWorker uses node plus monorepo source CLI under packaged runtime markers', () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-node-exec-worker-'));
     const spawnCalls = [];
@@ -135,6 +161,9 @@ describe('node-exec packaged runtime detection', () => {
     assert.strictEqual(spawnCalls.length, 1);
     assert.strictEqual(spawnCalls[0].command, 'node');
     assert.deepStrictEqual(spawnCalls[0].args, [sourceCli, 'team', 'work', '--worker-id', 'w1', '--projectid', 'global']);
+    assert.strictEqual(spawnCalls[0].options.shell, false);
+    assert.strictEqual(spawnCalls[0].options.argv0, 'node');
+    assert.strictEqual(spawnCalls[0].options.windowsVerbatimArguments, false);
 
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
@@ -178,6 +207,9 @@ describe('node-exec packaged runtime detection', () => {
       spawnCalls[0].args.slice(-5),
       ['team', 'dispatcher', 'run', '--projectid', 'global'],
     );
+    assert.strictEqual(spawnCalls[0].options.shell, false);
+    assert.strictEqual(spawnCalls[0].options.argv0, 'node');
+    assert.strictEqual(spawnCalls[0].options.windowsVerbatimArguments, false);
 
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
