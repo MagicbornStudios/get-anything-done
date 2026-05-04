@@ -7,6 +7,18 @@ sprintSize = 5
 # Flip this if graph queries cause perf issues or return wrong results.
 useGraphQuery = true
 
+[skills.scope]
+enabled = true
+standing = ["frontend-design", "web-design-guidelines", "gad-visual-context-system"]
+standing_contexts = ["exploratory", "design", "decision"]
+
+[skills.scope.context]
+bounded = ["repo-planner"]
+exploratory = ["gad-map-codebase"]
+design = ["scaffold-visual-context-surface", "objective-eval-design"]
+audit = ["gad-verify-phase", "gad-plan-checker"]
+decision = ["gad-discuss-phase"]
+
 [[planning.roots]]
 id = "get-anything-done"
 path = "."

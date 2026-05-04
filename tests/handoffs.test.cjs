@@ -139,11 +139,14 @@ describe('parseFrontmatter', () => {
 function captureConsole(fn) {
   const logs = [];
   const originalLog = console.log;
+  const originalWarn = console.warn;
   console.log = (...args) => logs.push(args.join(' '));
+  console.warn = (...args) => logs.push(args.join(' '));
   try {
     fn();
   } finally {
     console.log = originalLog;
+    console.warn = originalWarn;
   }
   return logs.join('\n');
 }
@@ -253,6 +256,57 @@ describe('handoffs create command', () => {
       }));
 
       assert.match(output, /Path:\s+vendor[\\/]get-anything-done[\\/]\.planning[\\/]handoffs[\\/]open[\\/]/);
+    } finally {
+      cleanup(tmpDir);
+    }
+  });
+
+  test('warns when --body exceeds 2000 characters', () => {
+    const tmpDir = createTempDir('gad-handoffs-command-');
+    const command = createHandoffsCommand({
+      findRepoRoot() {
+        return tmpDir;
+      },
+      outputError(message) {
+        throw new Error(message);
+      },
+      render() {
+        throw new Error('render should not be used in create command test');
+      },
+      shouldUseJson() {
+        return false;
+      },
+      detectRuntimeIdentity() {
+        return { id: 'codex-cli' };
+      },
+      gadConfig: {
+        load() {
+          return {
+            roots: [{ id: 'global', path: '.' }],
+          };
+        },
+      },
+      resolveRoots(args, _baseDir, allRoots) {
+        return allRoots.filter((root) => root.id === args.projectid);
+      },
+    });
+
+    try {
+      const output = captureConsole(() => command.subCommands.create.run({
+        args: {
+          projectid: 'global',
+          phase: '57',
+          'task-id': '',
+          priority: 'normal',
+          context: 'prescribed',
+          body: 'x'.repeat(2001),
+          'runtime-preference': '',
+        },
+        rawArgs: [],
+      }));
+
+      assert.match(output, /Warning: handoff body is 2001 characters/);
+      assert.match(output, /Consider using references instead of verbose inline content/);
     } finally {
       cleanup(tmpDir);
     }
@@ -492,7 +546,7 @@ describe('createHandoff', () => {
     assert.strictEqual(frontmatter.phase, '60');
     assert.strictEqual(frontmatter.task_id, '60-09');
     assert.strictEqual(frontmatter.priority, 'normal');
-    assert.strictEqual(frontmatter.estimated_context, 'mechanical');
+    assert.strictEqual(frontmatter.estimated_context, 'prescribed');
     assert.strictEqual(frontmatter.created_by, 'claude-code');
     assert.strictEqual(frontmatter.claimed_by, null);
     assert.strictEqual(frontmatter.claimed_at, null);

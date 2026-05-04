@@ -10,6 +10,7 @@ const {
 const { handleFullSnapshot } = require('./snapshot/full.cjs');
 const { handleScopedSnapshot } = require('./snapshot/scoped.cjs');
 const { handleSprintSnapshot } = require('./snapshot/sprint.cjs');
+const { handleTerseSnapshot } = require('./snapshot/terse.cjs');
 
 function createSnapshotCommand(deps) {
   const commandDeps = {
@@ -38,12 +39,17 @@ function createSnapshotCommand(deps) {
       mode: { type: 'string', description: 'full (default) | active — "active" emits ONLY STATE.xml next-action + current phase + open sprint tasks (skips static catalog, references, decisions). Decision gad-195: static info loaded once at session start, active info re-pullable cheap without context waste.', default: '' },
       session: { type: 'string', description: 'Session ID. When provided, auto-downgrades to mode=active if static context was already delivered in this session. Env fallback: GAD_SESSION_ID.', default: '' },
       sessionid: { type: 'string', description: 'Session ID alias for --session (runtime command compatibility).', default: '' },
-      format: { type: 'string', description: 'compact (default) | xml — "compact" strips XML envelope tokens (prolog, outer tags, per-item tag pairs) while preserving content. "xml" dumps raw file content (legacy). Decision gad-241.', default: 'compact' },
-      'no-side-effects': { type: 'boolean', description: 'Read-only snapshot: suppress session/lane/log/graph writes.', default: false },
+       format: { type: 'string', description: 'compact (default) | xml — "compact" strips XML envelope tokens (prolog, outer tags, per-item tag pairs) while preserving content. "xml" dumps raw file content (legacy). Decision gad-241.', default: 'compact' },
+       terse: { type: 'boolean', description: 'Terse snapshot: sprint scope + active phase + open task count + last 3 state-log entries. Target <500 tokens.', default: false },
+       'no-side-effects': { type: 'boolean', description: 'Read-only snapshot: suppress session/lane/log/graph writes.', default: false },
     },
     run({ args }) {
       const context = resolveSnapshotContext(commandDeps, args);
       if (!context) return;
+      if (args.terse) {
+        handleTerseSnapshot(commandDeps, context, args);
+        return;
+      }
       if (context.useFull) {
         handleFullSnapshot(commandDeps, context, args);
         return;

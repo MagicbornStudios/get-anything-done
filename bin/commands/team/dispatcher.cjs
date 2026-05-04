@@ -8,13 +8,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
 const { defineCommand } = require('citty');
 const { readConfig } = require('../../../lib/team/config.cjs');
 const { dispatcherPidPath, dispatcherLogPath, readPid, clearPid, pidAlive, runDaemon } = require('../../../lib/team/dispatcher.cjs');
 const { supervisorLog } = require('../../../lib/team/paths.cjs');
 const { appendJsonl } = require('../../../lib/team/io.cjs');
-const { pickNodeExecutable, resolveWorkerGadCli } = require('../../../lib/node-exec.cjs');
+const { spawnDetachedGadProcess } = require('../../../lib/team/spawn.cjs');
 
 function createDispatcherCommand(deps) {
   const { findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid, outputError } = deps;
@@ -44,23 +43,16 @@ function createDispatcherCommand(deps) {
       }
       if (current) clearPid(baseDir); // stale
 
-      const logFd = fs.openSync(dispatcherLogPath(baseDir), 'a');
       const gadBinary = path.resolve(__dirname, '..', '..', 'gad.cjs');
-      const child = spawn(
-        pickNodeExecutable(),
-        [resolveWorkerGadCli(gadBinary, { cwd: baseDir }), 'team', 'dispatcher', 'run', ...(projectid ? ['--projectid', projectid] : [])],
-        {
-          cwd: baseDir,
-          detached: true,
-          stdio: ['ignore', logFd, logFd],
-          windowsHide: true,
-          env: { ...process.env, GAD_TEAM_DISPATCHER: '1' },
-        },
+      const pid = spawnDetachedGadProcess(
+        baseDir,
+        gadBinary,
+        ['team', 'dispatcher', 'run', ...(projectid ? ['--projectid', projectid] : [])],
+        dispatcherLogPath(baseDir),
+        { GAD_TEAM_DISPATCHER: '1' },
       );
-      child.unref();
-      fs.closeSync(logFd);
-      appendJsonl(supervisorLog(baseDir), { ts: new Date().toISOString(), kind: 'dispatcher-start', pid: child.pid });
-      console.log(`Dispatcher started (pid=${child.pid}). Log: ${path.relative(baseDir, dispatcherLogPath(baseDir))}`);
+      appendJsonl(supervisorLog(baseDir), { ts: new Date().toISOString(), kind: 'dispatcher-start', pid });
+      console.log(`Dispatcher started (pid=${pid}). Log: ${path.relative(baseDir, dispatcherLogPath(baseDir))}`);
     },
   });
 

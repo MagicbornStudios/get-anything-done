@@ -222,7 +222,14 @@ function fromToml(tomlPath, root) {
   const profiles = data.profiles || {};
   const docs = data.docs || {};
   const verify = data.verify || {};
+  const tasks = data.tasks || {};
+  const skills = data.skills || {};
   const verifyProjects = (verify.projects && typeof verify.projects === 'object') ? verify.projects : {};
+  const requireEvidenceOnStamp =
+    tasks.require_evidence_on_stamp === true ||
+    tasks.require_evidence_on_stamp === 'true' ||
+    planning.require_evidence_on_stamp === true ||
+    planning.require_evidence_on_stamp === 'true';
 
   const rootsTable = (planning.roots || []).map((r) => ({
     id: r.id || path.basename(r.path || root),
@@ -269,6 +276,15 @@ function fromToml(tomlPath, root) {
     profiles,
     currentProfile: planning.currentProfile || 'human',
     conventionsPaths: planning.conventionsPaths || [],
+    skills: {
+      scope: skills.scope && typeof skills.scope === 'object' ? skills.scope : {},
+    },
+    planning: {
+      require_evidence_on_stamp: requireEvidenceOnStamp,
+    },
+    tasks: {
+      require_evidence_on_stamp: requireEvidenceOnStamp,
+    },
     git: {
       branching_strategy: data.git?.branching_strategy || 'none',
       phase_branch_template: data.git?.phase_branch_template || 'gad/phase-{phase}-{slug}',
@@ -339,8 +355,15 @@ function fromJson(jsonPath, root) {
   }
 
   const planning = data.planning || data || {};
+  const tasks = data.tasks || {};
   const verify = data.verify || planning.verify || {};
+  const skills = data.skills || {};
   const subRepos = planning.sub_repos || [];
+  const requireEvidenceOnStamp =
+    tasks.require_evidence_on_stamp === true ||
+    tasks.require_evidence_on_stamp === 'true' ||
+    planning.require_evidence_on_stamp === true ||
+    planning.require_evidence_on_stamp === 'true';
 
   // Map config.json sub_repos to roots format
   const roots = subRepos.map(sr => ({
@@ -382,6 +405,15 @@ function fromJson(jsonPath, root) {
     profiles: {},
     currentProfile: 'human',
     conventionsPaths: planning.conventionsPaths || [],
+    skills: {
+      scope: skills.scope && typeof skills.scope === 'object' ? skills.scope : {},
+    },
+    planning: {
+      require_evidence_on_stamp: requireEvidenceOnStamp,
+    },
+    tasks: {
+      require_evidence_on_stamp: requireEvidenceOnStamp,
+    },
     git: {
       branching_strategy: data.git?.branching_strategy || 'none',
       phase_branch_template: data.git?.phase_branch_template || 'gad/phase-{phase}-{slug}',
@@ -452,6 +484,7 @@ function toCompatJson(config, existing = {}) {
   planning.sprintSize = typeof config.sprintSize === 'number' ? config.sprintSize : (planning.sprintSize || 5);
   planning.currentProfile = config.currentProfile || planning.currentProfile || 'human';
   planning.conventionsPaths = Array.isArray(config.conventionsPaths) ? config.conventionsPaths : (planning.conventionsPaths || []);
+  planning.require_evidence_on_stamp = config.tasks?.require_evidence_on_stamp === true || config.planning?.require_evidence_on_stamp === true;
   planning.sub_repos = Array.isArray(config.roots)
     ? config.roots.map((root) => ({
         id: root.id,
@@ -489,6 +522,7 @@ function toCompatJson(config, existing = {}) {
     git: config.git || existing.git || {},
     workflow: config.workflow || existing.workflow || {},
     hooks: config.hooks || existing.hooks || {},
+    skills: config.skills || existing.skills || {},
     agent_skills: config.agent_skills || existing.agent_skills || {},
     planning,
   };
@@ -553,6 +587,36 @@ function writeToml(root, config) {
   }
   lines.push('');
 
+  const skillScope = config.skills?.scope;
+  if (skillScope && typeof skillScope === 'object') {
+    lines.push('[skills.scope]');
+    lines.push(`enabled = ${serializeTomlValue(skillScope.enabled !== false)}`);
+    if (Array.isArray(skillScope.default) && skillScope.default.length > 0) {
+      lines.push(`default = ${serializeTomlValue(skillScope.default)}`);
+    }
+    if (Array.isArray(skillScope.standing) && skillScope.standing.length > 0) {
+      lines.push(`standing = ${serializeTomlValue(skillScope.standing)}`);
+    }
+    if (Array.isArray(skillScope.standing_contexts) && skillScope.standing_contexts.length > 0) {
+      lines.push(`standing_contexts = ${serializeTomlValue(skillScope.standing_contexts)}`);
+    }
+    lines.push('');
+    if (skillScope.runtime && typeof skillScope.runtime === 'object' && Object.keys(skillScope.runtime).length > 0) {
+      lines.push('[skills.scope.runtime]');
+      for (const [key, value] of Object.entries(skillScope.runtime)) {
+        lines.push(`${key} = ${serializeTomlValue(Array.isArray(value) ? value : [value])}`);
+      }
+      lines.push('');
+    }
+    if (skillScope.context && typeof skillScope.context === 'object' && Object.keys(skillScope.context).length > 0) {
+      lines.push('[skills.scope.context]');
+      for (const [key, value] of Object.entries(skillScope.context)) {
+        lines.push(`${key} = ${serializeTomlValue(Array.isArray(value) ? value : [value])}`);
+      }
+      lines.push('');
+    }
+  }
+
   lines.push('[planning]');
   if (config.docs_sink != null) lines.push(`docs_sink = ${serializeTomlValue(config.docs_sink)}`);
   if (Array.isArray(config.docs_sink_ignore) && config.docs_sink_ignore.length) lines.push(`docs_sink_ignore = ${serializeTomlValue(config.docs_sink_ignore)}`);
@@ -560,6 +624,15 @@ function writeToml(root, config) {
   lines.push(`sprintSize = ${serializeTomlValue(typeof config.sprintSize === 'number' ? config.sprintSize : 5)}`);
   lines.push(`currentProfile = ${serializeTomlValue(config.currentProfile || 'human')}`);
   lines.push(`conventionsPaths = ${serializeTomlValue(Array.isArray(config.conventionsPaths) ? config.conventionsPaths : [])}`);
+  if (config.planning?.require_evidence_on_stamp) {
+    lines.push(`require_evidence_on_stamp = true`);
+  }
+  lines.push('');
+
+  lines.push('[tasks]');
+  if (config.tasks?.require_evidence_on_stamp) {
+    lines.push(`require_evidence_on_stamp = true`);
+  }
   lines.push('');
 
   if (config.docs_path != null) {
@@ -628,6 +701,15 @@ function defaults(root) {
     profiles: {},
     currentProfile: 'human',
     conventionsPaths: [],
+    skills: {
+      scope: {},
+    },
+    planning: {
+      require_evidence_on_stamp: false,
+    },
+    tasks: {
+      require_evidence_on_stamp: false,
+    },
     git: {
       branching_strategy: 'none',
       phase_branch_template: 'gad/phase-{phase}-{slug}',

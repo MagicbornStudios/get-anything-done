@@ -300,7 +300,10 @@ function createHandoffsCommand(deps) {
       phase: { type: 'string', description: 'Phase id (e.g. 60)', required: true },
       'task-id': { type: 'string', description: 'Task id (optional)', default: '' },
       priority: { type: 'string', description: 'low | normal | high', default: 'normal' },
-      context: { type: 'string', description: 'mechanical | reasoning', default: 'mechanical' },
+      context: { type: 'string', description: 'prescribed | bounded | exploratory | design | audit | decision', default: 'prescribed' },
+      risk: { type: 'string', description: 'safe | destructive | irreversible', default: 'safe' },
+      time: { type: 'string', description: 'quick | standard | deep', default: 'standard' },
+      surface: { type: 'string', description: 'local | api-bound | human-loop', default: 'local' },
       body: { type: 'string', description: 'Handoff body (markdown)', required: true },
       'runtime-preference': { type: 'string', description: 'Runtime hint (e.g. claude-code)', default: '' },
       'runtime-fallbacks': { type: 'string', description: 'Comma-separated fallback runtimes override', default: '' },
@@ -313,14 +316,21 @@ function createHandoffsCommand(deps) {
         .map((value) => value.trim())
         .filter(Boolean);
       try {
+        const body = String(args.body);
+        if (body.length > 2000) {
+          console.warn(`Warning: handoff body is ${body.length} characters. Consider using references instead of verbose inline content.`);
+        }
         const result = createHandoff({
           baseDir: target.baseDir,
           projectid: String(args.projectid || target.projectid),
           phase: String(args.phase),
           taskId: args['task-id'] || undefined,
           priority: String(args.priority || 'normal'),
-          estimatedContext: String(args.context || 'mechanical'),
-          body: String(args.body),
+          estimatedContext: String(args.context || 'prescribed'),
+          risk: String(args.risk || 'safe'),
+          time: String(args.time || 'standard'),
+          surface: String(args.surface || 'local'),
+          body,
           createdBy: process.env.GAD_AGENT || 'unknown',
           runtimePreference: args['runtime-preference'] || undefined,
           runtimeFallbacks,
@@ -385,7 +395,7 @@ function createHandoffsCommand(deps) {
           phase: String(args.phase),
           taskId: String(args['task-id']),
           priority: String(args.priority || 'normal'),
-          estimatedContext: 'mechanical',
+          estimatedContext: 'prescribed',
           body,
           createdBy: process.env.GAD_AGENT || detectRuntimeIdentity().id || 'unknown',
           runtimePreference: args['runtime-preference'] || undefined,
