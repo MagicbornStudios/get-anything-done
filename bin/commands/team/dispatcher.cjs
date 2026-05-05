@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
 const { readConfig } = require('../../../lib/team/config.cjs');
-const { dispatcherPidPath, dispatcherLogPath, readPid, clearPid, pidAlive, runDaemon } = require('../../../lib/team/dispatcher.cjs');
+const { dispatcherPidPath, dispatcherLogPath, readPid, clearPid, pidAlive, runDaemon, readHeartbeat } = require('../../../lib/team/dispatcher.cjs');
 const { supervisorLog } = require('../../../lib/team/paths.cjs');
 const { appendJsonl } = require('../../../lib/team/io.cjs');
 const { spawnDetachedGadProcess } = require('../../../lib/team/spawn.cjs');
@@ -76,22 +76,21 @@ function createDispatcherCommand(deps) {
   });
 
   const statusCmd = defineCommand({
-    meta: { name: 'status', description: 'Report whether the dispatcher daemon is alive.' },
+    meta: { name: 'status', description: 'Report dispatcher liveness from heartbeat (LIVE/STALE/DEAD).' },
     args: {
       projectid: PROJECTID_ARG,
       json: { type: 'boolean', default: false },
     },
     run({ args }) {
       const { baseDir } = resolveTeamTarget(args);
-      const current = readPid(baseDir);
-      const alive = current && pidAlive(current.pid);
+      const hb = readHeartbeat(baseDir);
       if (args.json) {
-        console.log(JSON.stringify({ running: Boolean(alive), ...(current || {}) }, null, 2));
+        console.log(JSON.stringify(hb, null, 2));
         return;
       }
-      if (!current) { console.log('Dispatcher: not running (no pid file).'); return; }
-      console.log(`Dispatcher: ${alive ? 'running' : 'STALE (pid file present, process dead)'}  pid=${current.pid}  started=${current.started_at}`);
-      console.log(`Log: ${path.relative(baseDir, dispatcherLogPath(baseDir))}`);
+      const ageStr = hb.age_s == null ? 'n/a' : `${hb.age_s}s`;
+      const pidStr = hb.pid == null ? 'n/a' : String(hb.pid);
+      console.log(`Dispatcher: ${hb.state}  pid=${pidStr}  heartbeat_age=${ageStr}`);
     },
   });
 
@@ -99,8 +98,8 @@ function createDispatcherCommand(deps) {
     meta: { name: 'run', description: 'Internal: daemon loop entry. Invoked by `dispatcher start` as a detached subprocess.' },
     args: { projectid: PROJECTID_ARG },
     async run({ args }) {
-      const { baseDir } = resolveTeamTarget(args);
-      await runDaemon(baseDir);
+      const { baseDir, projectid } = resolveTeamTarget(args);
+      await runDaemon(baseDir, { projectid });
     },
   });
 

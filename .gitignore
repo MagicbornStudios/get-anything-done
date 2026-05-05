@@ -129,6 +129,7 @@ tmp/
 .planning/team/dispatch.seq
 .planning/team/dispatcher.log.jsonl
 .planning/team/dispatcher.pid
+.planning/team/dispatcher.heartbeat.json
 .planning/team/supervisor.log.jsonl
 .planning/team/runtime-account-state.json
 .planning/team/workers/*/log.jsonl
