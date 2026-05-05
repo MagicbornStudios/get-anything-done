@@ -5,11 +5,13 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 const { defineCommand } = require('citty');
 const { readConfig } = require('../../../lib/team/config.cjs');
 const { listWorkerIds, readStatus } = require('../../../lib/team/status.cjs');
 const { mailboxDepth } = require('../../../lib/team/mailbox.cjs');
 const { readHeartbeat } = require('../../../lib/team/dispatcher.cjs');
+const { checkAndLogRestart } = require('../../../lib/team/restart-log.cjs');
 
 /**
  * Write (or update) the <dispatcher> element in STATE.xml.
@@ -48,11 +50,48 @@ function createStatusCommand(deps) {
     return { baseDir, stateXmlPath };
   }
 
+  /**
+   * Attempt to restart the dispatcher via `gad team dispatcher start --projectid <p>`.
+   * Uses spawnSync so we can capture the result inline.
+   * Returns { success, output }.
+   */
+  function runDispatcherStart(projectid) {
+    const gadBin = path.resolve(__dirname, '..', '..', 'gad.cjs');
+    const argv = ['team', 'dispatcher', 'start'];
+    if (projectid) argv.push('--projectid', projectid);
+    const result = spawnSync(process.execPath, [gadBin, ...argv], {
+      encoding: 'utf8',
+      timeout: 15_000,
+      windowsHide: true,
+    });
+    const output = (result.stdout || '') + (result.stderr || '');
+    return { success: result.status === 0, output: output.trim() };
+  }
+
+  /**
+   * Write a state log entry for the restart via `gad state log`.
+   * Best-effort — failures are silently ignored so status still renders.
+   */
+  function writeStateLog(projectid, reason) {
+    try {
+      const gadBin = path.resolve(__dirname, '..', '..', 'gad.cjs');
+      const argv = ['state', 'log', `dispatcher auto-restarted (${reason})`];
+      if (projectid) argv.push('--projectid', projectid);
+      argv.push('--tags', 'dispatcher,auto-restart');
+      spawnSync(process.execPath, [gadBin, ...argv], {
+        encoding: 'utf8',
+        timeout: 10_000,
+        windowsHide: true,
+      });
+    } catch { /* best-effort */ }
+  }
+
   return defineCommand({
     meta: { name: 'status', description: 'Show state of every worker (table or JSON).' },
     args: {
       projectid: { type: 'string', description: 'Target project id (resolves .planning/team/ path)', default: '' },
       json: { type: 'boolean', default: false },
+      'auto-restart': { type: 'boolean', default: false, description: 'When dispatcher is DEAD, automatically restart it (also via GAD_TEAM_AUTO_RESTART=1).' },
     },
     run({ args }) {
       const { baseDir, stateXmlPath } = resolveTeamTarget(args);
@@ -63,6 +102,27 @@ function createStatusCommand(deps) {
       const hb = readHeartbeat(baseDir);
       if (stateXmlPath) {
         try { updateStateXmlDispatcher(stateXmlPath, hb); } catch {}
+      }
+
+      // --- Auto-restart logic (opt-in via flag or env var) ---
+      const wantsAutoRestart = args['auto-restart'] || process.env.GAD_TEAM_AUTO_RESTART === '1';
+      if (wantsAutoRestart && hb.state === 'DEAD') {
+        const projectid = args.projectid || hb.projectid || '';
+        const reason = hb.last_heartbeat ? 'stale-heartbeat' : 'no-heartbeat';
+        const { blocked, count } = checkAndLogRestart(baseDir, projectid, reason);
+        if (blocked) {
+          console.log(`[auto-restart] Storm prevention: ${count} restart(s) already attempted in the last 5 min. Skipping.`);
+        } else {
+          // checkAndLogRestart pre-logged the attempt (success=false); just run it.
+          console.log(`[auto-restart] Dispatcher is DEAD (${reason}). Restarting…`);
+          const { success, output } = runDispatcherStart(projectid);
+          if (success) {
+            console.log(`[auto-restart] Restart succeeded. ${output}`);
+            writeStateLog(projectid, reason);
+          } else {
+            console.log(`[auto-restart] Restart failed. Output: ${output}`);
+          }
+        }
       }
 
       const rows = listWorkerIds(baseDir).map(id => {
