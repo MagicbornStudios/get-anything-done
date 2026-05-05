@@ -522,6 +522,101 @@ function createHandoffsCommand(deps) {
     },
   });
 
+  // ---------------------------------------------------------------------------
+  // new subcommand — create a handoff from the canonical template
+  // ---------------------------------------------------------------------------
+
+  const handoffsNewCmd = defineCommand({
+    meta: { name: 'new', description: 'Create a prefilled handoff from the handoff-template.md template' },
+    args: {
+      projectid: { type: 'string', description: 'Project id (required)', required: true },
+      phase: { type: 'string', description: 'Phase id (required)', required: true },
+      'task-id': { type: 'string', description: 'Task id — must exist in .planning/tasks/ (required)', required: true },
+      'runtime-preference': { type: 'string', description: `REQUIRED: one of ${ALLOWED_RUNTIMES.join('|')}`, required: true },
+      priority: { type: 'string', description: 'low | normal | high (default: normal)', default: 'normal' },
+      body: { type: 'string', description: 'Optional: body text to use instead of the template skeleton', default: '' },
+    },
+    run({ args }) {
+      const target = resolveTargetRoot(args.projectid);
+
+      // Validate required args explicitly (citty required:true doesn't always exit cleanly)
+      const missing = [];
+      if (!args.projectid) missing.push('--projectid');
+      if (!args.phase) missing.push('--phase');
+      if (!args['task-id']) missing.push('--task-id');
+      if (!args['runtime-preference']) missing.push('--runtime-preference');
+      if (missing.length > 0) {
+        outputError(`Missing required arguments: ${missing.join(', ')}`);
+        process.exit(1);
+      }
+
+      // Validate runtime-preference
+      const rp = String(args['runtime-preference']).trim();
+      if (!ALLOWED_RUNTIMES.includes(rp)) {
+        outputError(`--runtime-preference "${rp}" is not allowed. Must be one of: ${ALLOWED_RUNTIMES.join(', ')}`);
+        process.exit(1);
+      }
+
+      // Validate priority
+      const validPriorities = ['low', 'normal', 'high'];
+      const priority = String(args.priority || 'normal').trim();
+      if (!validPriorities.includes(priority)) {
+        outputError(`--priority "${priority}" must be one of: ${validPriorities.join(', ')}`);
+        process.exit(1);
+      }
+
+      // Load template and substitute placeholders
+      const templatePath = path.join(__dirname, '..', '..', 'templates', 'handoff-template.md');
+      if (!fs.existsSync(templatePath)) {
+        outputError(`Template not found at: ${templatePath}`);
+        process.exit(1);
+      }
+
+      const taskId = String(args['task-id']).trim();
+      let body;
+
+      if (args.body && String(args.body).trim()) {
+        // Caller supplied explicit body — use it directly (drop-in for gad handoffs create)
+        body = String(args.body).trim();
+      } else {
+        // Substitute template placeholders
+        const raw = fs.readFileSync(templatePath, 'utf8');
+        // Strip the YAML frontmatter block from the template — we don't include it in body
+        const withoutFrontmatter = raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, '');
+        body = withoutFrontmatter
+          .replace(/\{\{task_id\}\}/g, taskId)
+          .replace(/\{\{runtime_preference\}\}/g, rp)
+          .replace(/\{\{priority\}\}/g, priority)
+          .replace(/\{\{title\}\}/g, `(fill in title)`);
+      }
+
+      try {
+        const result = createHandoff({
+          baseDir: target.baseDir,
+          projectid: String(args.projectid),
+          phase: String(args.phase),
+          taskId,
+          priority,
+          estimatedContext: 'bounded',
+          body,
+          createdBy: process.env.GAD_AGENT || 'unknown',
+          runtimePreference: rp,
+        });
+
+        console.log(`Created: ${result.id}`);
+        console.log(`Path:    ${path.relative(findRepoRoot(), result.filePath)}`);
+        console.log('');
+        console.log('Edit the handoff to fill in ## Acceptance gate and ## Why before dispatching.');
+      } catch (e) {
+        if (e instanceof HandoffError) {
+          outputError(e.message);
+          process.exit(1);
+        }
+        throw e;
+      }
+    },
+  });
+
   const handoffsCreateCloseoutCmd = defineCommand({
     meta: {
       name: 'create-closeout',
@@ -604,7 +699,7 @@ function createHandoffsCommand(deps) {
   });
 
   return defineCommand({
-    meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, unclaim, complete, create, create-closeout, lint' },
+    meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, unclaim, complete, create, create-closeout, lint, new' },
     subCommands: {
       list: handoffsListCmd,
       show: handoffsShowCmd,
@@ -615,6 +710,7 @@ function createHandoffsCommand(deps) {
       create: handoffsCreateCmd,
       'create-closeout': handoffsCreateCloseoutCmd,
       lint: handoffsLintCmd,
+      new: handoffsNewCmd,
     },
   });
 }
