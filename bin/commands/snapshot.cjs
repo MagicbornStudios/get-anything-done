@@ -11,6 +11,7 @@ const { handleFullSnapshot } = require('./snapshot/full.cjs');
 const { handleScopedSnapshot } = require('./snapshot/scoped.cjs');
 const { handleSprintSnapshot } = require('./snapshot/sprint.cjs');
 const { handleTerseSnapshot } = require('./snapshot/terse.cjs');
+const { handleHandoffSnapshot } = require('./snapshot/handoff.cjs');
 
 // Refresh the pressure cache that the statusline reads. Cheap (few ms) and
 // keeps the pressure bar in sync with the snapshot the operator just saw.
@@ -57,8 +58,27 @@ function createSnapshotCommand(deps) {
        format: { type: 'string', description: 'compact (default) | xml — "compact" strips XML envelope tokens (prolog, outer tags, per-item tag pairs) while preserving content. "xml" dumps raw file content (legacy). Decision gad-241.', default: 'compact' },
        terse: { type: 'boolean', description: 'Terse snapshot: sprint scope + active phase + open task count + last 3 state-log entries. Target <500 tokens.', default: false },
        'no-side-effects': { type: 'boolean', description: 'Read-only snapshot: suppress session/lane/log/graph writes.', default: false },
+       handoff: { type: 'string', description: 'Handoff ID. Emits a unified pipe-able prompt: orientation + matched skill bodies + handoff body. Used by team workers as `gad snapshot --handoff <id> | runtime` (task 107-10).', default: '' },
     },
     run({ args }) {
+      // --handoff <id> path: full prompt for runtime stdin. Implemented as a
+      // wrapper that reads the handoff first (to derive projectid + phaseid),
+      // then runs the normal sprint orientation, then appends matched skill
+      // bodies + handoff body. Always read-only — workers shouldn't churn
+      // session/lane state when generating the prompt.
+      if (args.handoff) {
+        const baseDir = commandDeps.findRepoRoot();
+        const runOrientation = () => {
+          const ctx = resolveSnapshotContext(commandDeps, args);
+          if (!ctx) return;
+          if (args.terse) handleTerseSnapshot(commandDeps, ctx, args);
+          else if (ctx.useFull) handleFullSnapshot(commandDeps, ctx, args);
+          else if (ctx.scope.isScoped) handleScopedSnapshot(commandDeps, ctx, args);
+          else handleSprintSnapshot(commandDeps, ctx, args);
+        };
+        handleHandoffSnapshot({ commandDeps, args, baseDir, runOrientation });
+        return;
+      }
       const context = resolveSnapshotContext(commandDeps, args);
       if (!context) return;
       try {
