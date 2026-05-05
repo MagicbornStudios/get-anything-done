@@ -293,21 +293,112 @@ function createHandoffsCommand(deps) {
     },
   });
 
+  // ---------------------------------------------------------------------------
+  // Quality-gate helpers (decision GLOBAL-D-<auto>)
+  // ---------------------------------------------------------------------------
+
+  /** Allowed runtime values for --runtime-preference (no "any"). */
+  const ALLOWED_RUNTIMES = ['claude-code', 'codex-cli', 'gemini-cli', 'opencode'];
+
+  /**
+   * Validate handoff intake contract.
+   * Returns array of error strings; empty = valid.
+   */
+  function validateHandoffIntake({ taskId, runtimePreference, body, baseDir, projectid }) {
+    const errors = [];
+
+    // 1. task-id: required and must exist in .planning/tasks/<id>.json
+    if (!taskId || !String(taskId).trim()) {
+      errors.push('--task-id is required (must reference an existing task in .planning/tasks/)');
+    } else {
+      const taskFile = path.join(baseDir, '.planning', 'tasks', `${String(taskId).trim()}.json`);
+      if (!fs.existsSync(taskFile)) {
+        // Also check projectid-prefixed path for sub-projects
+        const resolved = (projectid && projectid !== 'global')
+          ? path.join(findRepoRoot(), '.planning', 'tasks', `${String(taskId).trim()}.json`)
+          : taskFile;
+        if (!fs.existsSync(resolved) && !fs.existsSync(taskFile)) {
+          errors.push(`--task-id "${taskId}" not found in .planning/tasks/ (file: ${path.basename(taskFile)} missing)`);
+        }
+      }
+    }
+
+    // 2. runtime-preference: required, must be one of ALLOWED_RUNTIMES
+    if (!runtimePreference || !String(runtimePreference).trim()) {
+      errors.push(`--runtime-preference is required (one of: ${ALLOWED_RUNTIMES.join(', ')})`);
+    } else if (!ALLOWED_RUNTIMES.includes(String(runtimePreference).trim())) {
+      errors.push(`--runtime-preference "${runtimePreference}" is not allowed. Must be one of: ${ALLOWED_RUNTIMES.join(', ')}`);
+    }
+
+    // 3. body: must contain ## Acceptance gate OR ## Acceptance criteria (case-insensitive)
+    if (!body || !String(body).trim()) {
+      errors.push('body is empty');
+    } else if (!/^##\s+(acceptance\s+gate|acceptance\s+criteria)\s*$/im.test(String(body))) {
+      errors.push('body must contain a "## Acceptance gate" or "## Acceptance criteria" section');
+    }
+
+    return errors;
+  }
+
+  /**
+   * Score a single handoff against the quality contract.
+   * Returns { checks: { [name]: boolean }, score: number, grade: string, missing: string[] }
+   */
+  function scoreHandoff(frontmatter, body, baseDir) {
+    const checks = {
+      'has-task-id': false,
+      'has-runtime-preference': false,
+      'has-acceptance-section': false,
+      'has-priority': false,
+      'body-length-reasonable': false,
+    };
+
+    // has-task-id: frontmatter.task_id is non-null, non-empty, and file exists
+    const rawTaskId = frontmatter.task_id;
+    if (rawTaskId && rawTaskId !== 'null' && String(rawTaskId).trim()) {
+      const taskFile = path.join(baseDir, '.planning', 'tasks', `${String(rawTaskId).trim()}.json`);
+      checks['has-task-id'] = fs.existsSync(taskFile);
+    }
+
+    // has-runtime-preference: frontmatter.runtime_preference is one of ALLOWED_RUNTIMES
+    const rp = frontmatter.runtime_preference;
+    checks['has-runtime-preference'] = Boolean(rp && ALLOWED_RUNTIMES.includes(String(rp).trim()));
+
+    // has-acceptance-section: body contains ## Acceptance gate|criteria
+    checks['has-acceptance-section'] = Boolean(body && /^##\s+(acceptance\s+gate|acceptance\s+criteria)\s*$/im.test(String(body)));
+
+    // has-priority: frontmatter.priority is a non-empty recognised value
+    const validPriorities = ['low', 'normal', 'high', 'critical'];
+    checks['has-priority'] = Boolean(frontmatter.priority && validPriorities.includes(String(frontmatter.priority).toLowerCase()));
+
+    // body-length-reasonable: 50–3000 chars
+    const bodyLen = body ? String(body).length : 0;
+    checks['body-length-reasonable'] = bodyLen >= 50 && bodyLen <= 3000;
+
+    const score = Object.values(checks).filter(Boolean).length;
+    const gradeMap = { 5: 'A', 4: 'B', 3: 'C', 2: 'D', 1: 'E', 0: 'F' };
+    const grade = gradeMap[score] || 'F';
+    const missing = Object.entries(checks).filter(([, v]) => !v).map(([k]) => k);
+
+    return { checks, score, grade, missing };
+  }
+
   const handoffsCreateCmd = defineCommand({
     meta: { name: 'create', description: 'Create a new handoff in open/' },
     args: {
       projectid: { type: 'string', description: 'Project id (defaults to session / cwd scope)', default: '' },
       phase: { type: 'string', description: 'Phase id (e.g. 60)', required: true },
-      'task-id': { type: 'string', description: 'Task id (optional)', default: '' },
+      'task-id': { type: 'string', description: 'Task id (REQUIRED — must exist in .planning/tasks/)', default: '' },
       priority: { type: 'string', description: 'low | normal | high', default: 'normal' },
       context: { type: 'string', description: 'prescribed | bounded | exploratory | design | audit | decision', default: 'prescribed' },
       risk: { type: 'string', description: 'safe | destructive | irreversible', default: 'safe' },
       time: { type: 'string', description: 'quick | standard | deep', default: 'standard' },
       surface: { type: 'string', description: 'local | api-bound | human-loop', default: 'local' },
-      body: { type: 'string', description: 'Handoff body (markdown)', required: true },
-      'runtime-preference': { type: 'string', description: 'Runtime hint (e.g. claude-code)', default: '' },
+      body: { type: 'string', description: 'Handoff body (markdown, MUST include ## Acceptance gate section)', required: true },
+      'runtime-preference': { type: 'string', description: `REQUIRED: one of ${ALLOWED_RUNTIMES.join('|')}`, default: '' },
       'runtime-fallbacks': { type: 'string', description: 'Comma-separated fallback runtimes override', default: '' },
       'runtime-required': { type: 'boolean', description: 'Treat runtime_preference as a hard requirement', default: false },
+      quick: { type: 'boolean', description: 'Bypass quality gate (logs a WARN; emergency use only)', default: false },
     },
     run({ args }) {
       const target = resolveTargetRoot(args.projectid);
@@ -315,8 +406,27 @@ function createHandoffsCommand(deps) {
         .split(',')
         .map((value) => value.trim())
         .filter(Boolean);
+
+      const body = String(args.body);
+      const taskId = args['task-id'] || '';
+      const runtimePreference = args['runtime-preference'] || '';
+
+      // Quality gate
+      if (!args.quick) {
+        const errors = validateHandoffIntake({
+          taskId,
+          runtimePreference,
+          body,
+          baseDir: target.baseDir,
+          projectid: String(args.projectid || target.projectid),
+        });
+        if (errors.length > 0) {
+          outputError(`Handoff quality gate FAILED:\n${errors.map((e) => `  - ${e}`).join('\n')}\n\nUse --quick to bypass (WARN will be logged).`);
+          process.exit(1);
+        }
+      }
+
       try {
-        const body = String(args.body);
         if (body.length > 2000) {
           console.warn(`Warning: handoff body is ${body.length} characters. Consider using references instead of verbose inline content.`);
         }
@@ -324,7 +434,7 @@ function createHandoffsCommand(deps) {
           baseDir: target.baseDir,
           projectid: String(args.projectid || target.projectid),
           phase: String(args.phase),
-          taskId: args['task-id'] || undefined,
+          taskId: taskId || undefined,
           priority: String(args.priority || 'normal'),
           estimatedContext: String(args.context || 'prescribed'),
           risk: String(args.risk || 'safe'),
@@ -332,10 +442,15 @@ function createHandoffsCommand(deps) {
           surface: String(args.surface || 'local'),
           body,
           createdBy: process.env.GAD_AGENT || 'unknown',
-          runtimePreference: args['runtime-preference'] || undefined,
+          runtimePreference: runtimePreference || undefined,
           runtimeFallbacks,
           runtimeRequired: args['runtime-required'] === true,
         });
+
+        if (args.quick) {
+          process.stderr.write(`WARN: --quick bypass — handoff ${result.id} skipped quality gate\n`);
+        }
+
         console.log(`Created: ${result.id}`);
         console.log(`Path:    ${path.relative(findRepoRoot(), result.filePath)}`);
       } catch (e) {
@@ -345,6 +460,65 @@ function createHandoffsCommand(deps) {
         }
         throw e;
       }
+    },
+  });
+
+  // ---------------------------------------------------------------------------
+  // lint subcommand
+  // ---------------------------------------------------------------------------
+
+  const handoffsLintCmd = defineCommand({
+    meta: { name: 'lint', description: 'Retroactively grade all handoffs in open/ + claimed/ against the quality contract' },
+    args: {
+      projectid: { type: 'string', description: 'Filter by project id', default: '' },
+      json: { type: 'boolean', description: 'Emit JSON array instead of table', default: false },
+    },
+    run({ args }) {
+      const baseDir = findRepoRoot();
+      const { listHandoffs: _list, parseFrontmatter: _parse } = require('../../lib/handoffs.cjs');
+
+      // Collect from open + claimed (not closed — already done)
+      const allHandoffs = _list({ baseDir, bucket: 'all', projectid: args.projectid || undefined });
+
+      if (allHandoffs.length === 0) {
+        console.log(`No handoffs found${args.projectid ? ` for project ${args.projectid}` : ''}.`);
+        return;
+      }
+
+      const results = allHandoffs.map((h) => {
+        const text = fs.readFileSync(h.filePath, 'utf8');
+        const { body } = _parse(text);
+        const { score, grade, missing } = scoreHandoff(h.frontmatter, body, baseDir);
+        return { id: h.id, bucket: h.bucket, grade, score, missing };
+      });
+
+      if (args.json || shouldUseJson()) {
+        console.log(JSON.stringify(results, null, 2));
+        return;
+      }
+
+      // Per-handoff lines
+      for (const r of results) {
+        const missingStr = r.missing.length > 0 ? r.missing.join(', ') : '(all checks pass)';
+        console.log(`${r.id}  [${r.bucket}]  ${r.grade}  ${missingStr}`);
+      }
+
+      // Summary
+      const gradeCounts = { A: 0, B: 0, C: 0, D: 0, E: 0, F: 0 };
+      for (const r of results) gradeCounts[r.grade] = (gradeCounts[r.grade] || 0) + 1;
+      const totalScore = results.reduce((s, r) => s + r.score, 0);
+      const avgScore = (totalScore / results.length).toFixed(1);
+      const gradeOrder = ['A', 'B', 'C', 'D', 'E', 'F'];
+      const gradeAvgIdx = Math.min(Math.round((5 - parseFloat(avgScore))), 5);
+      const avgGrade = gradeOrder[gradeAvgIdx] || 'F';
+
+      const countStr = gradeOrder
+        .filter((g) => gradeCounts[g] > 0)
+        .map((g) => `${g}=${gradeCounts[g]}`)
+        .join(' ');
+
+      console.log('');
+      console.log(`Project handoff-quality: ${countStr}  avg=${avgGrade} (${avgScore}/5)`);
     },
   });
 
@@ -430,7 +604,7 @@ function createHandoffsCommand(deps) {
   });
 
   return defineCommand({
-    meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, unclaim, complete, create, create-closeout' },
+    meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, unclaim, complete, create, create-closeout, lint' },
     subCommands: {
       list: handoffsListCmd,
       show: handoffsShowCmd,
@@ -440,6 +614,7 @@ function createHandoffsCommand(deps) {
       complete: handoffsCompleteCmd,
       create: handoffsCreateCmd,
       'create-closeout': handoffsCreateCloseoutCmd,
+      lint: handoffsLintCmd,
     },
   });
 }
