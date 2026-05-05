@@ -13,11 +13,13 @@
 const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
+const xpMath = require('../../lib/xp-math.cjs');
 const { createEvolutionValidateCommand } = require('./evolution/validate.cjs');
 const { createEvolutionInstallCommand } = require('./evolution/install.cjs');
 const { createEvolutionPromoteCommand } = require('./evolution/promote.cjs');
 const { createEvolutionDiscardCommand } = require('./evolution/discard.cjs');
 const { createEvolutionStatusCommand } = require('./evolution/status.cjs');
+const { createEvolutionReportCommand } = require('./evolution/report.cjs');
 const { createEvolutionSimilarityCommand } = require('./evolution/similarity.cjs');
 const { createEvolutionScanCommand } = require('./evolution/scan.cjs');
 const { createEvolutionShedCommand } = require('./evolution/shed.cjs');
@@ -104,6 +106,16 @@ function createEvolutionCommands(deps) {
     evolutionPaths,
     protoSkillRelativePath,
   });
+
+  const evolutionReport = createEvolutionReportCommand({
+    repoRoot,
+    evolutionPaths,
+    findRepoRoot,
+    gadConfig,
+    resolveRoots,
+    outputError,
+  });
+
   const evolutionSimilarity = createEvolutionSimilarityCommand({ repoRoot });
 
   const evolutionScan = createEvolutionScanCommand({
@@ -172,9 +184,9 @@ function createEvolutionCommands(deps) {
         return;
       }
 
-      // Stub formula until phase 127: double xp_to_next each level
+      // Phase 127: xp_to_next(L) = 100 * L^1.5
       const nextLevel = level.value + 1;
-      const nextXpToNext = level.xpToNext * 2;
+      const nextXpToNext = xpMath.xpToNextLevel(nextLevel);
       const newLevel = {
         value: nextLevel,
         xp: 0,
@@ -218,6 +230,7 @@ function createEvolutionCommands(deps) {
       promote: evolutionPromote,
       discard: evolutionDiscard,
       status: evolutionStatus,
+      report: evolutionReport,
       similarity: evolutionSimilarity,
       shed: evolutionShed,
       images: evolutionImagesCmd,
