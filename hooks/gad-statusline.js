@@ -15,6 +15,11 @@ const PROJECT_CONFIG_FILES = [
 ];
 const PRESSURE_CACHE_DIR = path.join('.cache', 'gad');
 const PRESSURE_SEGMENTS = 5;
+const LEVEL_SEGMENTS = 5;
+
+// New compact render constants (used unless GAD_STATUSLINE_LEGACY=1)
+const COMPACT_LEVEL_CELLS = 6;  // ▰▰▰▱▱▱ style, 6 cells
+const COMPACT_CTX_CELLS = 5;    // █████ battery style, 5 cells
 
 function stripTomlComment(line) {
   let inQuote = false;
@@ -187,6 +192,62 @@ function readPressureSnapshot(projectId, homeDir) {
   }
 }
 
+function computeLevelFromXp(totalXp) {
+  let level = 1;
+  let cumulative = 0;
+  for (let i = 0; i < 99; i += 1) {
+    const toNext = Math.ceil(100 * Math.pow(level, 1.5));
+    if (cumulative + toNext > totalXp) {
+      return { level, xpInLevel: totalXp - cumulative, xpToNext: toNext };
+    }
+    cumulative += toNext;
+    level += 1;
+  }
+  return { level, xpInLevel: 0, xpToNext: 0 };
+}
+
+function readLevelSnapshot(projectContext) {
+  if (!projectContext || !projectContext.rootPath) return null;
+  const planningDir = path.join(projectContext.rootPath, '.planning');
+  // Forward-compat: STATE.xml <level value=N xp=Y xp_to_next=Z/> per phase 126.
+  try {
+    const statePath = path.join(planningDir, 'STATE.xml');
+    if (fs.existsSync(statePath)) {
+      const content = fs.readFileSync(statePath, 'utf8');
+      const m = content.match(/<level\s+[^>]*\bvalue="(\d+)"[^>]*\bxp="(\d+)"[^>]*\bxp_to_next="(\d+)"/);
+      if (m) {
+        return { level: Number(m[1]), xpInLevel: Number(m[2]), xpToNext: Number(m[3]) };
+      }
+    }
+  } catch (e) {}
+  // Bootstrap fallback: count done+stamped tasks as XP=1 each.
+  try {
+    const tasksDir = path.join(planningDir, 'tasks');
+    if (!fs.existsSync(tasksDir)) return null;
+    let xp = 0;
+    for (const f of fs.readdirSync(tasksDir)) {
+      if (!f.endsWith('.json')) continue;
+      try {
+        const t = JSON.parse(fs.readFileSync(path.join(tasksDir, f), 'utf8'));
+        if (t.status === 'done' && t.skill) xp += 1;
+      } catch (e) {}
+    }
+    return computeLevelFromXp(xp);
+  } catch (e) {
+    return null;
+  }
+}
+
+function renderLevelSegment(snapshot) {
+  if (!snapshot) return '';
+  const { level, xpInLevel, xpToNext } = snapshot;
+  if (!xpToNext) return ` \x1b[35mLV ${level}\x1b[0m`;
+  const ratio = Math.max(0, Math.min(1, xpInLevel / xpToNext));
+  const filled = Math.round(ratio * LEVEL_SEGMENTS);
+  const bar = '█'.repeat(filled) + '░'.repeat(LEVEL_SEGMENTS - filled);
+  return ` \x1b[35mLV ${level} [${bar}] ${xpInLevel}/${xpToNext}\x1b[0m`;
+}
+
 function renderPressureSegment(snapshot) {
   if (!snapshot) return '';
   const score = Math.max(0, Math.min(1, Number(snapshot.score) || 0));
@@ -206,6 +267,32 @@ function renderPressureSegment(snapshot) {
   return ` \x1b[2;37m${base}\x1b[0m`;
 }
 
+
+// Compact variant: "LV2 ▰▰▰▱▱▱" — 6-cell fill bar, no XP numbers
+function renderLevelSegmentCompact(snapshot) {
+  if (!snapshot) return '';
+  const { level, xpInLevel, xpToNext } = snapshot;
+  if (!xpToNext) return ` \x1b[35mLV${level}\x1b[0m`;
+  const ratio = Math.max(0, Math.min(1, xpInLevel / xpToNext));
+  const filled = Math.round(ratio * COMPACT_LEVEL_CELLS);
+  const bar = '\u25B0'.repeat(filled) + '\u25B1'.repeat(COMPACT_LEVEL_CELLS - filled);
+  return ` \x1b[35mLV${level} ${bar}\x1b[0m`;
+}
+
+// Compact variant: single intensity glyph — P\u25e6 P\u25cb P\u25cf P! P!!
+// No blink attribute — fixes Windows Terminal flicker (acceptance gate #2).
+function renderPressureSegmentCompact(snapshot) {
+  if (!snapshot) return '';
+  const score = Math.max(0, Math.min(1, Number(snapshot.score) || 0));
+  const score100 = Math.round(score * 100);
+
+  if (score100 >= 85) return ` \x1b[1;91mP!!\x1b[0m`;  // bold-bright red, no blink
+  if (score100 >= 70) return ` \x1b[1;91mP!\x1b[0m`;   // bold-bright red
+  if (score100 >= 50) return ` \x1b[1;33mP\u25cf\x1b[0m`; // bold gold, filled circle
+  if (score100 >= 25) return ` \x1b[33mP\u25cb\x1b[0m`;   // dim gold, open circle
+  return ` \x1b[2;37mP\u25e6\x1b[0m`;                    // grey, bullet
+}
+
 function renderStatusline(data) {
   const model = data.model?.display_name || 'Claude';
   const dir = data.workspace?.current_dir || process.cwd();
@@ -217,17 +304,18 @@ function renderStatusline(data) {
   // is 83.5% of the total window. We normalize to show 100% at that point.
   const AUTO_COMPACT_BUFFER_PCT = 16.5;
   let ctx = '';
+  let usedForCtx = 0;
   if (remaining != null) {
     const usableRemaining = Math.max(0, ((remaining - AUTO_COMPACT_BUFFER_PCT) / (100 - AUTO_COMPACT_BUFFER_PCT)) * 100);
-    const used = Math.max(0, Math.min(100, Math.round(100 - usableRemaining)));
+    usedForCtx = Math.max(0, Math.min(100, Math.round(100 - usableRemaining)));
 
     if (session) {
       try {
-        const bridgePath = path.join(os.tmpdir(), `claude-ctx-${session}.json`);
+        const bridgePath = require('path').join(require('os').tmpdir(), `claude-ctx-${session}.json`);
         const bridgeData = JSON.stringify({
           session_id: session,
           remaining_percentage: remaining,
-          used_pct: used,
+          used_pct: usedForCtx,
           timestamp: Math.floor(Date.now() / 1000)
         });
         fs.writeFileSync(bridgePath, bridgeData);
@@ -236,34 +324,51 @@ function renderStatusline(data) {
       }
     }
 
-    const filled = Math.floor(used / 10);
-    const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(10 - filled);
-
-    if (used < 50) {
-      ctx = ` \x1b[32m${bar} ${used}%\x1b[0m`;
-    } else if (used < 65) {
-      ctx = ` \x1b[33m${bar} ${used}%\x1b[0m`;
-    } else if (used < 80) {
-      ctx = ` \x1b[38;5;208m${bar} ${used}%\x1b[0m`;
+    if (process.env.GAD_STATUSLINE_LEGACY === '1') {
+      // ── LEGACY path: original 10-block bar + "% used" suffix ──────────
+      const filled = Math.floor(usedForCtx / 10);
+      const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(10 - filled);
+      if (usedForCtx < 50) {
+        ctx = ` \x1b[32m${bar} ${usedForCtx}%\x1b[0m`;
+      } else if (usedForCtx < 65) {
+        ctx = ` \x1b[33m${bar} ${usedForCtx}%\x1b[0m`;
+      } else if (usedForCtx < 80) {
+        ctx = ` \x1b[38;5;208m${bar} ${usedForCtx}%\x1b[0m`;
+      } else {
+        ctx = ` \x1b[5;31m\u{1F480} ${bar} ${usedForCtx}%\x1b[0m`;
+      }
     } else {
-      ctx = ` \x1b[5;31m\u{1F480} ${bar} ${used}%\x1b[0m`;
+      // ── COMPACT path: 5-cell battery glyph + number only ──────────────
+      // ████░ 82% — no duplicate suffix, no skull blink
+      const filledCells = Math.round((usedForCtx / 100) * COMPACT_CTX_CELLS);
+      const bar = '\u2588'.repeat(filledCells) + '\u2591'.repeat(COMPACT_CTX_CELLS - filledCells);
+      if (usedForCtx < 50) {
+        ctx = ` \x1b[32m${bar} ${usedForCtx}%\x1b[0m`;
+      } else if (usedForCtx < 65) {
+        ctx = ` \x1b[33m${bar} ${usedForCtx}%\x1b[0m`;
+      } else if (usedForCtx < 80) {
+        ctx = ` \x1b[38;5;208m${bar} ${usedForCtx}%\x1b[0m`;
+      } else {
+        // bold-bright red, no blink (acceptance gate #2)
+        ctx = ` \x1b[1;91m\u{1F480} ${bar} ${usedForCtx}%\x1b[0m`;
+      }
     }
   }
 
   let task = '';
-  const homeDir = os.homedir();
-  const claudeDir = process.env.CLAUDE_CONFIG_DIR || path.join(homeDir, '.claude');
-  const todosDir = path.join(claudeDir, 'todos');
+  const homeDir = require('os').homedir();
+  const claudeDir = process.env.CLAUDE_CONFIG_DIR || require('path').join(homeDir, '.claude');
+  const todosDir = require('path').join(claudeDir, 'todos');
   if (session && fs.existsSync(todosDir)) {
     try {
       const files = fs.readdirSync(todosDir)
         .filter((file) => file.startsWith(session) && file.includes('-agent-') && file.endsWith('.json'))
-        .map((file) => ({ name: file, mtime: fs.statSync(path.join(todosDir, file)).mtime }))
+        .map((file) => ({ name: file, mtime: fs.statSync(require('path').join(todosDir, file)).mtime }))
         .sort((a, b) => b.mtime - a.mtime);
 
       if (files.length > 0) {
         try {
-          const todos = JSON.parse(fs.readFileSync(path.join(todosDir, files[0].name), 'utf8'));
+          const todos = JSON.parse(fs.readFileSync(require('path').join(todosDir, files[0].name), 'utf8'));
           const inProgress = todos.find((todo) => todo.status === 'in_progress');
           if (inProgress) task = inProgress.activeForm || '';
         } catch (e) {}
@@ -274,11 +379,11 @@ function renderStatusline(data) {
   }
 
   let gadUpdate = '';
-  const sharedCacheFile = path.join(homeDir, '.cache', 'gad', 'gad-update-check.json');
+  const sharedCacheFile = require('path').join(homeDir, '.cache', 'gad', 'gad-update-check.json');
   const legacyPrefix = ['g', 's', 'd'].join('');
   const legacyUpdateFile = `${legacyPrefix}-update-check.json`;
-  const legacySharedCacheFile = path.join(homeDir, '.cache', legacyPrefix, legacyUpdateFile);
-  const legacyRuntimeCacheFile = path.join(claudeDir, 'cache', legacyUpdateFile);
+  const legacySharedCacheFile = require('path').join(homeDir, '.cache', legacyPrefix, legacyUpdateFile);
+  const legacyRuntimeCacheFile = require('path').join(claudeDir, 'cache', legacyUpdateFile);
   const cacheFile = fs.existsSync(sharedCacheFile)
     ? sharedCacheFile
     : (fs.existsSync(legacySharedCacheFile) ? legacySharedCacheFile : legacyRuntimeCacheFile);
@@ -296,13 +401,21 @@ function renderStatusline(data) {
 
   // Pressure comes from a shared cache file so the statusline stays cheap.
   const projectContext = findProjectContext(dir);
-  const pressure = projectContext ? renderPressureSegment(readPressureSnapshot(projectContext.projectId, homeDir)) : '';
 
-  const dirname = path.basename(dir);
-  if (task) {
-    return `${gadUpdate}\x1b[2m${model}\x1b[0m \u2502 \x1b[1m${task}\x1b[0m \u2502 \x1b[2m${dirname}\x1b[0m${ctx}${pressure}`;
+  let pressure, level;
+  if (process.env.GAD_STATUSLINE_LEGACY === '1') {
+    pressure = projectContext ? renderPressureSegment(readPressureSnapshot(projectContext.projectId, homeDir)) : '';
+    level = projectContext ? renderLevelSegment(readLevelSnapshot(projectContext)) : '';
+  } else {
+    pressure = projectContext ? renderPressureSegmentCompact(readPressureSnapshot(projectContext.projectId, homeDir)) : '';
+    level = projectContext ? renderLevelSegmentCompact(readLevelSnapshot(projectContext)) : '';
   }
-  return `${gadUpdate}\x1b[2m${model}\x1b[0m \u2502 \x1b[2m${dirname}\x1b[0m${ctx}${pressure}`;
+
+  const dirname = require('path').basename(dir);
+  if (task) {
+    return `${gadUpdate}\x1b[2m${model}\x1b[0m \u2502 \x1b[1m${task}\x1b[0m \u2502 \x1b[2m${dirname}\x1b[0m${ctx}${pressure}${level}`;
+  }
+  return `${gadUpdate}\x1b[2m${model}\x1b[0m \u2502 \x1b[2m${dirname}\x1b[0m${ctx}${pressure}${level}`;
 }
 
 function main() {
