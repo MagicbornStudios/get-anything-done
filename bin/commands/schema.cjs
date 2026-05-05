@@ -290,6 +290,7 @@ const MINIMAL_TEMPLATES = {
 `,
   '.planning/STATE.xml': `<?xml version="1.0" encoding="UTF-8"?>
 <state>
+  <level value="1" xp="0" xp_to_next="100" loaded_skills="0"/>
   <next-action></next-action>
   <state-log></state-log>
 </state>

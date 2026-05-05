@@ -115,6 +115,7 @@ const INIT_XML_TEMPLATES = {
   'STATE.xml': (id, today) =>
 `<?xml version="1.0" encoding="UTF-8"?>
 <state project="${id}" schema="1">
+  <level value="1" xp="0" xp_to_next="100" loaded_skills="0"/>
   <status>active</status>
   <milestone>v1</milestone>
   <current-phase></current-phase>

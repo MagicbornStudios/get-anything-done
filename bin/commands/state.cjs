@@ -79,6 +79,9 @@ function createStateCommand(deps) {
             lastActivity: state.lastActivity || null,
             nextAction: state.nextAction || null,
           };
+          if (state.level) {
+            result.level = state.level;
+          }
           const gs = getGraphStats(root);
           if (gs) result.graph = gs;
           return result;
@@ -96,6 +99,8 @@ function createStateCommand(deps) {
           status: state.status,
           'open tasks': state.openTasks > 0 ? String(state.openTasks) : '—',
           'last activity': state.lastActivity || '—',
+          level: state.level ? `L${state.level.value}` : '—',
+          xp: state.level ? `${state.level.xp}/${state.level.xpToNext}` : '—',
           _nextAction: state.nextAction || null,
           _graphStats: getGraphStats(root),
         };
@@ -131,13 +136,15 @@ function createStateCommand(deps) {
   void shouldUseJson;
 
   const stateSetNextActionCmd = defineCommand({
-    meta: { name: 'set-next-action', description: `Replace STATE.xml <next-action> with new text. Hard-capped at ${NEXT_ACTION_MAX_CHARS} chars — overflow fails loud.` },
+    meta: { name: 'set-next-action', description: 'DEPRECATED: Use `gad state log` instead. Appends to <state-log> and warns.' },
     args: {
-      text: { type: 'positional', description: 'Replacement next-action text (use quotes)', required: true },
+      text: { type: 'positional', description: 'Log entry text (use quotes)', required: true },
       projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
-      force: { type: 'boolean', description: 'Bypass the hard cap (DO NOT USE — for migration only)', default: false },
     },
     run({ args }) {
+      console.warn('\n[DEPRECATED] `gad state set-next-action` is deprecated and will be removed.');
+      console.warn('Redirecting to `gad state log` with the current phase as a tag.\n');
+
       const baseDir = findRepoRoot();
       const config = gadConfig.load(baseDir);
       const roots = resolveRoots({ projectid: args.projectid }, baseDir, config.roots);
@@ -145,78 +152,19 @@ function createStateCommand(deps) {
         outputError('No project resolved. Pass --projectid <id> or run from a project root.');
         return;
       }
-      if (roots.length > 1) {
-        outputError('set-next-action requires a single project. Pass --projectid <id>.');
-        return;
-      }
       const root = roots[0];
-      const text = String(args.text || '').trim();
-      if (!text) {
-        outputError('next-action text is empty.');
-        return;
-      }
+      const state = readState(root, baseDir);
+      const currentPhase = state.currentPhase || '';
 
-      if (text.length > NEXT_ACTION_MAX_CHARS && !args.force) {
-        console.error('');
-        console.error(`✗ next-action too long: ${text.length} chars (cap ${NEXT_ACTION_MAX_CHARS})`);
-        console.error('');
-        console.error('next-action is a pointer to the next pick, NOT a running journal.');
-        console.error('Activity logging belongs elsewhere:');
-        console.error('  - per-task progress  → .planning/TASK-REGISTRY.xml <task><resolution>');
-        console.error('  - architectural choices → .planning/DECISIONS.xml');
-        console.error('  - session handoffs → .planning/sessions/');
-        console.error('');
-        console.error('Recommended shape (≤600 chars):');
-        console.error('  "Phase X in progress. Next pick: <task-id>. Open queue: <ids>. Blockers: <if any>."');
-        console.error('');
-        console.error('If you really need to bypass the cap (migration only): pass --force.');
-        process.exit(2);
-      }
-
-      const statePath = path.join(baseDir, root.path, root.planningDir, 'STATE.xml');
-      if (!fs.existsSync(statePath)) {
-        outputError(`STATE.xml not found at ${path.relative(baseDir, statePath)}`);
-        return;
-      }
-      const original = fs.readFileSync(statePath, 'utf8');
-      const replaced = original.replace(
-        /<next-action>[\s\S]*?<\/next-action>/,
-        `<next-action>${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</next-action>`,
-      );
-      if (replaced === original) {
-        outputError('No <next-action> element found in STATE.xml — add one manually first.');
-        return;
-      }
-      fs.writeFileSync(statePath, replaced);
-
-      // Dual-write to per-session JSON (decision 2026-04-20 D4). STATE.xml
-      // next-action is single-file → last-write-wins race across agents.
-      // Writing the same payload into the most-recent session's JSON keeps
-      // per-agent copies so we can surface the right "next action for this
-      // session" in the future without losing what another agent wrote.
-      try {
-        const sessionsDir = path.join(baseDir, root.path, root.planningDir, 'sessions');
-        if (fs.existsSync(sessionsDir)) {
-          const files = fs.readdirSync(sessionsDir)
-            .filter(f => f.startsWith('s-') && f.endsWith('.json'))
-            .map(f => ({ f, path: path.join(sessionsDir, f), mtime: fs.statSync(path.join(sessionsDir, f)).mtimeMs }))
-            .sort((a, b) => b.mtime - a.mtime);
-          if (files.length > 0) {
-            const target = files[0];
-            const session = JSON.parse(fs.readFileSync(target.path, 'utf8'));
-            session.nextAction = text;
-            session.nextActionAt = new Date().toISOString();
-            session.updatedAt = session.nextActionAt;
-            fs.writeFileSync(target.path, JSON.stringify(session, null, 2));
-          }
-        }
-      } catch (sessErr) {
-        console.error(`  (warning: session next_action write failed: ${sessErr.message})`);
-      }
-
-      maybeRebuildGraph(baseDir, root);
-      console.log(`Updated: ${path.relative(baseDir, statePath)}`);
-      console.log(`Length:  ${text.length}/${NEXT_ACTION_MAX_CHARS} chars`);
+      // Delegate to log logic
+      stateLogCmd.run({
+        args: {
+          message: args.text,
+          tags: currentPhase,
+          agent: process.env.GAD_AGENT_NAME || 'legacy-setter',
+          projectid: root.id,
+        },
+      });
     },
   });
 
