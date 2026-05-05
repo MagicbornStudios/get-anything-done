@@ -95,6 +95,9 @@ function createEvolutionCommands(deps) {
     resolveProtoSkillInstallRuntimes,
     installProtoSkillToRuntime,
     protoSkillRelativePath,
+    findRepoRoot,
+    gadConfig,
+    resolveRoots,
   });
 
   const evolutionPromote = createEvolutionPromoteCommand({ repoRoot, evolutionPaths });
@@ -125,6 +128,8 @@ function createEvolutionCommands(deps) {
     resolveRoots,
     writeEvolutionScan,
     shouldUseJson,
+    installProtoSkillToRuntime,
+    resolveProtoSkillInstallRuntimes,
   });
 
   const evolutionShed = createEvolutionShedCommand({
