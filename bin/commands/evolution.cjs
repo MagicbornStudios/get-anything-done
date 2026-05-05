@@ -14,6 +14,7 @@ const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
 const xpMath = require('../../lib/xp-math.cjs');
+const { computePressure } = require('../../lib/entropy/compute.cjs');
 const { createEvolutionValidateCommand } = require('./evolution/validate.cjs');
 const { createEvolutionInstallCommand } = require('./evolution/install.cjs');
 const { createEvolutionPromoteCommand } = require('./evolution/promote.cjs');
@@ -191,12 +192,26 @@ function createEvolutionCommands(deps) {
         return;
       }
 
-      const short = level.xpToNext - level.xp;
-      if (level.xp < level.xpToNext) {
+      // Phase 136 — either XP threshold OR resolved-signals threshold unlocks.
+      const xpReady = level.xp >= level.xpToNext;
+      let resolvedReady = false;
+      let resolvedSignals = 0;
+      let resolvedThreshold = xpMath.resolvedSignalsToNextLevel(level.value);
+      try {
+        const pressure = computePressure(root.id, { baseDir });
+        resolvedSignals = (pressure.breakdown && pressure.breakdown.resolved_signals) || 0;
+        resolvedReady = xpMath.meetsResolvedSignalThreshold(level.value, resolvedSignals);
+      } catch { /* pressure failure is non-fatal — fall back to XP path */ }
+
+      if (!xpReady && !resolvedReady) {
+        const short = level.xpToNext - level.xp;
+        const sigShort = resolvedThreshold - resolvedSignals;
         console.log(`${short} xp short of level ${level.value + 1} (need ${level.xpToNext}, have ${level.xp})`);
+        console.log(`  also ${sigShort} resolved-signal(s) short (need ${resolvedThreshold}, have ${resolvedSignals})`);
         process.exit(1);
         return;
       }
+      const triggerPath = xpReady ? 'xp' : 'resolved-signals';
 
       // Phase 127: xp_to_next(L) = 100 * L^1.5
       const nextLevel = level.value + 1;
@@ -229,8 +244,11 @@ function createEvolutionCommands(deps) {
         closeActiveSessions(baseDir, allRoots, root.id);
       }
 
-      console.log(`Leveled up to ${nextLevel}!`);
-      console.log(`XP reset. Next level requires ${nextXpToNext} xp.`);
+      console.log(`Leveled up to ${nextLevel}! (path: ${triggerPath})`);
+      if (triggerPath === 'resolved-signals') {
+        console.log(`Resolved ${resolvedSignals} pressure source type(s) — threshold was ${resolvedThreshold}.`);
+      }
+      console.log(`XP reset. Next level requires ${nextXpToNext} xp OR ${xpMath.resolvedSignalsToNextLevel(nextLevel)} resolved signal types.`);
       console.log(`Sessions closed. Run \`gad startup --projectid ${root.id}\` to begin level ${nextLevel}.`);
     },
   });
