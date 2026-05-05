@@ -104,21 +104,44 @@ function createSiteCommand(deps) {
     },
   });
 
+  // Directories never copied when cloning an existing site as a template.
+  const SITE_COPY_EXCLUDES = new Set([
+    '.next', 'node_modules', '.vercel', 'dist', 'out',
+    '.turbo', '.cache', '.git',
+  ]);
+  const SITE_COPY_EXCLUDE_FILES = new Set([
+    '.env', '.env.local', '.env.production', '.env.development',
+  ]);
+
+  function copySiteTree(src, dst) {
+    const fs = require('fs');
+    fs.mkdirSync(dst, { recursive: true });
+    for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+      if (entry.isDirectory() && SITE_COPY_EXCLUDES.has(entry.name)) continue;
+      if (entry.isFile() && SITE_COPY_EXCLUDE_FILES.has(entry.name)) continue;
+      if (entry.isFile() && entry.name.endsWith('.tsbuildinfo')) continue;
+      const s = path.join(src, entry.name);
+      const d = path.join(dst, entry.name);
+      if (entry.isDirectory()) copySiteTree(s, d);
+      else fs.copyFileSync(s, d);
+    }
+  }
+
   const siteNewCmd = defineCommand({
     meta: {
       name: 'new',
-      description: 'Bootstrap a new customer site from template',
+      description: 'Bootstrap a new customer site from template (default: vendor template; --template <existing-slug> clones a sites/<slug>)',
     },
     args: {
       slug: { type: 'positional', description: 'Slug for the new site (e.g. test-tenant)', required: true },
       name: { type: 'string', description: 'Site name. Defaults to slug.', default: '' },
+      template: { type: 'string', description: "Template source. Either 'customer-site' (default vendor template) or an existing site slug under sites/ (e.g. '7greens', 'grime-time').", default: 'customer-site' },
     },
     run({ args }) {
       const fs = require('fs');
       const { execSync } = require('child_process');
 
       const repoRoot = deps.findRepoRoot();
-      const templateDir = path.join(repoRoot, 'vendor/get-anything-done/templates/customer-site');
       const targetDir = path.join(repoRoot, 'sites', args.slug);
 
       if (fs.existsSync(targetDir)) {
@@ -126,23 +149,44 @@ function createSiteCommand(deps) {
         return;
       }
 
-      console.log(`[gad site new] bootstrapping sites/${args.slug} ...`);
+      // Resolve template source.
+      let templateDir;
+      let templateKind;
+      if (args.template === 'customer-site') {
+        templateDir = path.join(repoRoot, 'vendor/get-anything-done/templates/customer-site');
+        templateKind = 'vendor';
+      } else {
+        templateDir = path.join(repoRoot, 'sites', args.template);
+        templateKind = 'site-clone';
+        if (!fs.existsSync(templateDir)) {
+          outputError(`Template not found: --template ${args.template} resolves to ${templateDir}, which does not exist. Pass an existing slug under sites/ or 'customer-site'.`);
+          return;
+        }
+      }
+
+      console.log(`[gad site new] bootstrapping sites/${args.slug} from template '${args.template}' (${templateKind}) ...`);
 
       try {
         // 1. Copy template
-        fs.cpSync(templateDir, targetDir, { recursive: true });
+        if (templateKind === 'site-clone') {
+          copySiteTree(templateDir, targetDir);
+        } else {
+          fs.cpSync(templateDir, targetDir, { recursive: true });
+        }
 
-        // 2. Replace tokens
+        // 2. Replace tokens (vendor template only) + slug substitution (both kinds)
         const siteName = args.name || args.slug;
         const tenantId = `tenant-${args.slug}`;
+        const sourceSlug = args.template; // for site-clone substitutions
 
         function replaceInFile(filePath) {
           if (fs.statSync(filePath).isDirectory()) return;
-          // Skip binary files if any (very basic check)
           const ext = path.extname(filePath);
-          if (['.png', '.jpg', '.ico', '.pdf'].includes(ext)) return;
+          if (['.png', '.jpg', '.jpeg', '.ico', '.pdf', '.webp', '.gif', '.woff', '.woff2', '.ttf'].includes(ext)) return;
 
-          let content = fs.readFileSync(filePath, 'utf8');
+          let content;
+          try { content = fs.readFileSync(filePath, 'utf8'); }
+          catch { return; }
           let changed = false;
           if (content.includes('{{SITE_NAME}}')) {
             content = content.replace(/{{SITE_NAME}}/g, siteName);
@@ -152,20 +196,25 @@ function createSiteCommand(deps) {
             content = content.replace(/{{TENANT_ID}}/g, tenantId);
             changed = true;
           }
-          if (changed) {
-            fs.writeFileSync(filePath, content, 'utf8');
+          // Site-clone: rewrite source-slug occurrences in known-safe text files only.
+          if (templateKind === 'site-clone' && sourceSlug && sourceSlug !== args.slug) {
+            const safeExt = ['.md', '.json', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.toml', '.yml', '.yaml'];
+            if (safeExt.includes(ext)) {
+              const re = new RegExp(`\\b${sourceSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+              if (re.test(content)) {
+                content = content.replace(re, args.slug);
+                changed = true;
+              }
+            }
           }
+          if (changed) fs.writeFileSync(filePath, content, 'utf8');
         }
 
         function walk(dir) {
-          const files = fs.readdirSync(dir);
-          for (const file of files) {
+          for (const file of fs.readdirSync(dir)) {
             const fullPath = path.join(dir, file);
-            if (fs.statSync(fullPath).isDirectory()) {
-              walk(fullPath);
-            } else {
-              replaceInFile(fullPath);
-            }
+            if (fs.statSync(fullPath).isDirectory()) walk(fullPath);
+            else replaceInFile(fullPath);
           }
         }
 
@@ -175,18 +224,136 @@ function createSiteCommand(deps) {
         const pkgPath = path.join(targetDir, 'package.json');
         if (fs.existsSync(pkgPath)) {
           const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-          pkg.name = `@gad-sites/${args.slug}`;
-          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2), 'utf8');
+          pkg.name = templateKind === 'site-clone' ? args.slug : `@gad-sites/${args.slug}`;
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
         }
 
-        // 3. pnpm install
-        console.log(`[gad site new] running pnpm install ...`);
-        execSync('pnpm install', { cwd: repoRoot, stdio: 'inherit' });
+        // 3. pnpm install (skip on site-clone — assume root workspace install handles it)
+        if (templateKind === 'vendor') {
+          console.log(`[gad site new] running pnpm install ...`);
+          execSync('pnpm install', { cwd: repoRoot, stdio: 'inherit' });
+        }
 
+        const slugUpper = args.slug.replace(/-/g, '_').toUpperCase();
+        console.log('');
         console.log(`[gad site new] done! New site at sites/${args.slug}`);
+        console.log('');
+        console.log('Next steps:');
+        console.log(`  1. cd sites/${args.slug}`);
+        console.log(`  2. vercel link            # link to a new (or existing) Vercel project`);
+        console.log(`  3. cd ../.. && gad site link --slug ${args.slug} --domain <yourdomain.com>`);
+        console.log(`  4. Copy .github/workflows/${args.template === 'customer-site' ? '<template>' : args.template}-deploy.yml`);
+        console.log(`     → .github/workflows/${args.slug}-deploy.yml and update slug refs`);
+        console.log(`  5. Add VERCEL_PROJECT_ID_${slugUpper} to repo secrets`);
+        console.log(`  6. Commit + push — first push to main triggers the deploy workflow`);
       } catch (err) {
         outputError(`Failed to bootstrap site: ${err.message}`);
       }
+    },
+  });
+
+  const siteLinkCmd = defineCommand({
+    meta: {
+      name: 'link',
+      description: 'Attach a custom domain to a site\'s Vercel project. Uses VERCEL_TOKEN if set; otherwise prints the manual `vercel domains add` / `vercel alias set` commands.',
+    },
+    args: {
+      slug: { type: 'string', description: 'Site slug under sites/ (required)', required: true },
+      domain: { type: 'string', description: 'Custom domain to attach (e.g. example.com)', required: true },
+      redirect: { type: 'string', description: "Optional redirect target. 'www' redirects www.<domain> → apex; 'apex' redirects apex → www. Default: none.", default: '' },
+    },
+    run({ args }) {
+      const fs = require('fs');
+      const repoRoot = deps.findRepoRoot();
+      const siteDir = path.join(repoRoot, 'sites', args.slug);
+      const projectJsonPath = path.join(siteDir, '.vercel', 'project.json');
+
+      if (!fs.existsSync(siteDir)) {
+        outputError(`Site not found: sites/${args.slug}`);
+        return;
+      }
+
+      let projectId = '';
+      let orgId = '';
+      if (fs.existsSync(projectJsonPath)) {
+        try {
+          const pj = JSON.parse(fs.readFileSync(projectJsonPath, 'utf8'));
+          projectId = pj.projectId || '';
+          orgId = pj.orgId || '';
+        } catch {/* ignore */}
+      }
+
+      const token = process.env.VERCEL_TOKEN || '';
+      const apiBase = 'https://api.vercel.com';
+
+      if (!token) {
+        console.log(`[gad site link] VERCEL_TOKEN not set — printing manual commands.`);
+        console.log('');
+        console.log(`From sites/${args.slug}/:`);
+        console.log(`  vercel domains add ${args.domain}`);
+        console.log(`  vercel alias set ${args.domain}`);
+        if (args.redirect === 'www') {
+          console.log(`  vercel domains add www.${args.domain}`);
+          console.log(`  # then in dashboard: redirect www.${args.domain} → ${args.domain}`);
+        } else if (args.redirect === 'apex') {
+          console.log(`  vercel domains add www.${args.domain}`);
+          console.log(`  # then in dashboard: redirect ${args.domain} → www.${args.domain}`);
+        }
+        console.log('');
+        console.log('At your DNS registrar, add:');
+        console.log(`  A     @     76.76.21.21`);
+        console.log(`  CNAME www   cname.vercel-dns.com`);
+        console.log('');
+        console.log(`To enable one-call automation: gad env set VERCEL_TOKEN <token> --projectid global`);
+        return;
+      }
+
+      if (!projectId) {
+        outputError(`No Vercel project linked at sites/${args.slug}/.vercel/project.json. Run \`vercel link\` from sites/${args.slug}/ first.`);
+        return;
+      }
+
+      // Fire the Vercel API request.
+      console.log(`[gad site link] attaching ${args.domain} to project ${projectId} ...`);
+      const url = `${apiBase}/v10/projects/${projectId}/domains${orgId ? `?teamId=${orgId}` : ''}`;
+      const body = JSON.stringify({ name: args.domain });
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      };
+
+      // Use Node's built-in fetch (Node 18+).
+      (async () => {
+        try {
+          const res = await fetch(url, { method: 'POST', headers, body });
+          const txt = await res.text();
+          if (!res.ok) {
+            console.error(`[gad site link] Vercel API ${res.status}: ${txt}`);
+            console.error('');
+            console.error(`Falling back to manual commands. From sites/${args.slug}/:`);
+            console.error(`  vercel domains add ${args.domain}`);
+            console.error(`  vercel alias set ${args.domain}`);
+            process.exit(1);
+          }
+          let parsed = {};
+          try { parsed = JSON.parse(txt); } catch {/* ignore */}
+          console.log(`[gad site link] domain attached.`);
+          if (parsed.verification && Array.isArray(parsed.verification) && parsed.verification.length) {
+            console.log('');
+            console.log('DNS verification required — add at your registrar:');
+            for (const v of parsed.verification) {
+              console.log(`  ${v.type || '?'}  ${v.domain || args.domain}  ${v.value || ''}`);
+            }
+          } else {
+            console.log('');
+            console.log('At your DNS registrar, add:');
+            console.log(`  A     @     76.76.21.21`);
+            console.log(`  CNAME www   cname.vercel-dns.com`);
+          }
+        } catch (err) {
+          outputError(`Vercel API call failed: ${err.message}`);
+        }
+      })();
     },
   });
 
@@ -196,7 +363,7 @@ function createSiteCommand(deps) {
       description:
         'GAD planning / landing site (Next.js app under vendor/get-anything-done/site): compile static extract or serve it. Not preserved generation builds — use `gad play` or `gad generation open` for those.',
     },
-    subCommands: { compile: siteCompileCmd, serve: siteServeCmd, new: siteNewCmd },
+    subCommands: { compile: siteCompileCmd, serve: siteServeCmd, new: siteNewCmd, link: siteLinkCmd },
   });
 }
 
