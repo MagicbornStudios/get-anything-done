@@ -420,14 +420,122 @@ function createPhasesCommand(deps) {
     },
   });
 
+  function openHandoffPhasesByProject(baseDir, projectid) {
+    // Returns Set of phase ids (string) with at least one open or claimed handoff
+    // referencing the given project. Filename embeds phase, frontmatter authoritative.
+    const phases = new Set();
+    let listHandoffs;
+    try {
+      ({ listHandoffs } = require('../../lib/handoffs.cjs'));
+    } catch {
+      return phases;
+    }
+    for (const bucket of ['open', 'claimed']) {
+      let entries;
+      try { entries = listHandoffs({ baseDir, bucket, projectid }); } catch { entries = []; }
+      for (const entry of entries) {
+        const fm = entry.frontmatter || {};
+        const phaseId = fm.phase != null && fm.phase !== '' ? String(fm.phase) : null;
+        if (phaseId) phases.add(phaseId);
+      }
+    }
+    return phases;
+  }
+
+  const phasesSweepCmd = defineCommand({
+    meta: { name: 'sweep', description: 'Find phases where every task is done/cancelled and flag or auto-close them' },
+    args: {
+      projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+      phase: { type: 'string', description: 'Scope to a single phase id', default: '' },
+      'auto-close': { type: 'boolean', description: 'Close every phase the sweep finds closeable', default: false },
+      'dry-run': { type: 'boolean', description: 'Print closeable phases without mutating (default)', default: false },
+      json: { type: 'boolean', description: 'JSON output', default: false },
+    },
+    run({ args }) {
+      const baseDir = findRepoRoot();
+      const config = gadConfig.load(baseDir);
+      const roots = resolveRoots(args, baseDir, config.roots);
+      if (roots.length === 0) return;
+      const autoClose = Boolean(args['auto-close']);
+      const onlyPhase = args.phase ? String(args.phase) : '';
+      const useJson = args.json || shouldUseJson();
+      const closeable = [];
+      const blocked = [];
+      const closed = [];
+      const errors = [];
+
+      for (const root of roots) {
+        const tasks = readTasks(root, baseDir, {});
+        const phases = readPhases(root, baseDir);
+        const blockingHandoffPhases = openHandoffPhasesByProject(baseDir, root.id);
+        for (const phase of phases) {
+          const phaseId = String(phase.id);
+          if (onlyPhase && phaseId !== onlyPhase) continue;
+          if (phase.status === 'done' || phase.status === 'cancelled') continue;
+          const phaseTasks = tasks.filter((task) => String(task.phase) === phaseId);
+          const counts = phaseTaskCounts(phaseTasks);
+          const verdict = verdictFor(phase, counts);
+          if (verdict !== 'READY-TO-CLOSE') continue;
+          if (blockingHandoffPhases.has(phaseId)) {
+            blocked.push({ project: root.id, id: phaseId, title: phase.title, reason: 'open-handoff', done: counts.done, cancelled: counts.cancelled });
+            continue;
+          }
+          const row = { project: root.id, id: phaseId, title: phase.title, done: counts.done, cancelled: counts.cancelled, total: counts.total };
+          closeable.push(row);
+          if (autoClose) {
+            try {
+              setPhaseStatus(root, baseDir, phaseId, 'done');
+              appendStateLog(root, baseDir, `Closed phase ${phaseId} via gad phases sweep --auto-close - ${counts.done} done, ${counts.cancelled} cancelled.`, 'phases,sweep,close');
+              maybeRebuildGraph(baseDir, root);
+              closed.push(row);
+            } catch (e) {
+              errors.push({ project: root.id, id: phaseId, error: e.message });
+            }
+          }
+        }
+      }
+
+      if (useJson) {
+        console.log(JSON.stringify({ closeable, blocked, closed, errors, mode: autoClose ? 'auto-close' : 'dry-run' }, null, 2));
+        return;
+      }
+      const trimTitle = (s) => (s && s.length > 48 ? s.slice(0, 45) + '...' : (s || ''));
+      if (closeable.length === 0 && blocked.length === 0) {
+        console.log(onlyPhase
+          ? `Phase ${onlyPhase} is not closeable (status not planned, has open tasks, or already closed).`
+          : 'No closeable phases found.');
+        return;
+      }
+      if (closeable.length > 0) {
+        const rows = closeable.map((r) => ({ project: r.project, id: r.id, title: trimTitle(r.title), tasks: `${r.total}/${r.done}/${r.cancelled}`, action: autoClose ? (closed.find((c) => c.id === r.id && c.project === r.project) ? 'CLOSED' : 'FAILED') : 'WOULD-CLOSE' }));
+        console.log(render(rows, { format: 'table', title: `Closeable phases (${rows.length})`, headers: ['project', 'id', 'title', 'tasks', 'action'] }));
+        console.log('Tasks column: total/done/cancelled');
+      }
+      if (blocked.length > 0) {
+        const rows = blocked.map((r) => ({ project: r.project, id: r.id, title: trimTitle(r.title), reason: r.reason }));
+        console.log('');
+        console.log(render(rows, { format: 'table', title: `Blocked (open handoff) (${rows.length})`, headers: ['project', 'id', 'title', 'reason'] }));
+      }
+      if (errors.length > 0) {
+        console.log('');
+        console.log(render(errors, { format: 'table', title: `Errors (${errors.length})`, headers: ['project', 'id', 'error'] }));
+      }
+      if (!autoClose) {
+        console.log('');
+        console.log('Re-run with --auto-close to mark these phases done.');
+      }
+    },
+  });
+
   return defineCommand({
-    meta: { name: 'phases', description: 'Manage phases — list (default), add, audit, close, cancel' },
+    meta: { name: 'phases', description: 'Manage phases — list (default), add, audit, close, cancel, sweep' },
     subCommands: {
       list: phasesListCmd,
       add: phasesAddCmd,
       audit: phasesAuditCmd,
       close: phasesCloseCmd,
       cancel: phasesCancelCmd,
+      sweep: phasesSweepCmd,
     },
   });
 }
