@@ -275,6 +275,13 @@ function renderLevelSegmentCompact(snapshot) {
   if (!snapshot) return '';
   const { level, xpInLevel, xpToNext } = snapshot;
   if (!xpToNext) return ` \x1b[35mLV${level}\x1b[0m`;
+  const percent = Math.round((xpInLevel / xpToNext) * 100);
+  const nextLevel = level + 1;
+  return ` \x1b[35mLV${level} (${percent}% → ${nextLevel})\x1b[0m`;
+}
+  if (!snapshot) return '';
+  const { level, xpInLevel, xpToNext } = snapshot;
+  if (!xpToNext) return ` \x1b[35mLV${level}\x1b[0m`;
   const ratio = Math.max(0, Math.min(1, xpInLevel / xpToNext));
   const filled = Math.round(ratio * COMPACT_LEVEL_CELLS);
   const bar = '\u25B0'.repeat(filled) + '\u25B1'.repeat(COMPACT_LEVEL_CELLS - filled);
