@@ -6,7 +6,7 @@
  *   - .planning/.sessions/<id>/events.jsonl      (whiteboard)
  *   - .planning/.gad-log/*.jsonl                 (gad CLI log)
  *   - .planning/.trace-events.jsonl              (trace events)
- *   - .planning/team/workers/*/log.jsonl         (worker loop log)
+ *   - .planning/team/workers/<worker>/log.jsonl  (worker loop log)
  */
 
 const fs = require('fs');
@@ -14,8 +14,23 @@ const path = require('path');
 const { defineCommand } = require('citty');
 
 const SOURCE_STREAMS = ['whiteboard', 'gad-log', 'trace', 'worker-log'];
-const PHASE_TASK_RE = /\b([A-Z]+-T-\d+-\d+|\d+-\d+)\b/g;
+const CANONICAL_TASK_RE = /\b([A-Z]+-T-\d+-\d+)\b/;
+const SHORT_TASK_RE = /\b(\d+-\d+)\b/;
 const HANDOFF_RE = /\b(h-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-[a-z0-9-]+-\d+)\b/i;
+const TOKEN_VOLUME_BUCKETS = [
+  { key: 'lt-1k', label: '<1K', min: 0, maxExclusive: 1000 },
+  { key: '1k-10k', label: '1K-9.9K', min: 1000, maxExclusive: 10000 },
+  { key: '10k-50k', label: '10K-49.9K', min: 10000, maxExclusive: 50000 },
+  { key: '50k-200k', label: '50K-199.9K', min: 50000, maxExclusive: 200000 },
+  { key: 'ge-200k', label: '>=200K', min: 200000, maxExclusive: Number.POSITIVE_INFINITY },
+];
+const ESTIMATED_COST_BUCKETS = [
+  { key: 'lt-0.01', label: '<$0.01', min: 0, maxExclusive: 0.01 },
+  { key: '0.01-0.10', label: '$0.01-$0.09', min: 0.01, maxExclusive: 0.1 },
+  { key: '0.10-1.00', label: '$0.10-$0.99', min: 0.1, maxExclusive: 1 },
+  { key: '1.00-5.00', label: '$1.00-$4.99', min: 1, maxExclusive: 5 },
+  { key: 'ge-5.00', label: '>=$5.00', min: 5, maxExclusive: Number.POSITIVE_INFINITY },
+];
 
 function readJsonl(filePath) {
   try {
@@ -77,9 +92,25 @@ function extractHandoffId(text) {
 
 function extractTaskId(text, projectid) {
   if (!text) return null;
-  const matches = Array.from(String(text).matchAll(PHASE_TASK_RE));
-  if (matches.length === 0) return null;
-  return normalizeTaskId(matches[0][1], projectid);
+  const value = String(text);
+  const canonical = value.match(CANONICAL_TASK_RE);
+  if (canonical) return normalizeTaskId(canonical[1], projectid);
+
+  const explicitPatterns = [
+    /\btasks?\s+(?:show|claim|stamp|update|release|promote)\s+(\d+-\d+)\b/i,
+    /\btask[-_ ]id\s*[:= ]\s*(\d+-\d+)\b/i,
+    /\btask[-_ ]id\s*[:= ]\s*([A-Z]+-T-\d+-\d+)\b/i,
+  ];
+  for (const pattern of explicitPatterns) {
+    const match = value.match(pattern);
+    if (match) return normalizeTaskId(match[1], projectid);
+  }
+
+  const shortMatch = value.match(/\b(?:phase\s+\d+\s+task|task)\s+(\d+-\d+)\b/i);
+  if (shortMatch) return normalizeTaskId(shortMatch[1], projectid);
+  const plainShort = value.match(SHORT_TASK_RE);
+  if (plainShort && !value.includes('h-')) return normalizeTaskId(plainShort[1], projectid);
+  return null;
 }
 
 function inferRuntime(value) {
@@ -99,12 +130,114 @@ function normalizeTarget(value) {
   return text || null;
 }
 
+function normalizeNumeric(value) {
+  if (value == null || value === '') return null;
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
 function emptyTokens() {
   return {
     input: null,
     output: null,
     cache: { read: null, write: null },
   };
+}
+
+function extractTokensFromEntry(entry) {
+  const tokens = emptyTokens();
+  const nested = entry && typeof entry.tokens === 'object' ? entry.tokens : null;
+  const usage = entry && typeof entry.usage === 'object' ? entry.usage : null;
+
+  tokens.input = normalizeNumeric(
+    entry && entry.tokens_input != null ? entry.tokens_input
+      : entry && entry.input_tokens != null ? entry.input_tokens
+        : usage && usage.input_tokens != null ? usage.input_tokens
+          : usage && usage.prompt_tokens != null ? usage.prompt_tokens
+            : nested && nested.input != null ? nested.input
+              : null,
+  );
+  tokens.output = normalizeNumeric(
+    entry && entry.tokens_output != null ? entry.tokens_output
+      : entry && entry.output_tokens != null ? entry.output_tokens
+        : usage && usage.output_tokens != null ? usage.output_tokens
+          : usage && usage.completion_tokens != null ? usage.completion_tokens
+            : nested && nested.output != null ? nested.output
+              : null,
+  );
+  tokens.cache.read = normalizeNumeric(
+    entry && entry.tokens_cache_read != null ? entry.tokens_cache_read
+      : usage && usage.cache_read_tokens != null ? usage.cache_read_tokens
+        : usage && usage.input_cached_tokens != null ? usage.input_cached_tokens
+          : nested && nested.cache && nested.cache.read != null ? nested.cache.read
+            : null,
+  );
+  tokens.cache.write = normalizeNumeric(
+    entry && entry.tokens_cache_write != null ? entry.tokens_cache_write
+      : usage && usage.cache_write_tokens != null ? usage.cache_write_tokens
+        : nested && nested.cache && nested.cache.write != null ? nested.cache.write
+          : null,
+  );
+  return tokens;
+}
+
+function hasReportedTokens(tokens) {
+  if (!tokens) return false;
+  return [tokens.input, tokens.output, tokens.cache && tokens.cache.read, tokens.cache && tokens.cache.write]
+    .some((value) => Number.isFinite(value));
+}
+
+function totalKnownTokens(tokens) {
+  if (!hasReportedTokens(tokens)) return null;
+  return [tokens.input, tokens.output, tokens.cache && tokens.cache.read, tokens.cache && tokens.cache.write]
+    .reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0);
+}
+
+function loadPricingSnapshot(baseDir) {
+  const filePath = path.join(baseDir, '.planning', 'model-pricing-snapshot.json');
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function buildPricingIndex(snapshot) {
+  const index = new Map();
+  if (!snapshot || typeof snapshot !== 'object' || !snapshot.providers) return index;
+  for (const [provider, providerConfig] of Object.entries(snapshot.providers)) {
+    const models = Array.isArray(providerConfig && providerConfig.models) ? providerConfig.models : [];
+    for (const model of models) {
+      if (!model || !model.id) continue;
+      index.set(String(model.id).toLowerCase(), {
+        provider,
+        id: model.id,
+        input_per_m: normalizeNumeric(model.input_per_m),
+        output_per_m: normalizeNumeric(model.output_per_m),
+      });
+    }
+  }
+  return index;
+}
+
+function bucketCounts(definitions) {
+  return definitions.map((bucket) => ({ ...bucket, count: 0 }));
+}
+
+function placeInBucket(buckets, value) {
+  const bucket = buckets.find((candidate) => value >= candidate.min && value < candidate.maxExclusive);
+  if (bucket) bucket.count += 1;
+}
+
+function estimateUsd(tokens, pricing) {
+  if (!pricing || !tokens) return null;
+  const inputCost = Number.isFinite(tokens.input) && Number.isFinite(pricing.input_per_m)
+    ? (tokens.input / 1000000) * pricing.input_per_m
+    : 0;
+  const outputCost = Number.isFinite(tokens.output) && Number.isFinite(pricing.output_per_m)
+    ? (tokens.output / 1000000) * pricing.output_per_m
+    : 0;
+  return inputCost + outputCost;
 }
 
 function parseFrontmatterMd(filePath) {
@@ -221,7 +354,7 @@ function parseSessionRecords(filePath, handoffIndex) {
       duration_ms: Number.isFinite(entry.duration_ms) ? entry.duration_ms : null,
       success: typeof entry.ok === 'boolean' ? entry.ok : null,
       source_stream: 'whiteboard',
-      tokens: emptyTokens(),
+      tokens: extractTokensFromEntry(entry),
       task_id: taskId,
       handoff_id: handoffId,
       artifact_lineage: stepMeta.artifacts.slice(),
@@ -255,7 +388,7 @@ function parseGadLogRecords(filePath, handoffIndex) {
         ? entry.success
         : (typeof entry.exit === 'number' ? entry.exit === 0 : null),
       source_stream: 'gad-log',
-      tokens: emptyTokens(),
+      tokens: extractTokensFromEntry(entry),
       task_id: taskId,
       handoff_id: handoffId,
       artifact_lineage: [],
@@ -291,7 +424,7 @@ function parseTraceRecords(filePath, handoffIndex) {
       duration_ms: Number.isFinite(entry.duration_ms) ? entry.duration_ms : null,
       success: typeof entry.success === 'boolean' ? entry.success : null,
       source_stream: 'trace',
-      tokens: emptyTokens(),
+      tokens: extractTokensFromEntry(entry),
       task_id: taskId,
       handoff_id: handoffId,
       artifact_lineage: [],
@@ -333,7 +466,7 @@ function parseWorkerRecords(filePath, handoffIndex) {
       duration_ms: Number.isFinite(entry.duration_ms) ? entry.duration_ms : null,
       success,
       source_stream: 'worker-log',
-      tokens: emptyTokens(),
+      tokens: extractTokensFromEntry(entry),
       task_id: indexed ? indexed.task_id : null,
       handoff_id: handoffId,
       artifact_lineage: [],
@@ -441,7 +574,87 @@ function applyFilters(records, filters) {
   });
 }
 
-function summarizeRecords(records, filters) {
+function buildHistogramSummary(records, pricingSnapshot) {
+  const pricingIndex = buildPricingIndex(pricingSnapshot);
+  const tokenBuckets = bucketCounts(TOKEN_VOLUME_BUCKETS);
+  const costBuckets = bucketCounts(ESTIMATED_COST_BUCKETS);
+  const modelsSeen = new Set();
+  const modelsPriced = new Set();
+  const modelsMissingPricing = new Set();
+  let recordsWithReportedTokens = 0;
+  let recordsMissingTokenUsage = 0;
+  let recordsMissingPricing = 0;
+  let totalKnownTokensAcrossRecords = 0;
+  let totalEstimatedUsd = 0;
+  const estimatedCalls = [];
+
+  for (const record of records) {
+    if (!hasReportedTokens(record.tokens)) {
+      recordsMissingTokenUsage += 1;
+      continue;
+    }
+
+    recordsWithReportedTokens += 1;
+    const totalTokens = totalKnownTokens(record.tokens);
+    if (Number.isFinite(totalTokens)) {
+      totalKnownTokensAcrossRecords += totalTokens;
+      placeInBucket(tokenBuckets, totalTokens);
+    }
+
+    const normalizedModel = record.model ? String(record.model).toLowerCase() : '';
+    if (!normalizedModel) {
+      recordsMissingPricing += 1;
+      continue;
+    }
+    modelsSeen.add(normalizedModel);
+
+    const pricing = pricingIndex.get(normalizedModel);
+    if (!pricing) {
+      recordsMissingPricing += 1;
+      modelsMissingPricing.add(normalizedModel);
+      continue;
+    }
+    modelsPriced.add(normalizedModel);
+
+    const estimatedUsd = estimateUsd(record.tokens, pricing);
+    totalEstimatedUsd += estimatedUsd;
+    placeInBucket(costBuckets, estimatedUsd);
+    estimatedCalls.push({
+      ts: record.ts,
+      runtime: record.runtime,
+      model: record.model,
+      source_stream: record.source_stream,
+      estimated_usd: Math.round(estimatedUsd * 1000000) / 1000000,
+      total_tokens: totalTokens,
+      task_id: record.task_id,
+      handoff_id: record.handoff_id,
+    });
+  }
+
+  estimatedCalls.sort((a, b) => b.estimated_usd - a.estimated_usd);
+  return {
+    snapshotGeneratedAt: pricingSnapshot && pricingSnapshot.generated_at ? pricingSnapshot.generated_at : null,
+    dependencyNote: 'Phase 106 consumes these local histograms to build budget baselines and claim-time cost prediction.',
+    tokenVolumeBuckets: tokenBuckets,
+    estimatedUsdBuckets: costBuckets,
+    recordsWithReportedTokens,
+    recordsMissingTokenUsage,
+    recordsMissingPricing,
+    totalKnownTokensAcrossRecords,
+    totalEstimatedUsd: Math.round(totalEstimatedUsd * 1000000) / 1000000,
+    modelsSeen: Array.from(modelsSeen).sort(),
+    pricedModels: Array.from(modelsPriced).sort(),
+    missingPricingModels: Array.from(modelsMissingPricing).sort(),
+    topEstimatedCalls: estimatedCalls.slice(0, 10),
+    fallbackPolicy: {
+      missingTokenUsage: 'Records with duration/success but no token fields remain unestimated and are counted separately.',
+      missingPricing: 'Records with token usage but no matching model in .planning/model-pricing-snapshot.json remain unestimated and are counted separately.',
+      tokenSynthesis: 'Token values are never synthesized from duration or success signals.',
+    },
+  };
+}
+
+function summarizeRecords(records, filters, options = {}) {
   const totalCalls = records.length;
   const successCount = records.filter((record) => record.success === true).length;
   const failureCount = records.filter((record) => record.success === false).length;
@@ -485,6 +698,7 @@ function summarizeRecords(records, filters) {
     missing_runtime: records.filter((record) => !record.runtime).length,
     missing_duration_ms: records.filter((record) => !Number.isFinite(record.duration_ms)).length,
   };
+  const histograms = buildHistogramSummary(records, options.pricingSnapshot || null);
 
   return {
     filters,
@@ -499,6 +713,7 @@ function summarizeRecords(records, filters) {
     attributionCoverage,
     perSource,
     coverageGaps,
+    histograms,
   };
 }
 
@@ -523,6 +738,20 @@ function printHumanSummary(summary) {
   }
   console.log(`Missing lineage:      project=${summary.coverageGaps.missing_projectid}, task=${summary.coverageGaps.missing_task_id}, handoff=${summary.coverageGaps.missing_handoff_id}`);
   console.log(`Missing runtime/dur:  runtime=${summary.coverageGaps.missing_runtime}, duration=${summary.coverageGaps.missing_duration_ms}`);
+  console.log(`Token usage reported: ${summary.histograms.recordsWithReportedTokens}`);
+  console.log(`Missing token usage:  ${summary.histograms.recordsMissingTokenUsage}`);
+  console.log(`Missing pricing:      ${summary.histograms.recordsMissingPricing}`);
+  console.log(`Estimated USD total:  $${summary.histograms.totalEstimatedUsd.toFixed(6)}`);
+  console.log(`Phase 106 link:       ${summary.histograms.dependencyNote}`);
+  console.log('');
+  console.log('Token-volume buckets:');
+  summary.histograms.tokenVolumeBuckets.forEach((bucket) => {
+    console.log(`  ${bucket.label.padEnd(11)} ${bucket.count}`);
+  });
+  console.log('Estimated-cost buckets:');
+  summary.histograms.estimatedUsdBuckets.forEach((bucket) => {
+    console.log(`  ${bucket.label.padEnd(11)} ${bucket.count}`);
+  });
   if (summary.slowestCalls.length > 0) {
     console.log('\nSlowest calls:');
     summary.slowestCalls.forEach((record, index) => {
@@ -566,7 +795,7 @@ function createTelemetryCommand(deps) {
       };
 
       const records = applyFilters(collectTelemetryRecords(baseDir), filters);
-      const summary = summarizeRecords(records, filters);
+      const summary = summarizeRecords(records, filters, { pricingSnapshot: loadPricingSnapshot(baseDir) });
       if (args.json) {
         console.log(JSON.stringify(summary, null, 2));
       } else {
@@ -575,10 +804,59 @@ function createTelemetryCommand(deps) {
     },
   });
 
+  const exportCmd = defineCommand({
+    meta: {
+      name: 'export',
+      description: 'Export unified telemetry envelopes (phase 145) for SLM training. Walks all 4 source adapters, dedups by envelope id, writes events.jsonl + MANIFEST.json (with sha256).',
+    },
+    args: {
+      to: { type: 'string', description: 'Output directory (created if missing)', required: true },
+      since: { type: 'string', description: 'ISO timestamp (e.g. 2026-05-01T00:00:00Z); rows older are skipped' },
+      format: { type: 'string', description: 'jsonl | parquet | duckdb (default jsonl). parquet/duckdb fall back to jsonl until T-145-05.' },
+      projectid: { type: 'string', description: 'Reserved — adapter-side project filtering ships in v2' },
+      adapters: { type: 'string', description: 'Comma-separated adapter subset: gad-log,trace-events,worker-log,prompt-files. Default: all.' },
+      'root-dir': { type: 'string', description: 'Monorepo root (defaults to cwd ascended to nearest .planning/)' },
+      json: { type: 'boolean', description: 'Output result summary as JSON' },
+    },
+    run: async ({ args }) => {
+      const { runExport } = require('../../lib/telemetry/export.cjs');
+      const rootDir = args['root-dir'] || (function findRoot() {
+        let d = process.cwd();
+        while (d !== path.dirname(d)) {
+          if (fs.existsSync(path.join(d, '.planning'))) return d;
+          d = path.dirname(d);
+        }
+        return process.cwd();
+      })();
+      const adapters = args.adapters ? args.adapters.split(',').map((s) => s.trim()).filter(Boolean) : null;
+      const result = await runExport({
+        rootDir,
+        outDir: args.to,
+        since: args.since || null,
+        format: args.format || 'jsonl',
+        adapters,
+      });
+      if (args.json) {
+        console.log(JSON.stringify(result, null, 2));
+      } else {
+        console.log('Telemetry export complete');
+        console.log(`  rootDir:    ${result.rootDir}`);
+        console.log(`  outDir:     ${result.outDir}`);
+        console.log(`  data:       ${result.dataPath}`);
+        console.log(`  manifest:   ${result.manifestPath}`);
+        console.log(`  rows:       ${result.rowCount}`);
+        console.log(`  by role:    ${Object.entries(result.roleHistogram).map(([k, v]) => `${k}=${v}`).join('  ')}`);
+        console.log(`  schema_v:   ${result.manifest.schema_v}`);
+        console.log(`  sha256:     ${result.manifest.data_sha256}`);
+      }
+    },
+  });
+
   return defineCommand({
-    meta: { name: 'telemetry', description: 'Read-only telemetry summary across sessions, calls, tasks, and handoffs.' },
+    meta: { name: 'telemetry', description: 'Telemetry: summary (read-only) + export (phase 145 SLM training pipeline).' },
     subCommands: {
       summary: summaryCmd,
+      export: exportCmd,
     },
   });
 }
@@ -589,6 +867,11 @@ module.exports._private = {
   collectTelemetryRecords,
   applyFilters,
   summarizeRecords,
+  buildHistogramSummary,
+  loadPricingSnapshot,
+  extractTokensFromEntry,
+  hasReportedTokens,
+  totalKnownTokens,
   buildHandoffIndex,
   normalizeTaskId,
   derivePhase,
