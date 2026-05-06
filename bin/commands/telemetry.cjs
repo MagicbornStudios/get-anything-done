@@ -817,6 +817,7 @@ function createTelemetryCommand(deps) {
       adapters: { type: 'string', description: 'Comma-separated adapter subset: gad-log,trace-events,worker-log,prompt-files. Default: all.' },
       'root-dir': { type: 'string', description: 'Monorepo root (defaults to cwd ascended to nearest .planning/)' },
       json: { type: 'boolean', description: 'Output result summary as JSON' },
+      'no-redact': { type: 'boolean', description: 'Disable secret redaction (DEFAULT: redact ON for safety per phase 145.5-06).' },
     },
     run: async ({ args }) => {
       const { runExport } = require('../../lib/telemetry/export.cjs');
@@ -835,6 +836,7 @@ function createTelemetryCommand(deps) {
         since: args.since || null,
         format: args.format || 'jsonl',
         adapters,
+        redact: !args['no-redact'],
       });
       if (args.json) {
         console.log(JSON.stringify(result, null, 2));
@@ -846,6 +848,9 @@ function createTelemetryCommand(deps) {
         console.log(`  manifest:   ${result.manifestPath}`);
         console.log(`  rows:       ${result.rowCount}`);
         console.log(`  by role:    ${Object.entries(result.roleHistogram).map(([k, v]) => `${k}=${v}`).join('  ')}`);
+        if (result.contentTypeHistogram) {
+          console.log(`  by ctype:   ${Object.entries(result.contentTypeHistogram).map(([k, v]) => `${k}=${v}`).join('  ')}`);
+        }
         console.log(`  schema_v:   ${result.manifest.schema_v}`);
         console.log(`  sha256:     ${result.manifest.data_sha256}`);
       }
