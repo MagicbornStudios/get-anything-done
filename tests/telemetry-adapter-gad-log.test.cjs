@@ -136,6 +136,20 @@ test('skips unparseable lines, logs to stderr, continues', async () => {
   }
 });
 
+test('populates content_type (defaults to meta for CLI traffic)', async () => {
+  const root = tmpRoot();
+  writeFixture(root, '2026-04-09.jsonl', [
+    { ts: '2026-04-09T00:08:05.918Z', cmd: 'snapshot --projectid global', args: ['snapshot', '--projectid', 'global'], duration_ms: 1, exit: 0, summary: '', pid: 1 },
+    { ts: '2026-04-09T00:08:06.000Z', cmd: 'tasks add', args: ['tasks', 'add', '--projectid', 'global', '--phase', '145', 'sites/operator-portfolio/page.tsx'], duration_ms: 1, exit: 0, summary: '', pid: 1 },
+  ]);
+  const envs = await collect(root);
+  assert.equal(envs.length, 2);
+  // Plain CLI call with no path-like arg → meta
+  assert.equal(envs[0].content_type, 'meta');
+  // Args contains a path-like sites/ token → site
+  assert.equal(envs[1].content_type, 'site');
+});
+
 test('seq is per-file line number', async () => {
   const root = tmpRoot();
   writeFixture(root, '2026-04-09.jsonl', [
@@ -145,4 +159,111 @@ test('seq is per-file line number', async () => {
   const envs = await collect(root);
   assert.equal(envs[0].seq, 1);
   assert.equal(envs[1].seq, 2);
+});
+
+// Phase 145.5-05: glob extension picks up <date>-skill-loads.jsonl and
+// <date>-routing.jsonl alongside the default <date>.jsonl. Verifies the
+// new content.kind discriminator and that routing rows preserve every
+// field verbatim (they're GOLD signal).
+
+test('picks up <date>-skill-loads.jsonl with content.kind=skill_load', async () => {
+  const root = tmpRoot();
+  writeFixture(root, '2026-05-05-skill-loads.jsonl', [
+    {
+      ts: '2026-05-05T19:53:24.187Z',
+      runtime: 'claude-code',
+      worker: null,
+      handoff_id: 'h-2026-05-05T15-02-57-global-107',
+      slug: 'create-proto-skill',
+      projectid: 'global',
+      match_reason: 'name-match:create,proto,create; desc-match:proto,evolution,planning',
+      source: 'claude-skill',
+      score: 28,
+    },
+    {
+      ts: '2026-05-05T19:53:24.190Z',
+      runtime: 'claude-code',
+      worker: 'w3',
+      handoff_id: 'h-2026-05-05T15-02-57-global-107',
+      slug: 'gad-evolution-evolve',
+      projectid: 'magicborn',
+      match_reason: 'name-match:evolution,evolve',
+      source: 'claude-skill',
+      score: 28,
+    },
+  ]);
+
+  const envs = await collect(root);
+  assert.equal(envs.length, 2);
+  for (const env of envs) {
+    assert.equal(validateEnvelope(env).ok, true);
+    assert.equal(env.content.kind, 'skill_load');
+    assert.equal(env.role, 'meta');
+    assert.equal(env.runtime, 'gad-cli');
+    assert.equal(env.content.source, 'claude-skill');
+  }
+  // projectid honoured per row
+  assert.equal(envs[0].project, 'global');
+  assert.equal(envs[1].project, 'magicborn');
+  // worker carries through to content
+  assert.equal(envs[1].content.worker, 'w3');
+  assert.equal(envs[0].content.slug, 'create-proto-skill');
+});
+
+test('picks up <date>-routing.jsonl with content.kind=routing_decision (GOLD: every field preserved)', async () => {
+  const root = tmpRoot();
+  writeFixture(root, '2026-05-06-routing.jsonl', [
+    {
+      ts: '2026-05-06T16:15:36.650Z',
+      task: 'h-2026-05-06T16-15-36-global-152',
+      task_shape: 'planning',
+      chosen_runtime: 'opencode',
+      chosen_agent: 'team-w3',
+      chosen_model: 'default',
+      reason: ['handoff-claim', 'runtime_pref=opencode', 'priority=normal', 'ctx=bounded'],
+      outcome: 'pending',
+      cost_estimate: 0,
+      latency_ms: -1,
+      project_id: 'global',
+      session_id: '',
+    },
+  ]);
+
+  const envs = await collect(root);
+  assert.equal(envs.length, 1);
+  const env = envs[0];
+  assert.equal(validateEnvelope(env).ok, true);
+  assert.equal(env.content.kind, 'routing_decision');
+  assert.equal(env.role, 'meta');
+  assert.equal(env.runtime, 'gad-cli');
+  // project_id → envelope.project
+  assert.equal(env.project, 'global');
+  // every routing field preserved verbatim on content
+  assert.equal(env.content.task_shape, 'planning');
+  assert.equal(env.content.chosen_runtime, 'opencode');
+  assert.equal(env.content.chosen_agent, 'team-w3');
+  assert.equal(env.content.chosen_model, 'default');
+  assert.deepEqual(env.content.reason, ['handoff-claim', 'runtime_pref=opencode', 'priority=normal', 'ctx=bounded']);
+  assert.equal(env.content.outcome, 'pending');
+  assert.equal(env.content.cost_estimate, 0);
+  assert.equal(env.content.latency_ms, -1);
+  assert.equal(env.content.project_id, 'global');
+});
+
+test('all three file kinds coexist in one .gad-log/ dir', async () => {
+  const root = tmpRoot();
+  writeFixture(root, '2026-05-06.jsonl', [
+    { ts: '2026-05-06T00:00:00.000Z', cmd: 'snapshot', args: ['snapshot'], duration_ms: 1, exit: 0, summary: '', pid: 1 },
+  ]);
+  writeFixture(root, '2026-05-06-skill-loads.jsonl', [
+    { ts: '2026-05-06T00:00:01.000Z', runtime: 'claude-code', slug: 's', projectid: 'global', match_reason: '', source: 'x', score: 1 },
+  ]);
+  writeFixture(root, '2026-05-06-routing.jsonl', [
+    { ts: '2026-05-06T00:00:02.000Z', task: 't', task_shape: 'p', chosen_runtime: 'codex-cli', chosen_agent: 'a', chosen_model: 'm', reason: [], outcome: 'pending', cost_estimate: 0, latency_ms: 0, project_id: 'global', session_id: '' },
+  ]);
+
+  const envs = await collect(root);
+  assert.equal(envs.length, 3);
+  const kinds = envs.map((e) => e.content.kind).sort();
+  assert.deepEqual(kinds, ['gad_cli_call', 'routing_decision', 'skill_load']);
 });
