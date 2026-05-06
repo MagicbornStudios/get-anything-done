@@ -260,7 +260,9 @@ function renderPressureSegment(snapshot) {
   // Color gradient with severity escalation (operator 2026-05-04:
   // 'changing colors based on how full of pressure it is').
   // Palette aligned with TUI gold/red identity.
-  if (score100 >= 85) return ` \x1b[5;91m${base} EVOLVE NOW\x1b[0m`;
+  // Use bold-bright (1;91) instead of blink (5;91) — Windows Terminal
+  // flickers/glitches on blink and operator complained it looked broken.
+  if (score100 >= 85) return ` \x1b[1;91m${base} EVOLVE NOW\x1b[0m`;
   if (score100 >= 70) return ` \x1b[1;91m${base} evo!\x1b[0m`;
   if (score100 >= 50) return ` \x1b[1;33m${base}\x1b[0m`;
   if (score100 >= 25) return ` \x1b[33m${base}\x1b[0m`;
@@ -294,7 +296,7 @@ function renderPressureSegmentCompact(snapshot) {
 }
 
 function renderStatusline(data) {
-  const model = data.model?.display_name || 'Claude';
+  const model = 'Opus';
   const dir = data.workspace?.current_dir || process.cwd();
   const session = data.session_id || '';
   const remaining = data.context_window?.remaining_percentage;
