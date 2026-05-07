@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
+  <dispatcher last_heartbeat="" pid="" projectid="" state="DEAD"/>
   <current-phase>42.4</current-phase>
   <current-plan></current-plan>
   <milestone>gad-v1.1</milestone>
@@ -46,9 +47,15 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-04-23T13:13:40.725Z</last-updated>
+  <last-updated>2026-05-05T23:45:24.409Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="unknown" at="2026-05-05T20:12:49.982Z" tags="phases,sweep,close">Closed phase 74 via gad phases sweep --auto-close - 3 done, 0 cancelled.</entry>
+    <entry agent="unknown" at="2026-05-05T20:12:49.683Z" tags="phases,sweep,close">Closed phase 73 via gad phases sweep --auto-close - 1 done, 0 cancelled.</entry>
+    <entry agent="unknown" at="2026-05-05T20:12:49.339Z" tags="phases,sweep,close">Closed phase 57 via gad phases sweep --auto-close - 1 done, 0 cancelled.</entry>
+    <entry agent="unknown" at="2026-05-05T20:12:48.990Z" tags="phases,sweep,close">Closed phase 44.5 via gad phases sweep --auto-close - 24 done, 0 cancelled.</entry>
+    <entry agent="team-w3" at="2026-05-05T18:25:29.992Z" tags="106">Phase 106 PLAN.md drafted with 6 tasks (106-01 through 106-06) — token-parse, pricing snapshot, budget aggregation, rate-limit prediction, CLI surfaces, entropy pressure dimension</entry>
+    <entry agent="unknown" at="2026-05-05T17:02:06.211Z" tags="dispatcher,auto-restart">dispatcher auto-restarted (no-heartbeat)</entry>
     <entry agent="team-w3" at="2026-05-04T18:51:33.037Z" tags="global-87,anti-fraud,stamp-guardrail,codex-fabricated-resolution">Closed h-2026-05-04T05-03-38-global-87 — anti-fraud guardrail for gad tasks stamp shipped.  now requires --commit-sha &lt;SHA&gt; or --evidence &lt;text&gt; for non-human agents (warn mode default, enforce mode via config.tasks.require_evidence_on_stamp=true or --enforce flag). Tests pass (4/4). ERRORS entry codex-fabricated-resolution-05-40-2026-04-23 updated with safeguard details. Vendor commit 12df9ab0 + submodule pointer updated.</entry>
     <entry agent="team-w3" at="2026-05-04T18:42:55.324Z" tags="57-01">Closed h-2026-05-04T18-33-24-global-57 — phase 57 salvage committed (eec08a9c + parent 81872d26). All 37 tests passing. Task 57-01 stamped done.</entry>
     <entry agent="team-w3" at="2026-05-04T18:43:00.000Z" tags="global-87,anti-fraud,stamp-guardrail,codex-fabricated-resolution">Closed h-2026-05-04T05-03-38-global-87 — anti-fraud guardrail for gad tasks stamp shipped. `gad tasks stamp &lt;id&gt; --status done` now requires --commit-sha &lt;SHA&gt; or --evidence &lt;text&gt; for non-human agents. Warn mode (default) + enforce mode (config.tasks.require_evidence_on_stamp=true or --enforce). Tests pass (4/4). ERRORS entry codex-fabricated-resolution-05-40-2026-04-23 added with safeguard details.</entry>

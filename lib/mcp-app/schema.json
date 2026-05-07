@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://magicbornstudios.com/gad/mcp-app/schema/v1",
+  "title": "GAD MCP App Manifest",
+  "description": "Tray-app manifest declaring a project's MCP-navigable components, intent-capture forms, and agent-issues routing.",
+  "type": "object",
+  "required": ["project", "version", "components"],
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Must match a [[planning.roots]] id in gad-config.toml"
+    },
+    "version": {
+      "type": "integer",
+      "enum": [1],
+      "description": "Schema version. Currently must be 1."
+    },
+    "components": {
+      "type": "array",
+      "description": "MCP-navigable UI components. Can be empty.",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "intent", "route", "surface"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$",
+            "description": "Kebab-case, unique within this manifest"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-facing display name"
+          },
+          "intent": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One-line description of when to launch this component"
+          },
+          "route": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "App route with leading slash (e.g. /admin/training-loop)"
+          },
+          "surface": {
+            "type": "string",
+            "enum": ["transient", "popup", "sidebar", "inline"],
+            "description": "How this component is displayed"
+          },
+          "args": {
+            "type": "array",
+            "description": "Optional launch arguments",
+            "default": [],
+            "items": {
+              "type": "object",
+              "required": ["name", "type"],
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["string", "number", "boolean"]
+                },
+                "required": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            }
+          },
+          "capabilities": {
+            "type": "array",
+            "description": "Optional capability flags",
+            "default": [],
+            "items": {
+              "type": "string",
+              "enum": ["read", "write", "long-running", "file-export", "needs-confirmation"]
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Free-form tags for fuzzy search",
+            "default": [],
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "intent_capture": {
+      "type": "array",
+      "description": "Intent-capture form definitions. Optional.",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["id", "trigger_kinds", "form_route", "surface"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trigger_kinds": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "form_route": {
+            "type": "string",
+            "pattern": "^/",
+            "description": "Route with leading slash"
+          },
+          "surface": {
+            "type": "string",
+            "enum": ["transient", "popup", "sidebar", "inline"]
+          }
+        }
+      }
+    },
+    "agent_issues": {
+      "type": "object",
+      "description": "Agent-issues intake routing. Optional.",
+      "additionalProperties": false,
+      "properties": {
+        "intake_route": {
+          "type": "string",
+          "pattern": "^/",
+          "description": "Route for the agent-issues intake form"
+        },
+        "ledger_path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative path to the JSONL ledger (e.g. .planning/agent-issues.jsonl)"
+        }
+      }
+    }
+  }
+}
