@@ -1,7 +1,7 @@
 'use strict';
 
 const { defineCommand } = require('citty');
-const { createInstallHooksCommand, createUninstallHooksCommand } = require('./install/hooks.cjs');
+const { createInstallHooksCommand, createUninstallHooksCommand, createSyncHookFilesCommand } = require('./install/hooks.cjs');
 const { createInstallAllCommand, runInstallDelegation } = require('./install/all.cjs');
 const { createInstallSelfCommand } = require('./install/self.cjs');
 
@@ -28,12 +28,13 @@ function createInstallCommands() {
   const hooks = createInstallHooksCommand({ defineCommand });
   const all = createInstallAllCommand({ defineCommand });
   const self = createInstallSelfCommand({ defineCommand });
+  const syncHookFiles = createSyncHookFilesCommand({ defineCommand });
   const uninstallHooks = createUninstallHooksCommand({ defineCommand });
 
   const install = defineCommand({
     meta: { name: 'install', description: 'Install GAD into an agent runtime (hooks, framework, or full install)' },
     args: INSTALL_FLAG_ARGS,
-    subCommands: { hooks, all, self },
+    subCommands: { hooks, all, self, 'sync-hook-files': syncHookFiles },
     run: ({ args }) => runInstallDelegation(args),
   });
 

@@ -17,10 +17,12 @@ const path = require('node:path');
 const { defineCommand } = require('citty');
 
 const { buildProvenance } = require('../../lib/provenance/join.cjs');
+const { buildWorkerProvenance } = require('../../lib/provenance/worker-join.cjs');
 const { annotateSurvival } = require('../../lib/provenance/survival.cjs');
 const { annotateFrequency } = require('../../lib/provenance/frequency.cjs');
 const { annotateLabels } = require('../../lib/provenance/label.cjs');
 const { exportCorpus } = require('../../lib/provenance/export.cjs');
+const { startWatching } = require('../../lib/provenance/watch.cjs');
 const { provenanceDir, readJsonl, parseDateRange } = require('../../lib/provenance/index.cjs');
 
 function resolveProjectInfo(deps) {
@@ -76,7 +78,14 @@ function createProvenanceCommand(deps) {
           since: args.since || undefined,
           until: args.until || undefined,
         });
-        console.log(`  joiner: scanned ${joinResult.events_total} events, kept ${joinResult.events_kept}, wrote ${joinResult.files_written} per-day files`);
+        console.log(`  claude-joiner: scanned ${joinResult.events_total} events, kept ${joinResult.events_kept}, wrote ${joinResult.files_written} per-day files`);
+
+        const workerResult = buildWorkerProvenance({
+          planningDir,
+          since: args.since || undefined,
+          until: args.until || undefined,
+        });
+        console.log(`  worker-joiner: scanned ${workerResult.workers_scanned} workers, kept ${workerResult.events_kept} chunks, appended to ${workerResult.files_written} per-day files`);
 
         let survivalResult = null;
         if (!args['skip-survival']) {
@@ -338,6 +347,59 @@ function createProvenanceCommand(deps) {
     },
   });
 
+  const watchCmd = defineCommand({
+    meta: {
+      name: 'watch',
+      description: 'Reactive file watcher daemon — captures every file change under a planning root, even ones that bypass agent tool calls. Long-running. Ctrl-C to stop.',
+    },
+    args: {
+      projectid: { type: 'string', description: 'Scope to one project root', default: '' },
+      'debounce-ms': { type: 'string', description: 'Coalesce burst edits within N ms', default: '500' },
+      verbose: { type: 'boolean', description: 'Log every event as it lands', default: false },
+    },
+    run({ args }) {
+      const { baseDir, projects } = resolveProjectInfo(deps);
+      const targets = args.projectid
+        ? projects.filter((p) => p.projectId === args.projectid)
+        : projects;
+      if (targets.length === 0) {
+        deps.outputError('No matching projects.');
+        process.exit(1);
+        return;
+      }
+      const debounceMs = parseInt(args['debounce-ms'], 10) || 500;
+      const handles = [];
+
+      for (const project of targets) {
+        const planningDir = path.join(project.rootPath, project.planningDir);
+        if (!fs.existsSync(planningDir)) continue;
+        console.log(`[watch] ${project.projectId} -> ${project.rootPath}`);
+        const handle = startWatching({
+          planningDir,
+          rootPath: project.rootPath,
+          debounceMs,
+          onEmit: args.verbose ? (evt) => {
+            console.log(`  ${evt.ts}  ${evt.tool}  ${path.relative(baseDir, evt.file_path || '')}`);
+          } : null,
+        });
+        console.log(`  ${handle.watcherCount} watcher(s) active`);
+        handles.push({ project, handle });
+      }
+
+      const stopAll = () => {
+        for (const { handle } of handles) handle.stop();
+        console.log('\n[watch] stopped.');
+        process.exit(0);
+      };
+      process.on('SIGINT', stopAll);
+      process.on('SIGTERM', stopAll);
+
+      console.log(`\n[watch] running. Ctrl-C to stop. Events appended to .planning/.provenance/<date>.jsonl`);
+      // Keep process alive
+      setInterval(() => {}, 1 << 30);
+    },
+  });
+
   return defineCommand({
     meta: {
       name: 'provenance',
@@ -349,6 +411,7 @@ function createProvenanceCommand(deps) {
       export: exportCmd,
       stats: statsCmd,
       lookup: lookupCmd,
+      watch: watchCmd,
     },
   });
 }

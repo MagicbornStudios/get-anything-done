@@ -105,4 +105,106 @@ function createUninstallHooksCommand({ defineCommand }) {
   });
 }
 
-module.exports = { createInstallHooksCommand, createUninstallHooksCommand };
+/**
+ * Copy hook source files (gad-statusline.js, etc) to every known
+ * `.claude/hooks/` and `.opencode/hooks/` destination so project-local
+ * Claude/opencode instances pick up the latest source. Standalone from
+ * the settings.json wiring above.
+ *
+ * Walks:
+ *   - ~/.claude/hooks/
+ *   - <repo-root>/.claude/hooks/   (if present)
+ *   - <each planning root>/.claude/hooks/  (if present)
+ *   - <repo-root>/.opencode/hooks/  (if present)
+ */
+function createSyncHookFilesCommand({ defineCommand }) {
+  return defineCommand({
+    meta: {
+      name: 'sync-hook-files',
+      description: 'Copy hook source files (statusline, etc) to all .claude/hooks/ and .opencode/hooks/ locations across known planning roots. Standalone from settings.json wiring.',
+    },
+    args: {
+      'dry-run': { type: 'boolean', description: 'Print targets without copying', default: false },
+    },
+    run: ({ args }) => {
+      const sourceDir = path.resolve(__dirname, '..', '..', '..', 'hooks');
+      if (!fs.existsSync(sourceDir)) {
+        console.error(`Source hook dir not found: ${sourceDir}`);
+        process.exit(1);
+      }
+
+      // Files to copy (drop dist/, dotfiles, tests)
+      const sourceFiles = fs.readdirSync(sourceDir)
+        .filter((f) => f.endsWith('.js') || f.endsWith('.sh'))
+        .filter((f) => !f.startsWith('.'))
+        .map((f) => path.join(sourceDir, f));
+
+      // Build destination list
+      const home = process.env.HOME || process.env.USERPROFILE || '';
+      const destinations = [];
+      if (home) destinations.push(path.join(home, '.claude', 'hooks'));
+
+      // Walk gad-config.toml roots — load lazily to avoid circular deps
+      try {
+        const { findRepoRoot } = require('../../../lib/install-helpers.cjs');
+        const baseDir = findRepoRoot ? findRepoRoot() : process.cwd();
+        // <baseDir>/.claude/hooks
+        destinations.push(path.join(baseDir, '.claude', 'hooks'));
+        destinations.push(path.join(baseDir, '.opencode', 'hooks'));
+
+        // Each root's .claude/hooks
+        const configPath = path.join(baseDir, 'gad-config.toml');
+        if (fs.existsSync(configPath)) {
+          const tomlSrc = fs.readFileSync(configPath, 'utf8');
+          const rootPaths = [];
+          const sectionRe = /\[\[planning\.roots\]\]([\s\S]*?)(?=\[\[|\[[a-z]|$)/g;
+          let m;
+          while ((m = sectionRe.exec(tomlSrc)) !== null) {
+            const block = m[1];
+            const pm = block.match(/^\s*path\s*=\s*"([^"]+)"/m);
+            if (pm) rootPaths.push(pm[1]);
+          }
+          for (const rp of rootPaths) {
+            const abs = path.resolve(baseDir, rp);
+            destinations.push(path.join(abs, '.claude', 'hooks'));
+            destinations.push(path.join(abs, '.opencode', 'hooks'));
+          }
+        }
+      } catch (e) {
+        console.warn(`(could not enumerate planning roots: ${e.message})`);
+      }
+
+      // De-dupe + filter to existing
+      const uniqueDests = Array.from(new Set(destinations.map((d) => path.resolve(d))))
+        .filter((d) => fs.existsSync(d));
+
+      if (uniqueDests.length === 0) {
+        console.log('No hook destinations found. Run `gad install hooks --global` first.');
+        return;
+      }
+
+      let totalCopies = 0;
+      for (const dest of uniqueDests) {
+        for (const src of sourceFiles) {
+          const fname = path.basename(src);
+          const target = path.join(dest, fname);
+          // Skip if destination doesn't already have this file (don't introduce
+          // hooks where they didn't exist — only refresh existing ones)
+          if (!fs.existsSync(target)) continue;
+          if (args['dry-run']) {
+            console.log(`[dry-run] ${path.relative(process.cwd(), src)} -> ${target}`);
+          } else {
+            fs.copyFileSync(src, target);
+            console.log(`copied ${fname} -> ${target}`);
+          }
+          totalCopies++;
+        }
+      }
+
+      console.log(`\n${args['dry-run'] ? '[dry-run] would copy' : 'Copied'} ${totalCopies} file(s) to ${uniqueDests.length} location(s).`);
+      if (args['dry-run']) console.log('Re-run without --dry-run to apply.');
+    },
+  });
+}
+
+module.exports = { createInstallHooksCommand, createUninstallHooksCommand, createSyncHookFilesCommand };
