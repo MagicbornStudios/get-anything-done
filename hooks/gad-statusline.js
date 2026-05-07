@@ -238,14 +238,26 @@ function readLevelSnapshot(projectContext) {
   }
 }
 
-function renderLevelSegment(snapshot) {
+function renderLevelSegment(snapshot, pressureSnapshot) {
   if (!snapshot) return '';
   const { level, xpInLevel, xpToNext } = snapshot;
-  if (!xpToNext) return ` \x1b[35mLV ${level}\x1b[0m`;
+  // Cross-couple color with pressure (operator 2026-05-07: "leveling/
+  // pressure status line should be working better... almost like our
+  // context monitor status line, but for when the pressure is great
+  // and we need to relieve it"). High pressure flips the level
+  // segment to bright-yellow/red so the visible-tension cue is on
+  // BOTH segments — relieving pressure becomes the obvious next move.
+  const pressure100 = pressureSnapshot ? Math.round((Number(pressureSnapshot.score) || 0) * 100) : 0;
+  const color =
+    pressure100 >= 85 ? '\x1b[1;91m' :  // red: pressure critical, level stalls
+    pressure100 >= 70 ? '\x1b[1;33m' :  // bright-yellow: pressure high
+    pressure100 >= 50 ? '\x1b[33m'   :  // yellow: pressure rising
+                         '\x1b[35m';     // calm purple: pressure low / nominal
+  if (!xpToNext) return ` ${color}LV ${level}\x1b[0m`;
   const ratio = Math.max(0, Math.min(1, xpInLevel / xpToNext));
   const filled = Math.round(ratio * LEVEL_SEGMENTS);
   const bar = '█'.repeat(filled) + '░'.repeat(LEVEL_SEGMENTS - filled);
-  return ` \x1b[35mLV ${level} [${bar}] ${xpInLevel}/${xpToNext}\x1b[0m`;
+  return ` ${color}LV ${level} [${bar}] ${xpInLevel}/${xpToNext}\x1b[0m`;
 }
 
 function renderPressureSegment(snapshot) {
@@ -279,14 +291,6 @@ function renderLevelSegmentCompact(snapshot) {
   const nextLevel = level + 1;
   return ` \x1b[35mLV${level} (${percent}% → ${nextLevel})\x1b[0m`;
 }
-  if (!snapshot) return '';
-  const { level, xpInLevel, xpToNext } = snapshot;
-  if (!xpToNext) return ` \x1b[35mLV${level}\x1b[0m`;
-  const ratio = Math.max(0, Math.min(1, xpInLevel / xpToNext));
-  const filled = Math.round(ratio * COMPACT_LEVEL_CELLS);
-  const bar = '\u25B0'.repeat(filled) + '\u25B1'.repeat(COMPACT_LEVEL_CELLS - filled);
-  return ` \x1b[35mLV${level} ${bar}\x1b[0m`;
-}
 
 // Compact variant: single intensity glyph — P\u25e6 P\u25cb P\u25cf P! P!!
 // No blink attribute — fixes Windows Terminal flicker (acceptance gate #2).
@@ -295,11 +299,18 @@ function renderPressureSegmentCompact(snapshot) {
   const score = Math.max(0, Math.min(1, Number(snapshot.score) || 0));
   const score100 = Math.round(score * 100);
 
-  if (score100 >= 85) return ` \x1b[1;91mP!!\x1b[0m`;  // bold-bright red, no blink
-  if (score100 >= 70) return ` \x1b[1;91mP!\x1b[0m`;   // bold-bright red
-  if (score100 >= 50) return ` \x1b[1;33mP\u25cf\x1b[0m`; // bold gold, filled circle
-  if (score100 >= 25) return ` \x1b[33mP\u25cb\x1b[0m`;   // dim gold, open circle
-  return ` \x1b[2;37mP\u25e6\x1b[0m`;                    // grey, bullet
+  // Compact pressure segment: just bar glyph without EVOLVE NOW
+  const bar = score100 >= 85 ? 'P!!' :
+              score100 >= 70 ? 'P!' :
+              score100 >= 50 ? '\u25cf' :
+              score100 >= 25 ? '\u25cb' :
+                                 '\u25e6';
+  const color = score100 >= 85 ? '\x1b[1;91m' :
+                score100 >= 70 ? '\x1b[1;91m' :
+                score100 >= 50 ? '\x1b[1;33m' :
+                score100 >= 25 ? '\x1b[33m' :
+                                 '\x1b[2;37m';
+  return ` ${color}${bar}\x1b[0m`;
 }
 
 function renderStatusline(data) {
@@ -411,13 +422,24 @@ function renderStatusline(data) {
   // Pressure comes from a shared cache file so the statusline stays cheap.
   const projectContext = findProjectContext(dir);
 
-  let pressure, level;
+  let pressure = '';
+  let level = '';
   if (process.env.GAD_STATUSLINE_LEGACY === '1') {
-    pressure = projectContext ? renderPressureSegment(readPressureSnapshot(projectContext.projectId, homeDir)) : '';
-    level = projectContext ? renderLevelSegment(readLevelSnapshot(projectContext)) : '';
+    // Legacy mode keeps original behavior for both pressure and level.
+    const pressureSnap = projectContext ? readPressureSnapshot(projectContext.projectId, homeDir) : null;
+    pressure = pressureSnap ? renderPressureSegment(pressureSnap) : '';
+    const levelSnap = projectContext ? readLevelSnapshot(projectContext) : null;
+    level = levelSnap ? renderLevelSegment(levelSnap, pressureSnap) : '';
   } else {
-    pressure = projectContext ? renderPressureSegmentCompact(readPressureSnapshot(projectContext.projectId, homeDir)) : '';
-    level = projectContext ? renderLevelSegmentCompact(readLevelSnapshot(projectContext)) : '';
+    // Compact mode: pressure without EVOLVE NOW, level may be replaced.
+    const pressureSnap = projectContext ? readPressureSnapshot(projectContext.projectId, homeDir) : null;
+    pressure = pressureSnap ? renderPressureSegmentCompact(pressureSnap) : '';
+    const levelSnap = projectContext ? readLevelSnapshot(projectContext) : null;
+    if (pressureSnap && Math.round(Math.max(0, Math.min(1, Number(pressureSnap.score) || 0)) * 100) >= 85) {
+      level = ' EVOLVE NOW';
+    } else {
+      level = levelSnap ? renderLevelSegmentCompact(levelSnap) : '';
+    }
   }
 
   const dirname = require('path').basename(dir);
