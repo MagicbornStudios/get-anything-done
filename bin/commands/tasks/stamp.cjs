@@ -15,12 +15,17 @@
  *
  * All fields optional except id + projectid. Absent fields leave the
  * existing value untouched (no blanking).
+ *
+ * Phase 127: when status=done with skill=, increments XP on STATE.xml <level>.
+ * Idempotent via <stamped-tasks/> tracking — re-stamping the same task is a no-op.
  */
 
 const path = require('path');
+const fs = require('fs');
 const { execSync } = require('child_process');
 const { defineCommand } = require('citty');
 const taskFiles = require('../../../lib/task-files.cjs');
+const xpMath = require('../../../lib/xp-math.cjs');
 
 function runGit(baseDir, command) {
   return execSync(command, {
@@ -183,6 +188,62 @@ function createTasksStampCommand(deps) {
       }
 
       const updated = taskFiles.updateOne(planningDir, String(args.id), patch);
+
+      // Phase 127 + operator-fix 2026-05-07: XP accumulation hook.
+      // Originally required `effectiveSkill` to award XP — operator
+      // identified that as a system-discipline failure: many real
+      // closures arrive without a skill tag (forgotten flag, mass
+      // stamps, work that doesn't fit existing skills). The fix:
+      // award XP regardless. When skill is missing, treat it as the
+      // emergent placeholder `unknown` (lower weight, but tracked so
+      // recurring patterns become proto-skill candidates).
+      const effectiveStatus = patch.status || existing.status;
+      const effectiveSkill = patch.skill || existing.skill || 'unknown';
+      if (effectiveStatus === 'done') {
+        const stateXmlPath = path.join(baseDir, root.path, root.planningDir, 'STATE.xml');
+        if (fs.existsSync(stateXmlPath)) {
+          const stampedIds = xpMath.readStampedTasks(stateXmlPath, fs);
+          if (!xpMath.isTaskStamped(stampedIds, updated.id)) {
+            // unknown weight = 0.5 (half a regular stamp) — work still
+            // counts but nudges operators to label it. Known skills
+            // keep their full weight from xp-math's getSkillWeight.
+            const weight = effectiveSkill === 'unknown' ? 0.5 : xpMath.getSkillWeight(effectiveSkill);
+
+            // Read current level
+            let xml = fs.readFileSync(stateXmlPath, 'utf8');
+            const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+)"\s+xp_to_next="(\d+)"\s+loaded_skills="(\d+)"\/?>/);
+            if (levelMatch) {
+              const curValue = parseInt(levelMatch[1], 10);
+              const curXp = parseInt(levelMatch[2], 10);
+              const curXpToNext = parseInt(levelMatch[3], 10);
+              const curLoadedSkills = parseInt(levelMatch[4], 10);
+              const newXp = curXp + weight;
+
+              // Write updated level
+              const levelTag = `  <level value="${curValue}" xp="${newXp}" xp_to_next="${curXpToNext}" loaded_skills="${curLoadedSkills}"/>`;
+              xml = xml.replace(/(\s*<level\s[^>]*\/?>)/, levelTag);
+              fs.writeFileSync(stateXmlPath, xml);
+
+              // Add task to stamped-tasks list
+              xpMath.addStampedTask(stateXmlPath, updated.id, fs);
+
+              const nextLevel = xpMath.xpToNextLevel(curValue);
+              const skillTag = effectiveSkill === 'unknown'
+                ? 'skill: unknown — emergent (consider tagging or creating a proto-skill)'
+                : `skill: ${effectiveSkill}`;
+              if (newXp >= curXpToNext) {
+                console.log(`  +${weight} XP (${skillTag}) — Level ${curValue + 1} unlocked! Run \`gad evolution level-up --projectid ${args.projectid}\` to advance.`);
+              } else {
+                console.log(`  +${weight} XP (${skillTag}) — ${newXp}/${curXpToNext} (${curXpToNext - newXp} to next level)`);
+              }
+            }
+          } else {
+            // Already stamped — idempotent no-op
+            console.log(`  (XP already credited for ${updated.id} — idempotent no-op)`);
+          }
+        }
+      }
+
       console.log(`Stamped ${updated.id}: ${Object.entries(patch).map(([k, v]) => `${k}=${v}`).join(' ')}`);
       deps.maybeRebuildGraph(baseDir, root);
     },
