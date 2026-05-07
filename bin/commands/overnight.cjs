@@ -22,13 +22,23 @@
  */
 
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
 const { defineCommand } = require('citty');
 
-const DEFAULT_TICK_MINUTES = 10;
+const DEFAULT_TICK_MINUTES = 30;
 const PIDFILE_NAME = 'overnight.pid';
 const LOGFILE_NAME = 'overnight.log';
+const STATE_FILE_NAME = 'overnight-state.json';
+
+// Module-scoped state for in-flight guard, mtime cache, stall counters.
+// Reset on every daemon process start (intended).
+const _runtime = {
+  ticking: false,
+  lastTraceMtimeByProject: Object.create(null),
+  consecutiveStallByWorker: Object.create(null),
+};
 
 function ts() { return new Date().toISOString(); }
 
@@ -69,29 +79,71 @@ function getProjects(deps) {
 function stepHealth(planningDir, log) {
   const r = runGad(['team-health', '--only-bad', '--json']);
   if (r.status === 0) {
+    // Reset all stall counters when everyone reports healthy.
+    if (Object.keys(_runtime.consecutiveStallByWorker).length > 0) {
+      _runtime.consecutiveStallByWorker = Object.create(null);
+    }
     log('health: all workers healthy');
     return { healthy: true };
   }
-  // Non-zero exit means stalled workers detected
+  // Non-zero exit means stalled workers detected — require 2 consecutive
+  // detections before restarting, to absorb transient false positives.
   let report = [];
   try { report = JSON.parse(r.stdout || '[]'); } catch {}
   let restarted = 0;
+  const stillStalled = new Set();
   for (const projectReport of report) {
     for (const w of (projectReport.workers || [])) {
-      if (w.health.verdict === 'stalled') {
-        log(`health: restarting stalled worker ${projectReport.project}/${w.id} (${w.health.reason})`);
-        // Restart attempt — best effort. Use gad team restart if available, else gad team start.
-        const rr = runGad(['team', 'restart', '--worker-id', w.id, '--projectid', projectReport.project]);
-        if (rr.status === 0) restarted++;
-        else log(`health: restart failed for ${w.id}: ${(rr.stderr || '').trim().slice(0, 200)}`);
+      if (w.health.verdict !== 'stalled') continue;
+      const key = `${projectReport.project}/${w.id}`;
+      stillStalled.add(key);
+      const count = (_runtime.consecutiveStallByWorker[key] || 0) + 1;
+      _runtime.consecutiveStallByWorker[key] = count;
+      if (count < 2) {
+        log(`health: ${key} stalled (${w.health.reason}) — strike ${count}/2, deferring restart`);
+        continue;
+      }
+      log(`health: restarting stalled worker ${key} (${w.health.reason}) after ${count} strikes`);
+      const rr = runGad(['team', 'restart', '--worker-id', w.id, '--projectid', projectReport.project]);
+      if (rr.status === 0) {
+        restarted++;
+        delete _runtime.consecutiveStallByWorker[key];
+      } else {
+        log(`health: restart failed for ${w.id}: ${(rr.stderr || '').trim().slice(0, 200)}`);
       }
     }
+  }
+  // Clear counters for workers that recovered between ticks (in report but not stalled).
+  for (const key of Object.keys(_runtime.consecutiveStallByWorker)) {
+    if (!stillStalled.has(key)) delete _runtime.consecutiveStallByWorker[key];
   }
   log(`health: restarted ${restarted} worker(s)`);
   return { healthy: false, restarted };
 }
 
-function stepProvenance(log) {
+// Probe per-project trace mtimes; return true if any project has a newer
+// .trace-events.jsonl than the cached mtime, false if everything is unchanged.
+// Updates the cache as a side effect when something is newer.
+function tracesChangedSinceLastBuild(projects) {
+  let changed = false;
+  for (const p of projects) {
+    const tracePath = path.join(p.rootPath, p.planningDir, '.trace-events.jsonl');
+    let mtime = 0;
+    try { mtime = fs.statSync(tracePath).mtimeMs; } catch { continue; }
+    const last = _runtime.lastTraceMtimeByProject[p.projectId] || 0;
+    if (mtime > last) {
+      changed = true;
+      _runtime.lastTraceMtimeByProject[p.projectId] = mtime;
+    }
+  }
+  return changed;
+}
+
+function stepProvenance(projects, log) {
+  if (!tracesChangedSinceLastBuild(projects)) {
+    log('provenance: skipped — no new trace events since last build');
+    return { ok: true, skipped: true };
+  }
   log('provenance: building + exporting...');
   const r = runGad(['provenance', 'build', '--skip-survival', '--skip-frequency']);
   if (r.status !== 0) {
@@ -164,15 +216,36 @@ function stepEnsureHandoffs(projects, log) {
 // ─── Main loop ──────────────────────────────────────────────────────────
 
 async function runTick(deps, log) {
+  if (_runtime.ticking) {
+    log('--- tick skipped — previous tick still in progress ---');
+    return;
+  }
+  _runtime.ticking = true;
+  const t0 = Date.now();
   log('--- tick start ---');
-  const { projects } = getProjects(deps);
+  try {
+    const { projects } = getProjects(deps);
+    try { stepHealth(null, log); } catch (e) { log(`health error: ${e.message}`); }
+    try { stepProvenance(projects, log); } catch (e) { log(`provenance error: ${e.message}`); }
+    try { stepSweepPhases(projects, log); } catch (e) { log(`sweep error: ${e.message}`); }
+    try { stepEnsureHandoffs(projects, log); } catch (e) { log(`handoff error: ${e.message}`); }
+  } finally {
+    _runtime.ticking = false;
+    log(`--- tick end (${((Date.now() - t0) / 1000).toFixed(1)}s) ---`);
+  }
+}
 
-  try { stepHealth(null, log); } catch (e) { log(`health error: ${e.message}`); }
-  try { stepProvenance(log); } catch (e) { log(`provenance error: ${e.message}`); }
-  try { stepSweepPhases(projects, log); } catch (e) { log(`sweep error: ${e.message}`); }
-  try { stepEnsureHandoffs(projects, log); } catch (e) { log(`handoff error: ${e.message}`); }
-
-  log('--- tick end ---');
+// Drop our own process to BELOW_NORMAL priority on supported platforms.
+// Best-effort — silently no-op if the platform/runtime can't honor it.
+function lowerOwnPriority(log) {
+  try {
+    const target = (os.constants && os.constants.priority && os.constants.priority.PRIORITY_BELOW_NORMAL);
+    if (typeof target !== 'number') return;
+    os.setPriority(target);
+    log(`priority: lowered own process to BELOW_NORMAL (${target})`);
+  } catch (e) {
+    log(`priority: setPriority failed (${e.message}) — continuing at default`);
+  }
 }
 
 function createOvernightCommand(deps) {
@@ -211,12 +284,9 @@ function createOvernightCommand(deps) {
       };
 
       log(`overnight starting. tick=${tickMs / 1000}s pid=${process.pid}`);
-      // Write pidfile if we're not the detached child writer
-      if (!process.env.GAD_OVERNIGHT_CHILD) {
-        fs.writeFileSync(path.join(planningDir, PIDFILE_NAME), String(process.pid));
-      } else {
-        fs.writeFileSync(path.join(planningDir, PIDFILE_NAME), String(process.pid));
-      }
+      lowerOwnPriority(log);
+      // Always write pidfile (covers both foreground and detached-child paths)
+      fs.writeFileSync(path.join(planningDir, PIDFILE_NAME), String(process.pid));
 
       let tickCount = 0;
       const tick = async () => {
