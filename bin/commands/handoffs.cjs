@@ -303,29 +303,37 @@ function createHandoffsCommand(deps) {
   /**
    * Validate handoff intake contract.
    * Returns array of error strings; empty = valid.
+   *
+   * @param {{ taskId, runtimePreference, body, baseDir, projectid, noTask? }} opts
+   *   noTask=true — caller has opted out of task-id; validation skips task-id check.
    */
-  function validateHandoffIntake({ taskId, runtimePreference, body, baseDir, projectid }) {
+  function validateHandoffIntake({ taskId, runtimePreference, body, baseDir, projectid, noTask }) {
     const errors = [];
 
-    // 1. task-id: required and must exist in .planning/tasks/<id>.json
-    if (!taskId || !String(taskId).trim()) {
-      errors.push('--task-id is required (must reference an existing task in .planning/tasks/)');
-    } else {
-      const taskFile = path.join(baseDir, '.planning', 'tasks', `${String(taskId).trim()}.json`);
-      if (!fs.existsSync(taskFile)) {
-        // Also check projectid-prefixed path for sub-projects
-        const resolved = (projectid && projectid !== 'global')
-          ? path.join(findRepoRoot(), '.planning', 'tasks', `${String(taskId).trim()}.json`)
-          : taskFile;
-        if (!fs.existsSync(resolved) && !fs.existsSync(taskFile)) {
-          errors.push(`--task-id "${taskId}" not found in .planning/tasks/ (file: ${path.basename(taskFile)} missing)`);
+    // 1. task-id: required unless --no-task was passed.
+    //    Sentinel value '__no-task__' means the caller opted out.
+    if (!noTask && taskId !== '__no-task__') {
+      if (!taskId || !String(taskId).trim()) {
+        errors.push('--task-id is required (must reference an existing task in .planning/tasks/). Pass --no-task to opt out.');
+      } else {
+        const taskFile = path.join(baseDir, '.planning', 'tasks', `${String(taskId).trim()}.json`);
+        if (!fs.existsSync(taskFile)) {
+          // Also check projectid-prefixed path for sub-projects
+          const resolved = (projectid && projectid !== 'global')
+            ? path.join(findRepoRoot(), '.planning', 'tasks', `${String(taskId).trim()}.json`)
+            : taskFile;
+          if (!fs.existsSync(resolved) && !fs.existsSync(taskFile)) {
+            errors.push(`--task-id "${taskId}" not found in .planning/tasks/ (file: ${path.basename(taskFile)} missing)`);
+          }
         }
       }
     }
 
-    // 2. runtime-preference: required, must be one of ALLOWED_RUNTIMES
+    // 2. runtime-preference: required, must be one of ALLOWED_RUNTIMES.
+    //    When --any-runtime is set, caller substitutes a valid runtime before calling us;
+    //    validation sees a valid value and passes.
     if (!runtimePreference || !String(runtimePreference).trim()) {
-      errors.push(`--runtime-preference is required (one of: ${ALLOWED_RUNTIMES.join(', ')})`);
+      errors.push(`--runtime-preference is required (one of: ${ALLOWED_RUNTIMES.join(', ')}). Pass --any-runtime to opt out.`);
     } else if (!ALLOWED_RUNTIMES.includes(String(runtimePreference).trim())) {
       errors.push(`--runtime-preference "${runtimePreference}" is not allowed. Must be one of: ${ALLOWED_RUNTIMES.join(', ')}`);
     }
@@ -334,7 +342,7 @@ function createHandoffsCommand(deps) {
     if (!body || !String(body).trim()) {
       errors.push('body is empty');
     } else if (!/^##\s+(acceptance\s+gate|acceptance\s+criteria)\s*$/im.test(String(body))) {
-      errors.push('body must contain a "## Acceptance gate" or "## Acceptance criteria" section');
+      errors.push('body must contain a "## Acceptance gate" or "## Acceptance criteria" section (pass --quick to bypass all checks)');
     }
 
     return errors;
@@ -388,7 +396,8 @@ function createHandoffsCommand(deps) {
     args: {
       projectid: { type: 'string', description: 'Project id (defaults to session / cwd scope)', default: '' },
       phase: { type: 'string', description: 'Phase id (e.g. 60)', required: true },
-      'task-id': { type: 'string', description: 'Task id (REQUIRED — must exist in .planning/tasks/)', default: '' },
+      'task-id': { type: 'string', description: 'Task id (REQUIRED unless --no-task — must exist in .planning/tasks/)', default: '' },
+      'no-task': { type: 'boolean', description: 'Explicitly opt out of task-id requirement (logs a WARN)', default: false },
       priority: { type: 'string', description: 'low | normal | high', default: 'normal' },
       context: { type: 'string', description: 'prescribed | bounded | exploratory | design | audit | decision', default: 'prescribed' },
       risk: { type: 'string', description: 'safe | destructive | irreversible', default: 'safe' },
@@ -396,9 +405,10 @@ function createHandoffsCommand(deps) {
       surface: { type: 'string', description: 'local | api-bound | human-loop', default: 'local' },
       body: { type: 'string', description: 'Handoff body (markdown, MUST include ## Acceptance gate section)', required: true },
       'runtime-preference': { type: 'string', description: `REQUIRED: one of ${ALLOWED_RUNTIMES.join('|')}`, default: '' },
+      'any-runtime': { type: 'boolean', description: 'Explicitly opt out of runtime-preference requirement (logs a WARN)', default: false },
       'runtime-fallbacks': { type: 'string', description: 'Comma-separated fallback runtimes override', default: '' },
       'runtime-required': { type: 'boolean', description: 'Treat runtime_preference as a hard requirement', default: false },
-      quick: { type: 'boolean', description: 'Bypass quality gate (logs a WARN; emergency use only)', default: false },
+      quick: { type: 'boolean', description: 'Bypass all quality gate checks (logs a WARN; emergency use only)', default: false },
     },
     run({ args }) {
       const target = resolveTargetRoot(args.projectid);
@@ -411,18 +421,37 @@ function createHandoffsCommand(deps) {
       const taskId = args['task-id'] || '';
       const runtimePreference = args['runtime-preference'] || '';
 
-      // Quality gate
+      // Quality gate — skip entirely on --quick; apply selective overrides otherwise.
       if (!args.quick) {
+        // Build an effective task-id and runtime-pref for validation,
+        // substituting sentinel values when bypass flags are set.
+        const effectiveTaskId = args['no-task'] ? '__no-task__' : taskId;
+        const effectiveRuntime = args['any-runtime'] ? ALLOWED_RUNTIMES[0] : runtimePreference;
+
         const errors = validateHandoffIntake({
-          taskId,
-          runtimePreference,
+          taskId: effectiveTaskId,
+          runtimePreference: effectiveRuntime,
           body,
           baseDir: target.baseDir,
           projectid: String(args.projectid || target.projectid),
+          noTask: args['no-task'],
         });
         if (errors.length > 0) {
-          outputError(`Handoff quality gate FAILED:\n${errors.map((e) => `  - ${e}`).join('\n')}\n\nUse --quick to bypass (WARN will be logged).`);
+          const hint = [
+            args['no-task'] ? null : '  pass --no-task to opt out of task-id requirement',
+            args['any-runtime'] ? null : '  pass --any-runtime to opt out of runtime-preference requirement',
+            '  pass --quick to bypass all quality checks',
+          ].filter(Boolean).join('\n');
+          outputError(`Handoff quality gate FAILED:\n${errors.map((e) => `  - ${e}`).join('\n')}\n\nBypass options:\n${hint}`);
           process.exit(1);
+        }
+
+        // Emit WARNs for selective bypasses
+        if (args['no-task']) {
+          process.stderr.write(`WARN: --no-task — handoff created without a task-id reference (no audit link)\n`);
+        }
+        if (args['any-runtime']) {
+          process.stderr.write(`WARN: --any-runtime — handoff created without a runtime-preference (any worker may claim it)\n`);
         }
       }
 

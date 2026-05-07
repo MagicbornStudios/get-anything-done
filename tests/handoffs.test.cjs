@@ -196,6 +196,7 @@ describe('handoffs create command', () => {
           context: 'mechanical',
           body: 'body',
           'runtime-preference': '',
+          quick: true, // bypass quality gate — test exercises path resolution, not gate
         },
         rawArgs: [],
       }));
@@ -251,6 +252,7 @@ describe('handoffs create command', () => {
           context: 'mechanical',
           body: 'body',
           'runtime-preference': '',
+          quick: true, // bypass quality gate — test exercises path resolution, not gate
         },
         rawArgs: [],
       }));
@@ -301,6 +303,7 @@ describe('handoffs create command', () => {
           context: 'prescribed',
           body: 'x'.repeat(2001),
           'runtime-preference': '',
+          quick: true, // bypass quality gate — this test is about the body-length warning, not the gate
         },
         rawArgs: [],
       }));
