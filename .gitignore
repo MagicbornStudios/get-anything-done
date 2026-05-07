@@ -116,6 +116,9 @@ tmp/
 #   gracefully degrades to empty self-eval if missing.
 .planning/.trace-events.jsonl
 .planning/.trace-seq
+#   provenance: derived training corpus per phase 153 / decision GLOBAL-D-300.
+#   Rebuilt deterministically by `gad provenance build` from trace events.
+.planning/.provenance/
 #   gad-log: daily JSONL call log (.planning/.gad-log/YYYY-MM-DD.jsonl).
 #   Same self-eval consumer; same graceful-empty fallback.
 .planning/.gad-log/

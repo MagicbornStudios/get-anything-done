@@ -240,9 +240,27 @@ function appendEvent(projectRoot, event, payload) {
   if (event && typeof event === 'object' && !event.scope) {
     event.scope = classifyEventScope(payload || {}, projectRoot);
   }
-  fs.appendFileSync(traceFile, JSON.stringify(event) + '\n');
+  const eventLine = JSON.stringify(event) + '\n';
+  fs.appendFileSync(traceFile, eventLine);
 
-  // Log rotation: truncate oldest events when over limit
+  // Phase 153 / decision GLOBAL-D-300: ALSO append to per-day archive so
+  // the rolling-window truncation below doesn't lose training-data history.
+  // The trace-events.jsonl stays capped for fast access; the archive grows
+  // linearly forever and is the source-of-truth for the provenance pipeline.
+  try {
+    const ts = (event && event.ts) ? new Date(event.ts) : new Date();
+    const y = ts.getUTCFullYear();
+    const m = String(ts.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(ts.getUTCDate()).padStart(2, '0');
+    const archiveDir = path.join(path.dirname(traceFile), '.trace-archive');
+    if (!fs.existsSync(archiveDir)) fs.mkdirSync(archiveDir, { recursive: true });
+    fs.appendFileSync(path.join(archiveDir, `${y}-${m}-${d}.jsonl`), eventLine);
+  } catch {
+    // Best-effort archive — don't fail the hook
+  }
+
+  // Log rotation: truncate oldest events when over limit (the live trace
+  // stream stays compact; full history lives in .trace-archive/).
   try {
     const content = fs.readFileSync(traceFile, 'utf8');
     const lines = content.split('\n').filter(Boolean);
