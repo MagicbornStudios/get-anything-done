@@ -23,6 +23,8 @@ const { annotateFrequency } = require('../../lib/provenance/frequency.cjs');
 const { annotateLabels } = require('../../lib/provenance/label.cjs');
 const { exportCorpus } = require('../../lib/provenance/export.cjs');
 const { startWatching } = require('../../lib/provenance/watch.cjs');
+const { startDaemon, DEFAULT_INTERVAL_MS } = require('../../lib/provenance/daemon.cjs');
+const { extractCorrections } = require('../../lib/provenance/corrections.cjs');
 const { provenanceDir, readJsonl, parseDateRange } = require('../../lib/provenance/index.cjs');
 
 function resolveProjectInfo(deps) {
@@ -49,6 +51,7 @@ function createProvenanceCommand(deps) {
       'skip-survival': { type: 'boolean', description: 'Skip git-blame pass (faster)', default: false },
       'skip-frequency': { type: 'boolean', description: 'Skip rolling-window count', default: false },
       'skip-labels': { type: 'boolean', description: 'Skip quality classification', default: false },
+      'skip-corrections': { type: 'boolean', description: 'Skip operator-correction extractor', default: false },
     },
     run({ args }) {
       const { baseDir, config, projects } = resolveProjectInfo(deps);
@@ -99,11 +102,22 @@ function createProvenanceCommand(deps) {
           console.log(`  frequency: annotated ${freqResult.events_annotated} events across ${freqResult.files_processed} files`);
         }
 
+        // Operator-correction extractor — every "no/stop/wrong/don't" message
+        // paired with the preceding agent attempt and the followup fix. Highest-
+        // value training signal we have beyond surviving code.
+        let correctionResult = null;
+        if (!args['skip-corrections']) {
+          correctionResult = extractCorrections({ planningDir });
+          if (correctionResult.corrections_found > 0) {
+            console.log(`  corrections: ${correctionResult.corrections_found} operator-pushback events from ${correctionResult.sessions_scanned} sessions (user_msgs=${correctionResult.user_messages})`);
+          }
+        }
+
         let labelResult = null;
         if (!args['skip-labels']) {
           labelResult = annotateLabels({ planningDir, config });
           const c = labelResult.by_label;
-          console.log(`  labels: good=${c.good} churn=${c.churn} in_progress=${c.in_progress} neutral=${c.neutral}`);
+          console.log(`  labels: good=${c.good || 0} churn=${c.churn || 0} in_progress=${c.in_progress || 0} neutral=${c.neutral || 0} correction=${c.correction || 0}`);
         }
 
         summary.projects[project.projectId] = {
@@ -400,6 +414,50 @@ function createProvenanceCommand(deps) {
     },
   });
 
+  const daemonCmd = defineCommand({
+    meta: {
+      name: 'daemon',
+      description: 'Long-running provenance loop — build + export + (optional) watch on a cadence. Operator standing process for "always in sync."',
+    },
+    args: {
+      'interval-minutes': { type: 'string', description: 'Tick interval in minutes', default: '5' },
+      'sink-dir': { type: 'string', description: 'Cross-instance corpus sink (default ../slm_learning/data/)', default: '' },
+      watch: { type: 'boolean', description: 'Also start the file watcher in this process', default: true },
+      'watch-project': { type: 'string', description: 'Restrict watcher to one project (default: all roots)', default: '' },
+    },
+    run({ args }) {
+      const { baseDir, projects, config } = resolveProjectInfo(deps);
+      const intervalMs = Math.max(60_000, (parseFloat(args['interval-minutes']) || 5) * 60_000);
+      const slmLearningDir = args['sink-dir']
+        ? path.resolve(args['sink-dir'])
+        : path.resolve(baseDir, '..', 'slm_learning', 'data');
+
+      const log = (m) => console.log(m);
+
+      startDaemon({
+        intervalMs,
+        projects,
+        baseDir,
+        slmLearningDir,
+        watch: !!args.watch,
+        watchProject: args['watch-project'] || null,
+        log,
+        joinFn: ({ planningDir, traceJsonlPath, projects: ps }) => buildProvenance({ planningDir, traceJsonlPath, projects: ps }),
+        workerFn: ({ planningDir }) => buildWorkerProvenance({ planningDir }),
+        surviveFn: ({ planningDir, baseDir }) => annotateSurvival({ planningDir, baseDir }),
+        freqFn: ({ planningDir }) => annotateFrequency({ planningDir }),
+        labelFn: ({ planningDir, config }) => annotateLabels({ planningDir, config }),
+        exportFn: (opts) => exportCorpus(opts),
+        gadConfig: config,
+      }).then((handle) => {
+        process.on('SIGINT', () => { handle.stop(); process.exit(0); });
+        process.on('SIGTERM', () => { handle.stop(); process.exit(0); });
+        // Keep alive
+        setInterval(() => {}, 1 << 30);
+      });
+    },
+  });
+
   return defineCommand({
     meta: {
       name: 'provenance',
@@ -412,6 +470,7 @@ function createProvenanceCommand(deps) {
       stats: statsCmd,
       lookup: lookupCmd,
       watch: watchCmd,
+      daemon: daemonCmd,
     },
   });
 }
