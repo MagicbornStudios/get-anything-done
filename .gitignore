@@ -147,9 +147,12 @@ site/lib/*.generated.ts
 site/lib/*.generated.json
 site/data/*.json
 # Static (non-generated) data files that callers import — must be tracked.
-# Without this exception, clean-clone builds fail with "module not found" for
-# imports like `@/data/media.json` (operator-reported 2026-05-07).
+# Without these exceptions, clean-clone builds fail with "module not found"
+# for imports like `@/data/media.json` (operator-reported 2026-05-07).
+# Inventory: every `@/data/*.json` import in site/app + site/components.
 !site/data/media.json
+!site/data/self-eval.json
+!site/data/rounds.json
 site/public/llms.txt
 site/public/llms-full.txt
 site/public/api/docs.json
