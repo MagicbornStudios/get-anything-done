@@ -131,19 +131,42 @@ function serializeTomlValue(value) {
 const GAD_TOML_PRIMARY = 'gad-config.toml';
 const GAD_TOML_LEGACY = 'planning-config.toml';
 
+// Track roots that have already received the dual-config deprecation warning so we
+// emit it at most once per process, not once per gadConfig.load() call.
+const _dualConfigWarnedRoots = new Set();
+
 /**
  * Resolve path to GAD TOML config, or null if neither primary nor legacy exists.
+ *
+ * Bug 2 fix (2026-05-07): if BOTH <root>/gad-config.toml AND
+ * <root>/.planning/gad-config.toml exist, emit a deprecation warning on stderr
+ * (once per root per process).  Root-level file is always authoritative;
+ * .planning/ is legacy fallback only.
  */
 function resolveTomlPath(root) {
-  const candidates = [
-    path.join(root, GAD_TOML_PRIMARY),
-    path.join(root, '.planning', GAD_TOML_PRIMARY),
-    path.join(root, GAD_TOML_LEGACY),
-    path.join(root, '.planning', GAD_TOML_LEGACY),
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) return p;
+  const rootPrimary    = path.join(root, GAD_TOML_PRIMARY);
+  const planningPrimary = path.join(root, '.planning', GAD_TOML_PRIMARY);
+  const rootLegacy     = path.join(root, GAD_TOML_LEGACY);
+  const planningLegacy  = path.join(root, '.planning', GAD_TOML_LEGACY);
+
+  const rootExists     = fs.existsSync(rootPrimary);
+  const planningExists = fs.existsSync(planningPrimary);
+
+  // Dual-config warning: both root and .planning copies present.
+  if (rootExists && planningExists && !_dualConfigWarnedRoots.has(root)) {
+    _dualConfigWarnedRoots.add(root);
+    process.stderr.write(
+      '[gad-config] WARN: .planning/gad-config.toml is deprecated; ' +
+      'root gad-config.toml is authoritative. ' +
+      'Migrate entries and delete .planning/gad-config.toml.\n'
+    );
   }
+
+  // Resolution order: root primary → .planning/ primary (legacy fallback) → legacy filenames
+  if (rootExists) return rootPrimary;
+  if (planningExists) return planningPrimary;
+  if (fs.existsSync(rootLegacy)) return rootLegacy;
+  if (fs.existsSync(planningLegacy)) return planningLegacy;
   return null;
 }
 
@@ -319,6 +342,7 @@ function fromToml(tomlPath, root) {
       kind: p.kind || 'app',
       contentSkill: p['content-skill'] || null,
       repo: p.repo || null,
+      enabled: p.enabled !== false,
     })),
     verify: {
       buildCommands: Array.isArray(verify.build_commands)
@@ -659,16 +683,17 @@ function writeToml(root, config) {
     lines.push('');
   }
 
-  for (const docProject of config.docsProjects || []) {
-    lines.push('[[docs.projects]]');
-    lines.push(`id = ${serializeTomlValue(docProject.id)}`);
-    lines.push(`sinkPath = ${serializeTomlValue(docProject.sinkPath)}`);
-    lines.push(`description = ${serializeTomlValue(docProject.description || '')}`);
-    lines.push(`kind = ${serializeTomlValue(docProject.kind || 'app')}`);
-    if (docProject.contentSkill) lines.push(`content-skill = ${serializeTomlValue(docProject.contentSkill)}`);
-    if (docProject.repo) lines.push(`repo = ${serializeTomlValue(docProject.repo)}`);
-    lines.push('');
-  }
+    for (const docProject of config.docsProjects || []) {
+      lines.push('[[docs.projects]]');
+      lines.push(`id = ${serializeTomlValue(docProject.id)}`);
+      lines.push(`sinkPath = ${serializeTomlValue(docProject.sinkPath)}`);
+      lines.push(`description = ${serializeTomlValue(docProject.description || '')}`);
+      lines.push(`kind = ${serializeTomlValue(docProject.kind || 'app')}`);
+      lines.push(`enabled = ${serializeTomlValue(docProject.enabled !== false)}`);
+      if (docProject.contentSkill) lines.push(`content-skill = ${serializeTomlValue(docProject.contentSkill)}`);
+      if (docProject.repo) lines.push(`repo = ${serializeTomlValue(docProject.repo)}`);
+      lines.push('');
+    }
 
   fs.writeFileSync(outPath, lines.join('\n').trimEnd() + '\n');
   return outPath;
