@@ -206,33 +206,86 @@ function computeLevelFromXp(totalXp) {
   return { level, xpInLevel: 0, xpToNext: 0 };
 }
 
+// Auto-mirrored from lib/xp-math.cjs SKILL_WEIGHTS. Statusline runs as a
+// standalone Claude hook (no require access to the gad install path), so
+// we inline the table. To regenerate after editing lib/xp-math.cjs:
+//   node vendor/get-anything-done/scripts/regen-statusline-weights.cjs
+const STATUSLINE_SKILL_WEIGHTS = {
+  // atomic = 1 (also default for unrecognized via ?? 1 fallback below)
+  'find-skills': 1, 'gad-add-tests': 1, 'gad-add-todo': 1, 'gad-check-todos': 1,
+  'gad-health': 1, 'gad-help': 1, 'gad-note': 1, 'gad-settings': 1,
+  'gad-stats': 1, 'gad-task-checkpoint': 1, 'gad-update': 1, 'gad-workspace-add': 1,
+  'gad-workspace-show': 1, 'gad-workspace-sync': 1, 'gad:add-tests': 1, 'gad:add-todo': 1,
+  'gad:check-todos': 1, 'gad:health': 1, 'gad:help': 1, 'gad:note': 1,
+  'gad:settings': 1, 'gad:stats': 1, 'gad:task-checkpoint': 1, 'gad:update': 1,
+  'gad:workspace-add': 1, 'gad:workspace-show': 1, 'gad:workspace-sync': 1,
+  // implementation = 3
+  'frontend-design': 3, 'gad-debug': 3, 'gad-discuss-phase': 3, 'gad-docs-update': 3,
+  'gad-forensics': 3, 'gad-map-codebase': 3, 'gad-plan-phase': 3, 'gad-research-phase': 3,
+  'gad-review': 3, 'gad-validate-phase': 3, 'gad-verify-phase': 3, 'gad-verify-work': 3,
+  'gad-write-feature-doc': 3, 'gad-write-intent': 3, 'gad-write-tech-doc': 3, 'gad:debug': 3,
+  'gad:discuss-phase': 3, 'gad:docs-update': 3, 'gad:forensics': 3, 'gad:map-codebase': 3,
+  'gad:plan-phase': 3, 'gad:research-phase': 3, 'gad:review': 3, 'gad:validate-phase': 3,
+  'gad:verify-phase': 3, 'gad:verify-work': 3, 'gad:write-feature-doc': 3, 'gad:write-intent': 3,
+  'gad:write-tech-doc': 3, 'npm-package': 3, 'self-eval': 3, 'shadcn': 3,
+  'trace-analysis': 3, 'web-design-guidelines': 3,
+  // workflow = 5
+  'consolidate-cli-and-routes': 5, 'framework-upgrade': 5, 'gad-autonomous': 5, 'gad-cross-config-domain-change': 5,
+  'gad-do': 5, 'gad-execute-phase': 5, 'gad-next': 5, 'gad-progress': 5,
+  'gad-reapply-patches': 5, 'gad-review-backlog': 5, 'gad-session-report': 5, 'gad:autonomous': 5,
+  'gad:cross-config-domain-change': 5, 'gad:do': 5, 'gad:execute-phase': 5, 'gad:next': 5,
+  'gad:progress': 5, 'gad:reapply-patches': 5, 'gad:review-backlog': 5, 'gad:session-report': 5,
+  'monorepo-rename-and-relocate': 5, 'move-route-with-deprecation-stub': 5, 'scaffold-clerk-operator-attribution': 5, 'scaffold-tauri-desktop-shell': 5,
+  'scaffold-visual-context-surface': 5, 'verify-clean-clone-site-build': 5,
+  // compound = 8
+  'create-proto-skill': 8, 'create-skill': 8, 'eval-skill-install': 8, 'gad-audit-milestone': 8,
+  'gad-audit-uat': 8, 'gad-complete-milestone': 8, 'gad-evolution-evolve': 8, 'gad-generation-spawn': 8,
+  'gad-handoffs': 8, 'gad-manager': 8, 'gad-manuscript': 8, 'gad-milestone-summary': 8,
+  'gad-new-milestone': 8, 'gad-new-project': 8, 'gad-plan-milestone-gaps': 8, 'gad-skill-creator': 8,
+  'gad-visual-context-system': 8, 'gad:audit-milestone': 8, 'gad:audit-uat': 8, 'gad:complete-milestone': 8,
+  'gad:generation-spawn': 8, 'gad:handoffs': 8, 'gad:manager': 8, 'gad:manuscript': 8,
+  'gad:milestone-summary': 8, 'gad:new-milestone': 8, 'gad:new-project': 8, 'gad:plan-milestone-gaps': 8,
+  'gad:visual-context-system': 8, 'merge-skill': 8, 'objective-eval-design': 8, 'portfolio-sync': 8,
+  'tui-track-slice-coordination': 8, 'wire-agents-md-context-bootstrap': 8, 'wire-byok-encrypted-env': 8, 'wire-skill-provenance-tracking': 8,
+};
+// Operator 2026-05-07: every done task counts. Missing skill defaults to
+// gad-execute-phase (closing the loop IS the work, not the tag).
+const STATUSLINE_DEFAULT_DONE_SKILL = 'gad-execute-phase';
+
+function statuslineSkillWeight(skill) {
+  if (!skill) return 0;
+  return STATUSLINE_SKILL_WEIGHTS[skill] ?? 1;
+}
+
 function readLevelSnapshot(projectContext) {
   if (!projectContext || !projectContext.rootPath) return null;
   const planningDir = path.join(projectContext.rootPath, '.planning');
-  // Forward-compat: STATE.xml <level value=N xp=Y xp_to_next=Z/> per phase 126.
-  try {
-    const statePath = path.join(planningDir, 'STATE.xml');
-    if (fs.existsSync(statePath)) {
-      const content = fs.readFileSync(statePath, 'utf8');
-      const m = content.match(/<level\s+[^>]*\bvalue="(\d+)"[^>]*\bxp="(\d+)"[^>]*\bxp_to_next="(\d+)"/);
-      if (m) {
-        return { level: Number(m[1]), xpInLevel: Number(m[2]), xpToNext: Number(m[3]) };
-      }
-    }
-  } catch (e) {}
-  // Bootstrap fallback: count done+stamped tasks as XP=1 each.
+  // Operator 2026-05-07: derive in real-time from tasks/*.json. STATE.xml
+  // <level> is no longer load-bearing — closing tasks/phases moves the
+  // bar on the next render with no manual state-edit dance.
   try {
     const tasksDir = path.join(planningDir, 'tasks');
-    if (!fs.existsSync(tasksDir)) return null;
-    let xp = 0;
+    if (!fs.existsSync(tasksDir)) {
+      // No tasks dir yet — fall back to STATE.xml cache (early bootstrap).
+      const statePath = path.join(planningDir, 'STATE.xml');
+      if (fs.existsSync(statePath)) {
+        const content = fs.readFileSync(statePath, 'utf8');
+        const m = content.match(/<level\s+[^>]*\bvalue="(\d+)"[^>]*\bxp="([\d.]+)"[^>]*\bxp_to_next="(\d+)"/);
+        if (m) return { level: Number(m[1]), xpInLevel: Math.round(Number(m[2])), xpToNext: Number(m[3]) };
+      }
+      return null;
+    }
+    let totalXp = 0;
     for (const f of fs.readdirSync(tasksDir)) {
       if (!f.endsWith('.json')) continue;
       try {
         const t = JSON.parse(fs.readFileSync(path.join(tasksDir, f), 'utf8'));
-        if (t.status === 'done' && t.skill) xp += 1;
+        if (t.status === 'done') {
+          totalXp += statuslineSkillWeight(t.skill || STATUSLINE_DEFAULT_DONE_SKILL);
+        }
       } catch (e) {}
     }
-    return computeLevelFromXp(xp);
+    return computeLevelFromXp(totalXp);
   } catch (e) {
     return null;
   }
