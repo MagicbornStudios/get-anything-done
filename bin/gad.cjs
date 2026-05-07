@@ -40,7 +40,7 @@ const { readPhases, readDocFlow } = require('../lib/roadmap-reader.cjs');
 const { writePhase } = require('../lib/roadmap-writer.cjs');
 const { readDecisions } = require('../lib/decisions-reader.cjs');
 const { writeDecision } = require('../lib/decisions-writer.cjs');
-const { writeTodo, listTodos } = require('../lib/todos-writer.cjs');
+const { writeTodo, listTodos, readTodoFile, patchTodoFrontmatter, resolveTodoPath } = require('../lib/todos-writer.cjs');
 const { writeNote, listNotes, listNoteQuestions } = require('../lib/notes-writer.cjs');
 const {
   compactStateXml,
