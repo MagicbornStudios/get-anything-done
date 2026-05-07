@@ -250,14 +250,13 @@ function lowerOwnPriority(log) {
 
 function createOvernightCommand(deps) {
   const startCmd = defineCommand({
-    meta: { name: 'start', description: '[DEPRECATED — use MCP tool sweep_handoffs] Start the overnight autopilot loop (long-running). Use --detach to fork into background.' },
+    meta: { name: 'start', description: 'Start the overnight autopilot loop (long-running, non-blocking). Hardened per phase 159: 30min default ticks, in-flight guard, BELOW_NORMAL Windows priority, skip-if-no-traces, 2-strike worker-stall before restart. Use --detach to fork into background. The MCP tool sweep_handoffs (phase 164) is the on-demand alternative when you want a one-shot pass instead of standing rotation.' },
     args: {
       'tick-minutes': { type: 'string', description: 'Tick interval in minutes', default: String(DEFAULT_TICK_MINUTES) },
       detach: { type: 'boolean', description: 'Fork into background', default: false },
       'max-ticks': { type: 'string', description: 'Stop after N ticks (default: forever)', default: '0' },
     },
     async run({ args }) {
-      console.warn("[overnight] DEPRECATED: 'gad overnight start' is replaced by the MCP tool 'sweep_handoffs' (phase 164). The daemon still works but is no longer the recommended path. See vendor/get-anything-done/.planning/notes/ for the on-demand pattern.");
       const { baseDir } = getProjects(deps);
       const planningDir = path.join(baseDir, '.planning');
       fs.mkdirSync(planningDir, { recursive: true });
@@ -362,7 +361,7 @@ function createOvernightCommand(deps) {
   });
 
   const tickCmd = defineCommand({
-    meta: { name: 'tick', description: '[DEPRECATED — use MCP tool sweep_handoffs] Run a single tick now (one-shot, useful for cron / testing)' },
+    meta: { name: 'tick', description: 'Run a single tick now (one-shot, useful for cron / testing). Equivalent to one iteration of `gad overnight start`. The MCP tool sweep_handoffs is the chat-callable equivalent.' },
     args: {},
     async run() {
       const { baseDir } = getProjects(deps);

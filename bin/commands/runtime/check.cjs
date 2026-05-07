@@ -3,10 +3,21 @@
 const { defineCommand } = require('citty');
 const { getRuntimeArg } = require('../../../lib/runtime-args.cjs');
 const { runRuntimeScriptJson } = require('../../../lib/runtime-substrate-scripts.cjs');
+const {
+  runBatchPreflight,
+  RUNTIME_IDS,
+} = require('../../../lib/runtime-health/index.cjs');
+
+// Parse comma-separated runtime ids from CLI args
+function resolveRuntimeIds(args) {
+  if (args.runtime) return [String(args.runtime).trim()];
+  if (args.runtimes) return String(args.runtimes).split(',').map((s) => s.trim()).filter(Boolean);
+  return RUNTIME_IDS;
+}
 
 function createRuntimeCheckCommand({ resolveGadRuntimeContext, output, outputError, shouldUseJson }) {
   return defineCommand({
-    meta: { name: 'check', description: 'Run runtime health checks through GAD project/session context.' },
+    meta: { name: 'check', description: 'Run runtime health checks — install/auth/json-contract preflight for each runtime.' },
     args: {
       projectid: { type: 'string', description: 'Project id (GAD planning root)', default: '' },
       sessionid: { type: 'string', description: 'Session id for context hydration', default: '' },
@@ -23,22 +34,69 @@ function createRuntimeCheckCommand({ resolveGadRuntimeContext, output, outputErr
           projectId: args.projectid,
           sessionId: args.sessionid,
         });
-        const scriptArgs = ['--project-id', context.projectId, '--json'];
-        if (args.runtime) scriptArgs.push('--runtime', String(args.runtime));
-        if (args.runtimes) scriptArgs.push('--runtimes', String(args.runtimes));
-        if (args.smoke) scriptArgs.push('--smoke');
-        const timeoutMs = getRuntimeArg(args, 'timeout-ms', '60000');
+        const timeoutMs = Number(getRuntimeArg(args, 'timeout-ms', '60000')) || 60000;
         const noSave = Boolean(getRuntimeArg(args, 'no-save', false));
-        if (timeoutMs) scriptArgs.push('--timeout-ms', String(timeoutMs));
-        if (noSave) scriptArgs.push('--no-save');
 
-        const payload = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-check.mjs', scriptArgs);
-        payload.gadContext = {
-          projectId: context.projectId,
-          sessionId: context.sessionId,
-          sessionResolved: context.sessionResolved,
-          handoffArtifacts: context.handoffArtifacts,
-          contextProvenance: context.contextProvenance,
+        // Run preflight via lib/runtime-health (install/auth/json_contract per spec)
+        const runtimeIds = resolveRuntimeIds(args);
+        const preflight = runBatchPreflight(runtimeIds, {
+          timeoutMs: Math.min(timeoutMs, 30000),
+          repoRoot: context.runtimeRepoRoot,
+        });
+
+        // Also run substrate script for richer data (version, headless, etc.) when available
+        let substrateRuntimes = null;
+        try {
+          const scriptArgs = ['--project-id', context.projectId, '--json'];
+          runtimeIds.forEach((r) => { /* passed via --runtimes below */ });
+          if (args.runtime) scriptArgs.push('--runtime', String(args.runtime));
+          if (args.runtimes) scriptArgs.push('--runtimes', String(args.runtimes));
+          if (args.smoke) scriptArgs.push('--smoke');
+          scriptArgs.push('--timeout-ms', String(timeoutMs));
+          if (noSave) scriptArgs.push('--no-save');
+          const substratePayload = runRuntimeScriptJson(context.runtimeRepoRoot, 'runtime-check.mjs', scriptArgs);
+          substrateRuntimes = substratePayload.runtimes || null;
+        } catch {
+          // substrate not available — preflight-only mode
+        }
+
+        // Merge: lib preflight shape + substrate enrichment.
+        // For auth: substrate's authConfigured (which handles browser login, oauth, etc.) takes
+        // precedence over lib env-key check since substrate probes more auth modes.
+        const mergedRuntimes = preflight.map((p) => {
+          const sub = substrateRuntimes
+            ? substrateRuntimes.find((s) => s.runtime === p.runtime)
+            : null;
+          // If substrate says auth is configured, trust it even if lib env-key check said missing
+          const authStatus = sub && sub.authConfigured ? 'ok' : p.auth;
+          return {
+            runtime: p.runtime,
+            install: p.install,
+            auth: authStatus,
+            json_contract: p.json_contract,
+            version: p.version || sub?.version || null,
+            path: p.path || sub?.executablePath || null,
+            notes: p.notes,
+            // substrate extras (if available)
+            ...(sub ? {
+              supportsHeadless: sub.supportsHeadless,
+              supportsJsonOutput: sub.supportsJsonOutput,
+              authConfigured: sub.authConfigured,
+            } : {}),
+          };
+        });
+
+        const payload = {
+          checkedAt: new Date().toISOString(),
+          saved: !noSave,
+          runtimes: mergedRuntimes,
+          gadContext: {
+            projectId: context.projectId,
+            sessionId: context.sessionId,
+            sessionResolved: context.sessionResolved,
+            handoffArtifacts: context.handoffArtifacts,
+            contextProvenance: context.contextProvenance,
+          },
         };
 
         if (args.json || shouldUseJson()) {
@@ -47,14 +105,14 @@ function createRuntimeCheckCommand({ resolveGadRuntimeContext, output, outputErr
         }
 
         console.log(`Runtime check complete for project=${context.projectId} session=${context.sessionId || 'none'}`);
-        const rows = (payload.runtimes || []).map((entry) => ({
+        const rows = mergedRuntimes.map((entry) => ({
           runtime: entry.runtime,
-          installed: entry.installed,
-          auth: entry.authConfigured,
-          headless: entry.supportsHeadless,
-          json: entry.supportsJsonOutput,
+          install: entry.install,
+          auth: entry.auth,
+          json_contract: entry.json_contract,
+          version: entry.version || 'n/a',
         }));
-        output(rows, { title: 'Runtime health (GAD)', format: 'table' });
+        output(rows, { title: 'Runtime health (install/auth/json_contract)', format: 'table' });
       } catch (err) {
         outputError(err.message);
       }
