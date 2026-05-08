@@ -245,6 +245,31 @@ function createTasksStampCommand(deps) {
       }
 
       console.log(`Stamped ${updated.id}: ${Object.entries(patch).map(([k, v]) => `${k}=${v}`).join(' ')}`);
+
+      // Phase 122: when status=done, snapshot checksums for regression detection.
+      // Best-effort: extract file paths from evidence text + task.files array.
+      // Non-fatal — stamp already succeeded.
+      if (effectiveStatus === 'done') {
+        try {
+          const { snapshotChecksums } = require('../../../lib/collisions/index.cjs');
+          const evidenceText = String(args.evidence || '');
+          // Grab any path-like tokens from evidence (heuristic — looks for file
+          // extensions or explicit path separators). Also include task.files if set.
+          const evidencePaths = evidenceText
+            .split(/[\s,;|]+/)
+            .filter((t) => /[/\\]/.test(t) || /\.\w{2,6}$/.test(t))
+            .filter((t) => t.length > 2 && t.length < 200);
+          const taskFilePaths = Array.isArray(updated.files) ? updated.files : [];
+          const allPaths = [...new Set([...evidencePaths, ...taskFilePaths])];
+          if (allPaths.length > 0) {
+            snapshotChecksums(allPaths, baseDir, updated.id);
+          }
+        } catch (_snapErr) {
+          // Non-fatal — never block a successful stamp
+          try { process.stderr.write(`[stamp] checksum-snapshot failed (non-fatal): ${_snapErr.message}\n`); } catch {}
+        }
+      }
+
       deps.maybeRebuildGraph(baseDir, root);
     },
   });
