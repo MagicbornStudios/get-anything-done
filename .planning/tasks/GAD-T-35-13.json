@@ -1,16 +1,16 @@
 {
   "id": "GAD-T-35-13",
   "phase": "35",
-  "status": "planned",
+  "status": "done",
   "goal": "Extend runtime adapters (claude-code, codex-cli, gemini-cli, opencode) to populate model_id + tokens_in/tokens_out from response payload into telemetry envelopes so gad telemetry models shows named model rows instead of (unknown-model).",
   "type": "",
   "keywords": "",
   "depends": [],
   "commands": [],
   "files": [],
-  "agent_id": "",
+  "agent_id": "claude-sonnet-4-6",
   "agent_role": "",
-  "runtime": "",
+  "runtime": "claude-code",
   "model_profile": "",
   "resolved_model": "",
   "skill": "",
@@ -21,5 +21,5 @@
   "completed_at": "",
   "resolution": "",
   "created_at": "2026-05-08T05:51:34.092Z",
-  "updated_at": "2026-05-08T05:51:34.092Z"
+  "updated_at": "2026-05-08T08:51:17.159Z"
 }
