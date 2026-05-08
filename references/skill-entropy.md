@@ -388,3 +388,136 @@ That is the measurable backbone of the platform:
 pressure supplies the force
 skill entropy tells whether that force is collapsing into reusable form
 ```
+
+---
+
+## Benchmark suite
+
+The benchmark suite defines the measurable input signals that feed the
+entropy formula at the implementation layer. Each signal has a known unit
+and a weighted contribution to the event-type distribution used in
+`H(S,t)`.
+
+| Signal | Unit | Source | Contribution |
+|---|---|---|---|
+| `handoff-claim-time` | seconds (mean open→claim) | `.planning/handoffs/claimed/` frontmatter `claimed_at` - `created_at` | Time a task sits unclaimed — longer = higher pressure |
+| `retry-count` | sum of `unclaim_history` lengths | `.planning/handoffs/{open,claimed}/` `unclaim_history` array | Each unclaim is a failed dispatch — counts direct retries |
+| `tool-call-density` | tool-call events per session | `.planning/sessions/*.telemetry.jsonl` `kind=tool-call` | High density can indicate thrashing or productive complexity |
+| `worker-mailbox-depth` | count of open handoffs at snapshot time | `.planning/handoffs/open/` directory count | Work waiting = latent load; unbounded queue = high pressure |
+| `runtime-rate-limit` | count of rate-limit events in window | `.planning/.gad-log/*.jsonl` + worker `log.jsonl` `kind=runtime-rate-limit-on-call` | External choke on agent execution rate |
+| `edit-conflict` | count of file-modified-since-read errors | `.planning/.gad-log/` `kind=file-modified-since-read` | Concurrent write collisions — highest in multi-agent sessions |
+| `discipline-rule-fail` | count of discipline rule failures | `.planning/team/workers/*/log.jsonl` `kind=discipline-rule-fail` | Structural violations; amplified by H_total in rubric |
+
+The benchmark formula applied to these inputs (see `lib/entropy/benchmark.cjs`):
+
+```text
+H(S,t) = -sum_i p_i * log2(p_i)
+  where p_i = count(signal_i) / sum_j count(signal_j)
+  normalized to [0,1] via log2(n_nonzero_buckets)
+
+D(S,t) = unique_decompositions / total_decompositions   (from v2.cjs)
+
+H_total = alpha * H + beta * D
+  defaults: alpha = 0.7, beta = 0.3
+```
+
+Interpretation alignment between the canonical estimator and the benchmark:
+- The canonical estimator uses `h_shape`, `h_retry`, `h_pressure` from session telemetry.
+- The benchmark uses observable log signals as a proxy when full telemetry is not yet wired.
+- The two converge as `89-01` telemetry matures. Until then, the benchmark provides non-zero, non-fabricated signal.
+
+---
+
+## Eval rubric
+
+For a **generation** (a complete dev session ending in a closed milestone), the rubric
+scores five dimensions. Each is normalized to `[0, 1]` where `1.0` is cleanest execution.
+
+| Dimension | Weight | Scoring logic |
+|---|---|---|
+| `total-entropy` | 0.30 | `1 - H_total` from benchmark snapshot |
+| `peak-entropy` | 0.15 | `1 - peak_H_total` within window (approximated as current snapshot until daily log is wired in phase 107) |
+| `entropy-decay-rate` | 0.20 | Compare first-half vs second-half H_total. Positive decay (entropy dropped) → score 1.0. Zero or negative → score 0.0. Normalized over `[-0.3, +0.3]` range. |
+| `discipline-weighted-by-entropy` | 0.20 | Discipline failures are amplified by H_total. `score = 1 - (fail_rate * H_total * 10)`. High entropy + many violations → near zero. |
+| `handoff-flow-efficiency` | 0.10 | `1 - (total_retries / total_handoffs)`. High unclaim rate → low score. |
+| `decomposition-diversity` | 0.05 | `D` directly from v2 computation. Richer skill expression = higher score. |
+
+Composite rubric score:
+
+```text
+rubric_score = sum_i (weight_i * score_i)
+```
+
+Use `gad entropy benchmark --json` to get per-dimension `score` and `evidence`.
+
+---
+
+## Cross-generation comparison
+
+The **operational hypothesis** of the platform: species evolution should reduce `H_total`
+across generations. A generation ladder tests this.
+
+One row per generation (time-bounded dev session), sortable by `H_total` ascending:
+
+| RANK | ID | SINCE | UNTIL | H | D | H_TOTAL |
+|---|---|---|---|---|---|---|
+| 1 | gen-v2 | 2026-05-01 | 2026-05-07 | 0.312 | 0.410 | 0.342 |
+| 2 | gen-v1 | 2026-04-01 | 2026-04-30 | 0.581 | 0.280 | 0.491 |
+
+**Reading the ladder:**
+- Lower H_total at higher rank = species learning. The platform is compressing pressure into skill.
+- Increasing D at lower H = skill diversity expanding as entropy collapses. Expected pattern during skill emergence.
+- Stagnant or rising H_total across generations = evolution is not compressing pressure. Investigate skills catalogue.
+
+Run via:
+
+```sh
+gad entropy compare --generations gen-v1:2026-04-01:2026-04-30,gen-v2:2026-05-01:2026-05-07
+```
+
+---
+
+## Marketing explainer
+
+**What is Skill Entropy?**
+
+When an AI agent works on a problem, it creates a trace — a record of where it struggled,
+how many times it retried, which tools it reached for, and where it got blocked. On any
+single task that trace is noise. Across hundreds of tasks of the same kind, it becomes
+a signal.
+
+Skill Entropy is a number between 0 and 1 that measures how scattered those traces are.
+A score near 0 means every agent session of this type looks the same: one reliable path,
+minimal retries, pressure landing in one known category. The task class is domesticated.
+A score near 1 means no two sessions agree on what to do, and failures land in every
+possible category simultaneously. No skill exists yet.
+
+The GAD platform tracks Skill Entropy over time and across agent generations. When a task
+class moves from high entropy to low entropy, that is the signal that a reusable skill is
+forming. The platform captures it, formalizes it, and makes the next generation of agents
+start from a lower entropy baseline. That is what we mean by "AI that gets better at work
+by doing work." Not fine-tuning on token completions — evolution through documented entropy
+collapse.
+
+---
+
+## API
+
+| Command | Description |
+|---|---|
+| `gad entropy snapshot [--projectid X] [--since 7d\|YYYY-MM-DD] [--json]` | Current H/D/H_total with dimension breakdown and input signal table |
+| `gad entropy benchmark [--projectid X] [--since X] [--json]` | Full rubric evaluation + entropy combo; returns composite score and per-dimension evidence |
+| `gad entropy compare --generations id:since:until,... [--json]` | Cross-generation table sorted ascending by H_total; tests the entropy-collapse hypothesis |
+| `gad entropy explain` | Prints this reference in compact form (framing, formula, benchmark suite, rubric, CLI) |
+
+Implementation files:
+
+| File | Purpose |
+|---|---|
+| `lib/entropy/compute.cjs` | v1 — observable-signal pressure MVP (phase 88 stub, formalized in 107-06) |
+| `lib/entropy/v2.cjs` | v2 — adds decomposition-diversity dimension D (phase 89) |
+| `lib/entropy/benchmark.cjs` | Benchmark library — `runBenchmark`, `crossGenerationCompare` (phase 88) |
+| `lib/entropy/rubric.cjs` | Rubric library — `RUBRIC_DIMENSIONS`, `scoreRubric` (phase 88) |
+| `bin/commands/entropy.cjs` | CLI entry point — `snapshot`, `benchmark`, `compare`, `explain` (phase 88) |
+| `references/skill-entropy.md` | This document — canonical math + benchmark + rubric + marketing (phase 88) |
+| `references/pressure-formula.md` | Phase-level pressure formula — feeds into H estimation |
