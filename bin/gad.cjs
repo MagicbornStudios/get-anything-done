@@ -117,6 +117,26 @@ if (process.argv[2] === '__gad_internal_install__') {
   // Early-exit passthrough — bypass citty entirely so all gh flags reach the binary unchanged.
   // GLOBAL-D-316 / task 75-16. Logs envelope to .planning/.gad-log/<date>.jsonl.
   require('./commands/wrappers/gh.cjs').run(process.argv.slice(3));
+} else if (process.argv[2] === 'hf') {
+  // Early-exit passthrough — bypass citty entirely so all hf flags reach huggingface-cli unchanged.
+  // GLOBAL-D-316 / task 75-22. Logs envelope to .planning/.gad-log/<date>.jsonl.
+  require('./commands/wrappers/hf.cjs').run(process.argv.slice(3));
+} else if (process.argv[2] === 'modal') {
+  // Early-exit passthrough — bypass citty entirely so all modal flags reach the binary unchanged.
+  // GLOBAL-D-316 / task 75-23. Logs envelope to .planning/.gad-log/<date>.jsonl.
+  require('./commands/wrappers/modal.cjs').run(process.argv.slice(3));
+} else if (process.argv[2] === 'supabase') {
+  // Early-exit passthrough — bypass citty entirely so all supabase flags reach the binary unchanged.
+  // GLOBAL-D-316 / task 75-24. Logs envelope to .planning/.gad-log/<date>.jsonl.
+  require('./commands/wrappers/supabase.cjs').run(process.argv.slice(3));
+} else if (process.argv[2] === 'vercel') {
+  // Early-exit passthrough — bypass citty entirely so all vercel flags reach the binary unchanged.
+  // GLOBAL-D-316 / task 75-25. Logs envelope to .planning/.gad-log/<date>.jsonl.
+  require('./commands/wrappers/vercel.cjs').run(process.argv.slice(3));
+} else if (process.argv[2] === 'docker') {
+  // Early-exit passthrough — bypass citty entirely so all docker flags reach the binary unchanged.
+  // GLOBAL-D-316 / task 75-26. Logs envelope to .planning/.gad-log/<date>.jsonl.
+  require('./commands/wrappers/docker.cjs').run(process.argv.slice(3));
 } else {
 
 // ---------------------------------------------------------------------------

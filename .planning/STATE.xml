@@ -50,6 +50,7 @@
   <last-updated>2026-05-05T23:45:24.409Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="unknown" at="2026-05-08T08:45:30.177Z">feat(75-22..75-26): 5 more binary wrappers (hf, modal, supabase, vercel, docker) per GLOBAL-D-316; early-exit interceptors wired in bin/gad.cjs lines 120-134</entry>
     <entry agent="unknown" at="2026-05-08T08:38:11.899Z">feat(75-15,75-16): gad git + gh wrappers shipped per GLOBAL-D-316 — early-exit passthrough in gad.cjs, wrapper-base.cjs shared helper, structured JSONL envelope in .planning/.gad-log/</entry>
     <entry agent="unknown" at="2026-05-08T08:37:38.046Z">75-14 done — sitrep-digest.cjs writer + bin/commands/sitrep.cjs CLI + overnight tick wired; gad sitrep --tick/--watch tested</entry>
     <entry agent="unknown" at="2026-05-08T08:37:36.400Z">feat(75-13): gad cron CLI — cross-platform schedule management (Windows schtasks + Unix crontab); JSON source-of-truth at .planning/cron.json; add/list/remove/run-now subcommands; 22 tests all passing</entry>

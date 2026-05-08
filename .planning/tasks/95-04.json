@@ -1,0 +1,28 @@
+{
+  "id": "95-04",
+  "phase": "95",
+  "status": "planned",
+  "goal": "Add org_id to projects table, create customer-scoped Supabase client factory, and write RLS policies for org-based tenant isolation",
+  "type": "code",
+  "keywords": "",
+  "depends": [
+    "95-02",
+    "95-03"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed_by": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "completed_at": "",
+  "resolution": "",
+  "created_at": "2026-05-04T14:42:34.537Z",
+  "updated_at": "2026-05-04T14:42:34.537Z"
+}

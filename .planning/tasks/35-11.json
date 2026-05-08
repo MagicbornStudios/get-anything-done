@@ -1,0 +1,28 @@
+{
+  "id": "35-11",
+  "phase": "35",
+  "status": "planned",
+  "goal": "Propagate runtime session lineage and parent/root task attribution through team-worker subprocess env vars so nested runtime hops persist one joinable correlation chain across worker logs, session telemetry, gad-log, and trace events.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "35-02",
+    "35-03"
+  ],
+  "commands": [],
+  "files": [],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed_by": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "completed_at": "",
+  "resolution": "",
+  "created_at": "2026-05-04T17:25:37.792Z",
+  "updated_at": "2026-05-04T17:25:37.792Z"
+}
