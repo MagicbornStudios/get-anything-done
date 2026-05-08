@@ -1,0 +1,33 @@
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: {
+    default: "{{slug}}",
+    template: "%s · {{slug}}",
+  },
+  description: "{{slug}} — built with Get Anything Done.",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen flex flex-col bg-background text-foreground antialiased">
+        <main className="flex-1" data-cid="{{slug}}.main">
+          {children}
+        </main>
+      </body>
+    </html>
+  );
+}

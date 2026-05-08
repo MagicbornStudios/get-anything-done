@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────
+   {{slug}} — theme tokens
+   Replace palette + typography to match brand.
+   ───────────────────────────────────────────────────────── */
+
+@theme inline {
+  /* Color primitives */
+  --color-white: #ffffff;
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+
+  /* Semantic mappings — override per brand */
+  --color-background: var(--color-white);
+  --color-foreground: var(--color-neutral-900);
+  --color-muted: var(--color-neutral-100);
+  --color-muted-foreground: var(--color-neutral-500);
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.16);
+  --color-primary: var(--color-neutral-900);
+  --color-primary-foreground: var(--color-white);
+
+  /* Typography */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Display scale */
+  --text-display-xl: clamp(3rem, 7vw, 6rem);
+  --text-display-lg: clamp(2.25rem, 5vw, 4rem);
+  --text-display-md: clamp(1.75rem, 3.5vw, 2.75rem);
+  --text-display-sm: clamp(1.375rem, 2.5vw, 2rem);
+
+  /* Spatial rhythm */
+  --section-py: clamp(4rem, 10vw, 8rem);
+  --section-py-tight: clamp(3rem, 6vw, 5rem);
+  --section-px: clamp(1.25rem, 5vw, 4rem);
+  --content-max: 1280px;
+}
+
+/* Base */
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Focus-visible — keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* VCS dev markers (only in dev mode via [data-vcs="on"] on root) */
+[data-vcs="on"] [data-cid] {
+  outline: 1px dashed rgba(0, 100, 255, 0.3);
+  outline-offset: 2px;
+}
+
+[data-vcs="on"] [data-cid]:hover {
+  outline-color: oklch(55% 0.22 25);
+  outline-style: solid;
+}

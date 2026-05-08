@@ -1,0 +1,19 @@
+export default function HomePage() {
+  return (
+    <section
+      data-cid="{{slug}}-home-section"
+      className="flex flex-col items-center justify-center min-h-[60vh] px-6 py-24"
+    >
+      <h1 className="text-display-lg font-display font-medium text-foreground mb-4">
+        {{slug}}
+      </h1>
+      <p className="text-lg text-muted-foreground max-w-prose text-center">
+        Your new site is ready. Start building in{" "}
+        <code className="font-mono text-sm bg-muted px-1.5 py-0.5 rounded">
+          app/page.tsx
+        </code>
+        .
+      </p>
+    </section>
+  );
+}

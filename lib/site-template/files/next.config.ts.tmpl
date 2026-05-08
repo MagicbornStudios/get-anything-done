@@ -1,0 +1,12 @@
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // Monorepo: workspace packages need output tracing from repo root.
+  outputFileTracingRoot: require("path").join(__dirname, "../../"),
+  experimental: {
+    // Enable workspace packages to be transpiled.
+    externalDir: true,
+  },
+};
+
+export default nextConfig;

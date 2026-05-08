@@ -130,124 +130,139 @@ function createSiteCommand(deps) {
   const siteNewCmd = defineCommand({
     meta: {
       name: 'new',
-      description: 'Bootstrap a new customer site from template (default: vendor template; --template <existing-slug> clones a sites/<slug>)',
+      description: 'Bootstrap a new site from the GAD site template (Next.js 16 + Tailwind v4 + VCS). Use --template <slug> to clone an existing site instead.',
     },
     args: {
-      slug: { type: 'positional', description: 'Slug for the new site (e.g. test-tenant)', required: true },
-      name: { type: 'string', description: 'Site name. Defaults to slug.', default: '' },
-      template: { type: 'string', description: "Template source. Either 'customer-site' (default vendor template) or an existing site slug under sites/ (e.g. '7greens', 'grime-time').", default: 'customer-site' },
+      slug: { type: 'positional', description: 'Slug for the new site (e.g. my-site)', required: true },
+      'target-dir': { type: 'string', description: 'Override destination directory. Defaults to sites/<slug> in repo root.', default: '' },
+      template: { type: 'string', description: "Template source. 'gad' (default) = lib/site-template; or an existing site slug under sites/ to clone.", default: 'gad' },
+      'gh-init': { type: 'boolean', description: 'Run `gh repo create` after scaffolding.', default: false },
+      'gh-org': { type: 'string', description: 'GitHub org/user for --gh-init. Defaults to personal account.', default: '' },
+      'vercel-link': { type: 'boolean', description: 'Run `vercel link --project=<slug>` after scaffolding.', default: false },
+      'vercel-team': { type: 'string', description: 'Vercel team scope for --vercel-link.', default: '' },
+      'dry-run': { type: 'boolean', description: 'Print the file plan without writing anything.', default: false },
     },
     run({ args }) {
       const fs = require('fs');
-      const { execSync } = require('child_process');
+
+      const dryRun = args['dry-run'] === true || args.dryRun === true;
+      const doGhInit = args['gh-init'] === true || args.ghInit === true;
+      const doVercelLink = args['vercel-link'] === true || args.vercelLink === true;
+      const ghOrg = args['gh-org'] || args.ghOrg || '';
+      const vercelTeam = args['vercel-team'] || args.vercelTeam || '';
 
       const repoRoot = deps.findRepoRoot();
-      const targetDir = path.join(repoRoot, 'sites', args.slug);
+      const targetDir = args['target-dir']
+        ? path.resolve(args['target-dir'])
+        : path.join(repoRoot, 'sites', args.slug);
 
-      if (fs.existsSync(targetDir)) {
-        outputError(`Target directory already exists: ${targetDir}`);
-        return;
-      }
+      // ── Template kind resolution ──────────────────────────────────────────
+      const templateArg = args.template || 'gad';
 
-      // Resolve template source.
-      let templateDir;
-      let templateKind;
-      if (args.template === 'customer-site') {
-        templateDir = path.join(repoRoot, 'vendor/get-anything-done/templates/customer-site');
-        templateKind = 'vendor';
-      } else {
-        templateDir = path.join(repoRoot, 'sites', args.template);
-        templateKind = 'site-clone';
-        if (!fs.existsSync(templateDir)) {
-          outputError(`Template not found: --template ${args.template} resolves to ${templateDir}, which does not exist. Pass an existing slug under sites/ or 'customer-site'.`);
+      if (templateArg === 'gad') {
+        // Use lib/site-template generator (primary path).
+        const { generateSite, runGhInit, runVercelLink } = require('../../lib/site-template/index.cjs');
+
+        if (!dryRun && fs.existsSync(targetDir)) {
+          outputError(`Target directory already exists: ${targetDir}`);
           return;
         }
-      }
 
-      console.log(`[gad site new] bootstrapping sites/${args.slug} from template '${args.template}' (${templateKind}) ...`);
+        console.log(`[gad site new] scaffolding ${args.slug} → ${targetDir}${dryRun ? ' (dry-run)' : ''}`);
 
-      try {
-        // 1. Copy template
-        if (templateKind === 'site-clone') {
-          copySiteTree(templateDir, targetDir);
-        } else {
-          fs.cpSync(templateDir, targetDir, { recursive: true });
+        try {
+          const result = generateSite({ slug: args.slug, targetDir, dryRun });
+
+          if (result.errors.length) {
+            for (const e of result.errors) outputError(e);
+            if (!dryRun) return; // abort on real errors; dry-run continues
+          }
+
+          if (dryRun) {
+            console.log('');
+            console.log(`File plan (${result.files.length} files):`);
+            for (const f of result.files) console.log(`  ${f}`);
+            console.log('');
+            if (doGhInit) runGhInit({ slug: args.slug, org: ghOrg, targetDir, dryRun: true });
+            if (doVercelLink) runVercelLink({ slug: args.slug, team: vercelTeam, targetDir, dryRun: true });
+            return;
+          }
+
+          if (doGhInit) runGhInit({ slug: args.slug, org: ghOrg, targetDir });
+          if (doVercelLink) runVercelLink({ slug: args.slug, team: vercelTeam, targetDir });
+
+          const slugUpper = args.slug.replace(/-/g, '_').toUpperCase();
+          console.log('');
+          console.log(`[gad site new] done! ${result.files.length} files written to ${targetDir}`);
+          console.log('');
+          console.log('Next steps:');
+          console.log(`  1. cd sites/${args.slug}`);
+          if (!doVercelLink) console.log(`  2. vercel link --project=${args.slug}   # link Vercel project`);
+          console.log(`  ${doVercelLink ? '2' : '3'}. cd ../.. && gad site link --slug ${args.slug} --domain <yourdomain.com>`);
+          console.log(`  ${doVercelLink ? '3' : '4'}. Add VERCEL_PROJECT_ID_${slugUpper} to repo secrets`);
+          console.log(`  ${doVercelLink ? '4' : '5'}. Commit + push — first push triggers the deploy workflow`);
+        } catch (err) {
+          outputError(`Failed to scaffold site: ${err.message}`);
         }
 
-        // 2. Replace tokens (vendor template only) + slug substitution (both kinds)
-        const siteName = args.name || args.slug;
-        const tenantId = `tenant-${args.slug}`;
-        const sourceSlug = args.template; // for site-clone substitutions
+      } else {
+        // Fallback: clone an existing site under sites/<template>.
+        const templateDir = path.join(repoRoot, 'sites', templateArg);
+        if (!fs.existsSync(templateDir)) {
+          outputError(`Template not found: --template ${templateArg} resolves to ${templateDir}, which does not exist.`);
+          return;
+        }
 
-        function replaceInFile(filePath) {
-          if (fs.statSync(filePath).isDirectory()) return;
-          const ext = path.extname(filePath);
-          if (['.png', '.jpg', '.jpeg', '.ico', '.pdf', '.webp', '.gif', '.woff', '.woff2', '.ttf'].includes(ext)) return;
+        if (!dryRun && fs.existsSync(targetDir)) {
+          outputError(`Target directory already exists: ${targetDir}`);
+          return;
+        }
 
-          let content;
-          try { content = fs.readFileSync(filePath, 'utf8'); }
-          catch { return; }
-          let changed = false;
-          if (content.includes('{{SITE_NAME}}')) {
-            content = content.replace(/{{SITE_NAME}}/g, siteName);
-            changed = true;
-          }
-          if (content.includes('{{TENANT_ID}}')) {
-            content = content.replace(/{{TENANT_ID}}/g, tenantId);
-            changed = true;
-          }
-          // Site-clone: rewrite source-slug occurrences in known-safe text files only.
-          if (templateKind === 'site-clone' && sourceSlug && sourceSlug !== args.slug) {
-            const safeExt = ['.md', '.json', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.toml', '.yml', '.yaml'];
-            if (safeExt.includes(ext)) {
-              const re = new RegExp(`\\b${sourceSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
-              if (re.test(content)) {
-                content = content.replace(re, args.slug);
-                changed = true;
-              }
+        console.log(`[gad site new] cloning sites/${templateArg} → ${targetDir}${dryRun ? ' (dry-run)' : ''}`);
+
+        if (dryRun) {
+          console.log('[dry-run] would copy site tree + substitute slug tokens.');
+          return;
+        }
+
+        try {
+          copySiteTree(templateDir, targetDir);
+
+          // Substitute source slug with new slug in text files.
+          function replaceInFile(filePath) {
+            if (fs.statSync(filePath).isDirectory()) return;
+            const ext = path.extname(filePath);
+            const safeExt = ['.md', '.json', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.toml', '.yml', '.yaml', '.css'];
+            if (!safeExt.includes(ext)) return;
+            let content;
+            try { content = fs.readFileSync(filePath, 'utf8'); } catch { return; }
+            const re = new RegExp(`\\b${templateArg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+            if (re.test(content)) {
+              fs.writeFileSync(filePath, content.replace(re, args.slug), 'utf8');
             }
           }
-          if (changed) fs.writeFileSync(filePath, content, 'utf8');
-        }
 
-        function walk(dir) {
-          for (const file of fs.readdirSync(dir)) {
-            const fullPath = path.join(dir, file);
-            if (fs.statSync(fullPath).isDirectory()) walk(fullPath);
-            else replaceInFile(fullPath);
+          function walkReplace(dir) {
+            for (const file of fs.readdirSync(dir)) {
+              const fullPath = path.join(dir, file);
+              if (fs.statSync(fullPath).isDirectory()) walkReplace(fullPath);
+              else replaceInFile(fullPath);
+            }
           }
+
+          walkReplace(targetDir);
+
+          const pkgPath = path.join(targetDir, 'package.json');
+          if (fs.existsSync(pkgPath)) {
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            pkg.name = args.slug;
+            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
+          }
+
+          console.log(`[gad site new] done! Cloned to ${targetDir}`);
+        } catch (err) {
+          outputError(`Failed to clone site: ${err.message}`);
         }
-
-        walk(targetDir);
-
-        // Update package.json name
-        const pkgPath = path.join(targetDir, 'package.json');
-        if (fs.existsSync(pkgPath)) {
-          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-          pkg.name = templateKind === 'site-clone' ? args.slug : `@gad-sites/${args.slug}`;
-          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n', 'utf8');
-        }
-
-        // 3. pnpm install (skip on site-clone — assume root workspace install handles it)
-        if (templateKind === 'vendor') {
-          console.log(`[gad site new] running pnpm install ...`);
-          execSync('pnpm install', { cwd: repoRoot, stdio: 'inherit' });
-        }
-
-        const slugUpper = args.slug.replace(/-/g, '_').toUpperCase();
-        console.log('');
-        console.log(`[gad site new] done! New site at sites/${args.slug}`);
-        console.log('');
-        console.log('Next steps:');
-        console.log(`  1. cd sites/${args.slug}`);
-        console.log(`  2. vercel link            # link to a new (or existing) Vercel project`);
-        console.log(`  3. cd ../.. && gad site link --slug ${args.slug} --domain <yourdomain.com>`);
-        console.log(`  4. Copy .github/workflows/${args.template === 'customer-site' ? '<template>' : args.template}-deploy.yml`);
-        console.log(`     → .github/workflows/${args.slug}-deploy.yml and update slug refs`);
-        console.log(`  5. Add VERCEL_PROJECT_ID_${slugUpper} to repo secrets`);
-        console.log(`  6. Commit + push — first push to main triggers the deploy workflow`);
-      } catch (err) {
-        outputError(`Failed to bootstrap site: ${err.message}`);
       }
     },
   });
