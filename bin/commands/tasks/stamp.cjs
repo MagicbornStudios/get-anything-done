@@ -126,7 +126,7 @@ function createTasksStampCommand(deps) {
       resolution: { type: 'string', description: 'Free-form completion note', default: '' },
       'commit-sha': { type: 'string', description: 'Git commit hash that landed the work', default: '' },
       evidence: { type: 'string', description: 'Textual evidence for status=done (min 20 chars)', default: '' },
-      enforce: { type: 'boolean', description: 'Enforce evidence rules (override config)', default: false },
+      files: { type: 'string', description: 'Comma-separated list of file paths to add to task files array', default: '' },
     },
     run({ args }) {
       const resolved = deps.resolveProjectRootById(deps, args.projectid);
@@ -152,13 +152,19 @@ function createTasksStampCommand(deps) {
       if (args.runtime)    patch.runtime = String(args.runtime);
       if (args['skill-id']) patch.skill = String(args['skill-id']);
       if (args.status)     patch.status = String(args.status).toLowerCase();
-      if (args.resolution) patch.resolution = String(args.resolution);
-
-      if (Object.keys(patch).length === 0) {
-        deps.outputError('Nothing to stamp — pass at least one of --agent / --role / --runtime / --skill-id / --status / --resolution.');
-        process.exit(1);
-        return;
+      if (args.files) {
+        const newFiles = String(args.files).split(',').map(s => s.trim()).filter(Boolean);
+        const existingFiles = Array.isArray(existing.files) ? existing.files : [];
+        const merged = [...new Set([...existingFiles, ...newFiles])];
+        if (merged.length > 0) patch.files = merged;
       }
+
+       if (Object.keys(patch).length === 0) {
+         deps.outputError('Nothing to stamp — pass at least one of --agent / --role / --runtime / --skill-id / --status / --resolution / --files.');
+         process.exit(1);
+         return;
+       }
+
 
       // Agent-attributed done stamps need git-backed evidence.
       const newStatus = patch.status || '';

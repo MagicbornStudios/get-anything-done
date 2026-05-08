@@ -18,6 +18,7 @@ function createTasksAddCommand(deps) {
       type: { type: 'string', description: 'Optional category (code | site | design | migration | cleanup | framework | …)', default: '' },
       depends: { type: 'string', description: 'Comma-separated list of prerequisite task ids (no spaces)', default: '' },
       status: { type: 'string', description: 'Initial status (default: planned)', default: 'planned' },
+      files: { type: 'string', description: 'Comma-separated list of file paths touched by this task', default: '' },
       print: { type: 'boolean', description: 'Print the JSON to stdout instead of writing the file', default: false },
     },
     run({ args }) {
@@ -27,14 +28,16 @@ function createTasksAddCommand(deps) {
       const planningDir = path.join(baseDir, root.path, root.planningDir);
 
       const taskFiles = require('../../../lib/task-files.cjs');
-      const def = {
-        id: String(args.id),
-        phase: String(args.phase),
-        status: String(args.status || 'planned'),
-        goal: String(args.goal),
-        type: String(args.type || ''),
-        depends: args.depends ? String(args.depends).split(',').map(s => s.trim()).filter(Boolean) : [],
-      };
+        const def = {
+          id: String(args.id),
+          phase: String(args.phase),
+          status: String(args.status || 'planned'),
+          goal: String(args.goal),
+          type: String(args.type || ''),
+          depends: args.depends ? String(args.depends).split(',').map(s => s.trim()).filter(Boolean) : [],
+          files: args.files ? String(args.files).split(',').map(s => s.trim()).filter(Boolean) : [],
+        };
+
 
       try {
         if (args.print) {
