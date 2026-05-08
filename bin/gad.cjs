@@ -109,6 +109,14 @@ const pkg = require('../package.json');
 if (process.argv[2] === '__gad_internal_install__') {
   process.argv.splice(2, 1);
   require('./install.js');
+} else if (process.argv[2] === 'git') {
+  // Early-exit passthrough — bypass citty entirely so all git flags reach the binary unchanged.
+  // GLOBAL-D-316 / task 75-15. Logs envelope to .planning/.gad-log/<date>.jsonl.
+  require('./commands/wrappers/git.cjs').run(process.argv.slice(3));
+} else if (process.argv[2] === 'gh') {
+  // Early-exit passthrough — bypass citty entirely so all gh flags reach the binary unchanged.
+  // GLOBAL-D-316 / task 75-16. Logs envelope to .planning/.gad-log/<date>.jsonl.
+  require('./commands/wrappers/gh.cjs').run(process.argv.slice(3));
 } else {
 
 // ---------------------------------------------------------------------------

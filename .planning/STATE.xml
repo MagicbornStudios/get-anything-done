@@ -50,6 +50,9 @@
   <last-updated>2026-05-05T23:45:24.409Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="unknown" at="2026-05-08T08:38:11.899Z">feat(75-15,75-16): gad git + gh wrappers shipped per GLOBAL-D-316 — early-exit passthrough in gad.cjs, wrapper-base.cjs shared helper, structured JSONL envelope in .planning/.gad-log/</entry>
+    <entry agent="unknown" at="2026-05-08T08:37:38.046Z">75-14 done — sitrep-digest.cjs writer + bin/commands/sitrep.cjs CLI + overnight tick wired; gad sitrep --tick/--watch tested</entry>
+    <entry agent="unknown" at="2026-05-08T08:37:36.400Z">feat(75-13): gad cron CLI — cross-platform schedule management (Windows schtasks + Unix crontab); JSON source-of-truth at .planning/cron.json; add/list/remove/run-now subcommands; 22 tests all passing</entry>
     <entry agent="unknown" at="2026-05-08T08:36:34.368Z">57-10 done — extracted model rollup to lib/telemetry/model-rollup.cjs; HEALTH MODELS line added to snapshot</entry>
     <entry agent="unknown" at="2026-05-08T08:35:07.731Z">feat(35-14): vLLM endpoint health probe wired into gad runtime check</entry>
     <entry agent="unknown" at="2026-05-08T05:54:26.369Z" tags="GAD-T-35-12,GLOBAL-D-317,telemetry,models">Shipped gad telemetry models — cross-source rollup keyed by model_id (.gad-log + trace-events + slm-learning REGISTRY/DELTA_GRAPH). 61885 logged calls in last 24h grouped by runtime; 4 SLM models from REGISTRY listed with 0 calls (vLLM not yet serving). Note: 61885 calls have no model_id — task GAD-T-35-13 will extend adapters. Tasks 35-12..35-16 registered (impl done, 4 follow-ups planned: adapter model_id+tokens, vLLM probe, MCP tray card, DELTA_GRAPH lineage cross-link).</entry>
