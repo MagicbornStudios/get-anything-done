@@ -50,6 +50,7 @@
   <last-updated>2026-05-05T23:45:24.409Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="unknown" at="2026-05-08T14:34:33.474Z">35-17 done: wired buildTelemetryPayload into worker-loop work-complete log + parseWorkerRecords model field + gad-log post-completion entry; 10/10 tests pass</entry>
     <entry agent="unknown" at="2026-05-08T08:49:32.708Z" tags="75-17,75-18">Closed 75-17+75-18: cross-project disk rollup + archive-and-purge automation — 18/18 tests pass</entry>
     <entry agent="unknown" at="2026-05-08T08:46:56.634Z">feat(75-21): gad inventory CLI — runtime CLIs + local models + embeddings + sidecars + built binaries cross-project rollup</entry>
     <entry agent="unknown" at="2026-05-08T08:45:30.177Z">feat(75-22..75-26): 5 more binary wrappers (hf, modal, supabase, vercel, docker) per GLOBAL-D-316; early-exit interceptors wired in bin/gad.cjs lines 120-134</entry>

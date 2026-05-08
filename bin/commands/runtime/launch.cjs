@@ -310,6 +310,17 @@ function createRuntimeLaunchCommand({
           shell: false,
         });
         if (child.error) throw child.error;
+        // Post-completion dispatch record — model_id is null because stdio:inherit
+        // does not capture stdout. Worker-loop path populates model_id via
+        // buildTelemetryPayload from captured stdout (GAD-T-35-17).
+        writeDispatchLog(logDir, {
+          event: 'runtime-launch-complete',
+          ts: new Date().toISOString(),
+          projectId: context.projectId,
+          runtime: selectedRuntime,
+          exit_code: child.status,
+          model_id: null,
+        });
         if (child.status !== 0) {
           throw new Error(`${selectedRuntime} exited with status ${child.status}.`);
         }

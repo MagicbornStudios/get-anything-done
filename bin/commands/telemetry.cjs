@@ -459,10 +459,12 @@ function parseWorkerRecords(filePath, handoffIndex) {
     if (entry.kind === 'runtime-rate-limit-on-call') success = false;
     if (entry.kind === 'self-claim-error') success = false;
 
+    // model_id is populated by worker-loop's work-complete enrichment (GAD-T-35-17).
+    const workerModelId = (entry.kind === 'work-complete' && entry.model_id) ? String(entry.model_id) : null;
     records.push({
       ts: entry.ts || null,
       runtime,
-      model: null,
+      model: workerModelId,
       duration_ms: Number.isFinite(entry.duration_ms) ? entry.duration_ms : null,
       success,
       source_stream: 'worker-log',
