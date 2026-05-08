@@ -26,6 +26,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawn, spawnSync } = require('node:child_process');
 const { defineCommand } = require('citty');
+const { writeSitrepDigest } = require('../../lib/sitrep-digest.cjs');
 
 const DEFAULT_TICK_MINUTES = 30;
 const PIDFILE_NAME = 'overnight.pid';
@@ -224,11 +225,17 @@ async function runTick(deps, log) {
   const t0 = Date.now();
   log('--- tick start ---');
   try {
-    const { projects } = getProjects(deps);
+    const { baseDir, projects } = getProjects(deps);
     try { stepHealth(null, log); } catch (e) { log(`health error: ${e.message}`); }
     try { stepProvenance(projects, log); } catch (e) { log(`provenance error: ${e.message}`); }
     try { stepSweepPhases(projects, log); } catch (e) { log(`sweep error: ${e.message}`); }
     try { stepEnsureHandoffs(projects, log); } catch (e) { log(`handoff error: ${e.message}`); }
+    // Write SITREP digest for passive operator visibility (GLOBAL-D-315)
+    try {
+      const projectid = (projects[0] && projects[0].projectId) || 'global';
+      writeSitrepDigest(baseDir, projectid);
+      log('sitrep: digest written to .planning/.sitrep.md');
+    } catch (e) { log(`sitrep error: ${e.message}`); }
   } finally {
     _runtime.ticking = false;
     log(`--- tick end (${((Date.now() - t0) / 1000).toFixed(1)}s) ---`);
