@@ -108,6 +108,15 @@ function buildSingletons(projectid) {
       phase: 315,
       noRespawn: true,
     },
+    // ── GLOBAL-D-323 Phase D ─────────────────────────────────────────────────
+    {
+      id: 'cross-project-watcher',
+      pidfile: 'cross-project-watcher.pid',
+      spawnArgs: ['cross-project', 'watch', '--daemon', '--tick-seconds', '30'],
+      healthCheck: 'polls all planning roots every 30s — emits desktop notification on new cross-project handoffs',
+      phase: 323,
+      noRespawn: true,
+    },
     // mcp-server is on-demand by Claude/Cursor MCP clients; we don't auto-start
     // it here unless --include-mcp. It runs over stdio when an MCP client connects.
   ];
