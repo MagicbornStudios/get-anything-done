@@ -26,6 +26,7 @@ const { startWatching } = require('../../lib/provenance/watch.cjs');
 const { startDaemon, DEFAULT_INTERVAL_MS } = require('../../lib/provenance/daemon.cjs');
 const { extractCorrections } = require('../../lib/provenance/corrections.cjs');
 const { provenanceDir, readJsonl, parseDateRange } = require('../../lib/provenance/index.cjs');
+const { exportSft } = require('../../lib/provenance/sft-export.cjs');
 
 function resolveProjectInfo(deps) {
   const baseDir = deps.findRepoRoot();
@@ -458,6 +459,97 @@ function createProvenanceCommand(deps) {
     },
   });
 
+  const sftExportCmd = defineCommand({
+    meta: {
+      name: 'sft-export',
+      description: 'Export SFT training tuples (system_prompt/user_prompt/assistant_response/meta). Grouped by runtime/task-type/date. Quality labels: good|mid|bad|unknown.',
+    },
+    args: {
+      projectid: { type: 'string', description: 'Filter to one project (default: all)', default: '' },
+      since: { type: 'string', description: 'ISO date start (default: 7 days ago)', default: '' },
+      until: { type: 'string', description: 'ISO date end (default: now)', default: '' },
+      out: { type: 'string', description: 'Output directory (default: ../slm_learning/data/sft-corpus/)', default: '' },
+      rebuild: { type: 'boolean', description: 'Re-run joiner+survival+frequency+labeler before export', default: false },
+      json: { type: 'boolean', description: 'Emit stats as JSON (machine-readable)', default: false },
+    },
+    run({ args }) {
+      const { baseDir, config, projects } = resolveProjectInfo(deps);
+      const targets = args.projectid
+        ? projects.filter((p) => p.projectId === args.projectid)
+        : projects;
+
+      if (targets.length === 0) {
+        deps.outputError(`No matching projects. Tried projectid=${args.projectid || '<all>'}`);
+        process.exit(1);
+        return;
+      }
+
+      const outDir = args.out
+        ? path.resolve(args.out)
+        : path.resolve(baseDir, '..', 'slm_learning', 'data', 'sft-corpus');
+
+      const aggregated = {
+        tuples_written: 0,
+        files: {},
+        total_bytes: 0,
+        skipped: 0,
+        projects_processed: [],
+      };
+
+      for (const project of targets) {
+        const planningDir = path.join(project.rootPath, project.planningDir);
+        if (!args.json) {
+          console.log(`[sft-export] ${project.projectId} <- ${path.relative(baseDir, planningDir)}`);
+        }
+
+        const result = exportSft({
+          projectRoot: project.rootPath,
+          planningDir,
+          since: args.since || undefined,
+          until: args.until || undefined,
+          outDir,
+          projectid: args.projectid || null,
+          rebuild: !!args.rebuild,
+          config,
+          projects,
+        });
+
+        aggregated.tuples_written += result.tuples_written;
+        aggregated.total_bytes += result.total_bytes;
+        aggregated.skipped += result.skipped;
+        Object.assign(aggregated.files, result.files);
+        aggregated.projects_processed.push({
+          projectid: project.projectId,
+          tuples: result.tuples_written,
+          skipped: result.skipped,
+          files: Object.keys(result.files).length,
+        });
+
+        if (!args.json) {
+          console.log(`  tuples=${result.tuples_written}  skipped=${result.skipped}  files=${Object.keys(result.files).length}  bytes=${result.total_bytes}`);
+        }
+      }
+
+      if (args.json) {
+        console.log(JSON.stringify(aggregated, null, 2));
+      } else {
+        console.log(`\n[sft-export] done.`);
+        console.log(`  total tuples : ${aggregated.tuples_written}`);
+        console.log(`  total skipped: ${aggregated.skipped}`);
+        console.log(`  total bytes  : ${aggregated.total_bytes}`);
+        console.log(`  output dir   : ${outDir}`);
+        const fileCount = Object.keys(aggregated.files).length;
+        console.log(`  files written: ${fileCount}`);
+        if (fileCount > 0) {
+          console.log('\n  Files:');
+          for (const [f, count] of Object.entries(aggregated.files)) {
+            console.log(`    ${path.relative(baseDir, f)}  (${count} tuples)`);
+          }
+        }
+      }
+    },
+  });
+
   return defineCommand({
     meta: {
       name: 'provenance',
@@ -467,6 +559,7 @@ function createProvenanceCommand(deps) {
       build: buildCmd,
       show: showCmd,
       export: exportCmd,
+      'sft-export': sftExportCmd,
       stats: statsCmd,
       lookup: lookupCmd,
       watch: watchCmd,
