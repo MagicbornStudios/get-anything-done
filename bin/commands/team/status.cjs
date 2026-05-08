@@ -12,6 +12,7 @@ const { listWorkerIds, readStatus } = require('../../../lib/team/status.cjs');
 const { mailboxDepth } = require('../../../lib/team/mailbox.cjs');
 const { readHeartbeat } = require('../../../lib/team/dispatcher.cjs');
 const { checkAndLogRestart } = require('../../../lib/team/restart-log.cjs');
+const { getCooldownRemainingMs } = require('../../../lib/team/rate-limit.cjs');
 
 /**
  * Write (or update) the <dispatcher> element in STATE.xml.
@@ -128,6 +129,9 @@ function createStatusCommand(deps) {
       const rows = listWorkerIds(baseDir).map(id => {
         const s = readStatus(baseDir, id) || {};
         const ageMs = s.last_heartbeat ? Date.now() - Date.parse(s.last_heartbeat) : null;
+        const workerRuntime = s.runtime || cfg.runtime || null;
+        const cooldownMs = workerRuntime ? getCooldownRemainingMs(baseDir, workerRuntime) : 0;
+        const cooldown_remaining_seconds = cooldownMs > 0 ? Math.ceil(cooldownMs / 1000) : 0;
         return {
           id, role: s.role || '?', lane: s.lane || '-',
           state: s.state || 'UNKNOWN',
@@ -135,20 +139,22 @@ function createStatusCommand(deps) {
           current_ref: s.current_ref || '-',
           heartbeat_age_s: ageMs == null ? '-' : Math.round(ageMs / 1000),
           pid: s.pid || '-',
-          runtime: s.runtime || cfg.runtime || '-',
+          runtime: workerRuntime || '-',
+          cooldown_remaining_seconds,
         };
       });
       if (args.json) { console.log(JSON.stringify({ config: cfg, workers: rows, dispatcher: hb }, null, 2)); return; }
       console.log(`Team: ${cfg.workers} workers${cfg.from_profile ? ` profile=${cfg.from_profile}` : ''}, runtime=${cfg.runtime}, autopause@${cfg.autopause_threshold}% remaining`);
       console.log(`Dispatcher: ${hb.state}  pid=${hb.pid == null ? 'n/a' : hb.pid}  heartbeat_age=${hb.age_s == null ? 'n/a' : hb.age_s + 's'}`);
       console.log('');
-      console.log('  ID   ROLE      LANE           RUNTIME       STATE         MAILBOX  CURRENT                           HB(s)  PID');
-      console.log('  ──── ────────  ─────────────  ────────────  ────────────  ───────  ────────────────────────────────  ─────  ─────');
+      console.log('  ID   ROLE      LANE           RUNTIME       STATE         MAILBOX  COOLDOWN  CURRENT                           HB(s)  PID');
+      console.log('  ──── ────────  ─────────────  ────────────  ────────────  ───────  ────────  ────────────────────────────────  ─────  ─────');
       for (const r of rows) {
         const ref = String(r.current_ref).slice(0, 32).padEnd(32);
         const lane = String(r.lane).slice(0, 13).padEnd(13);
         const rt = String(r.runtime).slice(0, 12).padEnd(12);
-        console.log(`  ${r.id.padEnd(4)} ${String(r.role).padEnd(8)} ${lane} ${rt} ${String(r.state).padEnd(12)} ${String(r.mailbox).padStart(7)}  ${ref}  ${String(r.heartbeat_age_s).padStart(5)}  ${r.pid}`);
+        const cd = r.cooldown_remaining_seconds > 0 ? `${r.cooldown_remaining_seconds}s` : '--';
+        console.log(`  ${r.id.padEnd(4)} ${String(r.role).padEnd(8)} ${lane} ${rt} ${String(r.state).padEnd(12)} ${String(r.mailbox).padStart(7)}  ${cd.padStart(8)}  ${ref}  ${String(r.heartbeat_age_s).padStart(5)}  ${r.pid}`);
       }
     },
   });

@@ -114,11 +114,19 @@ Effect: operator can trigger a dispatcher sweep on demand without waiting for th
 
 ## Gaps
 
-### G1. Runtime parking disabled by default
+### G1. Runtime parking disabled by default — RESOLVED (phase 110-01)
 
-`parkingEnabled` returns `false` unless `GAD_ENABLE_RUNTIME_PARKING=1`. When parking is off, a rate-limited runtime is NOT auto-skipped for subsequent handoffs in the same tick — the handoff is requeued but a different worker can immediately reclaim it on the same runtime. This means same-runtime hammering CAN still occur if only one worker covers that runtime. The env-var is not documented in any reference file or `gad team` startup output.
+`parkingEnabled` now returns `true` by default (opt-OUT). Set `GAD_ENABLE_RUNTIME_PARKING=0` to disable.
 
-Fix needed: document the flag + either enable it by default for team mode or make `gad team start` print a warning when it is off.
+Previously the env-var was opt-in (`=1`). As of phase 110-01, parking is on unless the operator explicitly disables it.
+
+On dispatcher startup the daemon logs to stderr:
+```
+[gad-team] runtime parking: enabled
+```
+and a `parking-state` entry lands in `dispatcher.log.jsonl` so the state is visible in logs.
+
+Env-var: `GAD_ENABLE_RUNTIME_PARKING=0` to disable, unset or any other value → enabled.
 
 ---
 
@@ -136,15 +144,29 @@ Phase 87's original intent ("switch runtime automatically") is only partially ac
 
 ---
 
-### G4. Cooldown recovery not surfaced in `gad team status`
+### G4. Cooldown recovery not surfaced in `gad team status` — RESOLVED (phase 110-01)
 
-When a runtime is parked via `parkRuntime`, the cooldown state is stored in `.planning/team/runtime-cooldown.json` but `gad team status` does not display it. An operator can't see at a glance which runtimes are cooling down and for how long without inspecting the JSON file directly.
+`gad team status` now includes a `COOLDOWN` column in the text table and a `cooldown_remaining_seconds` field in JSON output per worker.
+
+- `--` means not parked.
+- `<N>s` means the worker's runtime has `N` seconds remaining in its parking cooldown.
+- Source: `lib/team/rate-limit.cjs::getCooldownRemainingMs(baseDir, runtime)` — reads `runtime-cooldown.json`, returns 0 if entry is expired or absent.
+- JSON: `workers[n].cooldown_remaining_seconds` (integer, 0 = no cooldown).
 
 ---
 
-### G5. No automated account-health polling
+### G5. No automated account-health polling — RESOLVED (phase 110-01)
 
-Account statuses (active / paused / rate-limited / error) in `runtime-accounts.json` are only updated when an operator manually calls `gad accounts pause/resume` or when the worker logs a `runtime-rate-limit-on-call` event. There is no automated loop that flips an account's status to `rate-limited` after exhaustion and back to `active` after the reset window. The `current_quota` field is always `null` in the live registry — nothing writes to it.
+`gad accounts poll` is now available.
+
+- `gad accounts poll --once` — single pass: auto-flips `rate-limited` → `active` when `reset_at` < now; calls per-runtime probe stubs where they exist.
+- `gad accounts poll --daemon [--interval-min N]` — hardened loop (in-flight guard, BELOW_NORMAL priority advisory, skip-if-no-changes); default 15-minute interval.
+- `gad accounts poll --json` — JSON output `{ updated: N, statuses: [...] }`.
+- Logs to `.planning/team/account-poller.log`.
+
+Per-runtime quota probe functions (`pollCodex`, `pollGemini`, `pollClaude`, `pollOpencode`) are in `lib/team/account-poller.cjs`. All currently return `{ status: 'unknown', reason: 'no quota endpoint' }` because no provider exposes a usable quota REST endpoint from stored OAuth files. The stub pattern makes it easy to add probes when endpoints become available. The `reset_at` flip runs regardless.
+
+When all accounts return `unknown`, poll reports `0 updated (all unknown — no quota endpoints available)` cleanly.
 
 ---
 
