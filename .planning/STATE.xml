@@ -50,6 +50,7 @@
   <last-updated>2026-05-05T23:45:24.409Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="unknown" at="2026-05-08T18:17:50.435Z">35-42 done — snapshot aggregates cross-project handoffs from all planning roots (GLOBAL-D-323 Phase A)</entry>
     <entry agent="unknown" at="2026-05-08T18:06:14.121Z">Wired trigger_skill envelope: active-skill-stack.cjs + trace-hook push/pop + join.cjs propagation + gad self diagnose --provenance smoke check. 29 tests green.</entry>
     <entry agent="unknown" at="2026-05-08T17:52:22.391Z">feat(35-39): design-decisions corpus shipped — gad design CLI + curator label class + 3 seed entries (dd-001/002/003)</entry>
     <entry agent="unknown" at="2026-05-08T17:18:58.114Z">35-34 done — gad desktop launch defaults to tauri; --browser for vite fallback; rust detect; log capture wired</entry>

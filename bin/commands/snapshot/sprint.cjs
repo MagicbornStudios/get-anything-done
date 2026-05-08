@@ -10,8 +10,10 @@ const {
 } = require('../../../lib/snapshot-sections.cjs');
 const { buildEquippedSkillsSection } = require('../../../lib/snapshot-equipped-skills.cjs');
 const { buildHealthSection } = require('../../../lib/snapshot-health-rollup.cjs');
+const { buildAgentPresenceSection } = require('../../../lib/snapshot-agent-presence-section.cjs');
 const { buildSprintTaskSection } = require('./sprint-tasks.cjs');
 const { maybeBuildGraphSection, stampSnapshotSession } = require('./sprint-runtime.cjs');
+const { buildCrossProjectHandoffsSection } = require('../../../lib/snapshot-cross-project-section.cjs');
 
 function handleSprintSnapshot(deps, context, args) {
   const {
@@ -83,6 +85,30 @@ function handleSprintSnapshot(deps, context, args) {
     runtime: deps.resolveDetectedRuntimeId(),
   });
   if (sprintHandoffsSection) sections.push(sprintHandoffsSection);
+
+  // GLOBAL-D-323 Phase A — cross-project handoffs aggregation
+  try {
+    const _crossConfig = deps.gadConfig ? deps.gadConfig.load(baseDir) : null;
+    if (_crossConfig) {
+      const crossSection = buildCrossProjectHandoffsSection({
+        baseDir,
+        projectid: root.id,
+        gadConfig: _crossConfig,
+        render: deps.render,
+      });
+      if (crossSection) sections.push(crossSection);
+    }
+  } catch (_crossErr) {
+    // Never let cross-project scan break the main snapshot
+    try { process.stderr.write(`[snapshot] cross-project handoffs scan failed (non-fatal): ${_crossErr.message}\n`); } catch {}
+  }
+
+  // GLOBAL-D-323 Phase B — agent presence ledger
+  let _presenceConfig = null;
+  try { _presenceConfig = deps.gadConfig ? deps.gadConfig.load(baseDir) : null; } catch {}
+  const agentPresenceSection = buildAgentPresenceSection({ baseDir, config: _presenceConfig });
+  if (agentPresenceSection) sections.push(agentPresenceSection);
+
   const sprintEvolutionSection = deps.buildEvolutionSection(root, baseDir);
   if (sprintEvolutionSection) sections.push(sprintEvolutionSection);
 
@@ -122,6 +148,8 @@ function handleSprintSnapshot(deps, context, args) {
     : '';
 
   if (args.json || deps.shouldUseJson()) {
+    // Extract cross_project_handoffs array from the section if present
+    const _crossSection = sections.find((s) => s.cross_project_handoffs);
     console.log(JSON.stringify({
       project: root.id,
       mode: isActiveMode ? 'active' : 'sprint',
@@ -131,6 +159,7 @@ function handleSprintSnapshot(deps, context, args) {
       assignments,
       sprintIndex,
       sprintPhaseIds,
+      cross_project_handoffs: _crossSection ? _crossSection.cross_project_handoffs : [],
       sections: deps.buildSnapshotSectionPayload(sections),
     }, null, 2));
     return;
