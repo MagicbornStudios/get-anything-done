@@ -1,16 +1,16 @@
 {
   "id": "75-11",
   "phase": "75",
-  "status": "planned",
+  "status": "done",
   "goal": "Implement runtime error taxonomy per GLOBAL-D-313: typed classification (quota_soft / quota_hard_cap / auth_failed / network / malformed_argv / runtime_crash / output_unparseable / unknown), parse cooldown windows from real stderr text ('quota will reset after 13h55m22s'), add per-class dispatcher behavior. Touches lib/team/rate-limit.cjs + subprocess.cjs + worker-loop.cjs + scripts/runtime-substrate-core.mjs. claude-code lane denied — handoff to codex-cli.",
   "type": "",
   "keywords": "",
   "depends": [],
   "commands": [],
   "files": [],
-  "agent_id": "",
+  "agent_id": "claude-code-subagent",
   "agent_role": "",
-  "runtime": "",
+  "runtime": "claude-code",
   "model_profile": "",
   "resolved_model": "",
   "skill": "",
@@ -21,5 +21,5 @@
   "completed_at": "",
   "resolution": "",
   "created_at": "2026-05-08T04:37:12.769Z",
-  "updated_at": "2026-05-08T04:37:12.769Z"
+  "updated_at": "2026-05-08T08:40:47.718Z"
 }
