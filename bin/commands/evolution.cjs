@@ -25,6 +25,7 @@ const { createEvolutionSimilarityCommand } = require('./evolution/similarity.cjs
 const { createEvolutionScanCommand } = require('./evolution/scan.cjs');
 const { createEvolutionShedCommand } = require('./evolution/shed.cjs');
 const { createEvolutionSkillUsageCommand } = require('./evolution/skill-usage.cjs');
+const { createEvolutionAgentCommand } = require('./evolution/agent.cjs');
 const { loadSessions } = require('./session.cjs');
 
 /** Read current level from STATE.xml. Returns default if absent. */
@@ -153,6 +154,14 @@ function createEvolutionCommands(deps) {
     shouldUseJson,
   });
 
+  const evolutionAgent = createEvolutionAgentCommand({
+    repoRoot,
+    findRepoRoot,
+    gadConfig,
+    resolveRoots,
+    outputError,
+  });
+
   // gad evolution level-up — project evolution scope (phase 126)
   const evolutionLevelUp = defineCommand({
     meta: {
@@ -266,6 +275,7 @@ function createEvolutionCommands(deps) {
       similarity: evolutionSimilarity,
       shed: evolutionShed,
       'skill-usage': evolutionSkillUsage,
+      agent: evolutionAgent,
       images: evolutionImagesCmd,
       'level-up': evolutionLevelUp,
     },
