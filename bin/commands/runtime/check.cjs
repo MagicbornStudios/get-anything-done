@@ -5,6 +5,7 @@ const { getRuntimeArg } = require('../../../lib/runtime-args.cjs');
 const { runRuntimeScriptJson } = require('../../../lib/runtime-substrate-scripts.cjs');
 const {
   runBatchPreflight,
+  checkVllm,
   RUNTIME_IDS,
 } = require('../../../lib/runtime-health/index.cjs');
 
@@ -43,6 +44,14 @@ function createRuntimeCheckCommand({ resolveGadRuntimeContext, output, outputErr
           timeoutMs: Math.min(timeoutMs, 30000),
           repoRoot: context.runtimeRepoRoot,
         });
+
+        // vLLM endpoint probe (async, time-boxed)
+        let vllmResult = { present: false };
+        try {
+          vllmResult = await checkVllm({ probeTimeoutMs: 2000, metricsTimeoutMs: 2000 });
+        } catch {
+          // probe failure must never crash the runtime check
+        }
 
         // Also run substrate script for richer data (version, headless, etc.) when available
         let substrateRuntimes = null;
@@ -90,6 +99,7 @@ function createRuntimeCheckCommand({ resolveGadRuntimeContext, output, outputErr
           checkedAt: new Date().toISOString(),
           saved: !noSave,
           runtimes: mergedRuntimes,
+          vllm: vllmResult,
           gadContext: {
             projectId: context.projectId,
             sessionId: context.sessionId,
@@ -113,6 +123,17 @@ function createRuntimeCheckCommand({ resolveGadRuntimeContext, output, outputErr
           version: entry.version || 'n/a',
         }));
         output(rows, { title: 'Runtime health (install/auth/json_contract)', format: 'table' });
+
+        // vLLM section (human-readable only; JSON callers read payload.vllm)
+        if (vllmResult.present) {
+          const alive = vllmResult.alive ? 'alive' : `dead (${vllmResult.error || 'unknown'})`;
+          const models = vllmResult.models ? vllmResult.models.map((m) => m.id).join(', ') : 'n/a';
+          const thr = 'throughput' in vllmResult ? ` throughput=${vllmResult.throughput} tok/s` : '';
+          const qd = 'queue_depth' in vllmResult ? ` queue_depth=${vllmResult.queue_depth}` : '';
+          console.log(`vLLM: ${vllmResult.endpoint} → ${alive}${thr}${qd} models=[${models}]`);
+        } else {
+          console.log('vLLM: not configured (set GAD_VLLM_ENDPOINT or add slm_learning/modal_app/serve_vllm.py)');
+        }
       } catch (err) {
         outputError(err.message);
       }
