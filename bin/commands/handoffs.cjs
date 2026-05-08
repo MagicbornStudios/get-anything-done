@@ -408,6 +408,7 @@ function createHandoffsCommand(deps) {
       'any-runtime': { type: 'boolean', description: 'Explicitly opt out of runtime-preference requirement (logs a WARN)', default: false },
       'runtime-fallbacks': { type: 'string', description: 'Comma-separated fallback runtimes override', default: '' },
       'runtime-required': { type: 'boolean', description: 'Treat runtime_preference as a hard requirement', default: false },
+      'to-agent': { type: 'string', description: 'Direct this handoff to a specific agent slug from the presence ledger (e.g. gilgamesh-monorepo, dr-stein-slm-learning). When set the handoff appears in BOTH the recipient project snapshot AND that agent\'s session-open notice.', default: '' },
       quick: { type: 'boolean', description: 'Bypass all quality gate checks (logs a WARN; emergency use only)', default: false },
     },
     run({ args }) {
@@ -474,6 +475,7 @@ function createHandoffsCommand(deps) {
           runtimePreference: runtimePreference || undefined,
           runtimeFallbacks,
           runtimeRequired: args['runtime-required'] === true,
+          toAgent: args['to-agent'] ? String(args['to-agent']).trim() : undefined,
         });
 
         if (args.quick) {
