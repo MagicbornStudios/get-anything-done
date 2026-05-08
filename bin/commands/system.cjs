@@ -35,8 +35,14 @@ const SINGLETONS = [
   {
     id: 'datasets-curator',
     pidfile: 'datasets-curator.pid',
-    spawnArgs: ['datasets', 'curate', '--daemon', '--tick-minutes', '30'],
-    healthCheck: 'real-time dataset curation (transcripts + traces -> labeled tuples)',
+    // --auto-push auto: detect creds at tick time, prefer hf-hub (training-corpus
+    // tier), fall back to supabase (queryable tier), silent-skip if neither
+    // present. --auto-push-delete: remove locals after successful upload so the
+    // laptop doesn't accumulate. Both safe-by-default — the curator never errors
+    // on missing creds, just logs "skipped" once and keeps writing locally.
+    // Removed broken --daemon flag (curate uses --detach; system.cjs already detaches via spawn detached:true).
+    spawnArgs: ['datasets', 'curate', '--tick-minutes', '30', '--auto-push', 'auto', '--auto-push-delete'],
+    healthCheck: 'real-time dataset curation (transcripts + traces -> labeled tuples) + auto-detect off-laptop push',
     phase: 170,
   },
   {

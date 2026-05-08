@@ -127,6 +127,8 @@ function createDatasetsCommand(deps) {
       'tick-minutes': { type: 'string',  description: 'Tick interval in minutes (default: 30)', default: String(DEFAULT_TICK_MINUTES) },
       detach:         { type: 'boolean', description: 'Fork into background and write pidfile', default: false },
       'dry-run':      { type: 'boolean', description: 'Classify events but do not write output files', default: false },
+      'auto-push':    { type: 'string',  description: 'After each tick, push curated files to remote target. Values: "" (off, default) | "auto" (detect creds, prefer hf-hub, fall back to supabase, silent-skip if neither) | "supabase" | "hf-hub". Reads target env vars (SUPABASE_*, HF_TOKEN+HF_DATASETS_REPO).', default: '' },
+      'auto-push-delete': { type: 'boolean', description: 'When --auto-push is set, delete local JSONL files after successful upload (laptop-storage relief).', default: false },
     },
     async run({ args }) {
       const planningDir = resolvePlanningDir(deps);
@@ -135,11 +137,21 @@ function createDatasetsCommand(deps) {
       const dryRun  = Boolean(args['dry-run']);
       const once    = Boolean(args.once);
       const tickMs  = (parseFloat(args['tick-minutes']) || DEFAULT_TICK_MINUTES) * 60_000;
+      const autoPushTarget = String(args['auto-push'] || '').toLowerCase();
+      const autoPushDelete = Boolean(args['auto-push-delete']);
+      const validTargets = ['', 'auto', 'supabase', 'hf-hub'];
+      if (!validTargets.includes(autoPushTarget)) {
+        console.error(`curate: unknown --auto-push "${autoPushTarget}". Use "auto", "supabase", or "hf-hub".`);
+        process.exit(1);
+        return;
+      }
 
       // ── detach path ─────────────────────────────────────────────────────────
       if (args.detach) {
         const spawnArgs = [gadCli(), 'datasets', 'curate', '--tick-minutes', args['tick-minutes']];
         if (dryRun) spawnArgs.push('--dry-run');
+        if (autoPushTarget) spawnArgs.push('--auto-push', autoPushTarget);
+        if (autoPushDelete) spawnArgs.push('--auto-push-delete');
         // Note: do NOT pass --detach to the child (infinite loop guard)
 
         const child = spawn('node', spawnArgs, {
@@ -161,15 +173,82 @@ function createDatasetsCommand(deps) {
         if (!isChild) console.log(`[datasets] ${m}`);
       };
 
-      log(`datasets curator starting. once=${once} tick=${tickMs / 1000}s dry-run=${dryRun} pid=${process.pid}`);
+      log(`datasets curator starting. once=${once} tick=${tickMs / 1000}s dry-run=${dryRun} auto-push=${autoPushTarget || 'off'} delete-after=${autoPushDelete} pid=${process.pid}`);
       lowerOwnPriority(log);
 
       // Always write pidfile (covers both foreground and detached-child paths)
       fs.writeFileSync(path.join(planningDir, PIDFILE_NAME), String(process.pid));
 
+      // ── auto-push helper ─────────────────────────────────────────────────────
+      // Tracks whether we already logged the "no creds" skip — so it doesn't
+      // spam the log every 30min for the lifetime of a daemon with no creds.
+      let autoPushSkipLoggedOnce = false;
+
+      const resolveAutoPushTarget = () => {
+        if (!autoPushTarget) return null;
+        if (autoPushTarget !== 'auto') return autoPushTarget;
+        // 'auto' mode: detect creds, prefer hf-hub (training-corpus tier),
+        // fall back to supabase (queryable tier), silent-skip if neither.
+        const { hasCredentials: hasHf }       = require('../../lib/datasets/remote-hf.cjs');
+        const { hasCredentials: hasSupabase } = require('../../lib/datasets/remote-supabase.cjs');
+        if (hasHf())       return 'hf-hub';
+        if (hasSupabase()) return 'supabase';
+        return null;
+      };
+
+      const maybeAutoPush = async () => {
+        if (!autoPushTarget) return;
+        const target = resolveAutoPushTarget();
+        if (!target) {
+          if (!autoPushSkipLoggedOnce) {
+            log(`auto-push: skipped (no remote credentials configured; set HF_TOKEN+HF_DATASETS_REPO or SUPABASE_URL+SUPABASE_SERVICE_ROLE_KEY to enable)`);
+            autoPushSkipLoggedOnce = true;
+          }
+          return;
+        }
+        // Reset the once-only skip flag if creds came back so a transient
+        // creds-missing window logs again later if it recurs.
+        autoPushSkipLoggedOnce = false;
+
+        try {
+          const datasetsRoot = path.join(planningDir, 'datasets');
+          if (!fs.existsSync(datasetsRoot)) return;
+          const labelDirs = fs.readdirSync(datasetsRoot);
+          const files = [];
+          for (const label of labelDirs) {
+            const labelDir = path.join(datasetsRoot, label);
+            let stat; try { stat = fs.statSync(labelDir); } catch (_) { continue; }
+            if (!stat.isDirectory()) continue;
+            let labelFiles; try { labelFiles = fs.readdirSync(labelDir).filter((f) => f.endsWith('.jsonl')); } catch (_) { continue; }
+            for (const file of labelFiles) files.push({ filePath: path.join(labelDir, file), label });
+          }
+          if (files.length === 0) { log(`auto-push: no files to push`); return; }
+          let result;
+          if (target === 'hf-hub') {
+            const { pushToHfHub } = require('../../lib/datasets/remote-hf.cjs');
+            result = await pushToHfHub({ files, log });
+          } else {
+            result = await pushToSupabase({ files, bucket: DEFAULT_BUCKET, log });
+          }
+          log(`auto-push: ${result.uploaded.length} uploaded, ${result.errors.length} errors (target=${target})`);
+          if (autoPushDelete && result.uploaded.length > 0) {
+            let deleted = 0;
+            for (const item of result.uploaded) {
+              try { fs.unlinkSync(item.filePath); deleted++; } catch (e) {
+                log(`auto-push delete: failed for ${item.filePath}: ${e.message}`);
+              }
+            }
+            log(`auto-push delete: removed ${deleted} local file(s)`);
+          }
+        } catch (e) {
+          log(`auto-push fatal: ${e.message}`);
+        }
+      };
+
       // ── once mode ───────────────────────────────────────────────────────────
       if (once) {
         await runTick(deps, log, dryRun);
+        await maybeAutoPush();
         try { fs.unlinkSync(path.join(planningDir, PIDFILE_NAME)); } catch (_) {}
         return;
       }
@@ -178,6 +257,7 @@ function createDatasetsCommand(deps) {
       const tick = async () => {
         try { await runTick(deps, log, dryRun); }
         catch (e) { log(`tick fatal: ${e.message}`); }
+        await maybeAutoPush();
       };
 
       // Initial tick immediately, then schedule
@@ -453,18 +533,28 @@ function createDatasetsCommand(deps) {
   const pushRemoteCmd = defineCommand({
     meta: {
       name: 'push-remote',
-      description: 'Upload .planning/datasets/<label>/*.jsonl to Supabase Storage. Requires SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY env vars.',
+      description: 'Upload .planning/datasets/<label>/*.jsonl to remote storage. Targets: supabase (default) | hf-hub. Requires target-specific env vars.',
     },
     args: {
       label:  { type: 'string', description: 'Only upload this label (default: all labels)', default: '' },
-      bucket: { type: 'string', description: `Supabase Storage bucket name (default: ${DEFAULT_BUCKET})`, default: DEFAULT_BUCKET },
+      target: { type: 'string', description: 'Upload target: supabase (default) | hf-hub', default: 'supabase' },
+      bucket: { type: 'string', description: `Supabase bucket name (target=supabase only, default: ${DEFAULT_BUCKET})`, default: DEFAULT_BUCKET },
+      repo:   { type: 'string', description: 'HuggingFace Datasets repo (target=hf-hub only, e.g. "org/dataset"). Falls back to HF_DATASETS_REPO env var.', default: '' },
+      'delete-after-push': { type: 'boolean', description: 'Delete local JSONL files after successful upload (operator opt-in for laptop-storage relief)', default: false },
       json:   { type: 'boolean', description: 'Emit result as JSON', default: false },
     },
     async run({ args }) {
       const planningDir = resolvePlanningDir(deps);
       const datasetsRoot = path.join(planningDir, 'datasets');
+      const target = String(args.target || 'supabase').toLowerCase();
       const bucket = args.bucket || DEFAULT_BUCKET;
       const labelFilter = args.label || '';
+
+      if (target !== 'supabase' && target !== 'hf-hub') {
+        console.error(`push-remote: unknown --target "${target}". Use "supabase" or "hf-hub".`);
+        process.exit(1);
+        return;
+      }
 
       const log = (m) => {
         logToFile(planningDir, m);
@@ -502,22 +592,37 @@ function createDatasetsCommand(deps) {
 
       let result;
       try {
-        result = await pushToSupabase({ files, bucket, log });
+        if (target === 'hf-hub') {
+          const { pushToHfHub } = require('../../lib/datasets/remote-hf.cjs');
+          result = await pushToHfHub({ files, repo: args.repo || undefined, log });
+        } else {
+          result = await pushToSupabase({ files, bucket, log });
+        }
       } catch (e) {
         log(`push-remote: error — ${e.message}`);
         process.exit(1);
         return;
       }
 
+      if (args['delete-after-push']) {
+        let deleted = 0;
+        for (const item of result.uploaded || []) {
+          try { fs.unlinkSync(item.filePath); deleted++; } catch (e) {
+            log(`delete-after-push: failed for ${item.filePath}: ${e.message}`);
+          }
+        }
+        log(`delete-after-push: removed ${deleted} local file(s) after successful upload`);
+      }
+
       if (args.json) {
-        console.log(JSON.stringify(result, null, 2));
+        console.log(JSON.stringify({ target, ...result }, null, 2));
         return;
       }
 
-      console.log(`\nUpload complete: ${result.uploaded.length} uploaded, ${result.errors.length} errors`);
+      console.log(`\nUpload complete (target=${target}): ${result.uploaded.length} uploaded, ${result.errors.length} errors`);
       if (result.errors.length > 0) {
         for (const err of result.errors) {
-          console.log(`  ERROR ${err.storageKey}: ${err.error}`);
+          console.log(`  ERROR ${err.storageKey || err.filePath}: ${err.error}`);
         }
         process.exit(1);
       }

@@ -342,8 +342,17 @@ function createAccountsCommand(deps) {
         try { process.setpriority(0, 10); } catch {}
       }
 
-      process.stderr.write(`[gad-accounts-poll] daemon started, interval=${intervalMin}min\n`);
-      pollerLog(baseDir, { kind: 'daemon-start', interval_min: intervalMin });
+      // Write pidfile so system.cjs status/stop can find this process.
+      const pidfilePath = path.join(baseDir, '.planning', 'accounts-poller.pid');
+      try {
+        fs.mkdirSync(path.dirname(pidfilePath), { recursive: true });
+        fs.writeFileSync(pidfilePath, String(process.pid), 'utf8');
+      } catch (e) {
+        process.stderr.write(`[gad-accounts-poll] warn: could not write pidfile: ${e.message}\n`);
+      }
+
+      process.stderr.write(`[gad-accounts-poll] daemon started, pid=${process.pid}, interval=${intervalMin}min\n`);
+      pollerLog(baseDir, { kind: 'daemon-start', interval_min: intervalMin, pid: process.pid });
 
       let inFlight = false;
       let stopping = false;
@@ -363,6 +372,8 @@ function createAccountsCommand(deps) {
       const stop = (signal) => {
         stopping = true;
         pollerLog(baseDir, { kind: 'daemon-stop', signal });
+        // Clean up pidfile on graceful shutdown.
+        try { fs.unlinkSync(pidfilePath); } catch {}
         clearInterval(timer);
         process.exit(0);
       };
