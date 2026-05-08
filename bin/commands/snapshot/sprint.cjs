@@ -9,6 +9,7 @@ const {
   buildConventionsSection,
 } = require('../../../lib/snapshot-sections.cjs');
 const { buildEquippedSkillsSection } = require('../../../lib/snapshot-equipped-skills.cjs');
+const { buildHealthSection } = require('../../../lib/snapshot-health-rollup.cjs');
 const { buildSprintTaskSection } = require('./sprint-tasks.cjs');
 const { maybeBuildGraphSection, stampSnapshotSession } = require('./sprint-runtime.cjs');
 
@@ -27,6 +28,7 @@ function handleSprintSnapshot(deps, context, args) {
     phases,
     currentPhase,
     stateXml,
+    nextAction,
     allTasks,
   } = context;
 
@@ -44,7 +46,7 @@ function handleSprintSnapshot(deps, context, args) {
   const sprintAssignmentsSection = buildAssignmentsSection(assignments);
   if (sprintAssignmentsSection) sections.push(sprintAssignmentsSection);
   if (stateXml) {
-    const stateContent = compactFmt ? deps.compactStateXml(stateXml) : stateXml.trim();
+    const stateContent = compactFmt ? deps.compactStateXml(stateXml, nextAction) : stateXml.trim();
     sections.push({ title: 'STATE', content: stateContent });
   }
 
@@ -109,6 +111,9 @@ function handleSprintSnapshot(deps, context, args) {
     const graphSection = maybeBuildGraphSection(deps, context);
     if (graphSection) sections.push(graphSection);
   }
+
+  const healthSection = buildHealthSection(baseDir);
+  if (healthSection) sections.push(healthSection);
 
   stampSnapshotSession(deps, context, isActiveMode);
 

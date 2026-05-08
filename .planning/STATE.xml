@@ -50,6 +50,7 @@
   <last-updated>2026-05-05T23:45:24.409Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="unknown" at="2026-05-08T04:36:37.811Z" tags="57-08,GLOBAL-D-314,snapshot,health">Snapshot HEALTH section live (lib/snapshot-health-rollup.cjs + sprint.cjs wire). Surfaces dispatcher liveness, worker tally + stale flags, per-provider account counts, daemon pidfile state. +118 tokens to snapshot output (target was &lt;500). Validated on global: caught 4 daemons OFF, 3 workers stale-heartbeat 14h+, w7 orphaned.</entry>
     <entry agent="unknown" at="2026-05-05T20:12:49.982Z" tags="phases,sweep,close">Closed phase 74 via gad phases sweep --auto-close - 3 done, 0 cancelled.</entry>
     <entry agent="unknown" at="2026-05-05T20:12:49.683Z" tags="phases,sweep,close">Closed phase 73 via gad phases sweep --auto-close - 1 done, 0 cancelled.</entry>
     <entry agent="unknown" at="2026-05-05T20:12:49.339Z" tags="phases,sweep,close">Closed phase 57 via gad phases sweep --auto-close - 1 done, 0 cancelled.</entry>
