@@ -50,6 +50,7 @@
   <last-updated>2026-05-05T23:45:24.409Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-04-13T20:42:19.498Z" />
   <state-log>
+    <entry agent="unknown" at="2026-05-08T08:36:34.368Z">57-10 done — extracted model rollup to lib/telemetry/model-rollup.cjs; HEALTH MODELS line added to snapshot</entry>
     <entry agent="unknown" at="2026-05-08T08:35:07.731Z">feat(35-14): vLLM endpoint health probe wired into gad runtime check</entry>
     <entry agent="unknown" at="2026-05-08T05:54:26.369Z" tags="GAD-T-35-12,GLOBAL-D-317,telemetry,models">Shipped gad telemetry models — cross-source rollup keyed by model_id (.gad-log + trace-events + slm-learning REGISTRY/DELTA_GRAPH). 61885 logged calls in last 24h grouped by runtime; 4 SLM models from REGISTRY listed with 0 calls (vLLM not yet serving). Note: 61885 calls have no model_id — task GAD-T-35-13 will extend adapters. Tasks 35-12..35-16 registered (impl done, 4 follow-ups planned: adapter model_id+tokens, vLLM probe, MCP tray card, DELTA_GRAPH lineage cross-link).</entry>
     <entry agent="unknown" at="2026-05-08T05:52:02.748Z">Shipped gad telemetry models subcommand (GAD-T-35-12): model-keyed rollup from existing sources, slm-learning REGISTRY+DELTA_GRAPH integration, (unknown-model) fallback per runtime, --json + --window-h + --top + --no-include-slm-learning flags. Decision GLOBAL-D-317.</entry>
