@@ -52,14 +52,43 @@
         "path": ".",
         "planningDir": ".planning",
         "enabled": true
-      },
-      {
-        "id": "test-md-sentinel",
-        "path": "../../../../AppData/Local/Temp/tmp.lZU0rvB0LV",
-        "planningDir": ".planning",
-        "enabled": true
       }
     ],
-    "docs_path": null
+    "docs_path": null,
+    "require_evidence_on_stamp": false
+  },
+  "skills": {
+    "scope": {
+      "enabled": true,
+      "standing": [
+        "frontend-design",
+        "web-design-guidelines",
+        "gad-visual-context-system"
+      ],
+      "standing_contexts": [
+        "exploratory",
+        "design",
+        "decision"
+      ],
+      "context": {
+        "bounded": [
+          "repo-planner"
+        ],
+        "exploratory": [
+          "gad-map-codebase"
+        ],
+        "design": [
+          "scaffold-visual-context-surface",
+          "objective-eval-design"
+        ],
+        "audit": [
+          "gad-verify-phase",
+          "gad-plan-checker"
+        ],
+        "decision": [
+          "gad-discuss-phase"
+        ]
+      }
+    }
   }
 }
