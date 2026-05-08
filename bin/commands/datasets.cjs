@@ -32,6 +32,7 @@ const { defineCommand } = require('citty');
 
 const { runCuration } = require('../../lib/datasets/curator.cjs');
 const { pushToSupabase } = require('../../lib/datasets/remote-supabase.cjs');
+const { extractDesignReasoning } = require('../../lib/datasets-curator-design-decisions.cjs');
 
 const DEFAULT_TICK_MINUTES = 30;
 const PIDFILE_NAME  = 'datasets-curator.pid';
@@ -105,6 +106,17 @@ async function runTick(deps, log, dryRun) {
   try {
     const projects = resolveProjects(deps);
     await runCuration({ projects, log, dryRun });
+
+    // design-reasoning extraction — runs if .planning/design-decisions/ exists
+    for (const p of projects) {
+      if (p && p.planningDir) {
+        try {
+          extractDesignReasoning({ planningDir: p.planningDir, log, dryRun });
+        } catch (e) {
+          log(`design-reasoning extraction error (${p.projectId}): ${e.message}`);
+        }
+      }
+    }
   } catch (e) {
     log(`tick error: ${e.message}`);
   } finally {
