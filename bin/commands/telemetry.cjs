@@ -818,6 +818,8 @@ function createTelemetryCommand(deps) {
       'root-dir': { type: 'string', description: 'Monorepo root (defaults to cwd ascended to nearest .planning/)' },
       json: { type: 'boolean', description: 'Output result summary as JSON' },
       'no-redact': { type: 'boolean', description: 'Disable secret redaction (DEFAULT: redact ON for safety per phase 145.5-06).' },
+      watch: { type: 'boolean', description: 'Long-running mode: re-export every --interval' },
+      interval: { type: 'string', description: 'Interval (e.g. 30s, 5m, 1h). Default 30s. If watch is on, exports to subdirs.' },
     },
     run: async ({ args }) => {
       const { runExport } = require('../../lib/telemetry/export.cjs');
@@ -830,38 +832,409 @@ function createTelemetryCommand(deps) {
         return process.cwd();
       })();
       const adapters = args.adapters ? args.adapters.split(',').map((s) => s.trim()).filter(Boolean) : null;
-      const result = await runExport({
-        rootDir,
-        outDir: args.to,
-        since: args.since || null,
-        format: args.format || 'jsonl',
-        adapters,
-        redact: !args['no-redact'],
-      });
-      if (args.json) {
-        console.log(JSON.stringify(result, null, 2));
-      } else {
-        console.log('Telemetry export complete');
-        console.log(`  rootDir:    ${result.rootDir}`);
-        console.log(`  outDir:     ${result.outDir}`);
-        console.log(`  data:       ${result.dataPath}`);
-        console.log(`  manifest:   ${result.manifestPath}`);
-        console.log(`  rows:       ${result.rowCount}`);
-        console.log(`  by role:    ${Object.entries(result.roleHistogram).map(([k, v]) => `${k}=${v}`).join('  ')}`);
-        if (result.contentTypeHistogram) {
-          console.log(`  by ctype:   ${Object.entries(result.contentTypeHistogram).map(([k, v]) => `${k}=${v}`).join('  ')}`);
+
+      function parseInterval(s) {
+        if (!s) return 30000;
+        const m = s.match(/^(\d+)([smh])$/);
+        if (!m) return 30000;
+        const val = parseInt(m[1], 10);
+        const unit = m[2];
+        if (unit === 's') return val * 1000;
+        if (unit === 'm') return val * 60 * 1000;
+        if (unit === 'h') return val * 60 * 60 * 1000;
+        return 30000;
+      }
+
+      const intervalMs = parseInterval(args.interval);
+      const isWatch = Boolean(args.watch);
+
+      const doExport = async (outDirOverride) => {
+        return runExport({
+          rootDir,
+          outDir: outDirOverride || args.to,
+          since: args.since || null,
+          format: args.format || 'jsonl',
+          adapters,
+          redact: !args['no-redact'],
+        });
+      };
+
+      if (!isWatch) {
+        const result = await doExport();
+        if (args.json) {
+          console.log(JSON.stringify(result, null, 2));
+        } else {
+          console.log('Telemetry export complete');
+          console.log(`  rootDir:    ${result.rootDir}`);
+          console.log(`  outDir:     ${result.outDir}`);
+          console.log(`  data:       ${result.dataPath}`);
+          console.log(`  manifest:   ${result.manifestPath}`);
+          console.log(`  rows:       ${result.rowCount}`);
+          console.log(`  by role:    ${Object.entries(result.roleHistogram).map(([k, v]) => `${k}=${v}`).join('  ')}`);
+          if (result.contentTypeHistogram) {
+            console.log(`  by ctype:   ${Object.entries(result.contentTypeHistogram).map(([k, v]) => `${k}=${v}`).join('  ')}`);
+          }
+          console.log(`  schema_v:   ${result.manifest.schema_v}`);
+          console.log(`  sha256:     ${result.manifest.data_sha256}`);
         }
-        console.log(`  schema_v:   ${result.manifest.schema_v}`);
-        console.log(`  sha256:     ${result.manifest.data_sha256}`);
+        return;
+      }
+
+      // Watch mode
+      console.log(`[telemetry export] watch mode ON. interval=${intervalMs}ms. root=${rootDir}`);
+      while (true) {
+        const now = new Date();
+        const stamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const outDir = path.join(args.to, stamp);
+        console.log(`[telemetry export] starting export to ${outDir} ...`);
+        try {
+          const result = await doExport(outDir);
+          console.log(`[telemetry export] done. rows=${result.rowCount} sha=${result.manifest.data_sha256.slice(0, 8)}`);
+        } catch (e) {
+          console.error(`[telemetry export] FAILED: ${e.message}`);
+        }
+        await new Promise((res) => setTimeout(res, intervalMs));
+      }
+    },
+  });
+
+  // ── gad telemetry models ─────────────────────────────────────────────────
+  // Model-keyed rollup from existing telemetry sources + slm-learning registry.
+  // Decision GLOBAL-D-317. First ship — model_id extraction is incomplete in
+  // most adapters; unknown calls are bucketed per runtime so the view is still
+  // useful today and becomes richer as adapters populate model_id.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  function loadSlmRegistry(slmModelsDir) {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(slmModelsDir, 'REGISTRY.json'), 'utf8'));
+    } catch {
+      return null;
+    }
+  }
+
+  function loadDeltaGraph(slmModelsDir) {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(slmModelsDir, 'DELTA_GRAPH.json'), 'utf8'));
+    } catch {
+      return null;
+    }
+  }
+
+  function resolveSlmModelsDir(repoRoot) {
+    // Walk upward from repoRoot trying sibling slm_learning at each level.
+    // This handles both monorepo root and submodule CWD contexts.
+    // Also check conventional path from monorepo parent (../slm_learning from monorepo).
+    const candidates = [
+      path.resolve(repoRoot, '..', 'slm_learning', 'models'),
+      path.resolve(repoRoot, '..', '..', 'slm_learning', 'models'),
+      path.resolve(repoRoot, '..', '..', '..', 'slm_learning', 'models'),
+    ];
+    for (const candidate of candidates) {
+      if (fs.existsSync(candidate)) return candidate;
+    }
+    return null;
+  }
+
+  // Build a flat map of model_id -> { lane, version, deltaId, recipe, status }
+  // from the REGISTRY lanes + DELTA_GRAPH deltas.
+  function buildSlmIndex(registry, deltaGraph) {
+    const index = new Map();
+    if (!registry || !registry.lanes) return index;
+
+    const deltaById = new Map();
+    if (deltaGraph && deltaGraph.deltas) {
+      for (const [modelId, delta] of Object.entries(deltaGraph.deltas)) {
+        deltaById.set(modelId, delta);
+        if (delta.delta_id) deltaById.set(delta.delta_id, delta);
+      }
+    }
+
+    for (const [lane, laneData] of Object.entries(registry.lanes)) {
+      const processModel = (modelId, status) => {
+        if (!modelId) return;
+        const delta = deltaById.get(modelId) || null;
+        const recipe = delta ? delta.training_method || null : null;
+        const dataset = delta ? (delta.dataset || null) : null;
+        index.set(modelId, {
+          lane,
+          status,
+          version: delta ? (delta.delta_id || null) : null,
+          recipe,
+          dataset,
+          base: delta ? (delta.base || null) : null,
+          compute_target: delta ? (delta.compute_target || null) : null,
+        });
+      };
+
+      if (laneData.canonical) processModel(laneData.canonical, 'canonical');
+      for (const entry of laneData.staging || []) {
+        processModel(typeof entry === 'string' ? entry : entry.id, 'staging');
+      }
+      for (const entry of laneData.candidates || []) {
+        processModel(typeof entry === 'string' ? entry : entry.id, 'candidate');
+      }
+    }
+    return index;
+  }
+
+  function classifyModelSource(modelId, slmIndex) {
+    if (!modelId || modelId === '(unknown-model)') return 'unknown';
+    if (slmIndex.has(modelId)) return 'local-slm';
+    // Heuristics for cloud providers
+    const lower = modelId.toLowerCase();
+    if (lower.includes('claude') || lower.includes('anthropic')) return 'cloud';
+    if (lower.includes('gpt') || lower.includes('openai') || lower.includes('o1') || lower.includes('o3') || lower.includes('o4')) return 'cloud';
+    if (lower.includes('gemini') || lower.includes('google')) return 'cloud';
+    if (lower.includes('qwen') || lower.includes('scrubster') || lower.includes('dr-stein')) return 'local-slm';
+    if (lower.includes('llama') || lower.includes('mistral') || lower.includes('phi')) return 'local-slm';
+    return 'unknown';
+  }
+
+  function percentile(sortedArray, p) {
+    if (sortedArray.length === 0) return null;
+    const idx = Math.ceil(p * sortedArray.length) - 1;
+    return sortedArray[Math.max(0, idx)];
+  }
+
+  function relativeTime(tsString) {
+    if (!tsString) return 'never';
+    const ms = Date.parse(String(tsString));
+    if (Number.isNaN(ms)) return 'never';
+    const diff = Date.now() - ms;
+    if (diff < 0) return 'future';
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return `${s}s ago`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    return `${d}d ago`;
+  }
+
+  function buildModelRollup(records, windowMs, slmIndex) {
+    // group by (model_id, runtime) — unknown model gets synthetic bucket per runtime
+    const buckets = new Map();
+    const cutoff = Date.now() - windowMs;
+
+    for (const record of records) {
+      const tsMs = toMs(record.ts);
+      if (tsMs != null && tsMs < cutoff) continue;
+
+      const rawModel = record.model ? String(record.model).trim() : null;
+      const modelId = rawModel || '(unknown-model)';
+      const runtime = record.runtime || 'unknown';
+      const key = `${modelId}|||${runtime}`;
+
+      if (!buckets.has(key)) {
+        buckets.set(key, {
+          model: modelId,
+          runtime,
+          calls: 0,
+          latencies: [],
+          lastSeenTs: null,
+          source: classifyModelSource(modelId, slmIndex),
+          slmMeta: slmIndex.get(modelId) || null,
+        });
+      }
+
+      const b = buckets.get(key);
+      b.calls += 1;
+      if (Number.isFinite(record.duration_ms)) b.latencies.push(record.duration_ms);
+      if (record.ts && (!b.lastSeenTs || (toMs(record.ts) || 0) > (toMs(b.lastSeenTs) || 0))) {
+        b.lastSeenTs = record.ts;
+      }
+    }
+
+    return Array.from(buckets.values()).map((b) => {
+      const sortedLat = b.latencies.slice().sort((a, c) => a - c);
+      const p50 = percentile(sortedLat, 0.5);
+      const slm = b.slmMeta;
+      return {
+        model: b.model,
+        source: b.source,
+        version: slm ? (slm.version || null) : null,
+        calls: b.calls,
+        p50_ms: p50 != null ? Math.round(p50) : null,
+        last_seen: b.lastSeenTs,
+        runtime: b.runtime,
+        recipe: slm ? (slm.recipe || null) : null,
+        lane: slm ? (slm.lane || null) : null,
+        status: slm ? (slm.status || null) : null,
+      };
+    });
+  }
+
+  // Merge in slm-learning models that have 0 calls (so they always appear).
+  function mergeSlmZeroRows(rows, slmIndex, windowMs) {
+    const seenModels = new Set(rows.map((r) => r.model));
+    const extra = [];
+    for (const [modelId, meta] of slmIndex.entries()) {
+      if (seenModels.has(modelId)) continue;
+      extra.push({
+        model: modelId,
+        source: 'local-slm',
+        version: meta.version || null,
+        calls: 0,
+        p50_ms: null,
+        last_seen: null,
+        runtime: 'unknown',
+        recipe: meta.recipe || null,
+        lane: meta.lane || null,
+        status: meta.status || null,
+      });
+    }
+    return [...rows, ...extra];
+  }
+
+  function printModelsTable(rows, noModelIdCount, windowH) {
+    console.log(`\n=== Telemetry: Model Rollup (last ${windowH}h) ===\n`);
+
+    if (noModelIdCount > 0) {
+      console.log(`NOTE: ${noModelIdCount} call(s) have no model_id — grouped as (unknown-model) per runtime.`);
+      console.log('      Extend adapters per task GAD-T-35-01 to populate model_id.\n');
+    }
+
+    const COL = {
+      MODEL:     40,
+      SOURCE:    10,
+      VERSION:   20,
+      CALLS:      7,
+      P50_MS:     9,
+      LAST_SEEN: 12,
+      RUNTIME:   14,
+      RECIPE:    10,
+    };
+
+    const header = [
+      'MODEL'.padEnd(COL.MODEL),
+      'SOURCE'.padEnd(COL.SOURCE),
+      'VERSION'.padEnd(COL.VERSION),
+      'CALLS'.padStart(COL.CALLS),
+      'P50_MS'.padStart(COL.P50_MS),
+      'LAST_SEEN'.padEnd(COL.LAST_SEEN),
+      'RUNTIME'.padEnd(COL.RUNTIME),
+      'RECIPE'.padEnd(COL.RECIPE),
+    ].join('  ');
+
+    const sep = '─'.repeat(header.length);
+    console.log(header);
+    console.log(sep);
+
+    for (const row of rows) {
+      const model = row.model.length > COL.MODEL ? row.model.slice(0, COL.MODEL - 1) + '…' : row.model;
+      const version = (row.version || '-').slice(0, COL.VERSION);
+      const lastSeen = relativeTime(row.last_seen);
+      const runtime = (row.runtime || '-').slice(0, COL.RUNTIME - 1);
+      const recipe = (row.recipe || '-').slice(0, COL.RECIPE - 1);
+
+      console.log([
+        model.padEnd(COL.MODEL),
+        (row.source || '-').padEnd(COL.SOURCE),
+        version.padEnd(COL.VERSION),
+        String(row.calls).padStart(COL.CALLS),
+        (row.p50_ms != null ? String(row.p50_ms) : '-').padStart(COL.P50_MS),
+        lastSeen.padEnd(COL.LAST_SEEN),
+        runtime.padEnd(COL.RUNTIME),
+        recipe.padEnd(COL.RECIPE),
+      ].join('  '));
+    }
+
+    console.log('');
+    console.log(`Rows: ${rows.length}  (SLM models with 0 calls are included from slm-learning REGISTRY if path exists)`);
+  }
+
+  const modelsCmd = defineCommand({
+    meta: {
+      name: 'models',
+      description: 'Model-keyed telemetry rollup — calls/latency/last-seen per model+runtime, cross-linked to slm-learning REGISTRY + DELTA_GRAPH. GLOBAL-D-317.',
+    },
+    args: {
+      projectid: { type: 'string', description: 'Scope to a project (default: all)', default: '' },
+      'window-h': { type: 'string', description: 'Time window in hours (default: 24)', default: '24' },
+      top: { type: 'string', description: 'Limit to top N rows by calls (default: 20, 0=all)', default: '20' },
+      json: { type: 'boolean', description: 'Emit JSON', default: false },
+      'include-slm-learning': { type: 'boolean', description: 'Pull REGISTRY/DELTA_GRAPH from sibling slm_learning repo (default: true if path exists)', default: true },
+      'no-include-slm-learning': { type: 'boolean', description: 'Disable slm-learning integration', default: false },
+    },
+    run({ args }) {
+      const baseDir = resolveBaseDir(args, findRepoRoot, gadConfig, resolveRoots, getLastActiveProjectid);
+      const repoRoot = findRepoRoot();
+      const planningDir = path.join(baseDir, '.planning');
+      if (!fs.existsSync(planningDir)) {
+        outputError(`No .planning directory under ${baseDir}`);
+        return;
+      }
+
+      const windowH = Math.max(1, parseFloat(args['window-h']) || 24);
+      const windowMs = windowH * 60 * 60 * 1000;
+      const topN = parseInt(args.top, 10);
+      const includeSlm = args['no-include-slm-learning'] ? false : args['include-slm-learning'];
+
+      const filters = {
+        projectid: args.projectid ? String(args.projectid).toLowerCase() : '',
+        session: '',
+        runtime: '',
+        phase: '',
+        task: '',
+        handoff: '',
+        since: '',
+      };
+
+      const allRecords = applyFilters(collectTelemetryRecords(baseDir), filters);
+
+      // Load slm-learning data
+      let slmIndex = new Map();
+      let slmLoaded = false;
+      if (includeSlm) {
+        const slmDir = resolveSlmModelsDir(repoRoot);
+        if (slmDir) {
+          const registry = loadSlmRegistry(slmDir);
+          const deltaGraph = loadDeltaGraph(slmDir);
+          slmIndex = buildSlmIndex(registry, deltaGraph);
+          slmLoaded = true;
+        }
+      }
+
+      // Build rollup
+      let rows = buildModelRollup(allRecords, windowMs, slmIndex);
+
+      // Merge in slm models with 0 calls
+      if (slmLoaded && slmIndex.size > 0) {
+        rows = mergeSlmZeroRows(rows, slmIndex, windowMs);
+      }
+
+      // Sort: calls desc, then model asc
+      rows.sort((a, b) => b.calls - a.calls || a.model.localeCompare(b.model));
+
+      // Count no-model records
+      const noModelIdCount = allRecords.filter((r) => !r.model).length;
+
+      // Apply top limit (after including 0-call SLM rows, those naturally sort to bottom)
+      const limited = topN > 0 ? rows.slice(0, topN) : rows;
+
+      if (args.json) {
+        console.log(JSON.stringify({
+          window_h: windowH,
+          generated_at: new Date().toISOString(),
+          no_model_id_count: noModelIdCount,
+          slm_learning_loaded: slmLoaded,
+          total_rows: rows.length,
+          rows: limited,
+        }, null, 2));
+      } else {
+        printModelsTable(limited, noModelIdCount, windowH);
       }
     },
   });
 
   return defineCommand({
-    meta: { name: 'telemetry', description: 'Telemetry: summary (read-only) + export (phase 145 SLM training pipeline).' },
+    meta: { name: 'telemetry', description: 'Telemetry: summary (read-only) + export (phase 145 SLM training pipeline) + models (model-keyed rollup, GLOBAL-D-317).' },
     subCommands: {
       summary: summaryCmd,
       export: exportCmd,
+      models: modelsCmd,
     },
   });
 }
