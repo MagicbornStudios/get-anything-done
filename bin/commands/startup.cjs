@@ -24,6 +24,7 @@ const { printDailySubagents } = require('../../lib/startup/subagents-section.cjs
 const { resolveProjectId, announceResolution } = require('../../lib/startup/resolve-projectid.cjs');
 const { bootstrapSession } = require('../../lib/startup/session-bootstrap.cjs');
 const { spawnSnapshot } = require('../../lib/startup/snapshot-reentry.cjs');
+const agentPresence = require('../../lib/agent-presence.cjs');
 
 let _deps = null;
 function deps() {
@@ -78,6 +79,16 @@ function buildStartupCmd() {
 
       if (!sideEffectsSuppressed()) {
         try { maybeGenerateDailyTip(); } catch { /* non-fatal */ }
+        // GLOBAL-D-323 Phase B — write presence on session open
+        try {
+          const ri = detectRuntimeIdentity();
+          agentPresence.write({
+            baseDir,
+            projectid: projectId,
+            runtime: ri.id,
+            model:   ri.model || undefined,
+          });
+        } catch { /* non-fatal */ }
       }
 
       console.log(`Running snapshot now for projectid=${projectId}...`);
