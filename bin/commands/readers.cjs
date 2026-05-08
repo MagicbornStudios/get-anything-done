@@ -1,8 +1,12 @@
 'use strict';
 /**
- * gad requirements / errors / blockers — three single-command readers
+ * gad requirements / errors / blockers — three top-level command families
  * grouped into one module because they share the same shape (read XML
  * under .planning/, render rows). Each is its own top-level command.
+ *
+ * Phase 115 (2026-05-07): `gad requirements` promoted to a subcommand family
+ * with list (legacy behaviour) + distill / verify / drift / audit-closure
+ * (new — see bin/commands/requirements.cjs for factory + lib/).
  *
  * Required deps:
  *   findRepoRoot, gadConfig, resolveRoots,
@@ -14,14 +18,18 @@ const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
 
+// Phase-115 factory: distill / verify / drift / audit-closure
+const { createRequirementsCommand: createDistillFamily } = require('./requirements.cjs');
+
 function createRequirementsCommand(deps) {
   const {
     findRepoRoot, gadConfig, resolveRoots,
     render, shouldUseJson, readRequirements, readDocFlow,
   } = deps;
 
-  return defineCommand({
-    meta: { name: 'requirements', description: 'List requirement doc references from REQUIREMENTS.xml' },
+  // Legacy bare list behaviour — preserved as `gad requirements list`
+  const listCmd = defineCommand({
+    meta: { name: 'list', description: 'List requirement doc references from REQUIREMENTS.xml' },
     args: {
       projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
       all: { type: 'boolean', description: 'Show all projects (overrides session scope)', default: false },
@@ -62,6 +70,20 @@ function createRequirementsCommand(deps) {
         }));
         console.log(render(tableRows, { format: 'table', title: `Requirement refs (${rows.length})` }));
       }
+    },
+  });
+
+  // Phase-115 distill/verify/drift/audit-closure subcommands
+  const distillFamily = createDistillFamily(deps);
+
+  return defineCommand({
+    meta: { name: 'requirements', description: 'Requirements: list refs (list), distill from code (distill), verify against codebase (verify), drift %, phase closure audit' },
+    subCommands: {
+      list: listCmd,
+      distill:          distillFamily.subCommands.distill,
+      verify:           distillFamily.subCommands.verify,
+      drift:            distillFamily.subCommands.drift,
+      'audit-closure':  distillFamily.subCommands['audit-closure'],
     },
   });
 }
