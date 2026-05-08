@@ -48,6 +48,13 @@ const {
   makeFileMutationEvent,
 } = require('../lib/trace-schema.cjs');
 const { truncateOutput, truncateInputsObject } = require('../lib/trace-truncate.cjs');
+const {
+  pushSkill,
+  popSkill,
+  peekSkill,
+  detectSkillToolInvocation,
+  detectSlashCommandInvocation,
+} = require('../lib/active-skill-stack.cjs');
 
 // -------------------------------------------------------------------------
 // Helpers
@@ -482,12 +489,54 @@ async function main() {
   const toolInput = payload.tool_input || {};
   const toolResponse = payload.tool_response || null;
 
+  const sessionId = (runtime && runtime.session_id) || 'unknown';
+
   try {
+    // -----------------------------------------------------------------
+    // Active-skill stack management (trigger_skill envelope, phase 153).
+    //
+    // PreToolUse on Skill tool → push onto the per-session stack.
+    // PostToolUse on Skill tool → pop from the stack after emitting events.
+    // UserPromptSubmit with <command-name>…</command-name> → push slash cmd.
+    //
+    // The stack persists between ephemeral hook processes via
+    // .planning/.trace-active-skill-stack.json, keyed by session_id.
+    // -----------------------------------------------------------------
+    if (hookEvent === 'PreToolUse') {
+      const detected = detectSkillToolInvocation(payload);
+      if (detected) {
+        try {
+          pushSkill(projectRoot, sessionId, detected);
+        } catch (stackErr) {
+          logHookError('gad-trace-hook:push-skill', stackErr);
+        }
+      }
+    }
+
+    if (hookEvent === 'UserPromptSubmit') {
+      const slashCmd = detectSlashCommandInvocation(payload);
+      if (slashCmd) {
+        try {
+          pushSkill(projectRoot, sessionId, slashCmd);
+        } catch (stackErr) {
+          logHookError('gad-trace-hook:push-slash-cmd', stackErr);
+        }
+      }
+    }
+
     // Always check for skill transitions first so a skill_invocation event
     // (if any) is written before the tool_use event that triggered the hook.
     const skillSeq = readNextSeq(projectRoot);
     const skillEvent = maybeSkillInvocationEvent(projectRoot, skillSeq, runtime, agent);
+    // Read the flat active-skill string for backward compat (existing consumers).
     const activeSkill = readActiveSkill(projectRoot);
+    // Read the richer trigger_skill struct from the top of the stack.
+    let triggerSkillEnvelope = null;
+    try {
+      triggerSkillEnvelope = peekSkill(projectRoot, sessionId) || null;
+    } catch (stackErr) {
+      logHookError('gad-trace-hook:peek-skill', stackErr);
+    }
 
     if (skillEvent) {
       appendEvent(projectRoot, skillEvent, payload);
@@ -504,10 +553,23 @@ async function main() {
         toolName,
         toolInput,
         toolResponse,
-        triggerSkill: activeSkill,
+        // Prefer the richer envelope; fall back to legacy flat string for
+        // sessions that predate the stack (stack file absent or empty).
+        triggerSkill: triggerSkillEnvelope || activeSkill,
       });
       for (const ev of events) {
         appendEvent(projectRoot, ev, payload);
+      }
+
+      // Pop skill stack AFTER emitting events so the Skill tool's own
+      // PostToolUse event still has trigger_skill set to the parent skill
+      // (not itself — we don't want recursive attribution).
+      if (toolName === 'Skill') {
+        try {
+          popSkill(projectRoot, sessionId);
+        } catch (stackErr) {
+          logHookError('gad-trace-hook:pop-skill', stackErr);
+        }
       }
     }
   } catch (err) {
