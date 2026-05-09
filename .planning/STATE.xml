@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <state>
+  <level value="3" xp="0" xp_to_next="600" loaded_skills="0"/>
+  <!-- Framework evolution level seeded 2026-05-09 per operator rule "evolving
+       means we go up a level. that's how we track evolutions." Level 3
+       reflects v1.32-1.35 release window with team substrate, dispatcher,
+       skill ecosystem, runtime substrate, settings registry, feedback record,
+       gad domains. xp/xp_to_next are placeholders pending xp-math.cjs
+       framework-side integration; statusline reads MAX(explicit, derived). -->
   <dispatcher last_heartbeat="" pid="" projectid="" state="DEAD"/>
   <current-phase>42.4</current-phase>
   <current-plan></current-plan>
