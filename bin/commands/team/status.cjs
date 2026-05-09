@@ -13,6 +13,133 @@ const { mailboxDepth } = require('../../../lib/team/mailbox.cjs');
 const { readHeartbeat } = require('../../../lib/team/dispatcher.cjs');
 const { checkAndLogRestart } = require('../../../lib/team/restart-log.cjs');
 const { getCooldownRemainingMs } = require('../../../lib/team/rate-limit.cjs');
+const { listHandoffs } = require('../../../lib/handoffs.cjs');
+
+// Invariant alarm thresholds (operator standing rule, 2026-05-09):
+// claimed_handoff_count MUST NOT exceed live_team_worker_count + N_external_agents.
+// Today's incident: 55 claimed handoffs, 9 zombie workers.
+const LIVE_HEARTBEAT_THRESHOLD_S = 5 * 60;       // 5 min — worker considered live
+const STALE_CLAIM_THRESHOLD_S = 6 * 60 * 60;     // 6 h  — claimed handoff considered stale
+const LIVE_STATES = new Set(['RUNNING', 'IDLE', 'WORKING']);
+
+function ageSeconds(tsIso) {
+  if (!tsIso) return Infinity;
+  const t = Date.parse(tsIso);
+  if (!Number.isFinite(t)) return Infinity;
+  return Math.floor((Date.now() - t) / 1000);
+}
+
+function formatDuration(seconds) {
+  if (!Number.isFinite(seconds)) return 'unknown';
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h${Math.floor((seconds % 3600) / 60)}m`;
+  return `${Math.floor(seconds / 86400)}d${Math.floor((seconds % 86400) / 3600)}h`;
+}
+
+/**
+ * Compute the team-status invariant warnings for a given baseDir + worker rows.
+ * Pure function: no I/O beyond the listHandoffs call (which is fs-injectable).
+ *
+ * Returns an array of warning records:
+ *   { kind: 'claims_exceed_capacity', claimed, live_workers, excess }
+ *   { kind: 'oldest_stale_claim', ref, claimed_by, age_seconds, threshold_seconds }
+ *   { kind: 'zombie_workers', count, ids }
+ */
+function computeWarnings({ baseDir, workerRows, externalAgents = 0, fsImpl, now = Date.now() } = {}) {
+  const warnings = [];
+
+  // Live workers — state in LIVE_STATES AND last_heartbeat within 5 min.
+  const liveWorkers = (workerRows || []).filter((r) => {
+    if (!LIVE_STATES.has(String(r.state || '').toUpperCase())) return false;
+    const ageS = typeof r.heartbeat_age_s === 'number' ? r.heartbeat_age_s : Infinity;
+    return ageS <= LIVE_HEARTBEAT_THRESHOLD_S;
+  }).length;
+
+  // Zombie workers — state != STOPPED AND state != NOT_STARTED AND heartbeat older than 5 min.
+  const zombies = (workerRows || []).filter((r) => {
+    const st = String(r.state || '').toUpperCase();
+    if (st === 'STOPPED' || st === 'NOT_STARTED' || st === 'UNKNOWN') return false;
+    const ageS = typeof r.heartbeat_age_s === 'number' ? r.heartbeat_age_s : Infinity;
+    return ageS > LIVE_HEARTBEAT_THRESHOLD_S;
+  });
+
+  // Claimed handoffs — list claimed bucket, scan frontmatter for claimed_at.
+  let claimedRecords = [];
+  try {
+    claimedRecords = listHandoffs({ baseDir, bucket: 'claimed', fsImpl }) || [];
+  } catch {
+    claimedRecords = [];
+  }
+  const claimedCount = claimedRecords.length;
+
+  // Invariant 1: claims_exceed_capacity.
+  const capacity = liveWorkers + (externalAgents || 0);
+  if (claimedCount > capacity) {
+    warnings.push({
+      kind: 'claims_exceed_capacity',
+      claimed: claimedCount,
+      live_workers: liveWorkers,
+      excess: claimedCount - capacity,
+    });
+  }
+
+  // Invariant 2: oldest_stale_claim — any claim older than 6h.
+  let oldest = null;
+  for (const rec of claimedRecords) {
+    const fm = rec && rec.frontmatter ? rec.frontmatter : {};
+    const ts = fm.claimed_at;
+    if (!ts) continue;
+    const ageS = Math.floor((now - Date.parse(ts)) / 1000);
+    if (!Number.isFinite(ageS)) continue;
+    if (!oldest || ageS > oldest.age_seconds) {
+      oldest = { ref: rec.id, claimed_by: fm.claimed_by || 'unknown', age_seconds: ageS };
+    }
+  }
+  if (oldest && oldest.age_seconds > STALE_CLAIM_THRESHOLD_S) {
+    warnings.push({
+      kind: 'oldest_stale_claim',
+      ref: oldest.ref,
+      claimed_by: oldest.claimed_by,
+      age_seconds: oldest.age_seconds,
+      threshold_seconds: STALE_CLAIM_THRESHOLD_S,
+    });
+  }
+
+  // Invariant 3: zombie_workers.
+  if (zombies.length > 0) {
+    warnings.push({
+      kind: 'zombie_workers',
+      count: zombies.length,
+      ids: zombies.map((z) => z.id),
+    });
+  }
+
+  return warnings;
+}
+
+/**
+ * Render the WARNINGS section of `gad team status`.
+ * Returns an array of lines (caller joins with newline).
+ */
+function formatWarnings(warnings) {
+  const lines = [];
+  if (!warnings || warnings.length === 0) {
+    lines.push('WARNINGS: none');
+    return lines;
+  }
+  lines.push('WARNINGS:');
+  for (const w of warnings) {
+    if (w.kind === 'claims_exceed_capacity') {
+      lines.push(`  invariant_violation=claims_exceed_capacity claimed=${w.claimed} live_workers=${w.live_workers} excess=${w.excess}`);
+    } else if (w.kind === 'oldest_stale_claim') {
+      lines.push(`  oldest_stale_claim ref=${w.ref} claimed_by=${w.claimed_by} age=${formatDuration(w.age_seconds)} threshold=6h`);
+    } else if (w.kind === 'zombie_workers') {
+      lines.push(`  zombie_workers count=${w.count} ids=${(w.ids || []).join(',')}`);
+    }
+  }
+  return lines;
+}
 
 /**
  * Write (or update) the <dispatcher> element in STATE.xml.
@@ -143,9 +270,17 @@ function createStatusCommand(deps) {
           cooldown_remaining_seconds,
         };
       });
-      if (args.json) { console.log(JSON.stringify({ config: cfg, workers: rows, dispatcher: hb }, null, 2)); return; }
+      // Compute invariant-violation warnings (claimed handoffs vs live workers,
+      // stale claims, zombie workers). Pure read of .planning/handoffs/claimed/.
+      const warnings = computeWarnings({ baseDir, workerRows: rows });
+
+      if (args.json) {
+        console.log(JSON.stringify({ config: cfg, workers: rows, dispatcher: hb, warnings }, null, 2));
+        return;
+      }
       console.log(`Team: ${cfg.workers} workers${cfg.from_profile ? ` profile=${cfg.from_profile}` : ''}, runtime=${cfg.runtime}, autopause@${cfg.autopause_threshold}% remaining`);
       console.log(`Dispatcher: ${hb.state}  pid=${hb.pid == null ? 'n/a' : hb.pid}  heartbeat_age=${hb.age_s == null ? 'n/a' : hb.age_s + 's'}`);
+      for (const line of formatWarnings(warnings)) console.log(line);
       console.log('');
       console.log('  ID   ROLE      LANE           RUNTIME       STATE         MAILBOX  COOLDOWN  CURRENT                           HB(s)  PID');
       console.log('  ──── ────────  ─────────────  ────────────  ────────────  ───────  ────────  ────────────────────────────────  ─────  ─────');
@@ -160,4 +295,10 @@ function createStatusCommand(deps) {
   });
 }
 
-module.exports = { createStatusCommand };
+module.exports = {
+  createStatusCommand,
+  computeWarnings,
+  formatWarnings,
+  LIVE_HEARTBEAT_THRESHOLD_S,
+  STALE_CLAIM_THRESHOLD_S,
+};

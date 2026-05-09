@@ -25,6 +25,7 @@ const {
   unclaimHandoff,
   createHandoff,
 } = require('../../lib/handoffs.cjs');
+const { reclaimStaleClaims } = require('../../lib/handoffs-reclaim.cjs');
 
 function createHandoffsCommand(deps) {
   const {
@@ -729,8 +730,98 @@ function createHandoffsCommand(deps) {
     },
   });
 
+  function parseDurationToMs(spec) {
+    if (!spec) return null;
+    const m = String(spec).trim().match(/^(\d+)\s*(ms|s|m|h|d)?$/i);
+    if (!m) return null;
+    const n = parseInt(m[1], 10);
+    const unit = (m[2] || 'h').toLowerCase();
+    switch (unit) {
+      case 'ms': return n;
+      case 's':  return n * 1000;
+      case 'm':  return n * 60 * 1000;
+      case 'h':  return n * 60 * 60 * 1000;
+      case 'd':  return n * 24 * 60 * 60 * 1000;
+      default:   return null;
+    }
+  }
+
+  const handoffsReclaimCmd = defineCommand({
+    meta: {
+      name: 'reclaim',
+      description: 'Sweep claimed/ for stale claims (worker dead/disengaged) and unclaim them back to open/.',
+    },
+    args: {
+      projectid: { type: 'string', description: 'Project id (forwards to root resolver)', default: '' },
+      'stale-after': { type: 'string', description: 'Age threshold (e.g. 6h, 30m, 600s); default 6h', default: '6h' },
+      'dry-run': { type: 'boolean', description: 'Compute but do not move files', default: false },
+      json: { type: 'boolean', description: 'JSON output', default: false },
+    },
+    run({ args }) {
+      if (!args.projectid) {
+        outputError('--projectid is required');
+        process.exit(1);
+      }
+      const target = resolveTargetRoot(args.projectid);
+      const baseDir = target.baseDir;
+
+      const staleAfterMs = parseDurationToMs(args['stale-after']);
+      if (staleAfterMs === null) {
+        outputError(`Invalid --stale-after value: ${args['stale-after']} (expected Nh|Nm|Ns|Nd|Nms)`);
+        process.exit(1);
+      }
+
+      let result;
+      try {
+        result = reclaimStaleClaims({
+          baseDir,
+          staleAfterMs,
+          dryRun: !!args['dry-run'],
+        });
+      } catch (e) {
+        outputError(e.message);
+        process.exit(1);
+      }
+
+      const fmt = args.json ? 'json' : (shouldUseJson() ? 'json' : 'table');
+
+      if (fmt === 'json') {
+        console.log(JSON.stringify(result, null, 2));
+        return;
+      }
+
+      const reclaimed = result.reclaimed || [];
+      const skipped = result.skipped || [];
+      const action = args['dry-run'] ? 'would-reclaim' : 'reclaimed';
+
+      const reclaimedRows = reclaimed.map((r) => ({
+        id: r.id,
+        claimer: r.claimer || '',
+        age_h: Number.isFinite(r.age_ms) ? (r.age_ms / 3600000).toFixed(1) : 'inf',
+        action,
+        reason: r.evidence || '',
+      }));
+      const skippedRows = skipped.map((s) => ({
+        id: s.id,
+        claimer: s.claimer || '',
+        age_h: '-',
+        action: 'skipped',
+        reason: s.reason || '',
+      }));
+
+      const allRows = [...reclaimedRows, ...skippedRows];
+      const title = `Handoff reclaim sweep — ${args['dry-run'] ? 'DRY RUN' : 'LIVE'} (reclaimed=${reclaimed.length}, skipped=${skipped.length}, threshold=${args['stale-after']})`;
+
+      if (allRows.length === 0) {
+        console.log(`${title}\n(no claimed/ entries)`);
+        return;
+      }
+      console.log(render(allRows, { format: 'table', title }));
+    },
+  });
+
   return defineCommand({
-    meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, unclaim, complete, create, create-closeout, lint, new' },
+    meta: { name: 'handoffs', description: 'Work-stealing handoff queue — list, show, claim, claim-next, unclaim, complete, create, create-closeout, lint, new, reclaim' },
     subCommands: {
       list: handoffsListCmd,
       show: handoffsShowCmd,
@@ -742,6 +833,7 @@ function createHandoffsCommand(deps) {
       'create-closeout': handoffsCreateCloseoutCmd,
       lint: handoffsLintCmd,
       new: handoffsNewCmd,
+      reclaim: handoffsReclaimCmd,
     },
   });
 }
