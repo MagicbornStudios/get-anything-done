@@ -361,7 +361,7 @@ async function gatherStatus(baseDir) {
 // Doctor checks
 // ---------------------------------------------------------------------------
 
-async function runDoctor(baseDir) {
+async function runDoctor(baseDir, projectid) {
   const status = await gatherStatus(baseDir);
   const todos = [];
 
@@ -384,7 +384,22 @@ async function runDoctor(baseDir) {
     }
   }
 
-  return { todos, status };
+  // Anomaly detection
+  let anomalies = [];
+  try {
+    const { detectAnomalies, describeAnomaly } = require('../../lib/anomalies/detector.cjs');
+    const raw = await detectAnomalies({ baseDir, projectid: projectid || '', lookback_h: 24 });
+    anomalies = raw.map((a) => ({
+      rule_id: a.rule_id,
+      severity: a.severity,
+      description: describeAnomaly(a),
+      evidence: a.evidence,
+    }));
+  } catch (err) {
+    anomalies = [{ rule_id: 'detector_error', severity: 'info', description: `Anomaly detector threw: ${err.message}`, evidence: {} }];
+  }
+
+  return { todos, status, anomalies };
 }
 
 // ---------------------------------------------------------------------------
@@ -584,19 +599,28 @@ function createEcosystemCommand(deps) {
     },
     async run({ args }) {
       const baseDir = resolveBaseDir(args);
-      const { todos, status } = await runDoctor(baseDir);
+      const { todos, status, anomalies } = await runDoctor(baseDir, args.projectid || '');
 
       if (args.json) {
-        process.stdout.write(JSON.stringify({ ok: todos.length === 0, todos, status }, null, 2) + '\n');
+        process.stdout.write(JSON.stringify({ ok: todos.length === 0 && anomalies.length === 0, todos, status, anomalies }, null, 2) + '\n');
         return;
       }
 
       console.log('\n=== gad ecosystem doctor ===\n');
       if (todos.length === 0) {
-        console.log('All checks passed.');
+        console.log('All process/env checks passed.');
       } else {
         for (const t of todos) {
           console.log(`  [${t.type.toUpperCase()}] ${t.message}`);
+        }
+      }
+
+      console.log('\n=== ANOMALIES ===\n');
+      if (!anomalies || anomalies.length === 0) {
+        console.log('ANOMALIES: none');
+      } else {
+        for (const a of anomalies) {
+          console.log(`  [${a.severity.toUpperCase()}] [${a.rule_id}] ${a.description}`);
         }
       }
       console.log('');
