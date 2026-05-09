@@ -40,6 +40,7 @@ const PROCESSES = {
   curator:     { label: 'Curator daemon',     stateFile: 'curator.json',     logFile: 'curator.log'     },
   'delta-train':{ label: 'Delta-train daemon',stateFile: 'delta-train.json', logFile: 'delta-train.log' },
   dispatcher:  { label: 'Team dispatcher',   stateFile: 'dispatcher.json',  logFile: 'dispatcher.log'  },
+  'team-workers': { label: 'Team workers',  stateFile: 'team-workers.json', logFile: 'team-workers.log' },
 };
 
 // ---------------------------------------------------------------------------
@@ -215,6 +216,52 @@ async function upDispatcher(baseDir) {
   const pid = spawnDetached(baseDir, bin, ['team', 'dispatcher', 'start'], lf);
   writeState(baseDir, 'dispatcher', { pid, started_at: ts(), mode: 'detach', log_path: lf });
   return { pid, log: lf };
+}
+
+async function upTeamWorkers(baseDir, projectid) {
+  // Operator standing direction 2026-05-09: "are all the teams going to be
+  // up and running with the ecosystem". Yes — when team config exists and
+  // ecosystem.team_required=true, fire `gad team start` with the configured
+  // profile. Workers are SAFE to start even when runtimes are parked: per
+  // 2026-05-09 token-drain incident patches, workers honor isParked() before
+  // each spawn AND inner rotation has MAX_INNER_ROTATIONS=3 ceiling AND
+  // worker-side completeHandoff prevents claim leak.
+  const teamConfigPath = path.join(baseDir, '.planning', 'team', 'config.json');
+  if (!fs.existsSync(teamConfigPath)) {
+    return { skipped: true, reason: 'no team config' };
+  }
+  let cfg;
+  try {
+    cfg = JSON.parse(fs.readFileSync(teamConfigPath, 'utf8'));
+  } catch {
+    return { skipped: true, reason: 'team config unreadable' };
+  }
+  // Skip if any worker is already alive
+  const workersDir = path.join(baseDir, '.planning', 'team', 'workers');
+  if (fs.existsSync(workersDir)) {
+    let aliveCount = 0;
+    try {
+      for (const w of fs.readdirSync(workersDir)) {
+        const sp = path.join(workersDir, w, 'status.json');
+        if (!fs.existsSync(sp)) continue;
+        try {
+          const s = JSON.parse(fs.readFileSync(sp, 'utf8'));
+          if (s.pid && pidAlive(s.pid) && s.state !== 'STOPPED') aliveCount++;
+        } catch {}
+      }
+    } catch {}
+    if (aliveCount > 0) {
+      return { skipped: true, reason: `${aliveCount} workers already alive` };
+    }
+  }
+  const profile = cfg.profile || 'default';
+  const lf = logFile(baseDir, 'team-workers');
+  const bin = gadBin();
+  const args = ['team', 'start', '--profile', profile];
+  if (projectid) args.push('--projectid', projectid);
+  const pid = spawnDetached(baseDir, bin, args, lf);
+  writeState(baseDir, 'team-workers', { pid, started_at: ts(), mode: 'detach', log_path: lf, profile });
+  return { pid, log: lf, profile };
 }
 
 // ---------------------------------------------------------------------------
@@ -402,9 +449,11 @@ function createEcosystemCommand(deps) {
       }
 
       if (!noTeam) {
-        results.dispatcher = await upDispatcher(baseDir);
+        results.dispatcher    = await upDispatcher(baseDir);
+        results['team-workers'] = await upTeamWorkers(baseDir, args.projectid || '');
       } else {
-        results.dispatcher = { skipped: true, reason: '--no-team flag' };
+        results.dispatcher      = { skipped: true, reason: '--no-team flag' };
+        results['team-workers'] = { skipped: true, reason: '--no-team flag' };
       }
 
       if (useJson) {
