@@ -530,6 +530,9 @@ function renderShell() {
   .tag .actions button.primary { color: var(--gold-bright); border-color: var(--gold); background: rgba(212,160,23,0.10); }
   .tag .pending-rec { color: var(--red); font-style: italic; }
   .tag.merging { border-color: var(--gold-bright); background: rgba(212,160,23,0.08); }
+  .tag.listening { border-color: var(--gold-dark); background: rgba(212,160,23,0.04); opacity: 0.75; }
+  .tag.listening .cidlabel { color: var(--gold-dark); letter-spacing: 0.18em; }
+  .tag.listening .pending-rec { color: var(--text-mid); font-style: italic; }
   .tag .typewriter-cursor { display: inline-block; width: 0.4em; background: var(--gold-bright); animation: cursorBlink 0.85s steps(1) infinite; margin-left: 0.05em; }
   .tag .typewriter-new { color: var(--gold-bright); background: rgba(212,160,23,0.18); padding: 0 0.1em; transition: background 0.6s ease; }
   .tag .typewriter-new.settled { background: transparent; }
@@ -876,13 +879,16 @@ MODAL_VLLM_URL=https://..."></textarea>
     supported: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
   };
 
-  function makeRecognizer(onFinal, onError) {
+  function makeRecognizer(onFinal, onError, onSpeechActivity) {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
     const r = new Ctor();
-    r.lang = 'en-US'; r.continuous = true; r.interimResults = false;
+    r.lang = 'en-US'; r.continuous = true; r.interimResults = true;
     r.onresult = (ev) => {
       for (let i = ev.resultIndex; i < ev.results.length; i++) {
         const res = ev.results[i];
+        // Any result (interim or final) = diction recognized = speech activity now.
+        // Volume-only sound (no diction) does NOT fire onresult, so this is a clean signal.
+        if (onSpeechActivity) onSpeechActivity();
         if (res.isFinal) {
           const t = res[0].transcript.trim();
           if (t) onFinal(t);
@@ -894,17 +900,27 @@ MODAL_VLLM_URL=https://..."></textarea>
   }
 
   // Target-mode recording — Alt+click on a cid
+  // Passive listening: recognizer runs continuously, but the UI shows ACTIVE
+  // (red pulse) only when diction is currently being heard. Otherwise it
+  // shows PASSIVE (dim, "listening · cid"). lastSpeechTs is bumped on every
+  // interim result; if no speech for >ACTIVE_GRACE_MS, drop back to passive.
   function startTargetRecord(cid) {
     if (!voice.supported) { toast('voice not supported in this browser', true); return; }
     if (voice.rec) stopRecord();
     const r = makeRecognizer(
       (t) => { voice.transcript = (voice.transcript ? voice.transcript + ' ' : '') + t; renderTags(); },
       (err) => toast('voice error: ' + err, true),
+      () => { voice.lastSpeechTs = Date.now(); renderTags(); },
     );
     r.onend = () => finalizeTagRec();
-    try { r.start(); voice.rec = r; voice.mode = 'target'; voice.recCid = cid; voice.transcript = ''; renderTags(); }
+    try { r.start(); voice.rec = r; voice.mode = 'target'; voice.recCid = cid; voice.transcript = ''; voice.lastSpeechTs = 0; renderTags(); }
     catch (e) { toast('voice start failed: ' + e.message, true); }
   }
+  const ACTIVE_GRACE_MS = 1500;
+  // Periodic poll to flip ACTIVE → PASSIVE without waiting for next speech event.
+  setInterval(() => {
+    if (voice.mode === 'target' && voice.recCid) renderTags();
+  }, 400);
 
   // Composer-mode recording — mic button next to the composer input
   function startComposerRecord() {
@@ -1020,12 +1036,13 @@ MODAL_VLLM_URL=https://..."></textarea>
     }
 
     if (voice.recCid) {
-      const t = el('div', { className: 'tag recording', attrs: { 'data-cid': 'tag-recording' } });
+      const isActive = voice.lastSpeechTs && (Date.now() - voice.lastSpeechTs) < ACTIVE_GRACE_MS;
+      const t = el('div', { className: 'tag' + (isActive ? ' recording' : ' listening'), attrs: { 'data-cid': 'tag-recording' } });
       const head = el('div', { className: 'tag-head' });
-      head.appendChild(el('span', { className: 'cidlabel' }, 'recording · ' + voice.recCid));
+      head.appendChild(el('span', { className: 'cidlabel' }, (isActive ? 'recording · ' : 'listening · ') + voice.recCid));
       head.appendChild(el('button', { onclick: stopRecord, title: 'stop recording' }, 'stop'));
       t.appendChild(head);
-      t.appendChild(el('span', { className: 'ctext pending-rec' }, voice.transcript || '(speak now…)'));
+      t.appendChild(el('span', { className: 'ctext pending-rec' }, voice.transcript || (isActive ? '(speak now…)' : '(quiet — passive listening)')));
       root.appendChild(t);
     }
 
