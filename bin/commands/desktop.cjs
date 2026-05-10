@@ -125,6 +125,7 @@ const launchCmd = defineCommand({
     projectid: { type: 'string', description: 'Project for BYOK secrets', default: 'global' },
     browser:   { type: 'boolean', description: 'Launch vite-only browser mode at :1420 instead of Tauri native window', default: false },
     detach:    { type: 'boolean', description: 'Fork into background and write logs to .planning/', default: false },
+    windowed:  { type: 'boolean', description: 'Windows only: spawn Windows Terminal (wt.exe) with vertical-split panes — left runs the dev server, right tails kael/tauri/curator/w1 logs. Operator-owned lifecycle (Ctrl+C in either pane).', default: false },
     'dry-run': { type: 'boolean', description: 'Print what would be spawned without actually spawning', default: false },
     // Legacy --tauri kept for back-compat but now is a no-op (Tauri is default)
     tauri:     { type: 'boolean', description: '[deprecated] Kept for back-compat. Tauri is now the default.', default: false },
@@ -132,6 +133,7 @@ const launchCmd = defineCommand({
   run({ args }) {
     const dryRun = args['dry-run'];
     const browserMode = !!args.browser;
+    const windowedMode = !!args.windowed;
     const repoRoot = findRepoRoot();
     const desktopDir = path.join(repoRoot, 'apps', 'desktop');
 
@@ -189,8 +191,67 @@ const launchCmd = defineCommand({
       console.log(`  mode    : ${modeLabel}`);
       console.log(`  log     : ${logFile}`);
       console.log(`  detach  : ${!!args.detach}`);
+      console.log(`  windowed: ${windowedMode}`);
       console.log(`  VITE_ANTHROPIC_API_KEY: ${env.VITE_ANTHROPIC_API_KEY ? '*** (set)' : '(not set)'}`);
       return;
+    }
+
+    // ── Windowed mode (Windows only): spawn wt.exe with split panes ──────────
+    // Operator UX 2026-05-09: "i need a way for this to reload and i see the
+    // fucking logs ... in another terminal with all processes running
+    // concurrently or broken up between different terminals. ... i will use a
+    // gad cli command to run the desktop in dev mode if we have it accessible
+    // somehow."
+    //
+    // Pane left  : pnpm --filter @gad/desktop dev    (or dev:vite if --browser)
+    // Pane right : pnpm --filter @gad/desktop logs:all
+    //
+    // Operator owns lifecycle (Ctrl+C in either pane stops that pane cleanly).
+    // Falls back to printed instructions if wt.exe is missing.
+    if (windowedMode) {
+      if (process.platform !== 'win32') {
+        console.error('[gad desktop] --windowed is Windows-only (uses wt.exe / Windows Terminal).');
+        console.error('[gad desktop] On macOS/Linux, run two terminals manually:');
+        console.error(`  pane 1: pnpm --filter @gad/desktop ${browserMode ? 'dev:vite' : 'dev'}`);
+        console.error('  pane 2: pnpm --filter @gad/desktop logs:all');
+        process.exit(1);
+      }
+      // Probe wt.exe availability.
+      const wtProbe = spawnSync('wt.exe', ['-h'], { stdio: 'ignore', windowsHide: true });
+      if (wtProbe.status !== 0 && wtProbe.status !== 1) {
+        console.error('[gad desktop] Windows Terminal (wt.exe) not found on PATH.');
+        console.error('[gad desktop] Install: https://aka.ms/terminal');
+        console.error('[gad desktop] OR run manually in two terminals:');
+        console.error(`  pane 1: pnpm --filter @gad/desktop ${browserMode ? 'dev:vite' : 'dev'}`);
+        console.error('  pane 2: pnpm --filter @gad/desktop logs:all');
+        process.exit(1);
+      }
+      const devScript = browserMode ? 'dev:vite' : 'dev';
+      const wtArgs = [
+        '-w', '0',
+        '-d', repoRoot,
+        'new-tab',
+        '--title', 'kael-dev',
+        'cmd', '/c', `pnpm --filter @gad/desktop ${devScript}`,
+        ';',
+        'split-pane',
+        '--vertical',
+        '--size', '0.5',
+        '--title', 'kael-logs',
+        'cmd', '/c', 'pnpm --filter @gad/desktop logs:all',
+      ];
+      console.log(`[gad desktop] spawning Windows Terminal with kael-dev + kael-logs panes…`);
+      console.log(`[gad desktop] mode     : ${modeLabel}`);
+      console.log(`[gad desktop] cwd      : ${repoRoot}`);
+      const wtChild = spawn('wt.exe', wtArgs, {
+        stdio: 'inherit',
+        windowsHide: false,
+        detached: true,
+        env,
+      });
+      wtChild.unref();
+      console.log('[gad desktop] new Windows Terminal window opened. Operator owns Ctrl+C in either pane.');
+      process.exit(0);
     }
 
     // ── Spawn ─────────────────────────────────────────────────────────────────
