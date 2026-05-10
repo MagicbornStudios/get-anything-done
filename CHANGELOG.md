@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- feat(ask): MVP `gad ask` CLI — auto-detects backend (modal | gateway | direct) and streams the answer
+- `gad evolution promote` now supports `--projectid <id>` (project scope) and `--framework` (canonical scope). Project promotion locates the proto-skill in `<projectRoot>/.planning/proto-skills/<slug>/`, installs it into `<projectRoot>/skills/<slug>/` + `<projectRoot>/workflows/<slug>.md`, and awards PROJECT XP (+8) to `<projectRoot>/.planning/STATE.xml`. Framework promotion is unchanged. Mutual-exclusion enforced. Per slm-learning-209: pressure and XP are project-local; project promotions must not bump framework XP and vice versa. Closes the project-level evolution loop (pressure → candidates → drafts → promotion → level-up) that was previously broken because every promote path resolved to the framework canonical regardless of `--projectid`.
+- New regression test `tests/evolution-promote-project-xp.test.cjs` covering project promote bundle relocation, +8 XP award, level-up threshold accumulation, mutually-exclusive flag handling, unknown-project-id refusal, and absence of cross-track XP contamination.
+
 ### Changed
 - `gad projects init` now scaffolds a full initial-instructions bundle alongside the canonical XML ledgers: root `AGENTS.md`, mirrored `CLAUDE.md`, `SOUL.md`, and `.planning/AGENTS.md`. Existing instruction files are preserved and the generated refresh lands as `.<file>.gad-init` with a merge hint.
 

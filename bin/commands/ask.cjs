@@ -1,15 +1,22 @@
 'use strict';
 /**
- * gad ask — human-in-the-loop intake via browser-popup forms (Phase 158).
+ * gad ask — dual purpose:
+ *   1. LLM Q&A entry point (MVP, 2026-05-10) — `gad ask "what is GLOBAL-D-330"`
+ *      routes to whichever LLM backend is reachable (modal | gateway | direct).
+ *      Streams the answer to stdout. See `gad ask llm --help`.
+ *   2. Human-in-the-loop intake via browser-popup forms (Phase 158).
  *
- * Subcommands:
+ * LLM subcommand (default when first positional looks like a sentence):
+ *   `gad ask llm "what is GLOBAL-D-330"`
+ *
+ * Intake subcommands:
  *   env <key>      — capture a BYOK key value, store via gad env set
  *   byok <key>     — alias for env (semantically clearer for "API key" cases)
  *   todo <body>    — operator answers a question; result goes into todos
  *   decision <q>   — approve/reject with optional note
  *   text <q>       — generic free-text question, prints answer to stdout
  *
- * Modes:
+ * Intake modes:
  *   default       — pops browser form, blocks until submit
  *   --no-ui       — fall back to TTY prompt (echoless for env/byok)
  *   --value <v>   — non-interactive shortcut (skips UI; useful for scripts/CI)
@@ -23,6 +30,7 @@
 const path = require('node:path');
 const { defineCommand } = require('citty');
 const { ask } = require('../../lib/intake/server.cjs');
+const { createAskLlmCommand, runAskLlm } = require('./_ask-llm.cjs');
 
 function commonArgs(extra = {}) {
   return {
@@ -157,12 +165,15 @@ function createAskCommand(deps) {
     },
   });
 
+  const llmCmd = createAskLlmCommand(deps);
+
   return defineCommand({
     meta: {
       name: 'ask',
-      description: 'Human-in-the-loop intake — pop a browser form, capture operator input, return to caller. Use for env vars, BYOK keys, todos, approvals.',
+      description: 'Ask an LLM a question via `gad ask llm "..."` (auto-routes modal → gateway → direct) OR pop a human-in-the-loop intake form (env / byok / todo / decision / text).',
     },
     subCommands: {
+      llm: llmCmd,
       env: envCmd,
       byok: byokCmd,
       todo: todoCmd,
