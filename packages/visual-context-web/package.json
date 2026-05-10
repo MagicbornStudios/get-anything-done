@@ -1,0 +1,11 @@
+{
+  "name": "@gad/visual-context-web",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./style.css": "./index.css"
+  },
+  "files": ["index.js", "index.css", "README.md"]
+}
