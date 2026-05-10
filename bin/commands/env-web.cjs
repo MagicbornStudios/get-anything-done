@@ -529,14 +529,17 @@ function renderShell() {
   .tag .actions button.danger:hover { color: var(--red); border-color: var(--red); }
   .tag .actions button.primary { color: var(--gold-bright); border-color: var(--gold); background: rgba(212,160,23,0.10); }
   .tag .pending-rec { color: var(--red); font-style: italic; }
+  .tag.merging { border-color: var(--gold-bright); background: rgba(212,160,23,0.08); }
+  .tag .typewriter-cursor { display: inline-block; width: 0.4em; background: var(--gold-bright); animation: cursorBlink 0.85s steps(1) infinite; margin-left: 0.05em; }
+  .tag .typewriter-new { color: var(--gold-bright); background: rgba(212,160,23,0.18); padding: 0 0.1em; transition: background 0.6s ease; }
+  .tag .typewriter-new.settled { background: transparent; }
+  @keyframes cursorBlink { 50% { opacity: 0; } }
 
   /* ─── Composer at panel bottom ───────────────────────────────────────── */
   .composer { border-top: 1px solid var(--gold-dark); background: var(--bg); padding: 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.4rem; }
-  .composer .composer-meta { font-size: 0.52rem; color: var(--text-mid); letter-spacing: 0.18em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-  .composer .quick-prompt-row { display: flex; gap: 0.4rem; align-items: center; font-size: 0.6rem; }
-  .composer .quick-prompt-row .qp-toggle { display: flex; gap: 0.3rem; align-items: center; cursor: pointer; user-select: none; flex: 1; color: var(--text-mid); letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.55rem; }
-  .composer .quick-prompt-row .qp-toggle input { accent-color: var(--gold); margin: 0; }
-  .composer .quick-prompt-row select { padding: 0.25rem 0.4rem; font-size: 0.6rem; }
+  .composer .composer-meta { font-size: 0.52rem; color: var(--text-mid); letter-spacing: 0.18em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; gap: 0.4rem; }
+  .composer .live-status.offline { color: var(--gold-dark); }
+  .composer .live-status.online { color: var(--gold-bright); }
   .composer textarea { width: 100%; min-height: 60px; resize: vertical; font-size: 0.74rem; color: var(--gold-bright); background: var(--bg2); }
   .composer .composer-actions { display: flex; gap: 0.3rem; }
   .composer .composer-actions button { flex: 1; padding: 0.45rem 0.4rem; font-size: 0.58rem; }
@@ -621,24 +624,12 @@ MODAL_VLLM_URL=https://..."></textarea>
   <form class="composer" id="composer" onsubmit="submitComposer(event)" data-cid="env-web-composer">
     <div class="composer-meta">
       <span id="composerTagCount">0 tags attached</span>
-      <span>composer</span>
+      <span id="liveChatStatus" class="live-status offline" title="Live chat not detected — UPDATE quick-prompt mode only">no live chat · update only</span>
     </div>
-    <div class="quick-prompt-row" data-cid="env-web-quick-prompt-row">
-      <label class="qp-toggle" data-cid="env-web-quick-prompt-toggle" title="When ON, send copies a CRUD-templated prompt to the clipboard instead of submitting to history.">
-        <input type="checkbox" id="quickPromptToggle"/>
-        <span>quick prompt (clipboard)</span>
-      </label>
-      <select id="crudVerb" data-cid="env-web-crud-verb" title="CRUD verb for the prompt template" disabled>
-        <option value="UPDATE">UPDATE</option>
-        <option value="CREATE">CREATE</option>
-        <option value="READ">READ</option>
-        <option value="DELETE">DELETE</option>
-      </select>
-    </div>
-    <textarea id="composerInput" placeholder="add a prompt to send with the attached tags…" spellcheck="false" data-cid="env-web-composer-input"></textarea>
+    <textarea id="composerInput" placeholder="add a prompt to copy with the attached tags…" spellcheck="false" data-cid="env-web-composer-input"></textarea>
     <div class="composer-actions">
       <button type="button" class="mic-btn" id="composerMicBtn" onclick="toggleComposerMic()" data-cid="env-web-composer-mic">mic</button>
-      <button type="submit" class="send-btn" id="composerSendBtn" disabled data-cid="env-web-composer-send">send</button>
+      <button type="submit" class="send-btn" id="composerSendBtn" disabled data-cid="env-web-composer-send">copy update prompt</button>
     </div>
   </form>
 </aside>
@@ -937,19 +928,67 @@ MODAL_VLLM_URL=https://..."></textarea>
 
   function finalizeTagRec() {
     if (voice.recCid && voice.transcript) {
-      // Append to existing tag for the same cid; create new only when no tag exists yet.
-      // Operator UX 2026-05-10: "the same ids being talked about when we take in a new
-      // recording it doesnt append to the previous on" — same cid = same context bucket.
       const existing = voice.tags.find((t) => t.cid === voice.recCid);
       if (existing) {
-        existing.text = (existing.text + ' ' + voice.transcript).trim();
+        // Same cid = same context bucket. Append the new transcript and let the
+        // typewriter animation play out the new chunk so the operator sees the
+        // merge happen — was previously invisible (operator UX 2026-05-10).
+        const sep = existing.text && !existing.text.endsWith(' ') ? ' ' : '';
+        existing.pendingAppend = sep + voice.transcript;
         existing.updatedAt = Date.now();
+        // Animation will commit pendingAppend → text once typing completes.
       } else {
         voice.tags.push({ id: 't' + Date.now(), cid: voice.recCid, text: voice.transcript, createdAt: Date.now() });
       }
     }
     voice.rec = null; voice.mode = null; voice.recCid = null; voice.transcript = '';
     renderTags();
+  }
+
+  // ─── Typewriter animation for tag append ─────────────────────────────────
+  // Per-tag animation: we type out tag.pendingAppend char-by-char into a
+  // <span class="typewriter-new"> appended to the existing text. When done,
+  // we commit pendingAppend to tag.text and remove the special class.
+  const TYPE_MS_PER_CHAR = 18;
+  const animatingTags = new Set();
+
+  function startTypewriter(tagId, contentEl) {
+    if (animatingTags.has(tagId)) return;
+    const tag = voice.tags.find((t) => t.id === tagId);
+    if (!tag || !tag.pendingAppend) return;
+    animatingTags.add(tagId);
+
+    // Build the DOM: existing text + a span to type new chars into + cursor.
+    contentEl.textContent = tag.text;
+    const newSpan = document.createElement('span');
+    newSpan.className = 'typewriter-new';
+    contentEl.appendChild(newSpan);
+    const cursor = document.createElement('span');
+    cursor.className = 'typewriter-cursor';
+    contentEl.appendChild(cursor);
+
+    const chars = tag.pendingAppend;
+    let i = 0;
+    function step() {
+      if (i >= chars.length) {
+        // Done. Commit pending → text, remove cursor, settle highlight.
+        tag.text = (tag.text + tag.pendingAppend).trim();
+        delete tag.pendingAppend;
+        cursor.remove();
+        newSpan.classList.add('settled');
+        setTimeout(() => {
+          animatingTags.delete(tagId);
+          // Re-render so the tag returns to non-merging visual state.
+          const row = document.querySelector('[data-cid="tag-' + tagId + '"]');
+          if (row) row.classList.remove('merging');
+        }, 700);
+        return;
+      }
+      newSpan.textContent += chars[i];
+      i++;
+      setTimeout(step, TYPE_MS_PER_CHAR);
+    }
+    step();
   }
 
   function finalizeComposerRec() {
@@ -991,11 +1030,18 @@ MODAL_VLLM_URL=https://..."></textarea>
     }
 
     for (const tag of voice.tags) {
-      const t = el('div', { className: 'tag', attrs: { 'data-cid': 'tag-' + tag.id } });
+      const isMerging = !!tag.pendingAppend;
+      const t = el('div', { className: 'tag' + (isMerging ? ' merging' : ''), attrs: { 'data-cid': 'tag-' + tag.id } });
       const head = el('div', { className: 'tag-head' });
       head.appendChild(el('span', { className: 'cidlabel' }, tag.cid));
       t.appendChild(head);
-      t.appendChild(el('span', { className: 'ctext' }, tag.text));
+      const contentEl = el('span', { className: 'ctext' }, tag.text);
+      t.appendChild(contentEl);
+      if (isMerging) {
+        // Defer to next frame so contentEl is in the DOM before we mutate it.
+        const tagId = tag.id;
+        setTimeout(() => startTypewriter(tagId, contentEl), 0);
+      }
       const acts = el('div', { className: 'actions' });
       const canInject = tag.cid.startsWith('env-input-') || tag.cid.startsWith('env-var-');
       if (canInject) {
@@ -1041,24 +1087,17 @@ MODAL_VLLM_URL=https://..."></textarea>
     const hasContent = text.length > 0 || voice.tags.length > 0;
     $('#composerSendBtn').disabled = !hasContent;
   }
-  // CRUD prompt templates — verb decides framing. Tags + composer prompt
-  // are injected as a structured block so the consuming agent can parse them.
-  function buildCrudPrompt(verb, prompt, tags) {
-    const verbConfig = {
-      UPDATE: { gerund: 'updating', desc: 'Update the targets below using the operator notes.' },
-      CREATE: { gerund: 'creating', desc: 'Create new entries based on the operator notes for the targets below.' },
-      READ:   { gerund: 'reading',  desc: 'Show information about the targets below per the operator notes.' },
-      DELETE: { gerund: 'deleting', desc: 'Delete or remove the targets below per the operator notes.' },
-    }[verb] || { gerund: 'acting on', desc: 'Process the targets below.' };
-
+  // UPDATE prompt template — only verb supported until live chat detection
+  // returns true (Kael endpoint reachable). Operator UX 2026-05-10: "lets
+  // always just update and only use the update prompt for when we have no
+  // live chat enabled."
+  function buildUpdatePrompt(prompt, tags) {
     const lines = [];
-    lines.push('# ' + verb + ' — ' + verbConfig.desc);
+    lines.push('# UPDATE — Update the targets below using the operator notes.');
     lines.push('');
     if (tags.length > 0) {
       lines.push('## Targets (' + tags.length + ')');
-      for (const t of tags) {
-        lines.push('- **' + t.cid + '**: ' + t.text);
-      }
+      for (const t of tags) lines.push('- **' + t.cid + '**: ' + t.text);
       lines.push('');
     }
     if (prompt) {
@@ -1067,7 +1106,7 @@ MODAL_VLLM_URL=https://..."></textarea>
       lines.push('');
     }
     lines.push('## Action');
-    lines.push('Proceed with ' + verbConfig.gerund + ' the targets above using the operator prompt as context.');
+    lines.push('Proceed with updating the targets above using the operator prompt as context.');
     return lines.join('\\n');
   }
 
@@ -1075,29 +1114,12 @@ MODAL_VLLM_URL=https://..."></textarea>
     ev.preventDefault();
     const text = $('#composerInput').value.trim();
     if (!text && voice.tags.length === 0) return;
-    const isQuickPrompt = $('#quickPromptToggle').checked;
-    const verb = $('#crudVerb').value || 'UPDATE';
     const tagsSnap = voice.tags.map((t) => ({ cid: t.cid, text: t.text }));
-
-    if (isQuickPrompt) {
-      // Build CRUD-templated prompt and copy to clipboard. No history entry,
-      // no clear of tags — operator may want to paste, refine, paste again.
-      const tmpl = buildCrudPrompt(verb, text, tagsSnap);
-      navigator.clipboard.writeText(tmpl).then(
-        () => toast('quick prompt copied (' + verb + ', ' + tagsSnap.length + ' tag' + (tagsSnap.length === 1 ? '' : 's') + ')'),
-        () => toast('clipboard write failed', true),
-      );
-      return;
-    }
-
-    const entry = { id: 'h' + Date.now(), prompt: text, tags: tagsSnap, ts: new Date().toISOString() };
-    voice.history.unshift(entry);
-    if (voice.history.length > 12) voice.history.pop();
-    $('#composerInput').value = '';
-    voice.tags = [];
-    renderTags();
-    renderHistory();
-    toast('captured: ' + entry.tags.length + ' tag' + (entry.tags.length === 1 ? '' : 's') + (text ? ' + prompt' : ''));
+    const tmpl = buildUpdatePrompt(text, tagsSnap);
+    navigator.clipboard.writeText(tmpl).then(
+      () => toast('UPDATE prompt copied (' + tagsSnap.length + ' tag' + (tagsSnap.length === 1 ? '' : 's') + ')'),
+      () => toast('clipboard write failed', true),
+    );
   }
   function renderHistory() {
     const root = $('#historyList');
@@ -1117,22 +1139,36 @@ MODAL_VLLM_URL=https://..."></textarea>
     }
   }
 
-  // Wire composer text events + quick-prompt toggle
+  // Wire composer text events + live chat probe
   function wireComposerInputs() {
     const input = $('#composerInput');
     if (input && !input._wired) { input.addEventListener('input', updateComposerSendState); input._wired = true; }
-    const qp = $('#quickPromptToggle');
-    if (qp && !qp._wired) {
-      qp.addEventListener('change', () => {
-        $('#crudVerb').disabled = !qp.checked;
-        const sendBtn = $('#composerSendBtn');
-        sendBtn.textContent = qp.checked ? 'copy prompt' : 'send';
-      });
-      qp._wired = true;
-    }
   }
   document.addEventListener('DOMContentLoaded', wireComposerInputs);
   setTimeout(wireComposerInputs, 0);
+
+  // Live chat detection — probes Kael at :1420/kael (Tauri Vite dev) and the
+  // SLM proxy at :3002. When either responds, we'll later swap UI to enable
+  // a real "send" button + history. For now both paths return offline.
+  async function probeLiveChat() {
+    const status = $('#liveChatStatus');
+    const targets = ['http://localhost:1420/kael', 'http://localhost:3002/api/llm/chat'];
+    for (const url of targets) {
+      try {
+        const r = await fetch(url, { method: 'GET', mode: 'no-cors', signal: AbortSignal.timeout(1500) });
+        if (r) {
+          if (status) {
+            status.textContent = 'live chat detected · still update-only until wired';
+            status.className = 'live-status online';
+          }
+          return true;
+        }
+      } catch {}
+    }
+    return false;
+  }
+  setTimeout(probeLiveChat, 800);
+  setInterval(probeLiveChat, 30000);
 
   // Alt+click → target-mode recording (composer-mode is button-driven)
   document.addEventListener('click', (e) => {
