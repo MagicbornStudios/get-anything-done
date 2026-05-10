@@ -227,18 +227,23 @@ const launchCmd = defineCommand({
         process.exit(1);
       }
       const devScript = browserMode ? 'dev:vite' : 'dev';
+      // 2026-05-09 fix: wt CLI does NOT do PATH search for the command, so
+      // `cmd` (not `cmd.exe`) returns 0x80070002 ENOENT. Also `pnpm` on
+      // Windows is `pnpm.cmd` (batch file) — invoking just `pnpm` from a
+      // non-shell context fails with the same code. Resolution: invoke
+      // `pnpm.cmd` directly, no shell wrapper.
       const wtArgs = [
         '-w', '0',
         '-d', repoRoot,
         'new-tab',
         '--title', 'kael-dev',
-        'cmd', '/c', `pnpm --filter @gad/desktop ${devScript}`,
+        'pnpm.cmd', '--filter', '@gad/desktop', devScript,
         ';',
         'split-pane',
         '--vertical',
         '--size', '0.5',
         '--title', 'kael-logs',
-        'cmd', '/c', 'pnpm --filter @gad/desktop logs:all',
+        'pnpm.cmd', '--filter', '@gad/desktop', 'logs:all',
       ];
       console.log(`[gad desktop] spawning Windows Terminal with kael-dev + kael-logs panes…`);
       console.log(`[gad desktop] mode     : ${modeLabel}`);
