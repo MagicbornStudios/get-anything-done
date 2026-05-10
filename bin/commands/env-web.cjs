@@ -419,10 +419,13 @@ function renderShell() {
     --red: #C92A2A; --red-soft: rgba(201,42,42,0.10);
     --text: #e8e8e8; --text-dim: #999; --text-mid: #888; --border: #1f1f1f;
     --mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+    --panel-w: 360px;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 14px; }
-  .container { max-width: 980px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--mono); font-size: 14px; height: 100%; overflow: hidden; }
+  .layout { display: flex; height: 100vh; }
+  .main-col { flex: 1; overflow-y: auto; }
+  .container { max-width: 760px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
   .topbar { display: flex; gap: 0.75rem; align-items: end; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 1px solid var(--gold-dark); }
   .topbar h1 { color: var(--gold-bright); font-size: 0.85rem; letter-spacing: 0.22em; text-transform: uppercase; margin: 0 0 0.25rem; }
   .topbar p { color: var(--text-mid); font-size: 0.7rem; margin: 0; }
@@ -494,21 +497,59 @@ function renderShell() {
   }
   body.devid [data-cid]:hover::after { opacity: 1; background: var(--gold-bright); color: var(--bg); }
 
-  /* ─── Voice chip stack ───────────────────────────────────────────────── */
-  .chips { position: fixed; right: 1rem; bottom: 1rem; display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-end; max-width: min(560px, 60vw); z-index: 70; }
-  .chip { background: rgba(10,10,10,0.95); border: 1px solid var(--gold-dark); color: var(--gold-bright); padding: 0.4rem 0.6rem; font-size: 0.66rem; display: flex; gap: 0.4rem; align-items: flex-start; }
-  .chip.recording { border-color: var(--red); background: rgba(201,42,42,0.12); }
-  .chip .cidlabel { font-size: 0.52rem; color: var(--gold-dark); letter-spacing: 0.18em; text-transform: uppercase; display: block; margin-bottom: 0.15rem; }
-  .chip .ctext { display: block; word-break: break-word; }
-  .chip button { padding: 0.05rem 0.35rem; font-size: 0.55rem; background: transparent; border: 1px solid var(--gold-dark); color: var(--text-mid); }
-  .chip button:hover { color: var(--gold); border-color: var(--gold); }
-  .chip-text-button { background: transparent; border: 0; padding: 0; cursor: pointer; color: inherit; text-align: left; }
+  /* ─── Side context panel ─────────────────────────────────────────────── */
+  .side-panel { width: var(--panel-w); flex: 0 0 var(--panel-w); border-left: 1px solid var(--gold-dark); background: var(--bg2); display: flex; flex-direction: column; height: 100vh; }
+  .side-panel header { padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: baseline; }
+  .side-panel header h2 { margin: 0; font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-bright); }
+  .side-panel header .clear-btn { background: transparent; border: 1px solid var(--gold-dark); color: var(--text-mid); padding: 0.2rem 0.5rem; font-size: 0.52rem; }
+  .side-panel header .clear-btn:hover:not(:disabled) { color: var(--red); border-color: var(--red); }
+
+  .tag-list { flex: 1; overflow-y: auto; padding: 0.6rem 0.8rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .tag-list .empty-hint { color: var(--text-mid); font-size: 0.65rem; text-align: center; padding: 1.5rem 0.5rem; line-height: 1.6; }
+  .tag-list .empty-hint kbd { background: var(--card); border: 1px solid var(--gold-dark); padding: 0.05rem 0.3rem; color: var(--gold); margin: 0 0.1rem; font-family: var(--mono); font-size: 0.55rem; }
+
+  .tag { background: var(--card); border: 1px solid var(--gold-dark); padding: 0.45rem 0.55rem; font-size: 0.66rem; display: flex; flex-direction: column; gap: 0.25rem; }
+  .tag.recording { border-color: var(--red); background: rgba(201,42,42,0.10); }
+  .tag .tag-head { display: flex; justify-content: space-between; align-items: center; gap: 0.3rem; }
+  .tag .cidlabel { font-size: 0.52rem; color: var(--gold-dark); letter-spacing: 0.18em; text-transform: uppercase; word-break: break-all; flex: 1; }
+  .tag .ctext { color: var(--gold-bright); word-break: break-word; line-height: 1.4; }
+  .tag .actions { display: flex; gap: 0.25rem; flex-wrap: wrap; margin-top: 0.2rem; }
+  .tag .actions button { padding: 0.1rem 0.4rem; font-size: 0.52rem; background: transparent; border: 1px solid var(--gold-dark); color: var(--text-mid); }
+  .tag .actions button:hover:not(:disabled) { color: var(--gold); border-color: var(--gold); }
+  .tag .actions button.danger { color: var(--text-mid); }
+  .tag .actions button.danger:hover { color: var(--red); border-color: var(--red); }
+  .tag .actions button.primary { color: var(--gold-bright); border-color: var(--gold); background: rgba(212,160,23,0.10); }
+  .tag .pending-rec { color: var(--red); font-style: italic; }
+
+  /* ─── Composer at panel bottom ───────────────────────────────────────── */
+  .composer { border-top: 1px solid var(--gold-dark); background: var(--bg); padding: 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.4rem; }
+  .composer .composer-meta { font-size: 0.52rem; color: var(--text-mid); letter-spacing: 0.18em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+  .composer textarea { width: 100%; min-height: 60px; resize: vertical; font-size: 0.74rem; color: var(--gold-bright); background: var(--bg2); }
+  .composer .composer-actions { display: flex; gap: 0.3rem; }
+  .composer .composer-actions button { flex: 1; padding: 0.45rem 0.4rem; font-size: 0.58rem; }
+  .composer .composer-actions .mic-btn.recording { background: rgba(201,42,42,0.12); border-color: var(--red); color: var(--red); animation: pulse 1.4s infinite; }
+  .composer .composer-actions .send-btn { background: rgba(212,160,23,0.18); border-color: var(--gold); color: var(--gold-bright); }
+  .composer .composer-actions .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+  /* ─── History (composer submissions) ─────────────────────────────────── */
+  .history { padding: 0.4rem 0.8rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.3rem; max-height: 32%; overflow-y: auto; background: var(--bg2); }
+  .history:empty { display: none; }
+  .history h3 { margin: 0 0 0.2rem; font-size: 0.55rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold-dark); }
+  .history .h-entry { font-size: 0.62rem; color: var(--text); padding: 0.35rem 0; border-bottom: 1px dashed var(--border); }
+  .history .h-entry:last-child { border-bottom: 0; }
+  .history .h-entry .h-time { font-size: 0.5rem; color: var(--text-mid); letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.15rem; }
+  .history .h-entry .h-prompt { color: var(--gold-bright); white-space: pre-wrap; word-break: break-word; }
+  .history .h-entry .h-tags { font-size: 0.52rem; color: var(--text-mid); margin-top: 0.15rem; }
+  .history .h-entry .h-tags code { background: var(--card); padding: 0.05rem 0.25rem; color: var(--gold); margin-right: 0.2rem; }
 
   .devhint { position: fixed; left: 1rem; bottom: 1rem; font-size: 0.55rem; color: var(--text-mid); letter-spacing: 0.14em; text-transform: uppercase; z-index: 65; pointer-events: none; }
   .devhint kbd { background: var(--card); border: 1px solid var(--gold-dark); padding: 0.05rem 0.3rem; color: var(--gold); margin: 0 0.1rem; font-family: var(--mono); }
 </style>
 </head>
 <body>
+<div class="layout" data-cid="env-web-layout">
+<div class="main-col" data-cid="env-web-main-col">
 <div class="container" data-cid="env-web-container">
   <header class="topbar" data-cid="env-web-topbar">
     <div data-cid="env-web-title-block">
@@ -555,9 +596,30 @@ MODAL_VLLM_URL=https://..."></textarea>
     <button class="primary" id="saveBtn" onclick="save()" disabled data-cid="env-web-save-btn">save</button>
   </div>
 </div>
+</div><!-- /main-col -->
 
-<div class="chips" id="chips" data-cid="env-web-voice-chips"></div>
-<div class="devhint" id="devhint">Alt+I: dev ids · Alt+click cid: voice record</div>
+<aside class="side-panel" data-cid="env-web-side-panel">
+  <header data-cid="env-web-side-panel-header">
+    <h2>context</h2>
+    <button class="clear-btn" id="clearTagsBtn" onclick="clearAllTags()" data-cid="env-web-side-panel-clear">clear all</button>
+  </header>
+  <div class="tag-list" id="tagList" data-cid="env-web-tag-list"></div>
+  <div class="history" id="historyList" data-cid="env-web-history"></div>
+  <form class="composer" id="composer" onsubmit="submitComposer(event)" data-cid="env-web-composer">
+    <div class="composer-meta">
+      <span id="composerTagCount">0 tags attached</span>
+      <span>composer</span>
+    </div>
+    <textarea id="composerInput" placeholder="add a prompt to send with the attached tags…" spellcheck="false" data-cid="env-web-composer-input"></textarea>
+    <div class="composer-actions">
+      <button type="button" class="mic-btn" id="composerMicBtn" onclick="toggleComposerMic()" data-cid="env-web-composer-mic">mic</button>
+      <button type="submit" class="send-btn" id="composerSendBtn" disabled data-cid="env-web-composer-send">send</button>
+    </div>
+  </form>
+</aside>
+</div><!-- /layout -->
+
+<div class="devhint" id="devhint">Alt+I: dev ids · Alt+click cid: voice tag</div>
 <div id="toast" class="toast" style="display:none"></div>
 
 <script>
@@ -781,15 +843,24 @@ MODAL_VLLM_URL=https://..."></textarea>
     if (e.altKey && (e.key === 'i' || e.key === 'I')) { e.preventDefault(); toggleDev(); }
   });
 
-  // ─── Voice recording on Alt+click ────────────────────────────────────────
+  // ─── Voice subsystem ─────────────────────────────────────────────────────
+  // Two paths share one SpeechRecognition recognizer (only one active at a time):
+  //   targetMode: Alt+click on a [data-cid] → records → finalizes as a tag
+  //               that goes into the right-side panel.
+  //   composerMode: Click the mic button on the composer → records → fills
+  //                 the composer textarea directly (does NOT create a tag).
   const voice = {
-    rec: null, recCid: null, transcript: '',
-    chips: [],
+    rec: null,
+    mode: null,        // 'target' | 'composer' | null
+    recCid: null,      // target cid when mode === 'target'
+    transcript: '',    // accumulating transcript for the active recording
+    composerStartText: '',  // composer text snapshot when composer recording started
+    tags: [],          // persistent target-recording tags
+    history: [],       // composer submissions (prompt + tag snapshot)
     supported: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
   };
-  function startRecord(cid) {
-    if (!voice.supported) { toast('voice not supported in this browser', true); return; }
-    if (voice.rec) stopRecord();
+
+  function makeRecognizer(onFinal, onError) {
     const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
     const r = new Ctor();
     r.lang = 'en-US'; r.continuous = true; r.interimResults = false;
@@ -798,73 +869,207 @@ MODAL_VLLM_URL=https://..."></textarea>
         const res = ev.results[i];
         if (res.isFinal) {
           const t = res[0].transcript.trim();
-          if (t) voice.transcript = (voice.transcript ? voice.transcript + ' ' : '') + t;
-          renderChips();
+          if (t) onFinal(t);
         }
       }
     };
-    r.onerror = (ev) => { toast('voice error: ' + ev.error, true); };
-    r.onend = () => { finalizeRec(); };
-    try { r.start(); voice.rec = r; voice.recCid = cid; voice.transcript = ''; renderChips(); }
+    r.onerror = (ev) => onError(ev.error || 'unknown');
+    return r;
+  }
+
+  // Target-mode recording — Alt+click on a cid
+  function startTargetRecord(cid) {
+    if (!voice.supported) { toast('voice not supported in this browser', true); return; }
+    if (voice.rec) stopRecord();
+    const r = makeRecognizer(
+      (t) => { voice.transcript = (voice.transcript ? voice.transcript + ' ' : '') + t; renderTags(); },
+      (err) => toast('voice error: ' + err, true),
+    );
+    r.onend = () => finalizeTagRec();
+    try { r.start(); voice.rec = r; voice.mode = 'target'; voice.recCid = cid; voice.transcript = ''; renderTags(); }
     catch (e) { toast('voice start failed: ' + e.message, true); }
   }
+
+  // Composer-mode recording — mic button next to the composer input
+  function startComposerRecord() {
+    if (!voice.supported) { toast('voice not supported in this browser', true); return; }
+    if (voice.rec) stopRecord();
+    const r = makeRecognizer(
+      (t) => {
+        const input = $('#composerInput');
+        const sep = input.value && !input.value.endsWith(' ') ? ' ' : '';
+        input.value = input.value + sep + t;
+        updateComposerSendState();
+      },
+      (err) => toast('voice error: ' + err, true),
+    );
+    r.onend = () => finalizeComposerRec();
+    try { r.start(); voice.rec = r; voice.mode = 'composer'; voice.composerStartText = $('#composerInput').value; renderComposerMic(); }
+    catch (e) { toast('voice start failed: ' + e.message, true); }
+  }
+
   function stopRecord() { if (voice.rec) { try { voice.rec.stop(); } catch {} } }
-  function finalizeRec() {
+
+  function finalizeTagRec() {
     if (voice.recCid && voice.transcript) {
-      voice.chips.push({ id: 'c' + Date.now(), cid: voice.recCid, text: voice.transcript });
-      if (voice.chips.length > 6) voice.chips.shift();
+      voice.tags.push({ id: 't' + Date.now(), cid: voice.recCid, text: voice.transcript, createdAt: Date.now() });
     }
-    voice.rec = null; voice.recCid = null; voice.transcript = '';
-    renderChips();
+    voice.rec = null; voice.mode = null; voice.recCid = null; voice.transcript = '';
+    renderTags();
   }
-  function renderChips() {
-    const root = $('#chips'); root.innerHTML = '';
-    if (voice.recCid) {
-      const c = el('div', { className: 'chip recording' });
-      c.appendChild(el('span', null,
-        el('span', { className: 'cidlabel' }, 'rec · ' + voice.recCid),
-        el('span', { className: 'ctext' }, voice.transcript || '(speak now…)'),
+
+  function finalizeComposerRec() {
+    voice.rec = null; voice.mode = null; voice.composerStartText = '';
+    renderComposerMic();
+  }
+
+  // ─── Tag rendering (right panel) ─────────────────────────────────────────
+  function renderTags() {
+    const root = $('#tagList');
+    root.innerHTML = '';
+    const hasContent = voice.recCid !== null || voice.tags.length > 0;
+    $('#clearTagsBtn').disabled = voice.tags.length === 0;
+    $('#composerTagCount').textContent = voice.tags.length + ' tag' + (voice.tags.length === 1 ? '' : 's') + ' attached';
+    updateComposerSendState();
+
+    if (!hasContent) {
+      root.appendChild(el('div', { className: 'empty-hint' },
+        'No context yet.',
+        el('br'),
+        el('br'),
+        'Hold ',
+        el('kbd', null, 'Alt'),
+        ' and click any element to record a voice tag attached to that target. ',
+        el('kbd', null, 'Alt+I'),
+        ' toggles the dev outline so every cid becomes visible.'
       ));
-      const stopBtn = el('button', { onclick: stopRecord, attrs: { 'aria-label': 'stop' } }, 'stop');
-      c.appendChild(stopBtn);
-      root.appendChild(c);
+      return;
     }
-    for (const chip of voice.chips) {
-      const c = el('div', { className: 'chip' });
-      const txtBtn = el('button', { className: 'chip-text-button', title: 'inject into matching input or copy', onclick: () => injectChip(chip) });
-      txtBtn.appendChild(el('span', { className: 'cidlabel' }, chip.cid));
-      txtBtn.appendChild(el('span', { className: 'ctext' }, chip.text));
-      c.appendChild(txtBtn);
-      c.appendChild(el('button', { onclick: () => dismissChip(chip.id) }, 'X'));
-      root.appendChild(c);
+
+    if (voice.recCid) {
+      const t = el('div', { className: 'tag recording', attrs: { 'data-cid': 'tag-recording' } });
+      const head = el('div', { className: 'tag-head' });
+      head.appendChild(el('span', { className: 'cidlabel' }, 'recording · ' + voice.recCid));
+      head.appendChild(el('button', { onclick: stopRecord, title: 'stop recording' }, 'stop'));
+      t.appendChild(head);
+      t.appendChild(el('span', { className: 'ctext pending-rec' }, voice.transcript || '(speak now…)'));
+      root.appendChild(t);
     }
-  }
-  function injectChip(chip) {
-    // If cid maps to an input element, fill it. Else copy to clipboard.
-    if (chip.cid.startsWith('env-input-') || chip.cid.startsWith('env-var-')) {
-      const key = chip.cid.replace(/^env-(input|var)-/, '').toUpperCase();
-      const input = document.querySelector('input[data-key="' + key + '"]');
-      if (input) {
-        input.value = chip.text;
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        toast('inserted into ' + key);
-        dismissChip(chip.id);
-        return;
+
+    for (const tag of voice.tags) {
+      const t = el('div', { className: 'tag', attrs: { 'data-cid': 'tag-' + tag.id } });
+      const head = el('div', { className: 'tag-head' });
+      head.appendChild(el('span', { className: 'cidlabel' }, tag.cid));
+      t.appendChild(head);
+      t.appendChild(el('span', { className: 'ctext' }, tag.text));
+      const acts = el('div', { className: 'actions' });
+      const canInject = tag.cid.startsWith('env-input-') || tag.cid.startsWith('env-var-');
+      if (canInject) {
+        acts.appendChild(el('button', { className: 'primary', title: 'inject transcript into matching input', onclick: () => injectTagIntoInput(tag) }, 'use as value'));
       }
+      acts.appendChild(el('button', { title: 'copy transcript to clipboard', onclick: () => { navigator.clipboard.writeText(tag.text); toast('copied'); } }, 'copy'));
+      acts.appendChild(el('button', { className: 'danger', title: 'detach this tag', onclick: () => dismissTag(tag.id) }, 'remove'));
+      t.appendChild(acts);
+      root.appendChild(t);
     }
-    navigator.clipboard.writeText(chip.text).then(() => toast('copied transcript'));
-    dismissChip(chip.id);
   }
-  function dismissChip(id) { voice.chips = voice.chips.filter((c) => c.id !== id); renderChips(); }
+
+  function injectTagIntoInput(tag) {
+    const key = tag.cid.replace(/^env-(input|var)-/, '').toUpperCase();
+    const input = document.querySelector('input[data-key="' + key + '"]');
+    if (!input) { toast('no matching input for ' + key, true); return; }
+    input.value = tag.text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    toast('inserted into ' + key);
+    dismissTag(tag.id);
+  }
+
+  function dismissTag(id) { voice.tags = voice.tags.filter((t) => t.id !== id); renderTags(); }
+  function clearAllTags() { voice.tags = []; renderTags(); }
+
+  // ─── Composer mic + send ─────────────────────────────────────────────────
+  function toggleComposerMic() {
+    if (voice.mode === 'composer') stopRecord();
+    else startComposerRecord();
+  }
+  function renderComposerMic() {
+    const btn = $('#composerMicBtn');
+    if (voice.mode === 'composer') {
+      btn.classList.add('recording');
+      btn.textContent = 'stop';
+    } else {
+      btn.classList.remove('recording');
+      btn.textContent = 'mic';
+    }
+  }
+  function updateComposerSendState() {
+    const text = $('#composerInput').value.trim();
+    const hasContent = text.length > 0 || voice.tags.length > 0;
+    $('#composerSendBtn').disabled = !hasContent;
+  }
+  function submitComposer(ev) {
+    ev.preventDefault();
+    const text = $('#composerInput').value.trim();
+    if (!text && voice.tags.length === 0) return;
+    const entry = {
+      id: 'h' + Date.now(),
+      prompt: text,
+      tags: voice.tags.map((t) => ({ cid: t.cid, text: t.text })),
+      ts: new Date().toISOString(),
+    };
+    voice.history.unshift(entry);
+    if (voice.history.length > 12) voice.history.pop();
+    // Reset
+    $('#composerInput').value = '';
+    voice.tags = [];
+    renderTags();
+    renderHistory();
+    toast('captured: ' + entry.tags.length + ' tag' + (entry.tags.length === 1 ? '' : 's') + (text ? ' + prompt' : ''));
+  }
+  function renderHistory() {
+    const root = $('#historyList');
+    root.innerHTML = '';
+    if (voice.history.length === 0) return;
+    root.appendChild(el('h3', null, 'recent submissions'));
+    for (const h of voice.history) {
+      const e = el('div', { className: 'h-entry' });
+      e.appendChild(el('div', { className: 'h-time' }, new Date(h.ts).toLocaleTimeString()));
+      if (h.prompt) e.appendChild(el('div', { className: 'h-prompt' }, h.prompt));
+      if (h.tags.length > 0) {
+        const tagBlock = el('div', { className: 'h-tags' });
+        for (const t of h.tags) tagBlock.appendChild(el('code', { title: t.text }, t.cid));
+        e.appendChild(tagBlock);
+      }
+      root.appendChild(e);
+    }
+  }
+
+  // Wire composer text events
+  document.addEventListener('DOMContentLoaded', () => {
+    const input = $('#composerInput');
+    if (input) input.addEventListener('input', updateComposerSendState);
+  });
+  setTimeout(() => {
+    const input = $('#composerInput');
+    if (input && !input._wired) { input.addEventListener('input', updateComposerSendState); input._wired = true; }
+  }, 0);
+
+  // Alt+click → target-mode recording (composer-mode is button-driven)
   document.addEventListener('click', (e) => {
     if (!e.altKey) return;
     const target = e.target.closest('[data-cid]');
     if (!target) return;
-    e.preventDefault(); e.stopPropagation();
+    // Don't trigger target-record on side-panel internals (they have their own buttons).
     const cid = target.getAttribute('data-cid');
-    if (voice.recCid === cid) stopRecord();
-    else startRecord(cid);
+    if (cid.startsWith('env-web-side-panel') || cid.startsWith('env-web-composer') || cid.startsWith('env-web-tag-list') || cid.startsWith('env-web-history') || cid.startsWith('tag-')) return;
+    e.preventDefault(); e.stopPropagation();
+    if (voice.mode === 'target' && voice.recCid === cid) stopRecord();
+    else if (voice.mode === 'target') stopRecord();  // finalize current, start new on next click cycle
+    else startTargetRecord(cid);
   }, true);
+
+  // Initial render of the empty-hint
+  renderTags();
 
   // ─── Wire UI ─────────────────────────────────────────────────────────────
   $('#projectSel').addEventListener('change', (e) => {
