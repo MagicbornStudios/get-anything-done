@@ -485,17 +485,26 @@ function renderShell() {
 
   .empty { text-align: center; padding: 2rem; color: var(--text-mid); font-size: 0.78rem; }
 
-  /* ─── VCS dev mode (Alt+I) ───────────────────────────────────────────── */
-  body.devid [data-cid] { outline: 1px solid rgba(212,160,23,0.45); outline-offset: 1px; position: relative; }
-  body.devid [data-cid]:hover { outline-color: var(--gold-bright); outline-width: 2px; cursor: pointer; }
-  body.devid [data-cid]::after {
-    content: attr(data-cid);
-    position: absolute; top: -8px; right: -2px;
-    font: 0.55rem var(--mono); padding: 0.05rem 0.3rem;
-    background: var(--bg); color: var(--gold-bright); border: 1px solid var(--gold-dark);
-    pointer-events: none; z-index: 50; opacity: 0.55;
+  /* ─── VCS dev mode (Alt+I) — hover-only, no persistent decoration ────── */
+  body.devid [data-cid] { position: relative; }
+  body.devid [data-cid]:hover {
+    outline: 2px solid var(--gold-bright); outline-offset: 1px; cursor: crosshair;
   }
-  body.devid [data-cid]:hover::after { opacity: 1; background: var(--gold-bright); color: var(--bg); }
+  body.devid [data-cid]:hover::after {
+    content: attr(data-cid);
+    position: absolute; top: -10px; right: -2px;
+    font: 0.55rem var(--mono); padding: 0.05rem 0.3rem;
+    background: var(--gold-bright); color: var(--bg); border: 1px solid var(--gold-dark);
+    pointer-events: none; z-index: 50; white-space: nowrap;
+  }
+  /* Subtle status badge — confirms dev mode is on without decorating every cid. */
+  body.devid::before {
+    content: 'DEV · alt+click to record';
+    position: fixed; top: 0.5rem; right: 0.5rem; z-index: 100;
+    font: 0.5rem var(--mono); letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 0.15rem 0.5rem; background: var(--gold-bright); color: var(--bg); border: 1px solid var(--gold-dark);
+    pointer-events: none;
+  }
 
   /* ─── Side context panel ─────────────────────────────────────────────── */
   .side-panel { width: var(--panel-w); flex: 0 0 var(--panel-w); border-left: 1px solid var(--gold-dark); background: var(--bg2); display: flex; flex-direction: column; height: 100vh; }
@@ -524,6 +533,10 @@ function renderShell() {
   /* ─── Composer at panel bottom ───────────────────────────────────────── */
   .composer { border-top: 1px solid var(--gold-dark); background: var(--bg); padding: 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.4rem; }
   .composer .composer-meta { font-size: 0.52rem; color: var(--text-mid); letter-spacing: 0.18em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+  .composer .quick-prompt-row { display: flex; gap: 0.4rem; align-items: center; font-size: 0.6rem; }
+  .composer .quick-prompt-row .qp-toggle { display: flex; gap: 0.3rem; align-items: center; cursor: pointer; user-select: none; flex: 1; color: var(--text-mid); letter-spacing: 0.1em; text-transform: uppercase; font-size: 0.55rem; }
+  .composer .quick-prompt-row .qp-toggle input { accent-color: var(--gold); margin: 0; }
+  .composer .quick-prompt-row select { padding: 0.25rem 0.4rem; font-size: 0.6rem; }
   .composer textarea { width: 100%; min-height: 60px; resize: vertical; font-size: 0.74rem; color: var(--gold-bright); background: var(--bg2); }
   .composer .composer-actions { display: flex; gap: 0.3rem; }
   .composer .composer-actions button { flex: 1; padding: 0.45rem 0.4rem; font-size: 0.58rem; }
@@ -609,6 +622,18 @@ MODAL_VLLM_URL=https://..."></textarea>
     <div class="composer-meta">
       <span id="composerTagCount">0 tags attached</span>
       <span>composer</span>
+    </div>
+    <div class="quick-prompt-row" data-cid="env-web-quick-prompt-row">
+      <label class="qp-toggle" data-cid="env-web-quick-prompt-toggle" title="When ON, send copies a CRUD-templated prompt to the clipboard instead of submitting to history.">
+        <input type="checkbox" id="quickPromptToggle"/>
+        <span>quick prompt (clipboard)</span>
+      </label>
+      <select id="crudVerb" data-cid="env-web-crud-verb" title="CRUD verb for the prompt template" disabled>
+        <option value="UPDATE">UPDATE</option>
+        <option value="CREATE">CREATE</option>
+        <option value="READ">READ</option>
+        <option value="DELETE">DELETE</option>
+      </select>
     </div>
     <textarea id="composerInput" placeholder="add a prompt to send with the attached tags…" spellcheck="false" data-cid="env-web-composer-input"></textarea>
     <div class="composer-actions">
@@ -912,7 +937,16 @@ MODAL_VLLM_URL=https://..."></textarea>
 
   function finalizeTagRec() {
     if (voice.recCid && voice.transcript) {
-      voice.tags.push({ id: 't' + Date.now(), cid: voice.recCid, text: voice.transcript, createdAt: Date.now() });
+      // Append to existing tag for the same cid; create new only when no tag exists yet.
+      // Operator UX 2026-05-10: "the same ids being talked about when we take in a new
+      // recording it doesnt append to the previous on" — same cid = same context bucket.
+      const existing = voice.tags.find((t) => t.cid === voice.recCid);
+      if (existing) {
+        existing.text = (existing.text + ' ' + voice.transcript).trim();
+        existing.updatedAt = Date.now();
+      } else {
+        voice.tags.push({ id: 't' + Date.now(), cid: voice.recCid, text: voice.transcript, createdAt: Date.now() });
+      }
     }
     voice.rec = null; voice.mode = null; voice.recCid = null; voice.transcript = '';
     renderTags();
@@ -1007,19 +1041,58 @@ MODAL_VLLM_URL=https://..."></textarea>
     const hasContent = text.length > 0 || voice.tags.length > 0;
     $('#composerSendBtn').disabled = !hasContent;
   }
+  // CRUD prompt templates — verb decides framing. Tags + composer prompt
+  // are injected as a structured block so the consuming agent can parse them.
+  function buildCrudPrompt(verb, prompt, tags) {
+    const verbConfig = {
+      UPDATE: { gerund: 'updating', desc: 'Update the targets below using the operator notes.' },
+      CREATE: { gerund: 'creating', desc: 'Create new entries based on the operator notes for the targets below.' },
+      READ:   { gerund: 'reading',  desc: 'Show information about the targets below per the operator notes.' },
+      DELETE: { gerund: 'deleting', desc: 'Delete or remove the targets below per the operator notes.' },
+    }[verb] || { gerund: 'acting on', desc: 'Process the targets below.' };
+
+    const lines = [];
+    lines.push('# ' + verb + ' — ' + verbConfig.desc);
+    lines.push('');
+    if (tags.length > 0) {
+      lines.push('## Targets (' + tags.length + ')');
+      for (const t of tags) {
+        lines.push('- **' + t.cid + '**: ' + t.text);
+      }
+      lines.push('');
+    }
+    if (prompt) {
+      lines.push('## Operator prompt');
+      lines.push(prompt);
+      lines.push('');
+    }
+    lines.push('## Action');
+    lines.push('Proceed with ' + verbConfig.gerund + ' the targets above using the operator prompt as context.');
+    return lines.join('\\n');
+  }
+
   function submitComposer(ev) {
     ev.preventDefault();
     const text = $('#composerInput').value.trim();
     if (!text && voice.tags.length === 0) return;
-    const entry = {
-      id: 'h' + Date.now(),
-      prompt: text,
-      tags: voice.tags.map((t) => ({ cid: t.cid, text: t.text })),
-      ts: new Date().toISOString(),
-    };
+    const isQuickPrompt = $('#quickPromptToggle').checked;
+    const verb = $('#crudVerb').value || 'UPDATE';
+    const tagsSnap = voice.tags.map((t) => ({ cid: t.cid, text: t.text }));
+
+    if (isQuickPrompt) {
+      // Build CRUD-templated prompt and copy to clipboard. No history entry,
+      // no clear of tags — operator may want to paste, refine, paste again.
+      const tmpl = buildCrudPrompt(verb, text, tagsSnap);
+      navigator.clipboard.writeText(tmpl).then(
+        () => toast('quick prompt copied (' + verb + ', ' + tagsSnap.length + ' tag' + (tagsSnap.length === 1 ? '' : 's') + ')'),
+        () => toast('clipboard write failed', true),
+      );
+      return;
+    }
+
+    const entry = { id: 'h' + Date.now(), prompt: text, tags: tagsSnap, ts: new Date().toISOString() };
     voice.history.unshift(entry);
     if (voice.history.length > 12) voice.history.pop();
-    // Reset
     $('#composerInput').value = '';
     voice.tags = [];
     renderTags();
@@ -1044,15 +1117,22 @@ MODAL_VLLM_URL=https://..."></textarea>
     }
   }
 
-  // Wire composer text events
-  document.addEventListener('DOMContentLoaded', () => {
-    const input = $('#composerInput');
-    if (input) input.addEventListener('input', updateComposerSendState);
-  });
-  setTimeout(() => {
+  // Wire composer text events + quick-prompt toggle
+  function wireComposerInputs() {
     const input = $('#composerInput');
     if (input && !input._wired) { input.addEventListener('input', updateComposerSendState); input._wired = true; }
-  }, 0);
+    const qp = $('#quickPromptToggle');
+    if (qp && !qp._wired) {
+      qp.addEventListener('change', () => {
+        $('#crudVerb').disabled = !qp.checked;
+        const sendBtn = $('#composerSendBtn');
+        sendBtn.textContent = qp.checked ? 'copy prompt' : 'send';
+      });
+      qp._wired = true;
+    }
+  }
+  document.addEventListener('DOMContentLoaded', wireComposerInputs);
+  setTimeout(wireComposerInputs, 0);
 
   // Alt+click → target-mode recording (composer-mode is button-driven)
   document.addEventListener('click', (e) => {
