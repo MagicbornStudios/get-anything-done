@@ -27,9 +27,13 @@
 
 body.vcs-devid [data-cid] {
   position: relative;
+  /* isolate so a child xterm canvas can't eclipse the highlight */
+  isolation: isolate;
 }
 
 body.vcs-devid [data-cid]:hover {
+  /* inset box-shadow escapes child stacking contexts that swallow outline */
+  box-shadow: inset 0 0 0 2px var(--vcs-accent-bright);
   outline: 2px solid var(--vcs-accent-bright);
   outline-offset: 1px;
   cursor: crosshair;
