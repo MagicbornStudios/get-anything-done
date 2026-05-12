@@ -19,6 +19,7 @@ const { createRuntimeMatrixCommand } = require('./runtime/matrix.cjs');
 const { createRuntimePipelineCommand } = require('./runtime/pipeline.cjs');
 const { createRuntimeLaunchCommand } = require('./runtime/launch.cjs');
 const { createRuntimeBudgetCommand } = require('./runtime/budget.cjs');
+const { createRuntimeAuditCommand } = require('./runtime-audit.cjs');
 
 function createRuntimeCommand(deps) {
   const resolveGadRuntimeContext = createGadRuntimeContextResolver(deps);
@@ -43,6 +44,7 @@ function createRuntimeCommand(deps) {
       pipeline: createRuntimePipelineCommand(commandDeps),
       launch: createRuntimeLaunchCommand(commandDeps),
       budget: createRuntimeBudgetCommand(commandDeps),
+      audit: createRuntimeAuditCommand(),
     },
   });
 }

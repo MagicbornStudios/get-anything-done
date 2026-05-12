@@ -7,6 +7,7 @@ const {
   readJsonSafe,
   writeJsonPretty,
   GAD_HOOK_MARKERS,
+  GAD_SESSION_END_HOOK_MARKER,
 } = require('../../../lib/install-helpers.cjs');
 
 function createHandlerEntry(handlerPath) {
@@ -37,12 +38,18 @@ function createInstallHooksCommand({ defineCommand }) {
       const settingsPath = getClaudeSettingsPath(isGlobal);
       const traceHandlerPath = path.resolve(__dirname, '..', '..', 'gad-trace-hook.cjs');
       const stopHandlerPath = path.resolve(__dirname, '..', '..', 'gad-stop-hook.cjs');
+      const sessionEndHandlerPath = path.resolve(__dirname, '..', '..', '..', 'scripts', 'claude-session-end-hook.cjs');
 
       for (const p of [traceHandlerPath, stopHandlerPath]) {
         if (!fs.existsSync(p)) {
           console.error(`gad install hooks: handler not found at ${p}`);
           process.exit(1);
         }
+      }
+      // session-end hook is best-effort — warn but don't abort if missing
+      const hasSessionEndHook = fs.existsSync(sessionEndHandlerPath);
+      if (!hasSessionEndHook) {
+        console.warn(`gad install hooks: spend-ledger session-end hook not found at ${sessionEndHandlerPath} (skipping)`);
       }
 
       const settings = readJsonSafe(settingsPath) || {};
@@ -57,17 +64,23 @@ function createInstallHooksCommand({ defineCommand }) {
       }
       for (const hookType of ['Stop', 'SubagentStop']) {
         const existing = Array.isArray(settings.hooks[hookType]) ? settings.hooks[hookType] : [];
-        settings.hooks[hookType] = [...filterHookEntries(existing), stopEntry];
+        // Keep existing entries that aren't GAD-managed, then add stop + session-end
+        const filtered = filterHookEntries(existing);
+        const newEntries = [stopEntry];
+        if (hasSessionEndHook) newEntries.push(createHandlerEntry(sessionEndHandlerPath));
+        settings.hooks[hookType] = [...filtered, ...newEntries];
       }
 
       writeJsonPretty(settingsPath, settings);
       console.log('Installed GAD hooks');
-      console.log(`  trace handler: ${traceHandlerPath}`);
-      console.log(`  stop handler:  ${stopHandlerPath}`);
-      console.log(`  settings:      ${settingsPath}`);
+      console.log(`  trace handler:       ${traceHandlerPath}`);
+      console.log(`  stop handler:        ${stopHandlerPath}`);
+      if (hasSessionEndHook) console.log(`  session-end handler: ${sessionEndHandlerPath}`);
+      console.log(`  settings:            ${settingsPath}`);
       console.log('\n  Hooks wired: PreToolUse, PostToolUse, Stop, SubagentStop');
       console.log('  Events written to <project>/.planning/.trace-events.jsonl per run');
       console.log('  Stop hook captures assistant text + reasoning (phase 145, T-145-04)');
+      if (hasSessionEndHook) console.log('  Session-end hook appends spend rows to ai-spend-ledger (phase 188-03)');
     },
   });
 }
