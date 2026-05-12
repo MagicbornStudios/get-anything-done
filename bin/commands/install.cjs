@@ -4,6 +4,7 @@ const { defineCommand } = require('citty');
 const { createInstallHooksCommand, createUninstallHooksCommand, createSyncHookFilesCommand } = require('./install/hooks.cjs');
 const { createInstallAllCommand, runInstallDelegation } = require('./install/all.cjs');
 const { createInstallSelfCommand } = require('./install/self.cjs');
+const { createInstallMcpServersCommand, runInstallMcpServers } = require('./install/mcp-servers.cjs');
 
 const INSTALL_FLAG_ARGS = {
   claude: { type: 'boolean' },
@@ -21,6 +22,8 @@ const INSTALL_FLAG_ARGS = {
   sdk: { type: 'boolean' },
   uninstall: { type: 'boolean' },
   'force-statusline': { type: 'boolean' },
+  'mcp-servers': { type: 'boolean', description: 'Register bundled mcp-servers/* with codex (~/.codex/config.toml) and Claude Code (~/.claude/settings.json)' },
+  'dry-run': { type: 'boolean', description: 'When combined with --mcp-servers, print changes without writing' },
   'config-dir': { type: 'string', description: 'Custom runtime config directory', default: '' },
 };
 
@@ -29,13 +32,30 @@ function createInstallCommands() {
   const all = createInstallAllCommand({ defineCommand });
   const self = createInstallSelfCommand({ defineCommand });
   const syncHookFiles = createSyncHookFilesCommand({ defineCommand });
+  const mcpServers = createInstallMcpServersCommand({ defineCommand });
   const uninstallHooks = createUninstallHooksCommand({ defineCommand });
 
   const install = defineCommand({
     meta: { name: 'install', description: 'Install GAD into an agent runtime (hooks, framework, or full install)' },
     args: INSTALL_FLAG_ARGS,
-    subCommands: { hooks, all, self, 'sync-hook-files': syncHookFiles },
-    run: ({ args }) => runInstallDelegation(args),
+    subCommands: { hooks, all, self, 'sync-hook-files': syncHookFiles, 'mcp-servers': mcpServers },
+    run: ({ args }) => {
+      // When `--mcp-servers` is passed at the top level (composable with --all etc.),
+      // run MCP registration first. If it was the ONLY flag requested, exit; otherwise
+      // continue into the runtime installer so callers can chain `--mcp-servers --claude`.
+      if (args['mcp-servers']) {
+        const res = runInstallMcpServers({
+          dryRun: Boolean(args['dry-run']),
+          configDir: args['config-dir'] || '',
+        });
+        const otherFlags = ['claude','opencode','gemini','cursor','codex','copilot','antigravity','windsurf','augment','all','sdk','uninstall','force-statusline','hooks','self','sync-hook-files'];
+        const hasOther = otherFlags.some((k) => args[k]);
+        if (!hasOther) {
+          process.exit(res.exitCode);
+        }
+      }
+      runInstallDelegation(args);
+    },
   });
 
   const uninstall = defineCommand({

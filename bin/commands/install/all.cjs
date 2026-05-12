@@ -23,6 +23,7 @@ const FLAG_KEYS = [
   'sdk',
   'uninstall',
   'force-statusline',
+  'mcp-servers',
 ];
 
 const RUNTIME_FLAG_KEYS = [
@@ -81,9 +82,22 @@ function createInstallAllCommand({ defineCommand }) {
       all: { type: 'boolean' }, local: { type: 'boolean' }, global: { type: 'boolean' },
       sdk: { type: 'boolean' }, uninstall: { type: 'boolean' },
       'force-statusline': { type: 'boolean' },
+      'mcp-servers': { type: 'boolean', description: 'Also register bundled mcp-servers/* with codex + Claude' },
       'config-dir': { type: 'string', description: 'Custom runtime config directory', default: '' },
     },
-    run: ({ args }) => runInstallDelegation(args, { implicitAll: true }),
+    run: ({ args }) => {
+      // If --mcp-servers is on, run the MCP-server registration before/with the install delegation.
+      // Done inline (not via spawnSync) so the parent process keeps stdout ordering.
+      if (args['mcp-servers']) {
+        try {
+          const { runInstallMcpServers } = require('./mcp-servers.cjs');
+          runInstallMcpServers({ dryRun: false, configDir: args['config-dir'] || '' });
+        } catch (e) {
+          console.error(`gad install all --mcp-servers: ${e && e.message ? e.message : e}`);
+        }
+      }
+      runInstallDelegation(args, { implicitAll: true });
+    },
   });
 }
 
