@@ -46,7 +46,7 @@ body.vcs-devid [data-cid]:hover::after {
   color: var(--vcs-bg);
   border: 1px solid var(--vcs-accent-dark);
   pointer-events: none;
-  z-index: 50;
+  z-index: 9999;
   white-space: nowrap;
 }
 
@@ -56,7 +56,7 @@ body.vcs-devid::before {
   position: fixed;
   top: 0.5rem;
   right: 0.5rem;
-  z-index: 100;
+  z-index: 9995;
   font: 0.5rem var(--vcs-mono);
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -76,7 +76,7 @@ body.vcs-devid::before {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  z-index: 200;
+  z-index: 9999;
   pointer-events: none;
   transition: background 0.2s ease, opacity 0.2s ease;
   background: var(--vcs-accent-dark);
@@ -102,16 +102,25 @@ body.vcs-devid::before {
 /* ─── Side panel ────────────────────────────────────────────────────────── */
 
 .vcs-side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
   width: var(--vcs-panel-w);
-  flex: 0 0 var(--vcs-panel-w);
+  height: 100vh;
   border-left: 1px solid var(--vcs-accent-dark);
   background: var(--vcs-bg2);
   display: flex;
   flex-direction: column;
-  height: 100vh;
   font-family: var(--vcs-mono);
   font-size: 14px;
   color: var(--vcs-fg);
+  z-index: 9990;
+  transform: translateX(100%);
+  transition: transform 0.2s ease;
+}
+
+.vcs-side-panel.vcs-open {
+  transform: translateX(0);
 }
 
 .vcs-side-panel header {
@@ -300,7 +309,7 @@ body.vcs-devid::before {
   color: var(--vcs-fg-dim);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  z-index: 65;
+  z-index: 9988;
   pointer-events: none;
   font-family: var(--vcs-mono);
 }

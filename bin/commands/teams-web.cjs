@@ -126,26 +126,125 @@ function renderShell() {
   .err-box { color: var(--error); border: 1px solid var(--error); padding: 0.8rem 1rem; font-size: 0.72rem; margin-top: 1rem; }
   .empty { color: var(--text-mid); font-size: 0.7rem; padding: 0.5rem 0; }
 
-  /* VCS dev mode (Alt+I) — hover-only */
-  body.devid [data-cid] { position: relative; }
-  body.devid [data-cid]:hover { outline: 2px solid var(--accent); outline-offset: 1px; cursor: crosshair; }
-  body.devid [data-cid]:hover::after {
+  /* ─── @gad/visual-context-web overlay styles (inlined, phase 185-04) ─── */
+  :root {
+    --vcs-bg: var(--bg, #0a0a0a);
+    --vcs-bg2: var(--bg2, #050505);
+    --vcs-card: var(--card, #141414);
+    --vcs-accent: #D4A017;
+    --vcs-accent-bright: #FFD700;
+    --vcs-accent-dark: #8C6E10;
+    --vcs-red: #C92A2A;
+    --vcs-red-soft: rgba(201, 42, 42, 0.10);
+    --vcs-fg: var(--text, #e8e8e8);
+    --vcs-fg-dim: var(--text-mid, #888);
+    --vcs-border: var(--border, #1f1f1f);
+    --vcs-mono: var(--mono, ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace);
+    --vcs-panel-w: 360px;
+  }
+  body.vcs-devid [data-cid] { position: relative; }
+  body.vcs-devid [data-cid]:hover { outline: 2px solid var(--vcs-accent-bright); outline-offset: 1px; cursor: crosshair; }
+  body.vcs-devid [data-cid]:hover::after {
     content: attr(data-cid);
     position: absolute; top: -10px; right: -2px;
-    font: 0.55rem var(--mono); padding: 0.05rem 0.3rem;
-    background: var(--accent); color: var(--bg); border: 1px solid var(--dim);
-    pointer-events: none; z-index: 50; white-space: nowrap;
+    font: 0.55rem var(--vcs-mono); padding: 0.05rem 0.3rem;
+    background: var(--vcs-accent-bright); color: var(--vcs-bg); border: 1px solid var(--vcs-accent-dark);
+    pointer-events: none; z-index: 9999; white-space: nowrap;
   }
-  body.devid::before {
-    content: 'DEV MODE · alt+i';
-    position: fixed; top: 0.5rem; right: 0.5rem; z-index: 100;
-    font: 0.5rem var(--mono); letter-spacing: 0.18em; text-transform: uppercase;
-    padding: 0.15rem 0.5rem; background: var(--accent); color: var(--bg); border: 1px solid var(--dim);
-    pointer-events: none;
+  body.vcs-devid::before {
+    content: 'DEV \\00b7 alt+click to record';
+    position: fixed; top: 0.5rem; right: 0.5rem; z-index: 9995;
+    font: 0.5rem var(--vcs-mono); letter-spacing: 0.18em; text-transform: uppercase;
+    padding: 0.15rem 0.5rem; background: var(--vcs-accent-bright); color: var(--vcs-bg);
+    border: 1px solid var(--vcs-accent-dark); pointer-events: none;
   }
-
-  .devhint { position: fixed; left: 1rem; bottom: 1rem; font-size: 0.55rem; color: var(--text-mid); letter-spacing: 0.14em; text-transform: uppercase; pointer-events: none; }
-  .devhint kbd { background: var(--card); border: 1px solid var(--dim); padding: 0.05rem 0.3rem; color: var(--fg); margin: 0 0.1rem; font-family: var(--mono); font-size: 0.55rem; }
+  .vcs-listening-dot {
+    position: fixed; top: 0.6rem; left: 0.6rem;
+    width: 8px; height: 8px; border-radius: 50%;
+    z-index: 9999; pointer-events: none;
+    transition: background 0.2s ease, opacity 0.2s ease;
+    background: var(--vcs-accent-dark); opacity: 0.45;
+  }
+  .vcs-listening-dot.passive { background: var(--vcs-accent-dark); opacity: 0.45; }
+  .vcs-listening-dot.active { background: var(--vcs-red); opacity: 1; animation: vcs-dot-pulse 1.4s infinite; }
+  @keyframes vcs-dot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .vcs-side-panel {
+    position: fixed; top: 0; right: 0;
+    width: var(--vcs-panel-w); height: 100vh;
+    border-left: 1px solid var(--vcs-accent-dark);
+    background: var(--vcs-bg2);
+    display: flex; flex-direction: column;
+    font-family: var(--vcs-mono); font-size: 14px; color: var(--vcs-fg);
+    z-index: 9990; transform: translateX(100%); transition: transform 0.2s ease;
+  }
+  .vcs-side-panel.vcs-open { transform: translateX(0); }
+  .vcs-side-panel header {
+    padding: 0.7rem 0.8rem; border-bottom: 1px solid var(--vcs-border);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .vcs-side-panel header h2 {
+    margin: 0; font-size: 0.62rem; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--vcs-accent-bright);
+  }
+  .vcs-side-panel .vcs-clear-btn {
+    background: transparent; border: 1px solid var(--vcs-accent-dark);
+    color: var(--vcs-fg-dim); padding: 0.2rem 0.5rem; font-size: 0.52rem;
+    font-family: var(--vcs-mono); cursor: pointer;
+  }
+  .vcs-side-panel .vcs-clear-btn:hover:not(:disabled) { color: var(--vcs-red); border-color: var(--vcs-red); }
+  .vcs-tag-list {
+    flex: 1; overflow-y: auto; padding: 0.6rem 0.8rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .vcs-tag-list .vcs-empty-hint {
+    color: var(--vcs-fg-dim); font-size: 0.65rem; text-align: center; padding: 1.5rem 0.5rem; line-height: 1.6;
+  }
+  .vcs-tag-list .vcs-empty-hint kbd {
+    background: var(--vcs-card); border: 1px solid var(--vcs-accent-dark);
+    padding: 0.05rem 0.3rem; color: var(--vcs-accent); margin: 0 0.1rem;
+    font-family: var(--vcs-mono); font-size: 0.55rem;
+  }
+  .vcs-recording-bucket {
+    background: var(--vcs-card); border: 1px solid var(--vcs-accent-dark);
+    padding: 0.45rem 0.55rem; font-size: 0.66rem;
+    display: flex; flex-direction: column; gap: 0.25rem; font-family: var(--vcs-mono);
+  }
+  .vcs-recording-bucket.vcs-recording { border-color: var(--vcs-red); background: rgba(201, 42, 42, 0.10); }
+  .vcs-recording-bucket.vcs-merging { border-color: var(--vcs-accent-bright); background: rgba(212, 160, 23, 0.08); }
+  .vcs-recording-bucket.vcs-listening { border-color: var(--vcs-accent-dark); background: rgba(212, 160, 23, 0.04); opacity: 0.75; }
+  .vcs-recording-bucket .vcs-tag-head { display: flex; justify-content: space-between; align-items: center; gap: 0.3rem; }
+  .vcs-recording-bucket .vcs-cidlabel {
+    font-size: 0.52rem; color: var(--vcs-accent-dark); letter-spacing: 0.18em;
+    text-transform: uppercase; word-break: break-all; flex: 1;
+  }
+  .vcs-recording-bucket .vcs-ctext { color: var(--vcs-accent-bright); word-break: break-word; line-height: 1.4; }
+  .vcs-recording-bucket .vcs-pending-rec { color: var(--vcs-red); font-style: italic; }
+  .vcs-recording-bucket.vcs-listening .vcs-pending-rec { color: var(--vcs-fg-dim); }
+  .vcs-recording-bucket .vcs-tag-actions { display: flex; gap: 0.25rem; flex-wrap: wrap; margin-top: 0.2rem; }
+  .vcs-recording-bucket .vcs-tag-actions button {
+    padding: 0.1rem 0.4rem; font-size: 0.52rem; background: transparent;
+    border: 1px solid var(--vcs-accent-dark); color: var(--vcs-fg-dim);
+    font-family: var(--vcs-mono); cursor: pointer;
+  }
+  .vcs-recording-bucket .vcs-tag-actions button:hover:not(:disabled) { color: var(--vcs-accent); border-color: var(--vcs-accent); }
+  .vcs-recording-bucket .vcs-tag-actions button.vcs-danger:hover { color: var(--vcs-red); border-color: var(--vcs-red); }
+  .vcs-typewriter-cursor {
+    display: inline-block; width: 0.4em; background: var(--vcs-accent-bright);
+    animation: vcs-cursor-blink 0.85s steps(1) infinite; margin-left: 0.05em;
+  }
+  .vcs-typewriter-new { color: var(--vcs-accent-bright); background: rgba(212, 160, 23, 0.18); padding: 0 0.1em; transition: background 0.6s ease; }
+  .vcs-typewriter-new.vcs-settled { background: transparent; }
+  @keyframes vcs-cursor-blink { 50% { opacity: 0; } }
+  .vcs-devhint {
+    position: fixed; left: 1rem; bottom: 1rem; font-size: 0.55rem;
+    color: var(--vcs-fg-dim); letter-spacing: 0.14em; text-transform: uppercase;
+    z-index: 9988; pointer-events: none; font-family: var(--vcs-mono);
+  }
+  .vcs-devhint kbd {
+    background: var(--vcs-card); border: 1px solid var(--vcs-accent-dark);
+    padding: 0.05rem 0.3rem; color: var(--vcs-accent); margin: 0 0.1rem;
+    font-family: var(--vcs-mono); font-size: 0.55rem;
+  }
 </style>
 </head>
 <body>
@@ -208,7 +307,7 @@ function renderShell() {
   </section>
 
 </div><!-- /container -->
-<div class="devhint"><kbd>Alt+I</kbd> toggle dev ids</div>
+<!-- VCS side panel is mounted by createVisualContextOverlay (packages/visual-context-web, phase 185-04) -->
 
 <script>
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -474,15 +573,294 @@ async function load() {
 
 function reload() { load(); }
 
-// ─── VCS dev mode (Alt+I) ─────────────────────────────────────────────────────
-document.addEventListener('keydown', (e) => {
-  if (e.altKey && (e.key === 'i' || e.key === 'I')) {
-    document.body.classList.toggle('devid');
-    e.preventDefault();
-  }
-});
-
 load();
+</script>
+
+<script type="module">
+// ─── @gad/visual-context-web — inlined (packages/visual-context-web/index.js, phase 185-04) ──
+// Source: vendor/get-anything-done/packages/visual-context-web/index.js
+
+const ACTIVE_GRACE_MS = 1500;
+const TYPE_MS_PER_CHAR = 18;
+
+function createVisualContextOverlay(options = {}) {
+  const {
+    cidPrefix = 'app',
+    onVoiceTag = null,
+    onUpdate = null,
+    container = document.body,
+    showDevHint = true,
+  } = options;
+
+  const voice = {
+    rec: null,
+    mode: null,
+    recCid: null,
+    transcript: '',
+    lastSpeechTs: 0,
+    tags: [],
+    supported: !!(window.SpeechRecognition || window.webkitSpeechRecognition),
+  };
+  const animatingTags = new Set();
+  let devOn = false;
+  let disposed = false;
+
+  function el(tag, props, ...kids) {
+    const e = document.createElement(tag);
+    if (props) {
+      const { attrs, ...rest } = props;
+      Object.assign(e, rest);
+      if (attrs) for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    }
+    for (const k of kids) {
+      if (k == null) continue;
+      if (typeof k === 'string') e.appendChild(document.createTextNode(k));
+      else e.appendChild(k);
+    }
+    return e;
+  }
+
+  const dot = el('div', { className: 'vcs-listening-dot passive', attrs: { 'data-cid': cidPrefix + '-vcs-dot', title: 'VCS: passive listening' } });
+  document.body.appendChild(dot);
+
+  function setDotState(state) { dot.className = 'vcs-listening-dot ' + state; }
+
+  function toggleDev() {
+    devOn = !devOn;
+    document.body.classList.toggle('vcs-devid', devOn);
+  }
+
+  function onKeydown(e) {
+    if (disposed) return;
+    if (e.altKey && (e.key === 'i' || e.key === 'I')) { e.preventDefault(); toggleDev(); return; }
+    if (e.ctrlKey && e.key === ';') {
+      e.preventDefault();
+      const str = buildUpdateString(voice.tags, cidPrefix);
+      navigator.clipboard.writeText(str).then(() => { if (onUpdate) onUpdate(str); }).catch(() => {});
+    }
+  }
+
+  function onAltClick(e) {
+    if (disposed) return;
+    if (!e.altKey) return;
+    const target = e.target.closest('[data-cid]');
+    if (!target) return;
+    const cid = target.getAttribute('data-cid');
+    if (cid.startsWith(cidPrefix + '-vcs-') || cid === cidPrefix + '-vcs-dot') return;
+    e.preventDefault(); e.stopPropagation();
+    if (voice.mode === 'target' && voice.recCid === cid) stopRecord();
+    else if (voice.mode === 'target') stopRecord();
+    else startTargetRecord(cid);
+  }
+
+  function makeRecognizer(onFinal, onError, onSpeechActivity) {
+    const Ctor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Ctor) return null;
+    const r = new Ctor();
+    r.lang = 'en-US'; r.continuous = true; r.interimResults = true;
+    r.onresult = (ev) => {
+      for (let i = ev.resultIndex; i < ev.results.length; i++) {
+        const res = ev.results[i];
+        if (onSpeechActivity) onSpeechActivity();
+        if (res.isFinal) { const t = res[0].transcript.trim(); if (t) onFinal(t); }
+      }
+    };
+    r.onerror = (ev) => onError(ev.error || 'unknown');
+    return r;
+  }
+
+  function startTargetRecord(cid) {
+    if (!voice.supported) return;
+    if (voice.rec) stopRecord();
+    const r = makeRecognizer(
+      (t) => { voice.transcript = (voice.transcript ? voice.transcript + ' ' : '') + t; renderTagList(); },
+      (_err) => {},
+      () => { voice.lastSpeechTs = Date.now(); setDotState('active'); renderTagList(); },
+    );
+    if (!r) return;
+    r.onend = () => finaliseTagRec();
+    try {
+      r.start();
+      voice.rec = r; voice.mode = 'target'; voice.recCid = cid;
+      voice.transcript = ''; voice.lastSpeechTs = 0;
+      setDotState('passive'); renderTagList();
+    } catch (_e) {}
+  }
+
+  function stopRecord() { if (voice.rec) { try { voice.rec.stop(); } catch {} } }
+
+  function finaliseTagRec() {
+    const cid = voice.recCid; const transcript = voice.transcript;
+    if (cid && transcript) {
+      const existing = voice.tags.find((t) => t.cid === cid);
+      if (existing) {
+        const sep = existing.text && !existing.text.endsWith(' ') ? ' ' : '';
+        existing.pendingAppend = sep + transcript; existing.updatedAt = Date.now();
+      } else {
+        const entry = { id: 't' + Date.now(), cid, text: transcript, createdAt: Date.now() };
+        voice.tags.push(entry);
+        if (onVoiceTag) onVoiceTag({ cid, ts: entry.createdAt, transcript });
+      }
+    }
+    voice.rec = null; voice.mode = null; voice.recCid = null; voice.transcript = '';
+    setDotState('passive'); renderTagList();
+  }
+
+  const dotInterval = setInterval(() => {
+    if (disposed) { clearInterval(dotInterval); return; }
+    if (voice.mode === 'target' && voice.recCid) {
+      const isActive = voice.lastSpeechTs && (Date.now() - voice.lastSpeechTs) < ACTIVE_GRACE_MS;
+      setDotState(isActive ? 'active' : 'passive'); renderTagList();
+    }
+  }, 400);
+
+  function startTypewriter(tagId, contentEl) {
+    if (animatingTags.has(tagId)) return;
+    const tag = voice.tags.find((t) => t.id === tagId);
+    if (!tag || !tag.pendingAppend) return;
+    animatingTags.add(tagId);
+    contentEl.textContent = tag.text;
+    const newSpan = document.createElement('span'); newSpan.className = 'vcs-typewriter-new'; contentEl.appendChild(newSpan);
+    const cursor = document.createElement('span'); cursor.className = 'vcs-typewriter-cursor'; contentEl.appendChild(cursor);
+    const chars = tag.pendingAppend; let i = 0;
+    function step() {
+      if (i >= chars.length) {
+        tag.text = (tag.text + tag.pendingAppend).trim(); delete tag.pendingAppend;
+        cursor.remove(); newSpan.classList.add('vcs-settled');
+        setTimeout(() => {
+          animatingTags.delete(tagId);
+          const row = document.querySelector('[data-cid="vcs-tag-' + tagId + '"]');
+          if (row) row.classList.remove('vcs-merging');
+        }, 700); return;
+      }
+      newSpan.textContent += chars[i]; i++; setTimeout(step, TYPE_MS_PER_CHAR);
+    }
+    step();
+  }
+
+  function onVoiceTagEvent(e) {
+    if (disposed) return;
+    const { cid, transcript } = e.detail || {};
+    if (!cid || !transcript) return;
+    const existing = voice.tags.find((t) => t.cid === cid);
+    if (existing) {
+      const sep = existing.text && !existing.text.endsWith(' ') ? ' ' : '';
+      existing.pendingAppend = sep + transcript; existing.updatedAt = Date.now();
+    } else { voice.tags.push({ id: 't' + Date.now(), cid, text: transcript, createdAt: Date.now() }); }
+    renderTagList();
+  }
+
+  const panel = el('aside', { className: 'vcs-side-panel', attrs: { 'data-cid': cidPrefix + '-vcs-panel' } });
+  const panelHeader = el('header', { attrs: { 'data-cid': cidPrefix + '-vcs-panel-header' } });
+  const panelTitle = el('h2', null, 'context');
+  const clearBtn = el('button', {
+    className: 'vcs-clear-btn',
+    attrs: { 'data-cid': cidPrefix + '-vcs-panel-clear' },
+    onclick: () => { voice.tags = []; renderTagList(); },
+  }, 'clear all');
+  panelHeader.appendChild(panelTitle); panelHeader.appendChild(clearBtn); panel.appendChild(panelHeader);
+  const tagList = el('div', { className: 'vcs-tag-list', attrs: { 'data-cid': cidPrefix + '-vcs-tag-list' } });
+  panel.appendChild(tagList);
+  container.appendChild(panel);
+
+  function renderTagList() {
+    tagList.innerHTML = '';
+    clearBtn.disabled = voice.tags.length === 0;
+    const hasContent = voice.recCid !== null || voice.tags.length > 0;
+    if (!hasContent) {
+      tagList.appendChild(el('div', { className: 'vcs-empty-hint' },
+        'No context yet.', el('br'), el('br'),
+        'Hold ', el('kbd', null, 'Alt'), ' and click any element to record a voice tag. ',
+        el('kbd', null, 'Alt+I'), ' toggles dev outline. ',
+        el('kbd', null, 'Ctrl+;'), ' copies UPDATE prompt.',
+      ));
+      return;
+    }
+    if (voice.recCid) {
+      const isActive = voice.lastSpeechTs && (Date.now() - voice.lastSpeechTs) < ACTIVE_GRACE_MS;
+      const cls = 'vcs-recording-bucket ' + (isActive ? 'vcs-recording' : 'vcs-listening');
+      const t = el('div', { className: cls, attrs: { 'data-cid': cidPrefix + '-vcs-recording' } });
+      const head = el('div', { className: 'vcs-tag-head' });
+      head.appendChild(el('span', { className: 'vcs-cidlabel' }, (isActive ? 'recording · ' : 'listening · ') + voice.recCid));
+      head.appendChild(el('button', { onclick: stopRecord, title: 'stop recording' }, 'stop'));
+      t.appendChild(head);
+      t.appendChild(el('span', { className: 'vcs-ctext vcs-pending-rec' }, voice.transcript || (isActive ? '(speak now…)' : '(quiet — passive listening)')));
+      tagList.appendChild(t);
+    }
+    for (const tag of voice.tags) {
+      const isMerging = !!tag.pendingAppend;
+      const cls = 'vcs-recording-bucket' + (isMerging ? ' vcs-merging' : '');
+      const t = el('div', { className: cls, attrs: { 'data-cid': 'vcs-tag-' + tag.id } });
+      const head = el('div', { className: 'vcs-tag-head' });
+      head.appendChild(el('span', { className: 'vcs-cidlabel' }, tag.cid));
+      t.appendChild(head);
+      const contentEl = el('span', { className: 'vcs-ctext' }, tag.text);
+      t.appendChild(contentEl);
+      if (isMerging) { const tagId = tag.id; setTimeout(() => startTypewriter(tagId, contentEl), 0); }
+      const acts = el('div', { className: 'vcs-tag-actions' });
+      acts.appendChild(el('button', { title: 'copy transcript to clipboard', onclick: () => { navigator.clipboard.writeText(tag.text).catch(() => {}); } }, 'copy'));
+      acts.appendChild(el('button', { className: 'vcs-danger', title: 'remove this tag', onclick: () => { voice.tags = voice.tags.filter((x) => x.id !== tag.id); renderTagList(); } }, 'remove'));
+      t.appendChild(acts);
+      tagList.appendChild(t);
+    }
+  }
+
+  let devHintEl = null;
+  if (showDevHint) {
+    devHintEl = el('div', { className: 'vcs-devhint', attrs: { 'data-cid': cidPrefix + '-vcs-devhint' } },
+      el('kbd', null, 'Alt+I'), ': dev ids · ',
+      el('kbd', null, 'Alt+click'), ': voice tag · ',
+      el('kbd', null, 'Ctrl+;'), ': copy UPDATE',
+    );
+    document.body.appendChild(devHintEl);
+  }
+
+  function buildUpdateString(tags, prefix) {
+    const lines = ['# UPDATE — Update the targets below using the operator notes.', ''];
+    if (tags.length > 0) {
+      lines.push('## Targets (' + tags.length + ')');
+      for (const t of tags) lines.push('- **' + t.cid + '**: ' + t.text);
+      lines.push('');
+    }
+    lines.push('## Context prefix: ' + prefix);
+    lines.push(''); lines.push('## Action'); lines.push('Proceed with updating the targets above.');
+    return lines.join('\n');
+  }
+
+  document.addEventListener('keydown', onKeydown);
+  document.addEventListener('click', onAltClick, true);
+  document.addEventListener('voice-tag-recorded', onVoiceTagEvent);
+  renderTagList();
+
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    clearInterval(dotInterval);
+    document.removeEventListener('keydown', onKeydown);
+    document.removeEventListener('click', onAltClick, true);
+    document.removeEventListener('voice-tag-recorded', onVoiceTagEvent);
+    document.body.classList.remove('vcs-devid');
+    if (dot.parentNode) dot.parentNode.removeChild(dot);
+    if (panel.parentNode) panel.parentNode.removeChild(panel);
+    if (devHintEl && devHintEl.parentNode) devHintEl.parentNode.removeChild(devHintEl);
+  }
+  function recordings() { return voice.tags.slice(); }
+  function refreshCids() {}
+
+  return { dispose, dot, recordings, refreshCids };
+}
+
+// ─── Boot VCS on the teams page ──────────────────────────────────────────────
+window.vcsOverlay = createVisualContextOverlay({
+  cidPrefix: 'teams',
+  onVoiceTag: ({ cid, ts, transcript }) => {
+    console.debug('[vcs] voice tag captured', { cid, ts, transcript });
+  },
+  onUpdate: (str) => {
+    console.debug('[vcs] UPDATE copied to clipboard', str.slice(0, 80));
+  },
+  showDevHint: true,
+});
 </script>
 </body></html>`;
 }
