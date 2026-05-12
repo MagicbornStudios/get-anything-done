@@ -30,12 +30,20 @@ function resolveAddPath(input, baseDir) {
     absPath = path.resolve(baseDir, input);
   }
 
-  // Determine whether the resolved path lives inside baseDir.
-  // If so, store a relative path so the config is portable.
-  // If not (sibling/external), store the absolute path.
+  // Prefer relative path for portability. Sibling projects (../foo) and
+  // descendants both store as relative. Only fall back to absolute when
+  // path.relative cannot express the target relative to baseDir (different
+  // drive letter on Windows — relFromBase comes back already absolute).
+  // See ERRORS-AND-ATTEMPTS.xml gad-projects-add-absolute-path-double-join:
+  // storing absolute paths for siblings caused consumer code to join
+  // baseDir + absPath producing C:\custom_portfolio\C:\agentic_crm\...
+  // (some consumers use path.join not path.resolve). Match the
+  // slm-learning precedent: ../slm_learning, not C:/.../slm_learning.
   const relFromBase = path.relative(baseDir, absPath);
-  const isInternal = !relFromBase.startsWith('..') && !path.isAbsolute(relFromBase);
-  const storedPath = isInternal ? relFromBase.replace(/\\/g, '/') || '.' : absPath.replace(/\\/g, '/');
+  const isCrossDrive = path.isAbsolute(relFromBase);
+  const storedPath = isCrossDrive
+    ? absPath.replace(/\\/g, '/')
+    : (relFromBase.replace(/\\/g, '/') || '.');
 
   return { absPath, storedPath };
 }
