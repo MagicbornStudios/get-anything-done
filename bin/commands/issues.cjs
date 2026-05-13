@@ -219,28 +219,44 @@ function createIssuesCommand(deps) {
     });
   }
 
+  // gad issues web / dev — DEPRECATED (phase 196, task 196-03, 2026-05-12).
+  // Native panel in apps/desk replaces the per-page http server. Original
+  // serveWeb() implementation remains in this file for now but is no longer
+  // reachable through the CLI; full removal is queued for a future sweep.
+  function printIssuesDeprecation() {
+    process.stdout.write(
+      `gad issues web is deprecated.\n` +
+      `The issues surface is now a native panel in apps/desk.\n` +
+      `Launch apps/desk: pnpm --filter @gad/desk dev (then click "Issues" in the sidebar Panels section).\n` +
+      `\n` +
+      `If you need a one-shot snapshot from the terminal:\n` +
+      `  gad issues list --json   # raw JSON\n` +
+      `  gad issues list          # text\n`
+    );
+  }
+
   const webCmd = defineCommand({
-    meta: { name: 'web', description: 'Launch the local issue capture web UI' },
+    meta: { name: 'web', description: '[deprecated] Use the Issues panel in apps/desk instead.' },
     args: {
-      projectid: { type: 'string', description: 'Default project id for capture', default: '' },
-      host: { type: 'string', description: 'Bind host', default: DEFAULT_HOST },
-      port: { type: 'string', description: `Port (default ${DEFAULT_PORT}, or GAD_ISSUES_PORT)`, default: '' },
-      dev: { type: 'boolean', description: 'Reload web UI source from disk on each page request', default: false },
+      projectid: { type: 'string', description: '[deprecated] no longer honored', default: '' },
+      host: { type: 'string', description: '[deprecated] no longer honored', default: DEFAULT_HOST },
+      port: { type: 'string', description: '[deprecated] no longer honored', default: '' },
+      dev: { type: 'boolean', description: '[deprecated] no longer honored', default: false },
     },
-    run({ args }) {
-      serveWeb(args);
+    run() {
+      printIssuesDeprecation();
     },
   });
 
   const devCmd = defineCommand({
-    meta: { name: 'dev', description: 'Launch the issue capture UI with source reload on browser refresh' },
+    meta: { name: 'dev', description: '[deprecated] Use the Issues panel in apps/desk instead.' },
     args: {
-      projectid: { type: 'string', description: 'Default project id for capture', default: '' },
-      host: { type: 'string', description: 'Bind host', default: DEFAULT_HOST },
-      port: { type: 'string', description: `Port (default ${DEFAULT_PORT}, or GAD_ISSUES_PORT)`, default: '' },
+      projectid: { type: 'string', description: '[deprecated] no longer honored', default: '' },
+      host: { type: 'string', description: '[deprecated] no longer honored', default: DEFAULT_HOST },
+      port: { type: 'string', description: '[deprecated] no longer honored', default: '' },
     },
-    run({ args }) {
-      serveWeb({ ...args, dev: true });
+    run() {
+      printIssuesDeprecation();
     },
   });
 
@@ -272,7 +288,8 @@ function createIssuesCommand(deps) {
     run({ args }) {
       if (hasExplicitIssuesSubcommand()) return;
       if (args.web) {
-        serveWeb(args);
+        // [deprecated 2026-05-12, phase 196]: --web is now a stub.
+        printIssuesDeprecation();
         return;
       }
       listCmd.run({ args: { ...args, status: 'open' } });
