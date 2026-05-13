@@ -101,6 +101,43 @@ function createPhasesCommand(deps) {
     return block.replace(/(\s*)<\/phase>$/, `$1  <status>${escapeXmlText(status)}</status>$1</phase>`);
   }
 
+  /**
+   * After a phase is marked done, advance <current-phase> in STATE.xml to the
+   * lowest-id non-done, non-cancelled phase in ROADMAP.xml.  Only writes when:
+   *   - STATE.xml exists for this project, AND
+   *   - The closed phase matches the current <current-phase> value, OR no
+   *     <current-phase> is set (initial population).
+   * Silent on failure — this is a soft hint for legacy/external readers; the
+   * snapshot renderer derives current-phase from roadmap independently.
+   */
+  function bumpCurrentPhase(root, baseDir, closedPhaseId) {
+    const stateXml = path.join(baseDir, root.path, root.planningDir, 'STATE.xml');
+    if (!fs.existsSync(stateXml)) return;
+    try {
+      let xml = fs.readFileSync(stateXml, 'utf8');
+      const currentMatch = xml.match(/<current-phase[^>]*>([^<]*)<\/current-phase>/);
+      const currentValue = currentMatch ? currentMatch[1].trim() : '';
+      // Only advance if the closed phase IS the current phase (or field is empty).
+      if (currentValue && String(currentValue) !== String(closedPhaseId)) return;
+      // Find next candidate: lowest-id phase not done/cancelled in ROADMAP.
+      const phases = readPhases(root, baseDir);
+      const next = phases.find((p) => {
+        const s = String(p.status || 'planned').toLowerCase();
+        return s !== 'done' && s !== 'cancelled' && s !== 'canceled';
+      });
+      if (!next) return; // all phases done — leave field as-is
+      const nextId = String(next.id);
+      if (currentMatch) {
+        xml = xml.replace(/<current-phase[^>]*>[^<]*<\/current-phase>/, `<current-phase>${nextId}</current-phase>`);
+      } else {
+        xml = xml.replace(/<\/state>/, `  <current-phase>${nextId}</current-phase>\n</state>`);
+      }
+      fs.writeFileSync(stateXml, xml, 'utf8');
+    } catch (_e) {
+      // Non-fatal: snapshot ignores this field; silently skip on any error.
+    }
+  }
+
   function appendStateLog(root, baseDir, message, tags = 'phases') {
     const stateXml = path.join(baseDir, root.path, root.planningDir, 'STATE.xml');
     if (!fs.existsSync(stateXml)) return null;
@@ -368,6 +405,7 @@ function createPhasesCommand(deps) {
       let filePath;
       try {
         filePath = setPhaseStatus(root, baseDir, phaseId, 'done');
+        bumpCurrentPhase(root, baseDir, phaseId);
         appendStateLog(root, baseDir, `Closed phase ${phaseId} via gad phases close - ${counts.done} tasks done, ${counts.cancelled} cancelled.`, 'phases,close');
         maybeRebuildGraph(baseDir, root);
       } catch (e) {
@@ -485,6 +523,7 @@ function createPhasesCommand(deps) {
           if (autoClose) {
             try {
               setPhaseStatus(root, baseDir, phaseId, 'done');
+              bumpCurrentPhase(root, baseDir, phaseId);
               appendStateLog(root, baseDir, `Closed phase ${phaseId} via gad phases sweep --auto-close - ${counts.done} done, ${counts.cancelled} cancelled.`, 'phases,sweep,close');
               maybeRebuildGraph(baseDir, root);
               closed.push(row);
