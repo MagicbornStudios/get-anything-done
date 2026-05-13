@@ -54,8 +54,8 @@
     <reference>references/project-assets.md (decision gad-210)</reference>
     <reference>evals/escape-the-dungeon/species/vcs-test/ (VCS portability test species)</reference>
   </references>
-  <last-updated>2026-05-05T23:45:24.409Z</last-updated>
-  <sink-compiled sink="docs/get-anything-done/planning/" at="2026-05-13T17:39:36.828Z" />
+  <last-updated>2026-05-13T22:16:54.481Z</last-updated>
+  <sink-compiled sink="docs/get-anything-done/planning/" at="2026-05-13T17:59:32.311Z" />
   <state-log>
     <entry agent="team-w3" at="2026-05-13T14:32:16.093Z" tags="95-10">Completed 95-10: dropped runtime parking — just-try-it redesign</entry>
     <entry agent="unknown" at="2026-05-08T18:26:59.634Z">feat(35-44,35-45,GLOBAL-D-323-C): to_agent field on handoffs + Kael cross-project activity tab shipped</entry>
