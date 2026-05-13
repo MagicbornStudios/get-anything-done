@@ -688,6 +688,12 @@ function stateUpdate(cwd, field, value) {
     'lastUpdated': 'last-updated',
   };
   const tag = tagMap[field] || field;
+
+  if (tag === 'next-action') {
+    console.error(`Warning: state update next-action is deprecated. Use 'gad state log' instead. Value '${value}' ignored.`);
+    return;
+  }
+
   const re = new RegExp(`<${tag}>[\\s\\S]*?</${tag}>`);
   if (re.test(content)) {
     content = content.replace(re, `<${tag}>${value}</${tag}>`);
@@ -701,7 +707,9 @@ function stateUpdate(cwd, field, value) {
 
 function stateRecordSession(cwd, args) {
   const stoppedAt = collectAfterFlag(args, 'stopped-at').join(' ');
-  if (stoppedAt) stateUpdate(cwd, 'next-action', stoppedAt);
+  if (stoppedAt) {
+    console.error(`Warning: state record-session --stopped-at is deprecated. Log '${stoppedAt}' via 'gad state log' instead.`);
+  }
 }
 
 function stateBeginPhase(cwd, phaseId) {
@@ -716,12 +724,7 @@ function stateAdvancePlan(cwd, phase, plan) {
 }
 
 function stateUpdateProgress(cwd, text) {
-  // Append to next-action (simple approach)
-  const state = stateLoad(cwd);
-  const current = state.nextAction || '';
-  const updated = current ? `${current}\n${text}` : text;
-  stateUpdate(cwd, 'next-action', updated);
-  console.log(`Progress noted.`);
+  console.error(`Warning: state update-progress is deprecated. Use 'gad state log' instead. Text '${text}' ignored.`);
 }
 
 function stateAddBlocker(cwd, text) {

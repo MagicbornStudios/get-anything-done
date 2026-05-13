@@ -178,4 +178,15 @@ describe('compactRefsTree (decision gad-241, task 42.4-24)', () => {
     assert.ok(out.includes('- a.md'), 'flat form preserved below threshold');
     assert.ok(out.includes('- b.md'));
   });
+
+  test('compactStateXml prefers a derived next-action override over stale XML content', () => {
+    const xml = `
+<state>
+  <current-phase>109</current-phase>
+  <next-action>Stale XML action.</next-action>
+</state>`;
+    const out = compactStateXml(xml, 'Fresh derived action.');
+    assert.match(out, /next-action: Fresh derived action\./);
+    assert.doesNotMatch(out, /next-action: Stale XML action\./);
+  });
 });

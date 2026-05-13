@@ -331,6 +331,109 @@ further schema changes.
 
 ---
 
+### Milestone G — cross-runtime worker/subagent correlation (35-11)
+
+**35-11** — Close the session-lineage gap between team workers, runtime wrappers,
+and trace events so nested runtime hops keep one correlation chain.
+
+**Audit findings (2026-05-04):**
+
+- `lib/team/worker-loop.cjs` logs `runtime`, `runtime_account`, and handoff refs at
+  `work-start`, but it does not mint or propagate a stable correlation id for the
+  spawned runtime session.
+- `lib/team/subprocess.cjs` forwards `GAD_TEAM_WORKER_ID` and `GAD_AGENT_NAME`
+  into the runtime subprocess, and optionally wraps Codex with
+  `scripts/codex-session-emit.cjs` when `GAD_SESSION_TELEMETRY=1`, but it does not
+  carry parent task / session ancestry into that child runtime.
+- `bin/gad-trace-hook.cjs` already records `runtime.session_id` plus agent ancestry
+  (`agent_id`, `parent_agent_id`, `root_agent_id`, `depth`) from env/payload, but it
+  has no fields for `parent_session_id`, `task_id`, or `root_task_id`, so a Codex
+  worker spawning a nested subagent that later calls `gad` breaks the join chain.
+- `lib/runtime-detect.cjs` already resolves `GAD_RUNTIME_SESSION_ID` and
+  `GAD_SESSION_ID`; phase 89's whiteboard schema already expects `session_id` and
+  `parent_session_id`. The missing work is propagation and trace persistence, not a
+  second session-id system.
+
+**Correlation contract:**
+
+- Team workers mint a per-work-item runtime session id when they dispatch a handoff or
+  mailbox item into a runtime subprocess. That id becomes the child runtime's
+  `GAD_RUNTIME_SESSION_ID`.
+- If the worker itself was launched from another runtime session, it forwards that as
+  `GAD_PARENT_SESSION_ID`. If absent, `parent_session_id = null`.
+- The dispatched work ref becomes `GAD_PARENT_TASK_ID` when it is a task or handoff
+  rooted in a single task. Where a broader umbrella spawned the work, the umbrella id
+  is also forwarded as `GAD_ROOT_TASK_ID`.
+- Any nested subagent/runtime spawn increments `GAD_AGENT_DEPTH` and preserves the
+  same `GAD_ROOT_TASK_ID`, while rotating `GAD_PARENT_TASK_ID` to the immediate parent
+  step/task that caused the spawn.
+- `bin/gad-trace-hook.cjs` persists these fields on every emitted event so
+  `.planning/.trace-events.jsonl`, worker logs, and phase 89 session telemetry can be
+  joined without heuristics:
+
+```jsonc
+{
+  "runtime": {
+    "session_id": "s-20260504-a1b2c3d4",
+    "parent_session_id": "s-20260504-deadbeef"
+  },
+  "agent": {
+    "agent_id": "team-w1",
+    "depth": 2
+  },
+  "attribution": {
+    "task_id": "35-11",
+    "parent_task_id": "h-2026-05-04T05-18-47-global-35",
+    "root_task_id": "35-11"
+  }
+}
+```
+
+**Implementation shape:**
+
+- `lib/team/worker-loop.cjs`
+  - derive a stable runtime-session id per claimed work item before `runSubprocess()`
+  - derive parent/root task ids from the claimed handoff/task metadata
+  - pass those values into `runSubprocess()` and record them in `work-start`
+- `lib/team/subprocess.cjs`
+  - forward `GAD_RUNTIME_SESSION_ID`, `GAD_PARENT_SESSION_ID`,
+    `GAD_PARENT_TASK_ID`, and `GAD_ROOT_TASK_ID` into every spawned runtime
+  - when the session-telemetry wrapper is active, pass the same ids to the wrapper so
+    phase 89's `.planning/.sessions/<id>/events.jsonl` uses the same join keys
+- `bin/gad-trace-hook.cjs`
+  - extend runtime detection to read `GAD_PARENT_SESSION_ID`
+  - extend agent/attribution detection to read `GAD_PARENT_TASK_ID` and
+    `GAD_ROOT_TASK_ID`
+  - include those fields in emitted tool/skill/spawn/file-mutation events
+- `lib/trace-schema.cjs`
+  - document the new attribution envelope and validate additive fields
+- tests / fixtures
+  - nested-runtime fixture proving a worker -> Codex session wrapper -> `gad` CLI call
+    preserves the same root ids across logs and trace events
+
+**Files touched (expected at execute time):**
+
+- `vendor/get-anything-done/lib/team/worker-loop.cjs`
+- `vendor/get-anything-done/lib/team/subprocess.cjs`
+- `vendor/get-anything-done/bin/gad-trace-hook.cjs`
+- `vendor/get-anything-done/lib/trace-schema.cjs`
+- `vendor/get-anything-done/tests/*correlation*.test.cjs` (new/extended)
+
+**Verify:**
+1. Synthetic worker test: a claimed handoff spawned through `runSubprocess()` emits
+   worker-log metadata with runtime session + parent/root task ids.
+2. Hook smoke: invoking `bin/gad-trace-hook.cjs` with those env vars present appends a
+   trace event containing `runtime.session_id`, `runtime.parent_session_id`,
+   `attribution.parent_task_id`, and `attribution.root_task_id`.
+3. Phase-89 join smoke: a preserved `events.jsonl` sample and `.trace-events.jsonl`
+   sample for the same run can be joined on session/task ids without path heuristics.
+
+**Done when:** a nested runtime path (team worker -> Codex runtime wrapper -> subagent
+or `gad` CLI call) keeps one continuous session/task lineage across worker logs,
+`.planning/.sessions/`, `.planning/.gad-log/`, and `.planning/.trace-events.jsonl`.
+
+---
+
 ## Risks and open questions
 
 1. **Exact env-var names.** Claude Code and Codex env-var names must be verified

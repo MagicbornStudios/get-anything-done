@@ -146,4 +146,65 @@
     <reference>tests/tasks-stamp-evidence.test.cjs (warn-mode and enforce-mode paths)</reference>
     <reference>bin/commands/tasks/shared.cjs (taskFiles helpers)</reference>
   </entry>
+
+  <entry id="stale-skill-orphans-from-renames-2026-05-09" date="2026-05-09" phase="76" task="76-03" status="open" kind="framework">
+    <summary>Install does not remove orphan skill dirs whose source skill was renamed/deleted</summary>
+    <context>On this machine: 153 user-level Claude Code skill dirs vs 95 source skill dirs in vendor/get-anything-done, leaving 58 orphans. Each orphan was once a source skill that was renamed or deleted upstream, but 'gad install --claude' only WRITES skills based on current source — it never RECONCILES against the previous manifest to prune dirs that no longer have a source.</context>
+    <failure>Stale skills remain auto-invokable: the user-level SKILL.md still has frontmatter, still appears in skill listings, still triggers on its old keywords — even though the canonical workflow has been moved/renamed. Future agents discover and load deprecated methodology. Hardcoded blocklists in install can't keep up with skill churn.</failure>
+    <rule>Install must walk the manifest's previous file list, compare against current source, and prune anything no longer authored. The manifest is the source of truth for 'what was previously installed'; reconcile-and-prune is part of every install pass, not a separate command.</rule>
+    <reference>bin/install.js</reference>
+    <reference>lib/install-repair.cjs</reference>
+  </entry>
+
+  <entry id="disable-model-invocation-bitrot-2026-05-09" date="2026-05-09" phase="76" task="76-03" status="open" kind="framework">
+    <summary>Stale disable-model-invocation:true frontmatter persists in user-level SKILL.md after upstream cleanup</summary>
+    <context>On this machine: 58 user-level SKILL.md files still carry 'disable-model-invocation: true' from a Cursor-suppression-script era that has since been deleted from the source tree. Current 'gad install --claude' only rewrites SKILL.md for skills whose source still exists; renamed-and-deprecated skills' user-level files retain the bad flag forever.</context>
+    <failure>Skills are silently uninvokable. Operator wonders why a skill they 'installed' never triggers — the frontmatter flag is suppressing model-invocation but no diagnostic surfaces it. Trust in the install/skill system erodes.</failure>
+    <rule>Repair must scan ALL installed SKILL.md files (not just ones with current source), strip stale flags (disable-model-invocation, deprecated-by, etc.), and validate required-fields presence. Frontmatter hygiene is a reconcile pass over the user-level state, not a write-time concern only.</rule>
+    <reference>bin/install.js</reference>
+    <reference>lib/install-repair.cjs</reference>
+    <reference>~/.claude/skills</reference>
+  </entry>
+
+  <entry id="snapshot-handoff-phase-id-type-mismatch-2026-05-13" date="2026-05-13" status="open" kind="framework">
+    <summary>gad snapshot --handoff &lt;id&gt; errors 'Phase not found' on phase 5 despite phase 5 being active</summary>
+    <context>Worker w5 (opencode gpt-oss) claimed handoff h-2026-05-05T21-28-03-global-5 (task 05-39, phase 5 active in global). Ran 'gad snapshot --handoff h-...-global-5' to get its prompt brief. Worker stderr: 'Error: Phase not found for snapshot scope: 5'. Phase 05 IS in roadmap (status=active). Worker adapted via 'ls -R .planning/handoffs' to read handoff body directly, lost the unified prompt benefit (no auto-loaded skill bodies, no project orientation prepended).</context>
+    <failure>Workers on legacy low-numbered phases (single-digit) get no snapshot prompt. They either fail or fall back to reading raw handoff file. Skill auto-loading + orientation lost — quality degrades for the affected work.</failure>
+    <rule>When gad snapshot resolves phase from a handoff id, normalize to string match. handoff frontmatter writes 'phase: 5' (number) — roadmap stores '05' (zero-padded string for sub-10). Convert both to int OR both to zero-padded string before comparison. Fix: lib/snapshot/scope-resolver.cjs (or wherever) — int(phase) and string(phase) both lookup roads.</rule>
+  </entry>
+
+  <entry id="emfile-misclassified-as-quota-hard-cap-2026-05-13" date="2026-05-13" status="open" kind="framework">
+    <summary>EMFILE during gemini context scan misclassified as quota_hard_cap, parks runtime 4h</summary>
+    <context>Worker w2 ran gemini-cli on a handoff in monorepo with apps/desktop/src-tauri/target/debug/deps/ present (Rust build artifacts, thousands of .rlib/.rmeta files). Gemini CLI's file-binary-detection walked the target tree and hit OS open-files limit: 'Failed to check if file is binary: ... EMFILE: too many open files'. Team's failure classifier read the post-crash exit and labeled it 'quota_hard_cap: billing/plan cap — operator must rotate or upgrade' with 14400000ms (4h) cooldown. Operator confirmed actual Gemini quota was 0% used. Parking spread to opencode at same time (probably same trigger — workers all share filesystem).</context>
+    <failure>Workers idled for 4 hours on a false positive. Operator saw 'rate-limited' status and lost trust in classifier. 18 open handoffs blocked from draining for the cooldown duration.</failure>
+    <rule>Failure classifier must distinguish file-system errors (EMFILE, ENOENT, EACCES) from API quota errors. EMFILE is a 'transient local resource' error, not a quota hard cap. Cooldown should be short (seconds) or zero. Better: ALSO add a context-scan ignore list for **/target/**, **/node_modules/**, **/.next/**, **/dist/**, **/build/** in the gemini-trial.mjs wrapper so the file walker never enters those.</rule>
+  </entry>
+
+  <entry id="agent-name-env-collides-with-subagents-2026-05-13" date="2026-05-13" status="open" kind="framework">
+    <summary>GAD_AGENT_NAME env var doesn't survive claude-code main+subagent fan-out — all subagents share parent's name</summary>
+    <context>vendor/get-anything-done/CLAUDE.md says set GAD_AGENT_NAME in env so state-log + note-add auto-fill the slug. Single-process-per-identity assumption. In claude-code v2 a single session can spawn N parallel Agent() subagents (Sonnet planner, Haiku auditor, Sonnet executor) — they all inherit parent env, all stamp as the same name. Audit trail loses ability to distinguish main vs subagent vs runtime tier. Operator caught this 2026-05-13 after I set GAD_AGENT_NAME=claude-code thinking that solved the [unknown] attribution problem.</context>
+    <failure>Attribution false-equivalences subagents and main thread. State log + notes from parallel subagents all look identical. Cannot reconstruct who did what during a session. Trust the audit trail less.</failure>
+    <rule>Either (a) accept GAD_AGENT_NAME as runtime-identity-only and require --agent on every command that writes attribution, (b) deprecate GAD_AGENT_NAME and force explicit --agent everywhere with [unknown] as a loud failure mode, or (c) add a SessionStart-like hook that writes a dynamic value (uuid + model + role). Document the chosen path in vendor CLAUDE.md.</rule>
+  </entry>
+
+  <entry id="evolution-scan-does-not-refresh-pressure-cache-2026-05-13" date="2026-05-13" status="open" kind="framework">
+    <summary>gad evolution scan refreshes .planning/.evolution-scan.json but NOT ~/.cache/gad/pressure-&lt;id&gt;.json — statusline stays stale after evolve</summary>
+    <context>Operator 2026-05-13: 'statusline still says to evolve now even though we just evolved'. Investigation: pressure cache at ~/.cache/gad/pressure-global.json was stuck at 2026-05-13T14:39 timestamp from earlier scan, showing score 0.89 + open_handoffs 48. Re-ran 'gad evolution scan' — .planning/.evolution-scan.json refreshed to 16:19 with current candidates, but the pressure-global.json cache stayed at 14:39. Statusline reads from ~/.cache/gad/pressure-&lt;id&gt;.json and shows 'evolve now'. Only 'gad snapshot' refreshes the pressure cache (running snapshot dropped score 0.89 -&gt; 0.55 and open_handoffs 48 -&gt; 9 immediately).</context>
+    <failure>Operator perceives that evolution did nothing because statusline doesn't update. Erodes trust in 'gad evolution evolve' workflow. Forces operator to learn the side-channel (snapshot) to see the result of an explicit evolution.</failure>
+    <rule>Either (a) 'gad evolution scan' should call the same pressure-cache writer that 'gad snapshot' uses, (b) the statusline hook reads from .planning/.evolution-scan.json directly when fresher than the cache, or (c) 'gad evolution evolve' runs snapshot at the end as a finalizer. Pick one — operator's mental model is 'I ran evolve, statusline should reflect.'</rule>
+  </entry>
+
+  <entry id="statusline-ignores-state-level-2026-05-13" date="2026-05-13" status="open" kind="framework">
+    <summary>Statusline ignores STATE.xml &lt;level&gt; and derives from XP; conflicts with operator intent that levels track evolutions</summary>
+    <context>Operator's 2026-05-09 memory feedback_evolve_equals_level_up: 'every evolution = +1 to &lt;level value=...&gt;. The level is the ledger entry. status line is always real time.' Operator wants levels to track evolution events, manually bumped per event. ~/.claude/hooks/gad-statusline.js readLevelSnapshot() has a comment 'Operator 2026-05-07: derive in real-time from tasks/*.json. STATE.xml &lt;level&gt; is no longer load-bearing — closing tasks/phases moves the bar.' Two operator decisions 2 days apart conflict: 2026-05-07 said XP-derived (in code), 2026-05-09 said event-bumped (in memory). Code never caught up to the 2026-05-09 intent. Operator 2026-05-13: 'are we really supposed to be level 4 or level 5? are we updating status and keeping it updated and how is level calculated?' — confusion is the symptom of the gap.</context>
+    <failure>Operator can't tell what level they're at without computing two parallel ledgers (STATE.xml manual + XP-derived). Trust in statusline as 'always real time for evolutions' is broken. Currently STATE.xml=7, XP-derived statusline=3 (771/520). Off by 4 levels.</failure>
+    <rule>Resolve the conflict. Option A: change readLevelSnapshot in gad-statusline.js to read STATE.xml &lt;level&gt; as PRIMARY (current fallback only); use XP only for the within-level progress bar. Matches 2026-05-09 operator intent. Option B: update memory feedback_evolve_equals_level_up to point at XP discipline (skill weights, task closures = level); means dropping the 'event-bump' model. Operator picks. Filing this so the question doesn't keep recurring.</rule>
+  </entry>
+
+  <entry id="no-worker-vs-main-attribution-in-git-2026-05-13" date="2026-05-13" status="open" kind="framework">
+    <summary>No reliable git attribution to distinguish team-worker commits from claude-code main-thread commits</summary>
+    <context>All commits author as operator's git identity (b2gdevs@gmail.com). Co-Authored-By: Claude Opus is convention I follow for claude-code main+subagent work but workers running opencode/gemini/codex don't add it. Audit subagent dispatched 2026-05-13 to assess worker quality concluded 'zero worker commits this session' based on absence-of-co-authored-line heuristic — but at least two commits (440e9f9b dropped runtime parking, cac85a8f portfolio migration) were demonstrably worker-shipped per their handoff refs in commit messages. Audit got the wrong answer because there's no reliable signal.</context>
+    <failure>Operator can't ask 'how are workers doing' without an audit subagent producing wrong answers. Trust in worker contribution metric is undermined. Same problem applies to attribution for evolution credit / XP / level — workers' XP earnings invisible to status surfaces.</failure>
+    <rule>When gad team worker spawns its runtime, the worker should prepend its identifier to every commit it produces. Two viable approaches: (a) commit message prefix [worker:wN] enforced at commit time by a worker-side git hook or commit-message template; (b) commit trailer Worker: wN runtime: opencode-default. Pick one; document in vendor/CLAUDE.md. After this lands, audit queries like 'workers shipped N commits this session' become a one-liner grep.</rule>
+  </entry>
 </errors-and-attempts>

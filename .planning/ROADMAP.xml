@@ -513,5 +513,12 @@
     <depends></depends>
   </phase>
 
+  <phase id="76">
+    <title>gad install --repair --claude flow</title>
+    <goal>Add gad install --repair --claude [--apply] flow: diagnose+fix drift in user-level Claude Code runtime artifacts (orphan skill dirs, stale frontmatter, broken hook paths, vendor-path leaks).</goal>
+    <status>planned</status>
+    <depends></depends>
+  </phase>
+
 </roadmap>
 

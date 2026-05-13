@@ -1,0 +1,281 @@
+{
+  "scanned_at": "2026-05-08T01:10:15.320Z",
+  "roots": [
+    "C:\\Users\\benja\\Documents\\custom_portfolio\\vendor\\get-anything-done",
+    "C:\\Users\\benja\\Documents\\custom_portfolio",
+    "C:\\Users\\benja"
+  ],
+  "handoff_count": 211,
+  "combo_count": 22,
+  "cluster_count": 6,
+  "frequency_table": [
+    {
+      "context": "reasoning",
+      "risk": "?",
+      "time": "?",
+      "surface": "?",
+      "count": 73,
+      "runtimes": "claude-code,codex,codex-cli,gemini-cli,opencode"
+    },
+    {
+      "context": "mechanical",
+      "risk": "?",
+      "time": "?",
+      "surface": "?",
+      "count": 44,
+      "runtimes": "codex,codex-cli,claude,gemini-cli"
+    },
+    {
+      "context": "bounded",
+      "risk": "safe",
+      "time": "standard",
+      "surface": "local",
+      "count": 36,
+      "runtimes": "codex-cli,gemini-cli,opencode,claude-code"
+    },
+    {
+      "context": "exploratory",
+      "risk": "safe",
+      "time": "standard",
+      "surface": "local",
+      "count": 19,
+      "runtimes": "codex-cli"
+    },
+    {
+      "context": "design",
+      "risk": "safe",
+      "time": "deep",
+      "surface": "local",
+      "count": 10,
+      "runtimes": "codex-cli"
+    },
+    {
+      "context": "prescribed",
+      "risk": "safe",
+      "time": "standard",
+      "surface": "local",
+      "count": 6,
+      "runtimes": "codex-cli"
+    },
+    {
+      "context": "feature",
+      "risk": "safe",
+      "time": "medium",
+      "surface": "local",
+      "count": 3,
+      "runtimes": "claude-code"
+    },
+    {
+      "context": "light",
+      "risk": "?",
+      "time": "?",
+      "surface": "?",
+      "count": 2,
+      "runtimes": "claude-code"
+    },
+    {
+      "context": "normal",
+      "risk": "safe",
+      "time": "medium",
+      "surface": "local",
+      "count": 2,
+      "runtimes": "null"
+    },
+    {
+      "context": "normal",
+      "risk": "safe",
+      "time": "deep",
+      "surface": "local",
+      "count": 2,
+      "runtimes": "null"
+    },
+    {
+      "context": "bounded",
+      "risk": "safe",
+      "time": "deep",
+      "surface": "local",
+      "count": 2,
+      "runtimes": "codex-cli,claude-code"
+    },
+    {
+      "context": "bounded",
+      "risk": "safe",
+      "time": "standard",
+      "surface": "cross-project",
+      "count": 2,
+      "runtimes": "claude-code"
+    },
+    {
+      "context": "audit",
+      "risk": "safe",
+      "time": "standard",
+      "surface": "local",
+      "count": 1,
+      "runtimes": "gemini-cli"
+    },
+    {
+      "context": "audit",
+      "risk": "safe",
+      "time": "deep",
+      "surface": "local",
+      "count": 1,
+      "runtimes": "codex-cli"
+    },
+    {
+      "context": "audit",
+      "risk": "safe",
+      "time": "medium",
+      "surface": "local",
+      "count": 1,
+      "runtimes": "claude-code"
+    },
+    {
+      "context": "audit",
+      "risk": "safe",
+      "time": "short",
+      "surface": "local",
+      "count": 1,
+      "runtimes": "claude-code"
+    },
+    {
+      "context": "feature",
+      "risk": "medium",
+      "time": "large",
+      "surface": "local",
+      "count": 1,
+      "runtimes": "claude-code"
+    },
+    {
+      "context": "exploratory",
+      "risk": "safe",
+      "time": "deep",
+      "surface": "local",
+      "count": 1,
+      "runtimes": "codex-cli"
+    },
+    {
+      "context": "bounded",
+      "risk": "irreversible",
+      "time": "deep",
+      "surface": "local",
+      "count": 1,
+      "runtimes": "codex-cli"
+    },
+    {
+      "context": "bounded",
+      "risk": "safe",
+      "time": "standard",
+      "surface": "api-bound",
+      "count": 1,
+      "runtimes": "codex-cli"
+    },
+    {
+      "context": "bounded",
+      "risk": "destructive",
+      "time": "standard",
+      "surface": "local",
+      "count": 1,
+      "runtimes": "codex-cli"
+    },
+    {
+      "context": "bounded",
+      "risk": "safe",
+      "time": "quick",
+      "surface": "cross-project",
+      "count": 1,
+      "runtimes": "claude-code"
+    }
+  ],
+  "clusters": [
+    {
+      "id": "reasoning-std",
+      "label": "reasoning-std",
+      "context": "reasoning",
+      "risk": "?",
+      "time": "?",
+      "surface": "?",
+      "runtimes": [
+        "claude-code",
+        "codex",
+        "codex-cli",
+        "gemini-cli",
+        "opencode"
+      ],
+      "memberCount": 1,
+      "totalCount": 73
+    },
+    {
+      "id": "bounded-impl",
+      "label": "bounded-impl",
+      "context": "bounded",
+      "risk": "safe",
+      "time": "standard",
+      "surface": "local",
+      "runtimes": [
+        "claude-code",
+        "codex-cli",
+        "gemini-cli",
+        "opencode"
+      ],
+      "memberCount": 8,
+      "totalCount": 68
+    },
+    {
+      "id": "mechanical-fix",
+      "label": "mechanical-fix",
+      "context": "mechanical",
+      "risk": "?",
+      "time": "?",
+      "surface": "?",
+      "runtimes": [
+        "claude",
+        "codex",
+        "codex-cli",
+        "gemini-cli"
+      ],
+      "memberCount": 1,
+      "totalCount": 44
+    },
+    {
+      "id": "design-deep",
+      "label": "design-deep",
+      "context": "design",
+      "risk": "safe",
+      "time": "deep",
+      "surface": "local",
+      "runtimes": [
+        "codex-cli",
+        "null"
+      ],
+      "memberCount": 4,
+      "totalCount": 14
+    },
+    {
+      "id": "feature-impl",
+      "label": "feature-impl",
+      "context": "feature",
+      "risk": "safe",
+      "time": "medium",
+      "surface": "local",
+      "runtimes": [
+        "claude-code",
+        "null"
+      ],
+      "memberCount": 3,
+      "totalCount": 6
+    },
+    {
+      "id": "light-task",
+      "label": "light-task",
+      "context": "light",
+      "risk": "?",
+      "time": "?",
+      "surface": "?",
+      "runtimes": [
+        "claude-code"
+      ],
+      "memberCount": 1,
+      "totalCount": 2
+    }
+  ]
+}

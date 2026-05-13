@@ -1,311 +1,383 @@
-'use strict';
-/**
- * Tests for bin/commands/telemetry.cjs
- *
- * Run: node --test tests/telemetry.test.cjs
- */
+const { test, describe, beforeEach, afterEach } = require('node:test');
+const assert = require('node:assert');
+const fs = require('node:fs');
+const path = require('node:path');
 
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
-const { createTelemetryCommand } = require('../bin/commands/telemetry.cjs');
+const { createTempDir, cleanup } = require('./helpers.cjs');
+const { createTelemetryCommand, _private } = require('../bin/commands/telemetry.cjs');
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function makeTmpDir() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'telemetry-test-'));
-  return dir;
+function writeJsonl(filePath, entries) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, `${entries.map((entry) => JSON.stringify(entry)).join('\n')}\n`);
 }
 
-function writeFile(filePath, content) {
+function writeText(filePath, content) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, content);
 }
 
-function removeDir(dir) {
-  if (!fs.existsSync(dir)) return;
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) removeDir(full);
-    else fs.unlinkSync(full);
-  }
-  fs.rmdirSync(dir);
-}
-
-function makeDeps(baseDir) {
+function makeDeps(tmpDir) {
   return {
-    findRepoRoot: () => baseDir,
+    findRepoRoot: () => tmpDir,
     gadConfig: {
-      load: () => ({ roots: [{ id: 'global', path: '', planningDir: '.planning' }] }),
+      load: () => ({ roots: [{ id: 'global', path: '.', planningDir: '.planning' }] }),
     },
-    resolveRoots: (opts, repoRoot, roots) => {
-      if (opts.projectid) return roots.filter((r) => r.id === opts.projectid);
-      return roots;
-    },
+    resolveRoots: () => [{ id: 'global', path: '.', planningDir: '.planning' }],
     getLastActiveProjectid: () => 'global',
-    outputError: (msg) => { throw new Error(msg); },
+    outputError: (message) => { throw new Error(message); },
   };
 }
 
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+describe('gad telemetry summary', () => {
+  let tmpDir;
+  const handoffId = 'h-2026-05-04T20-04-20-global-89';
 
-const tests = [];
+  beforeEach(() => {
+    tmpDir = createTempDir('gad-telemetry-');
+    writeText(path.join(tmpDir, 'gad-config.toml'), [
+      '[[planning.roots]]',
+      'id = "global"',
+      'path = "."',
+      'planningDir = ".planning"',
+      '',
+    ].join('\n'));
+    writeText(path.join(tmpDir, '.planning', 'handoffs', 'closed', `${handoffId}.md`), [
+      '---',
+      `id: ${handoffId}`,
+      'projectid: global',
+      'phase: 89',
+      'task_id: 89-06',
+      '---',
+      '',
+      'body',
+      '',
+    ].join('\n'));
+  });
 
-// Test 1: factory returns a defineCommand object
-tests.push({
-  name: 'factory returns a command with telemetry + summary subcommand',
-  fn() {
-    const deps = makeDeps('/tmp');
-    const cmd = createTelemetryCommand(deps);
-    if (!cmd || !cmd.meta || cmd.meta.name !== 'telemetry') {
-      throw new Error('Expected telemetry command');
-    }
-    if (!cmd.subCommands || !cmd.subCommands.summary) {
-      throw new Error('Expected summary subcommand');
-    }
-  },
-});
+  afterEach(() => {
+    cleanup(tmpDir);
+  });
 
-// Test 2: readJsonl handles empty / malformed
-tests.push({
-  name: 'readJsonl handles empty and malformed lines',
-  fn() {
-    const tmpDir = makeTmpDir();
-    try {
-      const jsonlPath = path.join(tmpDir, 'test.jsonl');
-      writeFile(jsonlPath, '\n{bad json\n{"ts":"2026-01-01T00:00:00.000Z","kind":"x"}\n\n');
-      // We can't directly call readJsonl (it's not exported), but we can test
-      // the parsing indirectly via aggregate with empty events.
-      const { aggregate } = (() => {
-        // Re-implement minimal version matching the module's internal logic
-        function aggregate(allEvents, filters) {
-          let events = allEvents;
-          if (filters.session) events = events.filter((e) => e.session_id && e.session_id.includes(filters.session));
-          if (filters.runtime) events = events.filter((e) => e.runtime && e.runtime.includes(filters.runtime));
-          if (filters.projectid) events = events.filter((e) => e.projectid && e.projectid.includes(filters.projectid));
-          if (filters.since) {
-            const sinceMs = Date.parse(filters.since);
-            if (!Number.isNaN(sinceMs)) events = events.filter((e) => e.ts && Date.parse(e.ts) >= sinceMs);
-          }
-          const totalCalls = events.length;
-          const successCount = events.filter((e) => e.ok).length;
-          return { totalCalls, successCount, failureCount: totalCalls - successCount };
-        }
-        return { aggregate };
-      })();
-      const result = aggregate([], {});
-      if (result.totalCalls !== 0) throw new Error('Expected 0 calls');
-    } finally {
-      removeDir(tmpDir);
-    }
-  },
-});
+  test('factory exposes telemetry summary command', () => {
+    const command = createTelemetryCommand(makeDeps(tmpDir));
+    assert.equal(command.meta.name, 'telemetry');
+    assert.ok(command.subCommands.summary);
+  });
 
-// Test 3: session event parsing
-tests.push({
-  name: 'parseSessionEvents extracts fields correctly',
-  fn() {
-    const tmpDir = makeTmpDir();
-    try {
-      const sessDir = path.join(tmpDir, '.planning', '.sessions', 's-20260101-abc12345');
-      const evFile = path.join(sessDir, 'events.jsonl');
-      writeFile(evFile, JSON.stringify({
-        ts: '2026-01-01T00:00:00.000Z',
+  test('collects joined records across whiteboard, gad-log, trace, and worker streams', () => {
+    writeJsonl(path.join(tmpDir, '.planning', '.sessions', 's-20260504-deadbeef', 'events.jsonl'), [
+      {
+        ts: '2026-05-04T20:04:20.000Z',
         kind: 'session-start',
-        session_id: 's-20260101-abc12345',
+        session_id: 's-20260504-deadbeef',
         schema_version: 1,
-        runtime: 'opencode',
+        runtime: 'codex-cli',
         projectid: 'global',
-        intent: 'test intent',
-      }) + '\n' + JSON.stringify({
-        ts: '2026-01-01T00:00:05.000Z',
+        claimed_handoff: handoffId,
+        model_profile: 'quality',
+      },
+      {
+        ts: '2026-05-04T20:04:21.000Z',
         kind: 'tool-call',
-        session_id: 's-20260101-abc12345',
+        session_id: 's-20260504-deadbeef',
         schema_version: 1,
         step_id: 'st-1',
-        tool: 'Bash',
-        target: 'echo hello',
+        tool: 'Read',
+        target: 'vendor/get-anything-done/bin/commands/activity.cjs',
         ok: true,
-        duration_ms: 500,
-      }) + '\n');
-      // Test via the module's internal parseSessionEvents by requiring the module
-      // and checking that the command's run can handle the file.
-      // Instead, directly test that reading the file works.
-      const content = fs.readFileSync(evFile, 'utf8');
-      const lines = content.split('\n').filter(Boolean).map((l) => JSON.parse(l));
-      if (lines.length !== 2) throw new Error(`Expected 2 events, got ${lines.length}`);
-      if (lines[0].kind !== 'session-start') throw new Error('Expected session-start');
-      if (lines[1].tool !== 'Bash') throw new Error('Expected Bash tool');
+        duration_ms: 125,
+      },
+      {
+        ts: '2026-05-04T20:04:21.100Z',
+        kind: 'attribution-link',
+        session_id: 's-20260504-deadbeef',
+        schema_version: 1,
+        step_id: 'st-1',
+        artifact_kind: 'task-stamp',
+        artifact_id: 'GLOBAL-T-89-06',
+        agent: 'team-w1',
+      },
+    ]);
+
+    writeJsonl(path.join(tmpDir, '.planning', '.gad-log', '2026-05-04.jsonl'), [
+      {
+        ts: '2026-05-04T20:04:23.000Z',
+        type: 'tool_call',
+        tool: 'Bash',
+        session_id: 'trace-session-1',
+        input_summary: 'gad tasks show 89-06 --projectid global',
+        gad_command: 'tasks show 89-06 --projectid global',
+        duration_ms: 250,
+        runtime: { id: 'codex-cli', model: 'gpt-5.4' },
+        success: true,
+      },
+    ]);
+
+    writeJsonl(path.join(tmpDir, '.planning', '.trace-events.jsonl'), [
+      {
+        ts: '2026-05-04T20:04:24.000Z',
+        type: 'tool_use',
+        tool: 'Bash',
+        runtime: { id: 'codex-cli', session_id: 'trace-session-1', model: 'gpt-5.4' },
+        inputs: { command: `gad handoffs show ${handoffId}` },
+        duration_ms: 400,
+        success: true,
+      },
+    ]);
+
+    writeJsonl(path.join(tmpDir, '.planning', 'team', 'workers', 'w1', 'log.jsonl'), [
+      {
+        ts: '2026-05-04T20:04:19.000Z',
+        worker_id: 'w1',
+        kind: 'worker-start',
+        runtime: 'codex-cli',
+        runtime_cmd: 'codex exec',
+      },
+      {
+        ts: '2026-05-04T20:04:25.000Z',
+        worker_id: 'w1',
+        kind: 'work-complete',
+        ref: handoffId,
+        exit_code: 0,
+        duration_ms: 1000,
+      },
+    ]);
+
+    const records = _private.collectTelemetryRecords(tmpDir);
+    assert.equal(records.length, 4);
+
+    const filtered = _private.applyFilters(records, {
+      projectid: 'global',
+      session: '',
+      runtime: '',
+      phase: '',
+      task: '',
+      handoff: '',
+      since: '',
+    });
+    const summary = _private.summarizeRecords(filtered, { projectid: 'global' });
+
+    assert.equal(summary.totalCalls, 4);
+    assert.equal(summary.successCount, 4);
+    assert.equal(summary.failureCount, 0);
+    assert.equal(summary.attributedRecords, 4);
+    assert.equal(summary.coverageGaps.source_streams.length, 0);
+    assert.equal(summary.perSource['whiteboard'].count, 1);
+    assert.equal(summary.perSource['gad-log'].count, 1);
+    assert.equal(summary.perSource.trace.count, 1);
+    assert.equal(summary.perSource['worker-log'].count, 1);
+    assert.equal(summary.slowestCalls[0].duration_ms, 1000);
+
+    const traceRecord = records.find((record) => record.source_stream === 'trace');
+    assert.equal(traceRecord.projectid, 'global');
+    assert.equal(traceRecord.handoff_id, handoffId);
+    assert.equal(traceRecord.task_id, 'GLOBAL-T-89-06');
+  });
+
+  test('filters by task, phase, and handoff', () => {
+    const records = [
+      {
+        ts: '2026-05-04T20:04:21.000Z',
+        runtime: 'codex-cli',
+        model: null,
+        duration_ms: 100,
+        success: true,
+        source_stream: 'whiteboard',
+        tokens: { input: null, output: null, cache: { read: null, write: null } },
+        task_id: 'GLOBAL-T-89-06',
+        handoff_id: handoffId,
+        artifact_lineage: [],
+        session_id: 's-1',
+        projectid: 'global',
+        phase: '89',
+        tool: 'Read',
+        target: 'file',
+      },
+      {
+        ts: '2026-05-04T20:04:22.000Z',
+        runtime: 'codex-cli',
+        model: null,
+        duration_ms: 50,
+        success: true,
+        source_stream: 'gad-log',
+        tokens: { input: null, output: null, cache: { read: null, write: null } },
+        task_id: 'GLOBAL-T-88-01',
+        handoff_id: 'h-2026-05-04T20-04-20-global-88',
+        artifact_lineage: [],
+        session_id: null,
+        projectid: 'global',
+        phase: '88',
+        tool: 'Bash',
+        target: 'gad tasks list',
+      },
+    ];
+
+    assert.equal(_private.applyFilters(records, {
+      projectid: 'global', session: '', runtime: '', phase: '', task: '89-06', handoff: '', since: '',
+    }).length, 1);
+    assert.equal(_private.applyFilters(records, {
+      projectid: 'global', session: '', runtime: '', phase: '89', task: '', handoff: '', since: '',
+    }).length, 1);
+    assert.equal(_private.applyFilters(records, {
+      projectid: 'global', session: '', runtime: '', phase: '', task: '', handoff: handoffId, since: '',
+    }).length, 1);
+  });
+
+  test('summary command prints json without debug noise', async () => {
+    writeText(path.join(tmpDir, '.planning', 'model-pricing-snapshot.json'), JSON.stringify({
+      generated_at: '2026-05-04T05:00:00.000Z',
+      providers: {
+        openai: {
+          models: [
+            { id: 'gpt-5.4', input_per_m: 5, output_per_m: 20 },
+          ],
+        },
+      },
+    }, null, 2));
+    writeJsonl(path.join(tmpDir, '.planning', '.sessions', 's-20260504-deadbeef', 'events.jsonl'), [
+      {
+        ts: '2026-05-04T20:04:20.000Z',
+        kind: 'session-start',
+        session_id: 's-20260504-deadbeef',
+        schema_version: 1,
+        runtime: 'codex-cli',
+        projectid: 'global',
+      },
+      {
+        ts: '2026-05-04T20:04:21.000Z',
+        kind: 'tool-call',
+        session_id: 's-20260504-deadbeef',
+        schema_version: 1,
+        step_id: 'st-1',
+        tool: 'Read',
+        target: 'file',
+        ok: true,
+        duration_ms: 125,
+      },
+    ]);
+
+    const output = [];
+    const originalLog = console.log;
+    console.log = (...args) => output.push(args.join(' '));
+    try {
+      const command = createTelemetryCommand(makeDeps(tmpDir));
+      await command.subCommands.summary.run({
+        args: { projectid: 'global', session: '', runtime: '', phase: '', task: '', handoff: '', since: '', json: true },
+      });
     } finally {
-      removeDir(tmpDir);
+      console.log = originalLog;
     }
-  },
-});
 
-// Test 4: aggregate with sample events
-tests.push({
-  name: 'aggregate computes totalCalls, success/failure, duration, slowest',
-  fn() {
-    const events = [
-      { source: 'cli', session_id: 's-1', kind: 'cli-call', ts: '2026-01-01T00:00:00.000Z', runtime: 'cursor', projectid: 'global', outcome: 'ok', duration_ms: 1000, ok: true, tool: 'tasks', target: 'tasks list', step_id: null, artifact_kind: null, artifact_id: null },
-      { source: 'cli', session_id: 's-1', kind: 'cli-call', ts: '2026-01-01T00:00:01.000Z', runtime: 'cursor', projectid: 'global', outcome: 'error', duration_ms: 200, ok: false, tool: 'Bash', target: 'false', step_id: null, artifact_kind: null, artifact_id: null },
-      { source: 'session', session_id: 's-1', kind: 'tool-call', ts: '2026-01-01T00:00:02.000Z', runtime: 'opencode', projectid: 'global', outcome: 'ok', duration_ms: 5000, ok: true, tool: 'Read', target: 'file.txt', step_id: 'st-1', artifact_kind: null, artifact_id: null },
+    const rendered = output.join('\n');
+    assert.doesNotMatch(rendered, /\[debug\]/);
+    const parsed = JSON.parse(rendered);
+    assert.equal(parsed.totalCalls, 1);
+    assert.equal(parsed.successCount, 1);
+    assert.ok(parsed.histograms);
+    assert.equal(parsed.histograms.recordsMissingTokenUsage, 1);
+  });
+
+  test('builds token and estimated-cost histograms from priced token-bearing calls', () => {
+    const snapshot = {
+      generated_at: '2026-05-04T05:00:00.000Z',
+      providers: {
+        openai: {
+          models: [
+            { id: 'gpt-5.4', input_per_m: 5, output_per_m: 20 },
+          ],
+        },
+      },
+    };
+    const records = [
+      {
+        ts: '2026-05-04T20:04:21.000Z',
+        runtime: 'codex-cli',
+        model: 'gpt-5.4',
+        duration_ms: 100,
+        success: true,
+        source_stream: 'whiteboard',
+        tokens: { input: 2000, output: 500, cache: { read: 100, write: null } },
+        task_id: 'GLOBAL-T-89-08',
+        handoff_id: handoffId,
+        artifact_lineage: [],
+        session_id: 's-1',
+        projectid: 'global',
+        phase: '89',
+        tool: 'Read',
+        target: 'file',
+      },
+      {
+        ts: '2026-05-04T20:04:22.000Z',
+        runtime: 'codex-cli',
+        model: 'gpt-5.4',
+        duration_ms: 150,
+        success: true,
+        source_stream: 'trace',
+        tokens: { input: null, output: null, cache: { read: null, write: null } },
+        task_id: 'GLOBAL-T-89-08',
+        handoff_id: handoffId,
+        artifact_lineage: [],
+        session_id: 's-1',
+        projectid: 'global',
+        phase: '89',
+        tool: 'Bash',
+        target: 'cmd',
+      },
+      {
+        ts: '2026-05-04T20:04:23.000Z',
+        runtime: 'codex-cli',
+        model: 'unknown-model',
+        duration_ms: 175,
+        success: true,
+        source_stream: 'gad-log',
+        tokens: { input: 1000, output: 1000, cache: { read: null, write: null } },
+        task_id: 'GLOBAL-T-89-08',
+        handoff_id: handoffId,
+        artifact_lineage: [],
+        session_id: 's-1',
+        projectid: 'global',
+        phase: '89',
+        tool: 'Bash',
+        target: 'cmd',
+      },
     ];
-    // Re-implement aggregate matching the module
-    function aggregate(allEvents, filters) {
-      let evs = allEvents;
-      if (filters.session) evs = evs.filter((e) => e.session_id && e.session_id.includes(filters.session));
-      if (filters.runtime) evs = evs.filter((e) => e.runtime && e.runtime.includes(filters.runtime));
-      if (filters.projectid) evs = evs.filter((e) => e.projectid && e.projectid.includes(filters.projectid));
-      if (filters.since) {
-        const sinceMs = Date.parse(filters.since);
-        if (!Number.isNaN(sinceMs)) evs = evs.filter((e) => e.ts && Date.parse(e.ts) >= sinceMs);
-      }
-      const totalCalls = evs.length;
-      const successCount = evs.filter((e) => e.ok).length;
-      const failureCount = totalCalls - successCount;
-      const totalDuration = evs.reduce((s, e) => s + (e.duration_ms || 0), 0);
-      const withDuration = evs.filter((e) => e.duration_ms > 0);
-      withDuration.sort((a, b) => (b.duration_ms || 0) - (a.duration_ms || 0));
-      const slowestCalls = withDuration.slice(0, 10).map((e) => ({ tool: e.tool || '?', target: e.target || '?', duration_ms: e.duration_ms, source: e.source }));
-      const attributedEvents = evs.filter((e) => e.artifact_id || e.artifact_kind);
-      const attributionCoverage = totalCalls > 0 ? (attributedEvents.length / totalCalls) * 100 : 0;
-      const sourceCounts = {};
-      for (const e of evs) sourceCounts[e.source] = (sourceCounts[e.source] || 0) + 1;
-      const expectedSources = ['session', 'cli', 'trace', 'worker'];
-      const sourceGaps = expectedSources.filter((s) => !sourceCounts[s]);
-      const perSource = {};
-      for (const s of expectedSources) {
-        const srcEvents = evs.filter((e) => e.source === s);
-        perSource[s] = { count: srcEvents.length, ok: srcEvents.filter((e) => e.ok).length, fail: srcEvents.filter((e) => !e.ok).length, totalDuration: srcEvents.reduce((sum, e) => sum + (e.duration_ms || 0), 0) };
-      }
-      return { totalCalls, successCount, failureCount, totalDuration, avgDuration: totalCalls > 0 ? Math.round(totalDuration / totalCalls) : 0, slowestCalls, attributionCoverage: Math.round(attributionCoverage * 100) / 100, attributedEvents: attributedEvents.length, sourceGaps, perSource, events: evs };
-    }
-    const result = aggregate(events, {});
-    if (result.totalCalls !== 3) throw new Error(`Expected 3 calls, got ${result.totalCalls}`);
-    if (result.successCount !== 2) throw new Error(`Expected 2 successes, got ${result.successCount}`);
-    if (result.failureCount !== 1) throw new Error(`Expected 1 failure, got ${result.failureCount}`);
-    if (result.totalDuration !== 6200) throw new Error(`Expected 6200ms duration, got ${result.totalDuration}`);
-    if (result.slowestCalls.length < 1) throw new Error('Expected slowest calls');
-    if (result.slowestCalls[0].duration_ms !== 5000) throw new Error('Expected slowest to be 5000ms');
-    if (result.perSource.cli.count !== 2) throw new Error('Expected 2 cli events');
-    if (result.perSource.session.count !== 1) throw new Error('Expected 1 session event');
-  },
+
+    const summary = _private.summarizeRecords(records, { projectid: 'global' }, { pricingSnapshot: snapshot });
+    assert.equal(summary.histograms.recordsWithReportedTokens, 2);
+    assert.equal(summary.histograms.recordsMissingTokenUsage, 1);
+    assert.equal(summary.histograms.recordsMissingPricing, 1);
+    assert.equal(summary.histograms.totalKnownTokensAcrossRecords, 4600);
+    assert.equal(summary.histograms.tokenVolumeBuckets.find((bucket) => bucket.key === '1k-10k').count, 2);
+    assert.equal(summary.histograms.estimatedUsdBuckets.find((bucket) => bucket.key === '0.01-0.10').count, 1);
+    assert.equal(summary.histograms.missingPricingModels[0], 'unknown-model');
+    assert.equal(summary.histograms.topEstimatedCalls[0].model, 'gpt-5.4');
+    assert.equal(summary.histograms.dependencyNote.includes('Phase 106'), true);
+  });
+
+  test('extracts token fields from future-compatible payload shapes', () => {
+    const direct = _private.extractTokensFromEntry({
+      tokens_input: 10,
+      tokens_output: 20,
+      tokens_cache_read: 30,
+      tokens_cache_write: 40,
+    });
+    assert.deepEqual(direct, {
+      input: 10,
+      output: 20,
+      cache: { read: 30, write: 40 },
+    });
+
+    const nested = _private.extractTokensFromEntry({
+      usage: {
+        prompt_tokens: 11,
+        completion_tokens: 22,
+        cache_read_tokens: 33,
+      },
+    });
+    assert.deepEqual(nested, {
+      input: 11,
+      output: 22,
+      cache: { read: 33, write: null },
+    });
+  });
 });
-
-// Test 5: filter by session
-tests.push({
-  name: 'aggregate filters by session id',
-  fn() {
-    const events = [
-      { source: 'cli', session_id: 's-111', ok: true, duration_ms: 100, tool: 'x', target: 'y', runtime: null, projectid: null, outcome: 'ok', kind: 'cli-call', step_id: null, artifact_kind: null, artifact_id: null },
-      { source: 'cli', session_id: 's-222', ok: false, duration_ms: 200, tool: 'x', target: 'y', runtime: null, projectid: null, outcome: 'error', kind: 'cli-call', step_id: null, artifact_kind: null, artifact_id: null },
-    ];
-    function aggregate(allEvents, filters) {
-      let evs = allEvents;
-      if (filters.session) evs = evs.filter((e) => e.session_id && e.session_id.includes(filters.session));
-      const totalCalls = evs.length;
-      const successCount = evs.filter((e) => e.ok).length;
-      return { totalCalls, successCount };
-    }
-    const result = aggregate(events, { session: '111' });
-    if (result.totalCalls !== 1) throw new Error(`Expected 1 call, got ${result.totalCalls}`);
-    if (result.successCount !== 1) throw new Error('Expected 1 success');
-  },
-});
-
-// Test 6: filter by runtime
-tests.push({
-  name: 'aggregate filters by runtime',
-  fn() {
-    const events = [
-      { source: 'cli', runtime: 'cursor', ok: true, duration_ms: 100, tool: 'x', target: 'y', session_id: null, projectid: null, outcome: 'ok', kind: 'cli-call', step_id: null, artifact_kind: null, artifact_id: null },
-      { source: 'cli', runtime: 'opencode', ok: false, duration_ms: 200, tool: 'x', target: 'y', session_id: null, projectid: null, outcome: 'error', kind: 'cli-call', step_id: null, artifact_kind: null, artifact_id: null },
-    ];
-    function aggregate(allEvents, filters) {
-      let evs = allEvents;
-      if (filters.runtime) evs = evs.filter((e) => e.runtime && e.runtime.includes(filters.runtime));
-      const totalCalls = evs.length;
-      const successCount = evs.filter((e) => e.ok).length;
-      return { totalCalls, successCount };
-    }
-    const result = aggregate(events, { runtime: 'cursor' });
-    if (result.totalCalls !== 1) throw new Error(`Expected 1 call, got ${result.totalCalls}`);
-    if (result.successCount !== 1) throw new Error('Expected 1 success');
-  },
-});
-
-// Test 7: source gaps detection
-tests.push({
-  name: 'source gaps detected when source missing',
-  fn() {
-    const events = [
-      { source: 'cli', ok: true, duration_ms: 100, tool: 'x', target: 'y', session_id: null, runtime: null, projectid: null, outcome: 'ok', kind: 'cli-call', step_id: null, artifact_kind: null, artifact_id: null },
-    ];
-    function aggregate(allEvents, filters) {
-      let evs = allEvents;
-      if (filters.session) evs = evs.filter((e) => e.session_id && e.session_id.includes(filters.session));
-      if (filters.runtime) evs = evs.filter((e) => e.runtime && e.runtime.includes(filters.runtime));
-      if (filters.projectid) evs = evs.filter((e) => e.projectid && e.projectid.includes(filters.projectid));
-      const sourceCounts = {};
-      for (const e of evs) sourceCounts[e.source] = (sourceCounts[e.source] || 0) + 1;
-      const expectedSources = ['session', 'cli', 'trace', 'worker'];
-      const sourceGaps = expectedSources.filter((s) => !sourceCounts[s]);
-      return { sourceGaps };
-    }
-    const result = aggregate(events, {});
-    if (!result.sourceGaps.includes('session')) throw new Error('Expected session in gaps');
-    if (!result.sourceGaps.includes('trace')) throw new Error('Expected trace in gaps');
-    if (!result.sourceGaps.includes('worker')) throw new Error('Expected worker in gaps');
-    if (result.sourceGaps.includes('cli')) throw new Error('Did not expect cli in gaps');
-  },
-});
-
-// Test 8: attribution coverage with artifact events
-tests.push({
-  name: 'attribution coverage counts artifact-linked events',
-  fn() {
-    const events = [
-      { source: 'session', artifact_kind: 'task-stamp', artifact_id: 'GLOBAL-T-89-06', ok: true, duration_ms: 0, tool: null, target: null, session_id: 's-1', runtime: null, projectid: 'global', outcome: 'ok', kind: 'attribution-link', step_id: 'st-1' },
-      { source: 'session', artifact_kind: null, artifact_id: null, ok: true, duration_ms: 100, tool: 'Read', target: 'file', session_id: 's-1', runtime: 'opencode', projectid: 'global', outcome: 'ok', kind: 'tool-call', step_id: 'st-1' },
-      { source: 'session', artifact_kind: null, artifact_id: null, ok: true, duration_ms: 200, tool: 'Bash', target: 'cmd', session_id: 's-1', runtime: 'opencode', projectid: 'global', outcome: 'ok', kind: 'tool-call', step_id: 'st-2' },
-    ];
-    function aggregate(allEvents, filters) {
-      let evs = allEvents;
-      const totalCalls = evs.length;
-      const attributedEvents = evs.filter((e) => e.artifact_id || e.artifact_kind);
-      const attributionCoverage = totalCalls > 0 ? (attributedEvents.length / totalCalls) * 100 : 0;
-      return { totalCalls, attributedEvents: attributedEvents.length, attributionCoverage: Math.round(attributionCoverage * 100) / 100 };
-    }
-    const result = aggregate(events, {});
-    if (result.totalCalls !== 3) throw new Error(`Expected 3, got ${result.totalCalls}`);
-    if (result.attributedEvents !== 1) throw new Error(`Expected 1 attributed, got ${result.attributedEvents}`);
-    if (Math.abs(result.attributionCoverage - 33.33) > 0.01) throw new Error(`Expected ~33.33%, got ${result.attributionCoverage}`);
-  },
-});
-
-// ---------------------------------------------------------------------------
-// Runner
-// ---------------------------------------------------------------------------
-
-let passed = 0;
-let failed = 0;
-
-for (const t of tests) {
-  try {
-    t.fn();
-    console.log(`  ✓ ${t.name}`);
-    passed++;
-  } catch (err) {
-    console.error(`  ✗ ${t.name}`);
-    console.error(`    ${err.message}`);
-    failed++;
-  }
-}
-
-console.log(`\n${passed} passed, ${failed} failed`);
-process.exit(failed > 0 ? 1 : 0);

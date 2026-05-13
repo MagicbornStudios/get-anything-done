@@ -4,7 +4,7 @@ const path = require('path');
 const { defineCommand } = require('citty');
 
 function createTaskCheckpointCommand(deps) {
-  const { findRepoRoot, gadConfig, resolveRoots, readTasks, readXmlFile } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, readTasks, readState } = deps;
 
   return defineCommand({
     meta: { name: 'checkpoint', description: 'Verify planning docs updated before proceeding to next task' },
@@ -34,17 +34,16 @@ function createTaskCheckpointCommand(deps) {
         }
       }
 
-      const planDir = path.join(baseDir, root.path, root.planningDir);
-      const stateContent = readXmlFile(path.join(planDir, 'STATE.xml'));
-      if (stateContent) {
-        const nextAction = (stateContent.match(/<next-action>([\s\S]*?)<\/next-action>/) || [])[1]?.trim();
+      const state = readState(root, baseDir);
+      if (state && state.status !== 'unknown') {
+        const nextAction = state.nextAction || '';
         if (!nextAction || nextAction.length < 10) {
           issues.push('STATE.xml next-action is empty or too short — update it to describe what comes next');
         } else {
           passCount++;
         }
       } else {
-        issues.push('STATE.xml not found');
+        issues.push('STATE.xml not found or could not be read');
       }
 
       try {

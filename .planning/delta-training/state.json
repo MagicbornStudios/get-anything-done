@@ -1,0 +1,15 @@
+{
+  "schema_v": 1,
+  "loop_started_at": null,
+  "last_tick_at": "2026-05-06T18:42:28.675Z",
+  "next_tick_at": null,
+  "interval_seconds": 1800,
+  "last_pull_ts": "2026-05-06T18:42:27.319Z",
+  "current_canonical": null,
+  "current_candidate": null,
+  "tick_count": 1,
+  "promotion_count": 0,
+  "discard_count": 0,
+  "skip_count": 0,
+  "consecutive_failures": 0
+}

@@ -55,7 +55,7 @@ function resolveVerifyBuildCommands({ config, root, projectDir, cliBuildCmd }) {
 }
 
 function createVerifyCommand(deps) {
-  const { findRepoRoot, gadConfig, resolveRoots, outputError, readPhases, readXmlFile, readTasks } = deps;
+  const { findRepoRoot, gadConfig, resolveRoots, outputError, readPhases, readXmlFile, readTasks, readState } = deps;
 
   return defineCommand({
     meta: { name: 'verify', description: 'Verify a phase achieved its goals — checks tasks, build, state, conventions' },
@@ -74,11 +74,9 @@ function createVerifyCommand(deps) {
       const planDir = path.join(baseDir, root.path, root.planningDir);
 
       const phases = readPhases(root, baseDir);
-      let targetPhase = args.phase;
-      if (!targetPhase) {
-        const stateXml = readXmlFile(path.join(planDir, 'STATE.xml'));
-        targetPhase = stateXml ? (stateXml.match(/<current-phase>([\s\S]*?)<\/current-phase>/) || [])[1]?.trim() : '';
-      }
+      const state = readState(root, baseDir);
+      let targetPhase = args.phase || state.currentPhase;
+
       if (!targetPhase) { outputError('No phase specified and no current phase found. Use --phase <id>'); return; }
 
       const padded = targetPhase.padStart(2, '0');
@@ -123,17 +121,14 @@ function createVerifyCommand(deps) {
       }
       checks.push({ category: 'Build', check: 'Build/typecheck passes', result: buildResult, evidence: buildEvidence });
 
-      const stateXml = readXmlFile(path.join(planDir, 'STATE.xml'));
-      if (stateXml) {
-        const nextAction = (stateXml.match(/<next-action>([\s\S]*?)<\/next-action>/) || [])[1]?.trim() || '';
-        const stateOk = nextAction.length > 10;
-        checks.push({
-          category: 'State',
-          check: 'STATE.xml next-action is current',
-          result: stateOk ? 'PASS' : 'FAIL',
-          evidence: stateOk ? nextAction.slice(0, 100) : 'next-action is empty or too short',
-        });
-      }
+      const nextAction = state.nextAction || '';
+      const stateOk = nextAction.length > 10;
+      checks.push({
+        category: 'State',
+        check: 'STATE.xml next-action is current',
+        result: stateOk ? 'PASS' : 'FAIL',
+        evidence: stateOk ? nextAction.slice(0, 100) : 'next-action is empty or too short',
+      });
 
       const decisionsXml = readXmlFile(path.join(planDir, 'DECISIONS.xml'));
       const decCount = decisionsXml ? (decisionsXml.match(/<decision\s/g) || []).length : 0;

@@ -214,6 +214,113 @@ The whiteboard captures the two signals v2 entropy needs:
 
 Skill Entropy v2 calc reads `.planning/.sessions/*/events.jsonl` filtered by `attribution-link.artifact_id` task-class, computes the two distributions, and returns `H_skill ∈ [0, log_2 N]` per task-class. Schema-side: keep `step-start.label` stable enough across sessions that task-class labels can be derived from labels with simple normalization (lowercase, strip paths). 89-06 documents the normalization.
 
+## Per-call telemetry join contract (phase 89-05)
+
+A future `gad telemetry summary` needs to recover a **unified per-call record** from four
+independent streams. This section defines the canonical field set, source-of-truth rules,
+and conflict resolution when streams disagree.
+
+### Canonical per-call fields
+
+| Field | Type | Description |
+|---|---|---|
+| `ts` | ISO-8601 | Wall-clock UTC timestamp |
+| `runtime` | string | `claude-code`, `codex-cli`, `cursor`, `gemini-cli`, `opencode` |
+| `model` | string\|null | Model name when known (e.g. `claude-sonnet-4-6`). `null` if stream doesn't carry it. |
+| `duration_ms` | integer\|null | Wall-clock duration of the call/work item |
+| `success` | boolean\|null | Did the call succeed? `null` if stream doesn't indicate success |
+| `source_stream` | enum | `whiteboard`, `trace`, `gad-log`, `worker-log` |
+| `tokens.input` | integer\|null | Input tokens consumed. `null` = not reported by this stream |
+| `tokens.output` | integer\|null | Output tokens generated |
+| `tokens.cache.read` | integer\|null | Cache read tokens |
+| `tokens.cache.write` | integer\|null | Cache write tokens |
+| `task_id` | string\|null | Task ID (e.g. `GLOBAL-T-89-05`) — the task this call contributes to |
+| `handoff_id` | string\|null | Handoff ID (e.g. `h-2026-05-04T20-04-07-global-89`) |
+| `artifact_lineage` | string[] | Artifact IDs produced by this call (task stamps, decision IDs, handoff completes) |
+
+### Field-by-field source rules
+
+For each stream, which fields are **direct emit**, **derived join**, or **`unknown` fallback**:
+
+| Field | Whiteboard (events.jsonl) | Trace (.trace-events.jsonl) | Gad-Log (.gad-log/*.jsonl) | Worker Log (workers/*/log.jsonl) |
+|---|---|---|---|---|
+| `ts` | direct (`ts`) | direct (`ts`) | direct (`ts`) | direct (`ts`) |
+| `runtime` | direct (`session-start.runtime`) | direct (`runtime.id`) | direct (`runtime.id`) | direct (`runtime`) |
+| `model` | derived (`session-start.model_profile` today; reserved for concrete model ids when adapters expose them) | **unknown** — not present | **unknown** — not present | **unknown** — not present |
+| `duration_ms` | direct (`tool-call.duration_ms`, `step-end.duration_ms`, `work-complete.duration_ms`) | direct (`duration_ms`) | direct (`duration_ms`) | direct (`duration_ms`) |
+| `success` | direct (`tool-call.ok`, `step-end.outcome`) | direct (`success`) | derived (`exit === 0`) | derived (`exit_code === 0` when `kind=work-complete`) |
+| `source_stream` | `"whiteboard"` | `"trace"` | `"gad-log"` | `"worker-log"` |
+| `tokens.input` | **unknown** — future runtime emit | **unknown** — not present | **unknown** — not present | **unknown** — not present |
+| `tokens.output` | **unknown** — future runtime emit | **unknown** — not present | **unknown** — not present | **unknown** — not present |
+| `tokens.cache` | **unknown** — future runtime emit | **unknown** — not present | **unknown** — not present | **unknown** — not present |
+| `task_id` | derived join (`attribution-link.artifact_id` where `artifact_kind=task-stamp`, correlated by `step_id`) | **unknown** — no task linkage | **unknown** — no task linkage | derived join (`ref` handoff id → whiteboard session/handoff join → task-stamp attribution) |
+| `handoff_id` | direct (`session-start.claimed_handoff`), derived (`attribution-link.artifact_id` where `artifact_kind=handoff-complete`) | **unknown** — no handoff linkage | **unknown** — no handoff linkage | direct (`ref` when `kind=work-start/work-complete`) |
+| `artifact_lineage` | direct (`attribution-link` events correlated by `step_id`) | **unknown** — not present | **unknown** — not present | **unknown** — not present |
+
+**Key gaps today (phase 89 baseline):**
+- Token counts are **not available** in any stream. The `tokens.*` fields are reserved for future
+  runtime adapter emissions (e.g. Claude Code's `_tokens` metadata, OpenAI `usage` objects).
+  A `gad telemetry summary` implementation MUST treat `tokens.* === null` as "not reported"
+  and NEVER synthesize token values from duration or other fields.
+- Gad-Log and Trace streams have **no task/handoff linkage**. Join them to whiteboard/worker-log
+  via `ts` temporal proximity + `runtime` match.
+- Worker logs only carry `handoff_id` (via `ref`), not `task_id`. Join worker-log → whiteboard
+  via `handoff_id`, then whiteboard `attribution-link` → `task-stamp`, to recover `task_id`.
+
+### Conflict resolution rules
+
+When the same logical call appears in multiple streams with conflicting values:
+
+1. **`runtime` conflicts:** Trust the whiteboard `session-start.runtime` as source-of-truth.
+   Trace/Gad-Log `runtime.id` is a fallback if whiteboard unavailable.
+2. **`model` conflicts:** Today the whiteboard only carries `model_profile`, which is weaker than
+   a concrete model id. Treat it as the best available model hint until adapters emit a true
+   model field. If future streams add concrete model ids, prefer the whiteboard's concrete model
+   field over profile hints.
+3. **`duration_ms` conflicts:** Prefer whiteboard `tool-call.duration_ms` (high-precision,
+   emitted by adapter at call boundaries). Trace `duration_ms` is second. Gad-Log `duration_ms`
+   is third. Worker-log `duration_ms` is coarsest (entire work item, not per-call).
+4. **`success` conflicts:** Whiteboard `tool-call.ok` is source-of-truth for tool calls.
+   For whole-work items, worker-log `exit_code === 0` wins.
+5. **`task_id` / `handoff_id` conflicts:** Whiteboard `attribution-link` + `session-start.claimed_handoff`
+   are source-of-truth. Worker-log `ref` is a fallback join key.
+
+### Join keys for cross-stream correlation
+
+To build a unified per-call record, use these join strategies (in priority order):
+
+| Join key | Streams joined | Method |
+|---|---|---|
+| `handoff_id` | whiteboard ↔ worker-log | Exact match: whiteboard `session-start.claimed_handoff` + `attribution-link.artifact_id` (handoff-complete) ↔ worker-log `ref` |
+| `ts` + `runtime` | whiteboard ↔ trace ↔ gad-log | Temporal window: events within ±5s with same `runtime` value |
+| `step_id` | whiteboard internal | Correlate `tool-call.step_id` / `step-end.step_id` to `attribution-link.step_id` for artifact lineage |
+| `session_id` | whiteboard internal | All events in same `session_id` share the session's `claimed_handoff`, `model_profile` |
+
+### Missing-token cases
+
+Since no stream reports token counts today:
+
+1. `gad telemetry summary` MUST output `tokens: { input: null, output: null, cache: { read: null, write: null } }`
+   when no source stream provides token data.
+2. NEVER estimate tokens from `duration_ms` or other fields. Null means null.
+3. When a future runtime emits tokens (e.g. Claude Code includes `tokens` in `PostToolUse` hooks),
+   the adapter should add `tokens.input`, `tokens.output`, `tokens.cache.read`, `tokens.cache.write`
+   to the whiteboard `tool-call` event. The join contract will pick them up automatically.
+
+### Rate-limit-only evidence from worker logs
+
+When a worker hits a rate limit, the worker-log captures:
+
+```jsonl
+{"ts":"...","worker_id":"w3","kind":"runtime-rate-limit-on-call","runtime":"opencode","ref":"h-2026-05-04T20-04-07-global-89","cooldown_until":"...","cooldown_ms":900000}
+{"ts":"...","worker_id":"w3","kind":"work-complete","ref":"h-2026-05-04T20-04-07-global-89","exit_code":0,"duration_ms":1234}
+```
+
+A `gad telemetry summary` can recover rate-limit events:
+- `kind=runtime-rate-limit-on-call` → `success=false`, `handoff_id=ref`, `runtime=runtime`
+- `kind=work-complete` with prior rate-limit → correlate via `ref` (handoff_id) + `ts` window
+- No token data is available for rate-limited calls (the call was blocked before token consumption)
+
 ## Adapter contracts (89-02..89-05 forward-reference)
 
 Each runtime adapter MUST:
@@ -225,6 +332,10 @@ Each runtime adapter MUST:
 5. Emit `session-end` on graceful close (auto-compact, user end-of-session, runtime exit).
 6. Tolerate write failures non-fatally — log to stderr, continue session. Never crash the runtime over telemetry I/O.
 7. Append-only. Never rewrite `events.jsonl` mid-session.
+8. **Phase 89-05 token extension (future):** When the runtime provides token counts
+   (e.g. Claude Code `PostToolUse` metadata, OpenAI `usage` object), emit them as
+   optional fields on `tool-call` events: `tokens_input`, `tokens_output`, `tokens_cache_read`,
+   `tokens_cache_write`. Do NOT emit these fields if the runtime doesn't provide them.
 
 ## Cross-references
 
@@ -232,4 +343,5 @@ Each runtime adapter MUST:
 - Skill Entropy decision: `gad decisions show 291` (alias `GLOBAL-D-291`)
 - Phase 89 task chain: `.planning/tasks/89-{01..07}.json`
 - JSON Schema validator: `vendor/get-anything-done/schemas/session-event.schema.json`
+- Per-call join contract (this section): `vendor/get-anything-done/schemas/per-call-telemetry-join.json`
 - Existing call trace: `.planning/.gad-log/*.jsonl`, `.planning/.trace-events.jsonl`

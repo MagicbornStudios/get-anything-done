@@ -38,8 +38,8 @@ function handleScopedSnapshot(deps, context, args) {
   const assignmentsSection = buildAssignmentsSection(assignments);
   if (assignmentsSection) sections.push(assignmentsSection);
   if (stateXml) {
-    const stateContent = compactFmt ? deps.compactStateXml(stateXml) : stateXml.trim();
-    sections.push({ title: 'STATE', content: stateContent });
+    const derivedStateContent = compactFmt ? deps.compactStateXml(stateXml, context.state?.nextAction || '') : stateXml.trim();
+    sections.push({ title: 'STATE', content: derivedStateContent });
   }
   if (scopedPhaseId) {
     const phase = phases.find((row) => row.id === scopedPhaseId);

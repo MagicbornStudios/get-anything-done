@@ -11,6 +11,7 @@ function handleTerseSnapshot(deps, context, args) {
     sprintSize,
     currentPhase,
     stateXml,
+    nextAction,
     phases,
     allTasks,
   } = context;
@@ -30,6 +31,9 @@ function handleTerseSnapshot(deps, context, args) {
     if (activePhase.goal) lines.push(`  Goal: ${(activePhase.goal || '').slice(0, 200)}`);
   } else {
     lines.push(`Active phase: ${currentPhase || '(none)'}`);
+  }
+  if (nextAction) {
+    lines.push(`  Next action: ${nextAction.slice(0, 300)}`);
   }
   lines.push('');
 

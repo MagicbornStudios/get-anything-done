@@ -174,6 +174,31 @@ test('returns empty when rootDir has no workers', async () => {
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test('content_type defaults to planning for handoff prompt text', async () => {
+  const root = mkRootDir();
+  const t = new Date('2026-05-04T06:00:00.000Z').getTime();
+  writeWorker(root, 'w1', { id: 'w1', runtime: 'codex-cli' }, [
+    { name: '1.prompt.md', content: 'do task GLOBAL-T-145-05 per handoff', mtimeMs: t },
+  ]);
+  const envs = await collect(root);
+  assert.equal(envs.length, 1);
+  assert.equal(envs[0].content_type, 'planning');
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('content_type field present and valid on every prompt envelope', async () => {
+  const root = mkRootDir();
+  const t = new Date('2026-05-04T06:00:00.000Z').getTime();
+  writeWorker(root, 'w1', { id: 'w1', runtime: 'codex-cli' }, [
+    { name: '1.prompt.md', content: 'p', mtimeMs: t },
+  ]);
+  const envs = await collect(root);
+  for (const e of envs) {
+    assert.ok(['planning', 'code', 'site', 'eval', 'narrative', 'meta'].includes(e.content_type));
+  }
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
 test('non-prompt files in out/ are ignored', async () => {
   const root = mkRootDir();
   const dir = path.join(root, '.planning', 'team', 'workers', 'w1', 'out');

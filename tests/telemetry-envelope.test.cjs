@@ -11,6 +11,8 @@ const {
   SCHEMA_V,
   VALID_RUNTIMES,
   VALID_ROLES,
+  VALID_CONTENT_TYPES,
+  OPTIONAL_FIELDS,
   validateEnvelope,
   deriveEnvelopeId,
   makeEnvelope,
@@ -155,4 +157,56 @@ test('makeRunId formats correctly', () => {
 test('makeRunId sanitises bad chars in session id', () => {
   const id = makeRunId('codex-cli', 'sess/with bad?chars', '2026-05-06T09:30:00.000Z');
   assert.match(id, /^cx-sess_with_bad_chars-/);
+});
+
+// ---------------------------------------------------------------------------
+// content_type validation (Phase 145 follow-up)
+// ---------------------------------------------------------------------------
+
+test('content_type listed in OPTIONAL_FIELDS', () => {
+  assert.ok(OPTIONAL_FIELDS.includes('content_type'));
+});
+
+test('VALID_CONTENT_TYPES is a Set with 6 entries', () => {
+  assert.ok(VALID_CONTENT_TYPES instanceof Set);
+  assert.equal(VALID_CONTENT_TYPES.size, 6);
+});
+
+test('valid envelope with each content_type passes validation', () => {
+  for (const ct of ['planning', 'code', 'site', 'eval', 'narrative', 'meta']) {
+    const env = { ...baseEnv, content_type: ct };
+    assert.equal(validateEnvelope(env).ok, true, `content_type ${ct} should validate`);
+  }
+});
+
+test('envelope validation rejects invalid content_type', () => {
+  const env = { ...baseEnv, content_type: 'not-a-real-type' };
+  const r = validateEnvelope(env);
+  assert.equal(r.ok, false);
+  assert.match(r.errors.join(' '), /content_type/);
+});
+
+test('envelope validation accepts null content_type', () => {
+  const env = { ...baseEnv, content_type: null };
+  assert.equal(validateEnvelope(env).ok, true);
+});
+
+test('envelope validation accepts missing content_type', () => {
+  const env = { ...baseEnv };
+  delete env.content_type;
+  assert.equal(validateEnvelope(env).ok, true);
+});
+
+test('makeEnvelope defaults content_type to null', () => {
+  const env = makeEnvelope(baseEnv);
+  assert.equal(env.content_type, null);
+});
+
+test('makeEnvelope passes content_type through', () => {
+  const env = makeEnvelope({ ...baseEnv, content_type: 'planning' });
+  assert.equal(env.content_type, 'planning');
+});
+
+test('makeEnvelope rejects invalid content_type', () => {
+  assert.throws(() => makeEnvelope({ ...baseEnv, content_type: 'bogus' }));
 });

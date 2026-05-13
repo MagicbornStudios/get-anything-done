@@ -153,9 +153,9 @@ async function main() {
     }
 
     if (name === "account_cooldowns") {
-      const data = readJsonSafe(path.join(teamDir, "runtime-cooldown.json"));
-      if (!data) return { content: [{ type: "text", text: "runtime-cooldown.json not found" }], isError: true };
-      return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      // Cooldown/parking was retired in phase 95-10 (just-try-it mode).
+      // The runtime-cooldown.json file is no longer written or read by workers.
+      return { content: [{ type: "text", text: JSON.stringify({ note: "cooldowns retired — just-try-it mode. no cooldown state written by workers." }, null, 2) }] };
     }
 
     if (name === "runtime_accounts") {

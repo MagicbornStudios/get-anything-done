@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Per-Call Telemetry Join Contract (phase 89-05)",
+  "description": "Canonical field set and join rules for unifying whiteboard/trace/gad-log/worker-log streams into per-call records.",
+  "type": "object",
+  "required": ["ts", "source_stream"],
+  "properties": {
+    "ts": { "type": "string", "format": "date-time", "description": "ISO-8601 UTC wall-clock timestamp" },
+    "runtime": { "type": "string", "enum": ["claude-code", "codex-cli", "cursor", "gemini-cli", "opencode"], "description": "Runtime that produced the record" },
+    "model": { "type": ["string", "null"], "description": "Concrete model id when known; today whiteboard usually contributes only model_profile as a weaker hint" },
+    "duration_ms": { "type": ["integer", "null"], "description": "Wall-clock duration in milliseconds; null if not reported" },
+    "success": { "type": ["boolean", "null"], "description": "Did the call succeed? null if stream does not indicate success" },
+    "source_stream": { "type": "string", "enum": ["whiteboard", "trace", "gad-log", "worker-log"], "description": "Which stream produced this record" },
+    "tokens": {
+      "type": "object",
+      "description": "Token counts; all null in phase 89 baseline — reserved for future runtime emissions",
+      "properties": {
+        "input": { "type": ["integer", "null"] },
+        "output": { "type": ["integer", "null"] },
+        "cache": {
+          "type": "object",
+          "properties": {
+            "read": { "type": ["integer", "null"] },
+            "write": { "type": ["integer", "null"] }
+          }
+        }
+      }
+    },
+    "task_id": { "type": ["string", "null"], "pattern": "^[A-Z]+-T-\\d+-\\d+$", "description": "Task ID this call contributes to; null if no linkage" },
+    "handoff_id": { "type": ["string", "null"], "pattern": "^h-\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-[a-z]+-\\d+$", "description": "Handoff ID; null if no linkage" },
+    "artifact_lineage": { "type": "array", "items": { "type": "string" }, "description": "Artifact IDs produced by this call", "default": [] }
+  },
+  "join_keys": {
+    "description": "Keys used to correlate records across streams",
+    "handoff_id": {
+      "streams": ["whiteboard", "worker-log"],
+      "method": "Exact match: whiteboard session-start.claimed_handoff + attribution-link.artifact_id (handoff-complete) ↔ worker-log ref"
+    },
+    "ts_plus_runtime": {
+      "streams": ["whiteboard", "trace", "gad-log"],
+      "method": "Temporal window: events within ±5s with same runtime value"
+    },
+    "step_id": {
+      "streams": ["whiteboard"],
+      "method": "Internal: correlate tool-call.step_id / step-end.step_id to attribution-link.step_id"
+    }
+  },
+  "source_rules": {
+    "description": "How each field is populated from each stream",
+    "whiteboard": {
+      "runtime": "direct (session-start.runtime)",
+      "model": "derived (session-start.model_profile today; reserved for concrete model ids when adapters expose them)",
+      "duration_ms": "direct (tool-call.duration_ms, step-end.duration_ms, work-complete.duration_ms)",
+      "success": "direct (tool-call.ok, step-end.outcome)",
+      "tokens": "unknown (future runtime emit)",
+      "task_id": "derived join (attribution-link.artifact_id where artifact_kind=task-stamp, correlated by step_id)",
+      "handoff_id": "direct (session-start.claimed_handoff), derived (attribution-link.artifact_id where artifact_kind=handoff-complete)"
+    },
+    "trace": {
+      "runtime": "direct (runtime.id)",
+      "model": "unknown",
+      "duration_ms": "direct (duration_ms)",
+      "success": "direct (success)",
+      "tokens": "unknown",
+      "task_id": "unknown",
+      "handoff_id": "unknown"
+    },
+    "gad-log": {
+      "runtime": "direct (runtime.id)",
+      "model": "unknown",
+      "duration_ms": "direct (duration_ms)",
+      "success": "derived (exit === 0)",
+      "tokens": "unknown",
+      "task_id": "unknown",
+      "handoff_id": "unknown"
+    },
+    "worker-log": {
+      "runtime": "direct (runtime)",
+      "model": "unknown",
+      "duration_ms": "direct (duration_ms)",
+      "success": "derived (exit_code === 0 when kind=work-complete)",
+      "tokens": "unknown",
+      "task_id": "derived join (ref handoff id -> whiteboard session/handoff join -> task-stamp attribution)",
+      "handoff_id": "direct (ref when kind=work-start/work-complete)"
+    }
+  },
+  "conflict_resolution": {
+    "description": "Which stream wins when the same field conflicts across streams",
+    "runtime": "whiteboard session-start.runtime wins; trace/gad-log runtime.id is fallback",
+    "model": "today whiteboard model_profile is the best available hint; if adapters later emit concrete model ids, the whiteboard concrete model wins",
+    "duration_ms": "whiteboard tool-call.duration_ms > trace duration_ms > gad-log duration_ms > worker-log duration_ms (coarsest)",
+    "success": "whiteboard tool-call.ok for tool calls; worker-log exit_code===0 for whole-work items",
+    "task_id": "whiteboard attribution-link + session-start.claimed_handoff win; worker-log ref is fallback join key",
+    "handoff_id": "whiteboard session-start.claimed_handoff wins; worker-log ref is fallback"
+  },
+  "missing_token_policy": {
+    "description": "How to handle missing token counts (phase 89 baseline: no stream reports tokens)",
+    "action": "Output null for all tokens.* fields",
+    "never_estimate_from": ["duration_ms", "other fields"],
+    "note": "Null means null. Future runtime emissions will populate these fields."
+  },
+  "rate_limit_evidence": {
+    "description": "How rate-limit events in worker-log are recovered",
+    "patterns": [
+      { "kind": "runtime-rate-limit-on-call", "maps_to": { "success": false, "handoff_id": "ref", "runtime": "runtime" } },
+      { "kind": "work-complete", "with_prior_rate_limit": "correlate via ref (handoff_id) + ts window" }
+    ],
+    "token_availability": "No token data for rate-limited calls (call was blocked before token consumption)"
+  }
+}

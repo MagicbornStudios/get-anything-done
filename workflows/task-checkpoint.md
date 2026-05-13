@@ -22,15 +22,15 @@ Fail: task still shows status="in-progress" or status="planned"
 
 If fail: **Stop. Update TASK-REGISTRY.xml to mark the task done before continuing.**
 
-### 2. STATE.xml next-action is current
+### 2. Derived next-action is current
 
 ```
-Check: STATE.xml <next-action> mentions the NEXT task or phase, not the completed one
-Pass: next-action references upcoming work
-Fail: next-action still describes the task that was just completed, or is stale
+Check: `gad state --projectid <id> --full` shows a next-action that points at the NEXT task or phase, not the completed one
+Pass: derived next-action references upcoming work
+Fail: derived next-action still describes the task that was just completed, or has no fresh state-log / task / phase-goal source
 ```
 
-If fail: **Stop. Run `gad state set-next-action --projectid <id> "<text>"` to update next-action.** Hard-capped at 600 chars — write a pointer (next pick + open ids + blockers), not a journal. Activity goes in TASK-REGISTRY `<resolution>`.
+If fail: **Stop. Run `gad state log "<text>" --tags "<phase-id>" --projectid <id>` to record the new state.** Snapshot/state derive next-action from the latest tagged state-log entry first, then the lowest-numbered planned task, then the active phase goal. Activity still belongs in TASK-REGISTRY `<resolution>`.
 
 ### 3. Code compiles (if applicable)
 
@@ -59,7 +59,7 @@ After all checks pass:
 ```
 ✓ Checkpoint passed for task [task-id]
   - TASK-REGISTRY: task marked done
-  - STATE.xml: next-action updated
+  - State: derived next-action updated
   - Build: clean
   - Git: committed
 
@@ -74,7 +74,7 @@ The execute-phase workflow inserts this checkpoint between every task:
 for each task in phase:
   1. Mark task in-progress
   2. Implement task
-  3. Mark task done + update STATE
+  3. Mark task done + log fresh state
   4. Commit
   5. >>> RUN CHECKPOINT <<<
   6. If checkpoint fails → fix before continuing

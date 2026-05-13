@@ -5,7 +5,9 @@ const path = require('path');
 function resolveScopedSnapshot(deps, root, baseDir, planDir, args) {
   const phases = deps.readPhases(root, baseDir);
   const stateXml = deps.readXmlFile(path.join(planDir, 'STATE.xml'));
-  const currentPhase = stateXml ? (stateXml.match(/<current-phase>([\s\S]*?)<\/current-phase>/) || [])[1]?.trim() || '' : '';
+  const state = deps.readState(root, baseDir);
+  const currentPhase = state.currentPhase || '';
+  const nextAction = state.nextAction || '';
   const allTasks = deps.readTasks(root, baseDir, {});
   const taskMap = new Map(allTasks.map((task) => [task.id, task]));
   const scopedTaskId = String(args.taskid || '').trim();
@@ -27,7 +29,9 @@ function resolveScopedSnapshot(deps, root, baseDir, planDir, args) {
   return {
     phases,
     stateXml,
+    state,
     currentPhase,
+    nextAction,
     allTasks,
     scopedTaskId,
     scopedTask,

@@ -30,13 +30,13 @@ function resolveSinkScope(args, findRepoRoot, gadConfig, resolveRoots, outputErr
 
   // Decision gad-08-02: Default to all roots if no projectid provided,
   // respecting `enabled` and `docs_sink_ignore` config.
-  const roots = resolveRoots(args, baseDir, config.roots);
+  const allRoots = resolveRoots(args, baseDir, config.roots);
 
   const configIgnore = new Set(config.docs_sink_ignore || []);
   const cliOnly = new Set((args.only || '').split(',').map((s) => s.trim()).filter(Boolean));
   const cliIgnore = new Set((args.ignore || '').split(',').map((s) => s.trim()).filter(Boolean));
 
-  const filtered = roots.filter((r) => {
+  const roots = allRoots.filter((r) => {
     // CLI --only always wins
     if (cliOnly.size > 0) return cliOnly.has(r.id);
     // Explicitly disabled in config
@@ -48,7 +48,7 @@ function resolveSinkScope(args, findRepoRoot, gadConfig, resolveRoots, outputErr
     return true;
   });
 
-  return { baseDir, config, roots: filtered, sink };
+  return { baseDir, config, roots, allRoots, sink };
 }
 
 module.exports = {

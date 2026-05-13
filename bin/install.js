@@ -338,6 +338,28 @@ function getGlobalDir(runtime, explicitDir = null) {
   return path.join(os.homedir(), '.claude');
 }
 
+/**
+ * Resolve the GLOBAL skills directory for a runtime, regardless of the current
+ * install mode. Used to dedupe project-local installs against skills already
+ * present in the operator's global runtime config dir.
+ *
+ * Returns null when the runtime has no stable global skills location or when
+ * the home directory cannot be resolved.
+ *
+ * Conventions match getGlobalDir (env-var override > default home subdir).
+ * @param {string} runtime
+ * @returns {string|null}
+ */
+function resolveGlobalSkillsDir(runtime) {
+  try {
+    const base = getGlobalDir(runtime, null);
+    if (!base) return null;
+    return path.join(base, 'skills');
+  } catch (_err) {
+    return null;
+  }
+}
+
 const red = '\x1b[31m';
 const banner = '\n' +
   red + '   ██████╗  █████╗ ██████╗\n' +
@@ -405,6 +427,11 @@ const explicitNewProjectPath = parseNewProjectArg();
 
 const hasHelp = args.includes('--help') || args.includes('-h');
 const forceStatusline = args.includes('--force-statusline');
+// When set, --local installs do NOT skip skills that already exist in the
+// runtime's GLOBAL skills dir. Default behaviour (flag absent) is to skip,
+// preventing the 78-duplicate-skill regression where Claude Code concatenates
+// both ~/.claude/skills and <project>/.claude/skills into the session catalog.
+const hasIncludeGloballyInstalledSkills = args.includes('--include-globally-installed-skills');
 
 console.log(banner);
 
@@ -2230,11 +2257,35 @@ function applyRuntimePathTransforms(content, pathPrefix, runtime) {
   return converted;
 }
 
-function installCanonicalSkills(skillsRoot, skillsDir, runtime, pathPrefix, isGlobal = false) {
-  const records = readCanonicalSkillRecords(skillsRoot).filter((record) => !isExcludedSkill(record));
-  if (records.length === 0) return [];
+function installCanonicalSkills(skillsRoot, skillsDir, runtime, pathPrefix, isGlobal = false, skipIfExistsInDir = null) {
+  const allRecords = readCanonicalSkillRecords(skillsRoot).filter((record) => !isExcludedSkill(record));
+  if (allRecords.length === 0) return [];
+  let records = allRecords;
+
+  // Dedupe against a parent (typically global) skills dir. Standing rule:
+  // when the same skill id is already installed globally, the runtime will
+  // load it from there — re-installing into <project>/skills would double-load
+  // it into the session catalog (Claude Code concatenates both). Skipping here
+  // prevents the 78-duplicate regression. Override with --include-globally-installed-skills.
+  if (skipIfExistsInDir && fs.existsSync(skipIfExistsInDir)) {
+    const before = records.length;
+    records = records.filter((record) => !fs.existsSync(path.join(skipIfExistsInDir, record.id)));
+    const skipped = before - records.length;
+    if (skipped > 0) {
+      let rel;
+      try { rel = path.relative(process.cwd(), skipIfExistsInDir) || skipIfExistsInDir; }
+      catch (_err) { rel = skipIfExistsInDir; }
+      console.log('  Skipped ' + skipped + ' skills already present in global ' + rel + '/');
+    }
+  }
+
   fs.mkdirSync(skillsDir, { recursive: true });
-  removeInstalledSkillDirs(skillsDir, records);
+  // Always clean against the FULL record set so stale local copies of skills
+  // that are now globally-installed get removed on re-install (the regression
+  // fix would otherwise leave orphaned local duplicates from prior runs).
+  removeInstalledSkillDirs(skillsDir, allRecords);
+
+  if (records.length === 0) return [];
 
   for (const record of records) {
     const targetDir = path.join(skillsDir, record.id);

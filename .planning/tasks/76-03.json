@@ -1,0 +1,28 @@
+{
+  "id": "76-03",
+  "phase": "76",
+  "status": "planned",
+  "goal": "Extract reusable detect+fix helpers to lib/install-repair.cjs (orphan-skill-dirs, bad-frontmatter, broken-hook-paths, vendor-path-leak, stale-vs-source)",
+  "type": "",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [
+    "lib/install-repair.cjs",
+    "bin/install.js"
+  ],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed_by": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "completed_at": "",
+  "resolution": "",
+  "created_at": "2026-05-09T22:27:10.251Z",
+  "updated_at": "2026-05-09T22:27:10.251Z"
+}

@@ -103,7 +103,13 @@ function createEvolutionCommands(deps) {
     resolveRoots,
   });
 
-  const evolutionPromote = createEvolutionPromoteCommand({ repoRoot, evolutionPaths });
+  const evolutionPromote = createEvolutionPromoteCommand({
+    repoRoot,
+    evolutionPaths,
+    findRepoRoot,
+    gadConfig,
+    resolveRoots,
+  });
 
   const evolutionDiscard = createEvolutionDiscardCommand({ repoRoot, evolutionPaths });
 

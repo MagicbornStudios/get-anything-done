@@ -1,0 +1,28 @@
+{
+  "id": "76-04",
+  "phase": "76",
+  "status": "planned",
+  "goal": "Wire diagnose pass to invoke each helper + render SITREP table",
+  "type": "",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [
+    "bin/commands/install/repair.cjs",
+    "lib/install-repair.cjs"
+  ],
+  "agent_id": "",
+  "agent_role": "",
+  "runtime": "",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed_by": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "completed_at": "",
+  "resolution": "",
+  "created_at": "2026-05-09T22:27:12.343Z",
+  "updated_at": "2026-05-09T22:27:12.343Z"
+}

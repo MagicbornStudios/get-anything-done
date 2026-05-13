@@ -222,3 +222,31 @@ test('returns empty when rootDir has no workers', async () => {
   assert.deepEqual(envs, []);
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+test('content_type defaults to planning when run has handoff_id and no path signal', async () => {
+  const root = mkRootDir();
+  writeWorker(root, 'w1', { id: 'w1', runtime: 'codex-cli' }, [
+    { ts: '2026-05-04T06:17:55.386Z', worker_id: 'w1', kind: 'work-start', ref: 'h-test-1' },
+    { ts: '2026-05-04T06:18:00.000Z', worker_id: 'w1', kind: 'subproc-stdin', data: 'do the planning task' },
+    { ts: '2026-05-04T06:18:01.000Z', worker_id: 'w1', kind: 'subproc-stdout', data: 'done' },
+  ]);
+  const envs = await collect(root);
+  assert.equal(envs.length, 3);
+  for (const e of envs) {
+    assert.equal(e.content_type, 'planning', `${e.role} should be planning under handoff`);
+  }
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('content_type field is populated and valid on every envelope', async () => {
+  const root = mkRootDir();
+  writeWorker(root, 'w1', { id: 'w1', runtime: 'codex-cli' }, [
+    { ts: '2026-05-04T06:17:55.386Z', worker_id: 'w1', kind: 'work-start', ref: 'h-x' },
+    { ts: '2026-05-04T06:18:00.000Z', worker_id: 'w1', kind: 'subproc-stdout', data: 'r' },
+  ]);
+  const envs = await collect(root);
+  for (const e of envs) {
+    assert.ok(['planning', 'code', 'site', 'eval', 'narrative', 'meta'].includes(e.content_type));
+  }
+  fs.rmSync(root, { recursive: true, force: true });
+});

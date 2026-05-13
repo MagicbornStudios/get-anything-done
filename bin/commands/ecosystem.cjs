@@ -222,9 +222,9 @@ async function upTeamWorkers(baseDir, projectid) {
   // Operator standing direction 2026-05-09: "are all the teams going to be
   // up and running with the ecosystem". Yes — when team config exists and
   // ecosystem.team_required=true, fire `gad team start` with the configured
-  // profile. Workers are SAFE to start even when runtimes are parked: per
-  // 2026-05-09 token-drain incident patches, workers honor isParked() before
-  // each spawn AND inner rotation has MAX_INNER_ROTATIONS=3 ceiling AND
+  // profile. Parking was retired in phase 95-10 (just-try-it mode); workers
+  // use per-handoff retry budget (isHandoffExhausted) instead of global
+  // cooldown state. inner rotation has MAX_INNER_ROTATIONS=3 ceiling AND
   // worker-side completeHandoff prevents claim leak.
   const teamConfigPath = path.join(baseDir, '.planning', 'team', 'config.json');
   if (!fs.existsSync(teamConfigPath)) {

@@ -133,12 +133,13 @@ function createDocsCommand(deps) {
         }
       }
 
-      if (config.docsProjects && config.docsProjects.length > 0) {
-        for (const dp of config.docsProjects) {
-          if (args.projectid && dp.id !== args.projectid) continue;
-          rows.push({ project: dp.id, type: 'docs-project', name: dp.kind || 'project', path: dp.id });
+        if (config.docsProjects && config.docsProjects.length > 0) {
+          for (const dp of config.docsProjects) {
+            if (dp.enabled === false) continue;
+            if (args.projectid && dp.id !== args.projectid) continue;
+            rows.push({ project: dp.id, type: 'docs-project', name: dp.kind || 'project', path: dp.id });
+          }
         }
-      }
 
       if (rows.length === 0) {
         console.log('No docs found. Create DOCS-MAP.xml or add docs.projects to gad-config.toml.');

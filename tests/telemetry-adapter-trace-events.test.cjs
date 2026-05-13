@@ -211,6 +211,42 @@ test('handles fractional seq (sub-events) without colliding', async () => {
   assert.equal(ids.size, 4);
 });
 
+test('populates content_type from tool_call file_path', async () => {
+  const root = tmpRoot();
+  // Edit on a .planning .md -> planning
+  const a = {
+    ...toolUseRow(900),
+    inputs: { file_path: '.planning/STATE.xml', old_string: 'a', new_string: 'b' },
+  };
+  // Edit on a .ts file -> code
+  const b = {
+    ...toolUseRow(901),
+    inputs: { file_path: 'lib/foo.ts', old_string: 'a', new_string: 'b' },
+  };
+  // Edit on a sites/ tsx -> site
+  const c = {
+    ...toolUseRow(902),
+    inputs: { file_path: 'sites/operator-portfolio/app/page.tsx', old_string: 'a', new_string: 'b' },
+  };
+  writeFixture(root, [a, b, c]);
+  const envs = await collect(root);
+  assert.equal(envs.length, 6); // 3 tool_use -> 6 envelopes
+  // Both call + result envelopes from the same row should match
+  assert.equal(envs[0].content_type, 'planning');
+  assert.equal(envs[1].content_type, 'planning');
+  assert.equal(envs[2].content_type, 'code');
+  assert.equal(envs[4].content_type, 'site');
+});
+
+test('content_type is one of the 6 valid types for every emitted envelope', async () => {
+  const root = tmpRoot();
+  writeFixture(root, [toolUseRow(1000)]);
+  const envs = await collect(root);
+  for (const env of envs) {
+    assert.ok(['planning', 'code', 'site', 'eval', 'narrative', 'meta'].includes(env.content_type));
+  }
+});
+
 test('skips unparseable lines, logs to stderr, continues', async () => {
   const root = tmpRoot();
   const fpath = path.join(root, '.planning', '.trace-events.jsonl');

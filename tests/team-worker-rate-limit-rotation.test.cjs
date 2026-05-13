@@ -35,42 +35,48 @@ afterEach(() => {
 
 test('resolves active account env and rotates to the next configured account', () => {
   const baseDir = makeTempDir();
-  const primaryDir = path.join(baseDir, 'accounts', 'codex-primary');
-  const secondaryDir = path.join(baseDir, 'accounts', 'codex-secondary');
-  fs.mkdirSync(primaryDir, { recursive: true });
-  fs.mkdirSync(secondaryDir, { recursive: true });
-  fs.writeFileSync(path.join(primaryDir, 'auth.json'), '{}', 'utf8');
-  fs.writeFileSync(path.join(secondaryDir, 'auth.json'), '{}', 'utf8');
+  const primaryFile = path.join(baseDir, 'accounts', 'codex-primary.json');
+  const secondaryFile = path.join(baseDir, 'accounts', 'codex-secondary.json');
+  fs.mkdirSync(path.dirname(primaryFile), { recursive: true });
+  fs.writeFileSync(primaryFile, '{}', 'utf8');
+  fs.writeFileSync(secondaryFile, '{}', 'utf8');
   writeJson(runtimeAccountsPath(baseDir), {
-    'codex-cli': [
-      { label: 'primary', env_file: path.join(primaryDir, 'auth.json') },
-      { label: 'secondary', env_file: path.join(secondaryDir, 'auth.json') },
-    ],
+    'codex-cli': {
+      provider: 'codex',
+      accounts: [
+        { label: 'primary', type: 'oauth-file', credential_ref: { kind: 'file', path: primaryFile, canonical_filename: 'auth.json' }, status: 'active' },
+        { label: 'secondary', type: 'oauth-file', credential_ref: { kind: 'file', path: secondaryFile, canonical_filename: 'auth.json' }, status: 'active' },
+      ],
+    },
   });
 
-  const active = getActiveRuntimeAccount(baseDir, 'codex-cli');
+  const active = getActiveRuntimeAccount(baseDir, 'codex-cli', process.env, { workerId: 'w1' });
   assert.equal(active.label, 'primary');
-  assert.equal(active.env.CODEX_HOME, primaryDir);
+  assert.equal(path.basename(active.env.CODEX_HOME), 'primary');
+  assert.equal(fs.existsSync(path.join(active.env.CODEX_HOME, 'auth.json')), true);
 
-  const rotated = rotateRuntimeAccount(baseDir, 'codex-cli');
+  const rotated = rotateRuntimeAccount(baseDir, 'codex-cli', process.env, { workerId: 'w1' });
   assert.equal(rotated.label, 'secondary');
   assert.equal(rotated.previous_label, 'primary');
-  assert.equal(rotated.env.CODEX_HOME, secondaryDir);
+  assert.equal(path.basename(rotated.env.CODEX_HOME), 'secondary');
+  assert.equal(fs.existsSync(path.join(rotated.env.CODEX_HOME, 'auth.json')), true);
 });
 
 test('logs runtime-account-rotated before requeue when accounts are exhausted', () => {
   const baseDir = makeTempDir();
-  const primaryDir = path.join(baseDir, 'accounts', 'codex-primary');
-  const secondaryDir = path.join(baseDir, 'accounts', 'codex-secondary');
-  fs.mkdirSync(primaryDir, { recursive: true });
-  fs.mkdirSync(secondaryDir, { recursive: true });
-  fs.writeFileSync(path.join(primaryDir, 'auth.json'), '{}', 'utf8');
-  fs.writeFileSync(path.join(secondaryDir, 'auth.json'), '{}', 'utf8');
+  const primaryFile = path.join(baseDir, 'accounts', 'codex-primary.json');
+  const secondaryFile = path.join(baseDir, 'accounts', 'codex-secondary.json');
+  fs.mkdirSync(path.dirname(primaryFile), { recursive: true });
+  fs.writeFileSync(primaryFile, '{}', 'utf8');
+  fs.writeFileSync(secondaryFile, '{}', 'utf8');
   writeJson(runtimeAccountsPath(baseDir), {
-    'codex-cli': [
-      { label: 'primary', env_file: path.join(primaryDir, 'auth.json') },
-      { label: 'secondary', env_file: path.join(secondaryDir, 'auth.json') },
-    ],
+    'codex-cli': {
+      provider: 'codex',
+      accounts: [
+        { label: 'primary', type: 'oauth-file', credential_ref: { kind: 'file', path: primaryFile, canonical_filename: 'auth.json' }, status: 'active' },
+        { label: 'secondary', type: 'oauth-file', credential_ref: { kind: 'file', path: secondaryFile, canonical_filename: 'auth.json' }, status: 'active' },
+      ],
+    },
   });
 
   const events = [];
@@ -111,4 +117,35 @@ test('logs runtime-account-rotated before requeue when accounts are exhausted', 
   assert.notEqual(requeuedIdx, -1, 'rate-limit event should be logged');
   assert.ok(rotatedIdx < requeuedIdx, 'rotation should be logged before requeue');
   assert.equal(fs.existsSync(cooldownPath(baseDir)), false, 'just-try-it should not write cooldown state');
+});
+
+test('stages distinct CODEX_HOME directories for concurrent workers', () => {
+  const baseDir = makeTempDir();
+  const primaryFile = path.join(baseDir, 'accounts', 'codex-primary.json');
+  const secondaryFile = path.join(baseDir, 'accounts', 'codex-secondary.json');
+  fs.mkdirSync(path.dirname(primaryFile), { recursive: true });
+  fs.writeFileSync(primaryFile, '{"token":"primary"}', 'utf8');
+  fs.writeFileSync(secondaryFile, '{"token":"secondary"}', 'utf8');
+  writeJson(runtimeAccountsPath(baseDir), {
+    'codex-cli': {
+      provider: 'codex',
+      accounts: [
+        { label: 'primary', type: 'oauth-file', credential_ref: { kind: 'file', path: primaryFile, canonical_filename: 'auth.json' }, status: 'active' },
+        { label: 'secondary', type: 'oauth-file', credential_ref: { kind: 'file', path: secondaryFile, canonical_filename: 'auth.json' }, status: 'active' },
+      ],
+    },
+  });
+
+  const activeW1 = getActiveRuntimeAccount(baseDir, 'codex-cli', process.env, { workerId: 'w1' });
+  const rotatedW2 = rotateRuntimeAccount(baseDir, 'codex-cli', process.env, { workerId: 'w2' });
+
+  assert.notEqual(activeW1.env.CODEX_HOME, rotatedW2.env.CODEX_HOME);
+  assert.equal(
+    fs.readFileSync(path.join(activeW1.env.CODEX_HOME, 'auth.json'), 'utf8'),
+    '{"token":"primary"}',
+  );
+  assert.equal(
+    fs.readFileSync(path.join(rotatedW2.env.CODEX_HOME, 'auth.json'), 'utf8'),
+    '{"token":"secondary"}',
+  );
 });

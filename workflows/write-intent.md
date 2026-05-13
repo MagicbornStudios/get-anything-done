@@ -68,7 +68,7 @@ Any constraint that came up during intent capture goes to DECISIONS.xml:
 
 ## Step 5 — Update STATE.xml
 
-Set `next-action` via `gad state set-next-action --projectid <id> "<text>"` (hard cap 600 chars — fails loud over). Example: "Intent captured. Next: plan phase 01 based on requirements."
+Append a fresh state entry via `gad state log "Intent captured. Next: plan phase 01 based on requirements." --projectid <id>`. Snapshot/state will derive next-action from the latest relevant state-log entry, then fall back to planned tasks or the phase goal.
 
 ## Step 6 — Sync
 
@@ -84,4 +84,4 @@ For a project called "listen" with intent "music portfolio with BandLab integrat
 
 **DECISIONS.xml** gets: "listen-01: BandLab is the only music source — no upload, no SoundCloud".
 
-**STATE.xml** gets: next-action = "Intent captured. Plan phase 01: catalog data model and BandLab API integration."
+**STATE.xml** gets: a state-log entry like "Intent captured. Plan phase 01: catalog data model and BandLab API integration."

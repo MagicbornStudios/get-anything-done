@@ -2135,6 +2135,16 @@ Operator priority statement: "I just need it working right now. If we can put it
     <impact>(1) Memory project_omx_is_operators_tool.md needs rewrite — OMX was treated as 'operator's codex workflow' but going forward codex is just another runtime. (2) agent-lanes.md updated to lane-by-function not lane-by-runtime. (3) CLAUDE.md vendor section: any 'codex owns X' language removed. (4) Handoff queue / team dispatch routes by lane, not runtime — runtime is a preference, not a privilege. (5) Phase 63 G6 gray area resolved: no .omx/ read-only policy because .omx/ doesn't exist post-gad-282.</impact>
   </decision>
 
+  <decision id="gad-285">
+    <title>Install repair as first-class mode (--repair) auto-running on every install</title>
+    <summary>The manifest is the source of truth for 'what was previously installed'; install must reconcile against current source not just hardcoded blocklists. Observed drift on this machine (58 orphan skill dirs, 58 SKILL.md files with disable-model-invocation:true from a deprecated Cursor-suppression-script era, vendor-path-leak in 2 hook entries pointing into vendor/get-anything-done absolute paths) demonstrates the gap: install does not prune renamed/deleted source skills from user-level dirs, and only rewrites frontmatter for skills whose source still exists. Decision: add 'gad install --repair --claude [--apply]' as a first-class mode with diagnose (default) + apply pass; auto-run repair on every 'gad install --claude' invocation gated by --no-auto-repair for back-compat. Auto-repair on install is preferable to a separate command because the failure mode is invisible until something breaks (a stale skill triggers, a hook fires for a moved file, a frontmatter flag silences invocation).</summary>
+    <impact>Self-healing install eliminates a class of cross-machine drift bugs that currently require manual cleanup; reduces support burden when skill catalog churns; sets the pattern for repair-on-install across other runtimes (cursor/codex/gemini/opencode).</impact>
+    <references>
+      <file path="bin/commands/install.cjs"/>
+      <file path="bin/install.js"/>
+      <file path="lib/install-repair.cjs"/>
+    </references>
+  </decision>
 
 </decisions>
 

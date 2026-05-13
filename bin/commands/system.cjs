@@ -285,6 +285,34 @@ const startCmd = defineCommand({
   },
 });
 
+const statusCmd = defineCommand({
+  meta: { name: 'status', description: 'Show pidfile + alive state for every tracked singleton.' },
+  args: {
+    json: { type: 'boolean', default: false },
+    projectid: { type: 'string', default: 'global' },
+  },
+  run({ args }) {
+    const repoRoot = findRepoRoot();
+    const projectid = args.projectid || 'global';
+    const all = snapshotSingletons(repoRoot, projectid);
+    if (args.json) {
+      console.log(JSON.stringify(all.map((s) => ({
+        id: s.id, alive: s.alive, pid: s.pid, exists: s.exists, phase: s.phase, role: s.healthCheck,
+      })), null, 2));
+      return;
+    }
+    console.log('[gad system status]');
+    for (const s of all) {
+      const stateLabel = s._workersEntry
+        ? (s.alive ? 'CONFIGURED (use `gad team status` for worker pids)' : 'not configured')
+        : (s.alive ? `RUNNING (pid ${s.pid})` : (s.exists ? `STALE pidfile (pid ${s.pid} dead)` : 'not running'));
+      console.log(`  ${s.id.padEnd(20)} phase ${String(s.phase).padEnd(4)} ${stateLabel}`);
+      console.log(`    ${s.healthCheck}`);
+    }
+  },
+});
+
+
 const auditCmd = defineCommand({
   meta: { name: 'audit', description: 'Audit daemons for popup windows (P0 if any).' },
   args: {
@@ -295,9 +323,9 @@ const auditCmd = defineCommand({
     const all = snapshotSingletons(repoRoot, args.projectid || 'global');
     // Placeholder logic: currently no explicit popup detection.
     // Future implementation could inspect child processes or logs.
-    const problematic = all.filter((s) => false); // none detected
+    const problematic = all.filter(() => false);
     if (problematic.length) {
-      console.error('Popup detected in:', problematic.map((s) => s.id).join(','));
+      console.error('Popup detected in:', problematic.map(s => s.id).join(','));
       process.exit(1);
     } else {
       console.log('No popup windows detected');
