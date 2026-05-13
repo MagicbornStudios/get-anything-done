@@ -14,6 +14,7 @@ const { readHeartbeat } = require('../../../lib/team/dispatcher.cjs');
 const { checkAndLogRestart } = require('../../../lib/team/restart-log.cjs');
 const { getCooldownRemainingMs } = require('../../../lib/team/rate-limit.cjs');
 const { listHandoffs } = require('../../../lib/handoffs.cjs');
+const { computePressure } = require('../../../lib/entropy/compute.cjs');
 
 // Invariant alarm thresholds (operator standing rule, 2026-05-09):
 // claimed_handoff_count MUST NOT exceed live_team_worker_count + N_external_agents.
@@ -35,6 +36,23 @@ function formatDuration(seconds) {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h${Math.floor((seconds % 3600) / 60)}m`;
   return `${Math.floor(seconds / 86400)}d${Math.floor((seconds % 86400) / 3600)}h`;
+}
+
+/**
+ * Render pressure as an ASCII bar with colorized ANSI markers.
+ * Returns { bar: string, label: string } — caller wraps in ANSI codes.
+ */
+function pressureBar(score) {
+  if (typeof score !== 'number') return { bar: '[?]', label: '0.00' };
+  const clamped = Math.max(0, Math.min(1, score));
+  const filled = Math.round(clamped * 5);
+  const empty = 5 - filled;
+  const bar = '█'.repeat(filled) + '░'.repeat(empty);
+  const label = clamped.toFixed(2);
+  let color = ''; // gray default
+  if (clamped >= 0.7) color = '\x1b[31m'; // red
+  else if (clamped >= 0.41) color = '\x1b[33m'; // yellow
+  return { bar, label, color };
 }
 
 /**
@@ -274,12 +292,29 @@ function createStatusCommand(deps) {
       // stale claims, zombie workers). Pure read of .planning/handoffs/claimed/.
       const warnings = computeWarnings({ baseDir, workerRows: rows });
 
+      // Compute pressure — catch errors gracefully so broken pressure does not
+      // break the entire status output.
+      let pressureScore = 0;
+      let pressureTopPhase = '';
+      try {
+        const p = computePressure(/*projectid*/ undefined, { baseDir });
+        if (p && typeof p.score === 'number') {
+          pressureScore = p.score;
+          pressureTopPhase = p.top_phase || '';
+        }
+      } catch { /* pressure is optional — default to 0 */ }
+
       if (args.json) {
-        console.log(JSON.stringify({ config: cfg, workers: rows, dispatcher: hb, warnings }, null, 2));
+        const pressureInfo = { score: pressureScore, top_phase: pressureTopPhase };
+        console.log(JSON.stringify({ config: cfg, workers: rows, dispatcher: hb, warnings, pressure: pressureInfo }, null, 2));
         return;
       }
       console.log(`Team: ${cfg.workers} workers${cfg.from_profile ? ` profile=${cfg.from_profile}` : ''}, runtime=${cfg.runtime}, autopause@${cfg.autopause_threshold}% remaining`);
       console.log(`Dispatcher: ${hb.state}  pid=${hb.pid == null ? 'n/a' : hb.pid}  heartbeat_age=${hb.age_s == null ? 'n/a' : hb.age_s + 's'}`);
+      // Pressure bar
+      const pb = pressureBar(pressureScore);
+      const resetAnsi = '\x1b[0m';
+      console.log(`Pressure:  ${pb.color}${pb.bar}${resetAnsi} ${pb.color}${pb.label}${resetAnsi}${pressureTopPhase ? `  (top phase: ${pressureTopPhase})` : ''}`);
       for (const line of formatWarnings(warnings)) console.log(line);
       console.log('');
       console.log('  ID   ROLE      LANE           RUNTIME       STATE         MAILBOX  COOLDOWN  CURRENT                           HB(s)  PID');
@@ -290,6 +325,11 @@ function createStatusCommand(deps) {
         const rt = String(r.runtime).slice(0, 12).padEnd(12);
         const cd = r.cooldown_remaining_seconds > 0 ? `${r.cooldown_remaining_seconds}s` : '--';
         console.log(`  ${r.id.padEnd(4)} ${String(r.role).padEnd(8)} ${lane} ${rt} ${String(r.state).padEnd(12)} ${String(r.mailbox).padStart(7)}  ${cd.padStart(8)}  ${ref}  ${String(r.heartbeat_age_s).padStart(5)}  ${r.pid}`);
+      }
+      // Evolution CTA when pressure exceeds threshold
+      if (pressureScore >= 0.7) {
+        console.log('');
+        console.log(`  ${pb.color}Evolution recommended${resetAnsi} — pressure ${pb.label}${pressureTopPhase ? ` on phase ${pressureTopPhase}` : ''}. Run: gad evolution evolve`);
       }
     },
   });

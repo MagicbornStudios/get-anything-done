@@ -18,6 +18,7 @@ Model profiles control which Claude model each GAD agent uses. They are off by d
 | gad-plan-checker | inherit | sonnet | haiku | inherit |
 | gad-integration-checker | inherit | sonnet | haiku | inherit |
 | gad-nyquist-auditor | inherit | sonnet | haiku | inherit |
+| gad-evolution-analyzer | inherit | inherit | sonnet | inherit |
 
 ## Profile Philosophy
 

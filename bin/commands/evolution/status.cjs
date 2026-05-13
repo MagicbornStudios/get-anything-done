@@ -4,10 +4,26 @@ const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
 const { classifyProtoSkillDraftingState } = require('../../../lib/proto-skill-state.cjs');
+const { computePressure } = require('../../../lib/entropy/compute.cjs');
+const { buildCompactStatusline } = require('../../../lib/agents/evolution-context.cjs');
+
+/**
+ * Try to find the project root by walking up from cwd.
+ */
+function findProjectRoot(start) {
+  let dir = start;
+  for (let i = 0; i < 10; i++) {
+    if (fs.existsSync(path.join(dir, '.planning'))) return dir;
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return start;
+}
 
 function createEvolutionStatusCommand({ repoRoot, evolutionPaths, protoSkillRelativePath }) {
   return defineCommand({
-    meta: { name: 'status', description: 'Show evolution state - pending proto-skills + candidates' },
+    meta: { name: 'status', description: 'Show evolution state - pending proto-skills + candidates + pressure dimensions' },
     run() {
       const { candidatesDir, protoSkillsDir, evolutionsDir } = evolutionPaths(repoRoot);
       const candidates = fs.existsSync(candidatesDir)
@@ -22,11 +38,19 @@ function createEvolutionStatusCommand({ repoRoot, evolutionPaths, protoSkillRela
 
       const drafting = classifyProtoSkillDraftingState(candidatesDir, protoSkillsDir);
 
-      if (candidates.length === 0 && protoSkills.length === 0) {
-        console.log('No active evolution.');
-        console.log(`  ${evolutions.length} historical evolutions recorded in skills/.evolutions/`);
-        return;
-      }
+      // Compute pressure
+      const projectRoot = findProjectRoot(repoRoot || process.cwd());
+      let pressureScore = 0;
+      let pressureBreakdown = {};
+      try {
+        const p = computePressure(/*projectid*/ undefined, { baseDir: projectRoot });
+        if (p && typeof p.score === 'number') {
+          pressureScore = p.score;
+          pressureBreakdown = p.breakdown || {};
+        }
+      } catch { /* pressure is optional */ }
+
+      // ── Output ──────────────────────────────────────────────────────────
       console.log(`Active evolution: ${evolutions[evolutions.length - 1] || '(no marker found)'}`);
       console.log('');
 
@@ -34,6 +58,19 @@ function createEvolutionStatusCommand({ repoRoot, evolutionPaths, protoSkillRela
       console.log(`  pending:     ${drafting.pending.length}   (candidate without proto-skill dir)`);
       console.log(`  in-progress: ${drafting.inProgress.length}   (PROVENANCE.md present, SKILL.md missing - resume target)`);
       console.log(`  complete:    ${drafting.complete.length}   (proto-skill bundle drafted)`);
+      console.log('');
+
+      // Pressure dimensions
+      console.log('Pressure dimensions:');
+      const pd = pressureBreakdown;
+      console.log(`  skill-entropy:         ${(pressureScore * 100).toFixed(0)}% ${buildCompactStatusline(pressureScore)}`);
+      console.log(`  handoff-context-budget: ${pd.rate_limits || 0} rate-limit events  |  ${pd.open_handoffs || 0} open handoffs`);
+      console.log(`  worker-load:           ${pd.worker_failures || 0} recent worker failures  |  ${pd.handoffs_with_unclaims || 0} bouncy handoffs`);
+      console.log(`  token-budget:          ${pd.errors_recent || 0} recent errors  |  ${pd.errors_open || 0} open errors`);
+      if (pd.resolved_signals > 0) {
+        console.log(`  resolved-signals:      ${pd.resolved_signals}  (${(pd.resolved_signal_list || []).join(', ')})`);
+      }
+      console.log(`  composite pressure:    ${pressureScore.toFixed(3)} (0.0–1.0)${pressureScore >= 0.7 ? '  ⚡ evolution recommended' : ''}`);
       console.log('');
 
       if (drafting.inProgress.length > 0) {

@@ -441,6 +441,55 @@ const entropyExplainCmd = defineCommand({
   },
 });
 
+// ── Subcommand: compute ───────────────────────────────────────────────────────
+
+const entropyComputeCmd = defineCommand({
+  meta: { name: 'compute', description: 'Compute pressure scalar (0.0-1.0). Use --format compact for statusline.' },
+  args: {
+    projectid: { type: 'string', description: 'Project ID (default: auto-detect)', default: '' },
+    format: { type: 'string', description: 'Output format: json|compact (default: json)', default: 'json' },
+  },
+  run({ args }) {
+    const { computePressure } = require('../../lib/entropy/compute.cjs');
+    const { buildCompactStatusline } = require('../../lib/agents/evolution-context.cjs');
+    const fs = require('fs');
+
+    function findRoot(start) {
+      let dir = start;
+      for (let i = 0; i < 10; i++) {
+        if (fs.existsSync(path.join(dir, '.planning'))) return dir;
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+      }
+      return start;
+    }
+    const projectRoot = findRoot(process.cwd());
+    const projectid = args.projectid || undefined;
+
+    let pressure;
+    try {
+      pressure = computePressure(projectid, { baseDir: projectRoot });
+    } catch (err) {
+      pressure = { score: 0, top_phase: 'error', top_phase_score: 0, error: err.message };
+    }
+
+    if (args.format === 'compact') {
+      console.log(buildCompactStatusline(pressure.score));
+      return;
+    }
+
+    console.log(JSON.stringify({
+      projectid: projectid || 'auto',
+      score: pressure.score,
+      top_phase: pressure.top_phase,
+      top_phase_score: pressure.top_phase_score,
+      breakdown: pressure.breakdown || null,
+      updated_at: pressure.updated_at || new Date().toISOString(),
+    }, null, 2));
+  },
+});
+
 // ── Top-level command ─────────────────────────────────────────────────────────
 
 function register(_ctx) {
@@ -453,6 +502,7 @@ function register(_ctx) {
       snapshot: entropySnapshotCmd,
       benchmark: entropyBenchmarkCmd,
       compare: entropyCompareCmd,
+      compute: entropyComputeCmd,
       explain: entropyExplainCmd,
     },
   });
