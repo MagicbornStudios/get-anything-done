@@ -345,25 +345,17 @@ function renderLevelSegmentCompact(snapshot) {
   return ` \x1b[35mLV${level} (${percent}% → ${nextLevel})\x1b[0m`;
 }
 
-// Compact variant: single intensity glyph — P\u25e6 P\u25cb P\u25cf P! P!!
-// No blink attribute — fixes Windows Terminal flicker (acceptance gate #2).
 function renderPressureSegmentCompact(snapshot) {
   if (!snapshot) return '';
   const score = Math.max(0, Math.min(1, Number(snapshot.score) || 0));
   const score100 = Math.round(score * 100);
-
-  // Compact pressure segment: just bar glyph without EVOLVE NOW
-  const bar = score100 >= 85 ? 'P!!' :
-              score100 >= 70 ? 'P!' :
-              score100 >= 50 ? '\u25cf' :
-              score100 >= 25 ? '\u25cb' :
-                                 '\u25e6';
+  const base = `\u26A1 ${score100}`;
   const color = score100 >= 85 ? '\x1b[1;91m' :
                 score100 >= 70 ? '\x1b[1;91m' :
                 score100 >= 50 ? '\x1b[1;33m' :
                 score100 >= 25 ? '\x1b[33m' :
                                  '\x1b[2;37m';
-  return ` ${color}${bar}\x1b[0m`;
+  return ` ${color}${base}\x1b[0m`;
 }
 
 function renderStatusline(data) {
@@ -489,7 +481,7 @@ function renderStatusline(data) {
     pressure = pressureSnap ? renderPressureSegmentCompact(pressureSnap) : '';
     const levelSnap = projectContext ? readLevelSnapshot(projectContext) : null;
     if (pressureSnap && Math.round(Math.max(0, Math.min(1, Number(pressureSnap.score) || 0)) * 100) >= 85) {
-      level = ' EVOLVE NOW';
+      level = ' \x1b[1;91mEVOLVE NOW\x1b[0m';
     } else {
       level = levelSnap ? renderLevelSegmentCompact(levelSnap) : '';
     }
