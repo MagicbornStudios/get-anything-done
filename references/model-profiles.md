@@ -126,7 +126,7 @@ When using OpenCode as a GAD worker runtime, you can assign free-tier models via
 
 | Model | OpenRouter ID | Notes |
 |-------|---------------|-------|
-| DeepSeek-R1 | `openrouter/deepseek/deepseek-r1:free` | Reasoning-tier model, strong for code tasks |
+| DeepSeek-R1 | `openrouter/deepseek/deepseek-r1` | Reasoning-tier model, strong for code tasks (paid; no `:free` variant) |
 | Llama 3.3 70B | `openrouter/meta-llama/llama-3.3-70b-instruct:free` | General purpose, good balance |
 | Gemini 2.5 Pro | `google/gemini-2.5-pro` | Requires Google AI Pro subscription |
 | Gemini 2.5 Flash | `google/gemini-2.5-flash` | Fast, cost-efficient |
@@ -138,9 +138,9 @@ When using OpenCode as a GAD worker runtime, you can assign free-tier models via
 {
   "id": "w4",
   "role": "executor",
-  "lane": "opencode-deepseek",
+  "lane": "opencode-nemotron-reasoning",
   "runtime": "opencode",
-  "runtime_cmd": "node scripts/gad-opencode-trial.mjs -- run --format json --model openrouter/deepseek/deepseek-r1:free"
+  "runtime_cmd": "node scripts/gad-opencode-trial.mjs -- run --format json --model openrouter/nvidia/nemotron-3-super-120b-a12b:free"
 }
 ```
 
