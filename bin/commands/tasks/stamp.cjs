@@ -276,9 +276,119 @@ function createTasksStampCommand(deps) {
         }
       }
 
+      // GAD-T-63-56: auto-close linked handoffs when status flips to done/cancelled.
+      // Scans open/ and claimed/ for files whose frontmatter task_id matches the
+      // stamped task. Non-fatal — stamp already succeeded before this block runs.
+      if (effectiveStatus === 'done' || effectiveStatus === 'cancelled') {
+        try {
+          autoCloseLinkedHandoffs(baseDir, updated.id, effectiveStatus, args.projectid);
+        } catch (_hErr) {
+          // Non-fatal — stamp already recorded; never block on handoff auto-close.
+          try { process.stderr.write(`[stamp] auto-close-handoffs failed (non-fatal): ${_hErr.message}\n`); } catch {}
+        }
+      }
+
       deps.maybeRebuildGraph(baseDir, root);
     },
   });
 }
 
-module.exports = { createTasksStampCommand };
+/**
+ * autoCloseLinkedHandoffs — scan open/ and claimed/ for handoff files whose
+ * frontmatter `task_id` matches stampedTaskId, then move each match to closed/
+ * with an ## Auto-closed section appended.
+ *
+ * Idempotent: if the target file already exists in closed/, skip without error.
+ * Scoped to the same project to avoid cross-project collisions.
+ *
+ * @param {string} baseDir
+ * @param {string} stampedTaskId  - e.g. "GAD-T-63-56" or "63-56"
+ * @param {string} triggerStatus  - 'done' | 'cancelled'
+ * @param {string} projectid
+ */
+function autoCloseLinkedHandoffs(baseDir, stampedTaskId, triggerStatus, projectid) {
+  const handoffsRoot = path.join(baseDir, '.planning', 'handoffs');
+  const bucketsToScan = ['open', 'claimed'];
+  const closedDir = path.join(handoffsRoot, 'closed');
+  const closed = [];
+  const errors = [];
+
+  for (const bucket of bucketsToScan) {
+    const dir = path.join(handoffsRoot, bucket);
+    let files;
+    try {
+      files = fs.readdirSync(dir);
+    } catch {
+      continue; // bucket doesn't exist — fine
+    }
+
+    for (const file of files) {
+      if (!file.endsWith('.md')) continue;
+      const filePath = path.join(dir, file);
+      let text;
+      try {
+        text = fs.readFileSync(filePath, 'utf8');
+      } catch {
+        continue;
+      }
+
+      // Parse frontmatter (simple key:value; reuse the inline parser pattern
+      // rather than importing the full lib/handoffs.cjs to keep the dep light).
+      const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+      if (!match) continue;
+      const fmText = match[1];
+      const body = match[2] || '';
+      const fm = {};
+      for (const line of fmText.split(/\r?\n/)) {
+        const ci = line.indexOf(':');
+        if (ci === -1) continue;
+        fm[line.slice(0, ci).trim()] = line.slice(ci + 1).trim();
+      }
+
+      // Match by task_id (exact) and optional projectid scoping.
+      if (!fm.task_id || fm.task_id !== stampedTaskId) continue;
+      if (projectid && fm.projectid && fm.projectid !== projectid) continue;
+
+      const id = file.replace(/\.md$/, '');
+      const destPath = path.join(closedDir, file);
+
+      // Idempotent: already closed — skip.
+      if (fs.existsSync(destPath)) continue;
+
+      // Rewrite frontmatter: set completed_at.
+      const now = new Date().toISOString();
+      const fmLines = fmText.split(/\r?\n/);
+      let completedAtPatched = false;
+      const newFmLines = fmLines.map((line) => {
+        if (/^completed_at:/.test(line)) {
+          completedAtPatched = true;
+          return `completed_at: ${now}`;
+        }
+        return line;
+      });
+      if (!completedAtPatched) newFmLines.push(`completed_at: ${now}`);
+
+      const autoClosedSection = `\n## Auto-closed\n\nClosed automatically when task \`${stampedTaskId}\` was stamped \`${triggerStatus}\` on ${now}.\n`;
+      const newText = `---\n${newFmLines.join('\n')}\n---\n${body}${autoClosedSection}`;
+
+      try {
+        fs.mkdirSync(closedDir, { recursive: true });
+        fs.writeFileSync(filePath, newText, 'utf8');
+        fs.renameSync(filePath, destPath);
+        closed.push(id);
+        console.log(`  [auto-close] handoff ${id} → closed/ (task ${stampedTaskId} stamped ${triggerStatus})`);
+      } catch (mvErr) {
+        errors.push(`${id}: ${mvErr.message}`);
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    // Surface as a warning but don't throw — stamp already succeeded.
+    try { process.stderr.write(`[stamp] auto-close-handoffs partial failure: ${errors.join('; ')}\n`); } catch {}
+  }
+
+  return { closed, errors };
+}
+
+module.exports = { createTasksStampCommand, autoCloseLinkedHandoffs };

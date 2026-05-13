@@ -178,6 +178,27 @@ describe('classifyRuntimeError — 8-class taxonomy', () => {
     assert.strictEqual(r.class, 'runtime_crash');
   });
 
+  // EMFILE: gemini-cli walks Rust target/ dirs, hits open-file limit — must NOT be quota
+  test('runtime_crash — EMFILE (too many open files)', () => {
+    const r = classifyRuntimeError('Error: EMFILE: too many open files, open \'/home/user/project/target/debug/.fingerprint/foo\'', 1, 'gemini-cli');
+    assert.strictEqual(r.class, 'runtime_crash', `expected runtime_crash, got ${r.class}`);
+    assert.notStrictEqual(r.class, 'quota_soft');
+    assert.notStrictEqual(r.class, 'quota_hard_cap');
+    assert.notStrictEqual(r.class, 'unknown');
+    assert.strictEqual(r.cooldown_ms, null, 'EMFILE should have no cooldown');
+  });
+
+  test('runtime_crash — EMFILE bare keyword', () => {
+    const r = classifyRuntimeError('EMFILE: too many open files', 1, 'gemini-cli');
+    assert.strictEqual(r.class, 'runtime_crash');
+    assert.strictEqual(r.cooldown_ms, null);
+  });
+
+  test('runtime_crash — ENFILE (file table overflow)', () => {
+    const r = classifyRuntimeError('ENFILE: file table overflow', 1, 'gemini-cli');
+    assert.strictEqual(r.class, 'runtime_crash');
+  });
+
   // output_unparseable
   test('output_unparseable — [object Object] only', () => {
     const r = classifyRuntimeError('[object Object]', 0, null);
