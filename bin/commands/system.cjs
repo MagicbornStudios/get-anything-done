@@ -1,18 +1,21 @@
 'use strict';
 /**
- * gad system — unified singleton lifecycle for the GAD background substrate.
+ * gad system — unified singleton lifecycle for the GAD team substrate.
  *
  * One command brings up the canonical always-on processes (or skips ones
  * already alive). Pidfile-guarded; refuses to start a duplicate.
  *
  * Tracked singletons (each owns a pidfile under .planning/):
- *   overnight           .planning/overnight.pid           gad overnight start
- *   datasets-curator    .planning/datasets-curator.pid    gad datasets curate --daemon
- *   sessions-watcher    .planning/sessions-watcher.pid    gad sessions watch --daemon
- *   accounts-poller     .planning/accounts-poller.pid     gad accounts poll --daemon
  *   dispatcher          .planning/team/dispatcher.pid     gad team dispatcher run --projectid <id>
  *   workers             (no single pidfile — each worker owns .planning/team/workers/<id>/status.json)
  *   supervisor          .planning/supervisor.pid          gad supervisor run --projectid <id>
+ *   cross-project-watcher  .planning/cross-project-watcher.pid  gad cross-project watch --daemon
+ *
+ * 2026-05-14 — periodic-tick daemons (overnight, datasets-curator, sessions-watcher,
+ * accounts-poller) MIGRATED to apps/desk hook scheduler. The desk Rust runtime
+ * spawns their hook scripts with CREATE_NO_WINDOW (no Windows console flash).
+ * See `.planning/desk-hooks/overnight-tick.mjs` + `datasets-curator-tick.mjs`.
+ * sessions-watcher + accounts-poller dropped per 2026-05-14 daemon audit.
  *
  * Subcommands:
  *   gad system start [--only X,Y] [--skip A,B] [--projectid Z] [--dry-run]
@@ -42,41 +45,12 @@ const path = require('path');
 function buildSingletons(projectid) {
   const pid = projectid || 'global';
   return [
-    {
-      id: 'overnight',
-      pidfile: 'overnight.pid',
-      spawnArgs: ['overnight', 'start', '--detach', '--tick-minutes', '30'],
-      healthCheck: 'ambient curation + handoff sweep + provenance build',
-      phase: 159,
-    },
-    {
-      id: 'datasets-curator',
-      pidfile: 'datasets-curator.pid',
-      // --auto-push auto: detect creds at tick time, prefer hf-hub (training-corpus
-      // tier), fall back to supabase (queryable tier), silent-skip if neither
-      // present. --auto-push-delete: remove locals after successful upload so the
-      // laptop doesn't accumulate. Both safe-by-default — the curator never errors
-      // on missing creds, just logs "skipped" once and keeps writing locally.
-      // Removed broken --daemon flag (curate uses --detach; system.cjs already detaches via spawn detached:true).
-      spawnArgs: ['datasets', 'curate', '--tick-minutes', '30', '--auto-push', 'auto', '--auto-push-delete'],
-      healthCheck: 'real-time dataset curation (transcripts + traces -> labeled tuples) + auto-detect off-laptop push',
-      phase: 170,
-    },
-    {
-      id: 'sessions-watcher',
-      pidfile: 'sessions-watcher.pid',
-      spawnArgs: ['sessions', 'watch', '--daemon'],
-      healthCheck: 'tails Claude Code transcripts -> session telemetry',
-      phase: 89,
-    },
-    {
-      id: 'accounts-poller',
-      pidfile: 'accounts-poller.pid',
-      spawnArgs: ['accounts', 'poll', '--daemon'],
-      healthCheck: 'periodic per-account quota probes -> auto-flip rate-limit state',
-      phase: 110,
-    },
-    // ── New entries (GLOBAL-D-315) ────────────────────────────────────────────
+    // 2026-05-14: overnight, datasets-curator, sessions-watcher, accounts-poller
+    // REMOVED — migrated to apps/desk hook scheduler (no Windows popups). See
+    // .planning/desk-hooks/overnight-tick.mjs + datasets-curator-tick.mjs.
+    // sessions-watcher + accounts-poller dropped per daemon audit (no value).
+    //
+    // ── Team substrate (GLOBAL-D-315) ────────────────────────────────────────
     {
       id: 'dispatcher',
       // dispatcher.pid lives under .planning/team/ not .planning/ — use _pidfileRelative
@@ -230,6 +204,12 @@ function startSingleton(s, repoRoot, opts) {
     detached: true,
     stdio: 'ignore',
     env: { ...process.env },
+    // 2026-05-14: windowsHide (defense in depth — Windows console flash fix).
+    // The 4 periodic-tick daemons that used to popup were migrated to apps/desk
+    // hooks. The remaining team singletons (dispatcher/workers/supervisor/
+    // cross-project-watcher) get the flag too so any future regressions stay quiet.
+    windowsHide: true,
+    shell: false,
   });
   child.unref();
   return { id: s.id, action: 'spawned', pid: child.pid };
@@ -261,7 +241,7 @@ function filterByOnlyOrSkip(singletons, only, skip) {
 const startCmd = defineCommand({
   meta: { name: 'start', description: 'Start all singleton background processes that are not already running. Idempotent.' },
   args: {
-    only: { type: 'string', description: 'Comma-separated singleton ids to start (overnight,datasets-curator,sessions-watcher,accounts-poller,dispatcher,workers,supervisor)' },
+    only: { type: 'string', description: 'Comma-separated singleton ids to start (dispatcher,workers,supervisor,cross-project-watcher)' },
     skip: { type: 'string', description: 'Comma-separated list to skip' },
     projectid: { type: 'string', default: 'global', description: 'Project id passed to dispatcher, workers, and supervisor (default: global)' },
     'dry-run': { type: 'boolean', default: false, description: 'Print what would be spawned without actually starting any processes' },
