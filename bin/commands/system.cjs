@@ -45,18 +45,25 @@ const path = require('path');
 function buildSingletons(projectid) {
   const pid = projectid || 'global';
   return [
-    // 2026-05-14: overnight, datasets-curator, sessions-watcher, accounts-poller
-    // REMOVED — migrated to apps/desk hook scheduler (no Windows popups). See
-    // .planning/desk-hooks/overnight-tick.mjs + datasets-curator-tick.mjs.
-    // sessions-watcher + accounts-poller dropped per daemon audit (no value).
+    // 2026-05-14 (GLOBAL-D-347): apps/desk owns the entire process substrate.
+    // ALL periodic-tick + supervisor work moved to .planning/desk-hooks/*.mjs;
+    // dispatcher + workers move to apps/desk Rust managed children in a
+    // follow-up. system.cjs is now a deprecated thin shim — see `gad headless
+    // start` for explicit CI/server use.
     //
-    // ── Team substrate (GLOBAL-D-315) ────────────────────────────────────────
+    // Removed daemons (now hooks under .planning/desk-hooks/):
+    //   overnight              -> overnight-tick.mjs            (30m)
+    //   datasets-curator       -> datasets-curator-tick.mjs     (30m)
+    //   supervisor             -> supervisor-tick.mjs           (60s)
+    //   cross-project-watcher  -> cross-project-tick.mjs        (30s)
+    // Discarded entirely per daemon audit:
+    //   sessions-watcher       (Claude transcripts already captured natively)
+    //   accounts-poller        (all probes return "unknown" — no quota endpoints)
+    //
+    // Headless team substrate (`gad headless start`):
     {
       id: 'dispatcher',
-      // dispatcher.pid lives under .planning/team/ not .planning/ — use _pidfileRelative
-      // for the readPidfile helper and set pidfile to a sentinel so status shows correctly.
       pidfile: path.join('team', 'dispatcher.pid'),
-      // The dispatcher pidfile is JSON {pid, started_at} not a bare integer.
       _dispatcherPid: true,
       spawnArgs: ['team', 'dispatcher', 'run', '--projectid', pid],
       healthCheck: 'fs.watch handoff dispatcher — routes open/ handoffs into worker mailboxes',
@@ -65,8 +72,6 @@ function buildSingletons(projectid) {
     },
     {
       id: 'workers',
-      // Workers don't share a single pidfile. We guard on team config.json existing
-      // and at least one worker NOT_STARTED. _workersEntry signals special handling.
       pidfile: path.join('team', 'workers.sentinel'),
       _workersEntry: true,
       spawnArgs: ['team', 'start', '--projectid', pid],
@@ -74,25 +79,6 @@ function buildSingletons(projectid) {
       phase: 315,
       noRespawn: true,
     },
-    {
-      id: 'supervisor',
-      pidfile: 'supervisor.pid',
-      spawnArgs: ['supervisor', 'run', '--projectid', pid],
-      healthCheck: 'substrate supervisor — auto-recovers stuck handoffs, stale workers, dead dispatcher',
-      phase: 315,
-      noRespawn: true,
-    },
-    // ── GLOBAL-D-323 Phase D ─────────────────────────────────────────────────
-    {
-      id: 'cross-project-watcher',
-      pidfile: 'cross-project-watcher.pid',
-      spawnArgs: ['cross-project', 'watch', '--daemon', '--tick-seconds', '30'],
-      healthCheck: 'polls all planning roots every 30s — emits desktop notification on new cross-project handoffs',
-      phase: 323,
-      noRespawn: true,
-    },
-    // mcp-server is on-demand by Claude/Cursor MCP clients; we don't auto-start
-    // it here unless --include-mcp. It runs over stdio when an MCP client connects.
   ];
 }
 
@@ -238,15 +224,35 @@ function filterByOnlyOrSkip(singletons, only, skip) {
   return out;
 }
 
+// 2026-05-14 (GLOBAL-D-347): `gad system start` is DEPRECATED.
+// Periodic-tick + supervisor work runs as apps/desk hooks now.
+// Team substrate (dispatcher + workers) auto-spawns from apps/desk on project
+// load (feature-flagged via .planning/desk-settings.json workers.auto_start).
+//
+// For headless / CI / server use where apps/desk isn't running, pass --headless
+// to explicitly opt in to spawning the team substrate from the CLI.
 const startCmd = defineCommand({
-  meta: { name: 'start', description: 'Start all singleton background processes that are not already running. Idempotent.' },
+  meta: { name: 'start', description: 'DEPRECATED — apps/desk owns the substrate. Pass --headless for explicit CI/server opt-in.' },
   args: {
-    only: { type: 'string', description: 'Comma-separated singleton ids to start (dispatcher,workers,supervisor,cross-project-watcher)' },
+    only: { type: 'string', description: 'Comma-separated singleton ids (dispatcher,workers)' },
     skip: { type: 'string', description: 'Comma-separated list to skip' },
-    projectid: { type: 'string', default: 'global', description: 'Project id passed to dispatcher, workers, and supervisor (default: global)' },
-    'dry-run': { type: 'boolean', default: false, description: 'Print what would be spawned without actually starting any processes' },
+    projectid: { type: 'string', default: 'global', description: 'Project id passed to dispatcher + workers' },
+    'dry-run': { type: 'boolean', default: false, description: 'Print what would be spawned without spawning' },
+    headless: { type: 'boolean', default: false, description: 'Explicit opt-in for CI/server (no apps/desk available). Without this flag, this command no-ops with a warning.' },
   },
   run({ args }) {
+    if (!args.headless) {
+      console.error('[gad system start] DEPRECATED — apps/desk owns the process substrate (GLOBAL-D-347).');
+      console.error('  - Periodic ticks + supervisor:    apps/desk hook scheduler');
+      console.error('  - Dispatcher + workers:           apps/desk on project load (feature-flagged)');
+      console.error('  - Daemons that no longer exist:   overnight, datasets-curator, sessions-watcher,');
+      console.error('                                    accounts-poller, supervisor, cross-project-watcher');
+      console.error('');
+      console.error('To launch the desktop:    gad desk launch [--projectid <id>]');
+      console.error('Headless / CI override:   gad system start --headless [--projectid <id>]');
+      process.exit(2);
+    }
+
     const repoRoot = findRepoRoot();
     const projectid = args.projectid || 'global';
     const dryRun = args['dry-run'] || false;
@@ -255,7 +261,7 @@ const startCmd = defineCommand({
     const skip = args.skip ? args.skip.split(',').map((s) => s.trim()).filter(Boolean) : null;
     const target = filterByOnlyOrSkip(all, only, skip);
     const results = target.map((s) => startSingleton(s, repoRoot, { dryRun }));
-    console.log(dryRun ? '[gad system start --dry-run]' : '[gad system start]');
+    console.log(dryRun ? '[gad system start --headless --dry-run]' : '[gad system start --headless]');
     for (const r of results) {
       if (r.action === 'spawned') console.log(`  + ${r.id}: spawned (pid ${r.pid})`);
       else if (r.action === 'would-spawn') console.log(`  ~ ${r.id}: would spawn: node gad.cjs ${r.spawnArgs.join(' ')}`);

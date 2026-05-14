@@ -21,6 +21,7 @@ const path = require('path');
 const { defineCommand } = require('citty');
 const {
   runDaemon,
+  tick: supervisorTick,
   supervisorPidPath,
   supervisorLogPath,
 } = require('../../lib/supervisor-agent.cjs');
@@ -80,6 +81,26 @@ function createSupervisorCommand(deps) {
     },
   });
 
+  // 2026-05-14 (GLOBAL-D-347): one-shot tick for desk-hook invocation.
+  // Replaces the long-running daemon loop when called from apps/desk hooks.
+  const tickCmd = defineCommand({
+    meta: { name: 'tick', description: 'Run a single supervisor pass (one-shot, useful for cron / desk hooks). Equivalent to one iteration of `gad supervisor run`.' },
+    args: { projectid: PROJECTID_ARG },
+    run({ args }) {
+      const { baseDir, projectid } = resolveTarget(args);
+      const interventions = [];
+      supervisorTick(baseDir, projectid, (entry) => interventions.push(entry));
+      if (interventions.length === 0) {
+        console.log('OK supervisor tick — no interventions');
+        return;
+      }
+      console.log(`OK supervisor tick — ${interventions.length} intervention(s):`);
+      for (const e of interventions) {
+        console.log(`  ${e.kind || 'action'}: ${e.summary || JSON.stringify(e).slice(0, 120)}`);
+      }
+    },
+  });
+
   const stopCmd = defineCommand({
     meta: { name: 'stop', description: 'Send SIGTERM to the supervisor daemon.' },
     args: { projectid: PROJECTID_ARG },
@@ -105,7 +126,7 @@ function createSupervisorCommand(deps) {
 
   return defineCommand({
     meta: { name: 'supervisor', description: 'GAD substrate supervisor daemon — auto-recovers stuck handoffs, stale workers, exhausted accounts, dead dispatcher.' },
-    subCommands: { run: runCmd, status: statusCmd, stop: stopCmd },
+    subCommands: { run: runCmd, tick: tickCmd, status: statusCmd, stop: stopCmd },
   });
 }
 
