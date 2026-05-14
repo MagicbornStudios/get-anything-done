@@ -12,6 +12,7 @@
 
 const { defineCommand } = require('citty');
 const { createEnvWebCommand } = require('./env-web.cjs');
+const { createEnvDoctorCommand } = require('./env-doctor.cjs');
 
 function createEnvCommand() {
   let _envCliSingleton = null;
@@ -185,12 +186,15 @@ function createEnvCommand() {
   // ── web — schema-driven editor (delegates to env-web.cjs as of 2026-05-10) ──
   const webCmd = createEnvWebCommand();
 
+  // ── doctor — schema-driven feature validator (phase 206) ──
+  const doctorCmd = createEnvDoctorCommand();
+
   return defineCommand({
     meta: {
       name: 'env',
-      description: 'Per-project BYOK secrets — get / set / list / rotate / revoke / audit / purge / web. Values are encrypted with AES-256-GCM under a PBKDF2-derived master key and stored at .gad/secrets/<projectid>.enc. See references/byok-design.md.',
+      description: 'Per-project BYOK secrets + schema-driven env validation — get / set / list / rotate / revoke / audit / purge / web / doctor. Secret values are encrypted with AES-256-GCM under a PBKDF2-derived master key and stored at .gad/secrets/<projectid>.enc. Doctor reads gad-env.schema.toml and the .env / .env.local / .gad/env.shared chain to report feature satisfaction. See references/byok-design.md.',
     },
-    subCommands: { get, set, list, rotate, revoke, audit, purge, web: webCmd },
+    subCommands: { get, set, list, rotate, revoke, audit, purge, web: webCmd, doctor: doctorCmd },
   });
 }
 
