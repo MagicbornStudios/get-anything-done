@@ -47,6 +47,25 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Generate static commands manifest
+        # Produce bin/commands/_manifest.cjs before bun --compile so that every
+        # bin/commands/*.cjs module is traced by the bundler. Without this the
+        # filesystem-discovery fallback in _loader.cjs uses readdirSync against
+        # the CI checkout path (D:\a\...) which is baked into the exe and causes
+        # EUNKNOWN scandir errors at runtime (2026-05-15 incident, GLOBAL-T-235-09).
+        run: node scripts/build-manifest.mjs
+
+      - name: Verify manifest module count
+        # Guard: fail loudly if the manifest was silently truncated.
+        shell: bash
+        run: |
+          count=$(node -e "const m = require('./bin/commands/_manifest.cjs'); console.log(Object.keys(m).length);")
+          echo "Manifest modules: $count"
+          if [ "$count" -lt 100 ]; then
+            echo "ERROR: manifest count $count is below threshold of 100 — expected >= 100 modules" >&2
+            exit 1
+          fi
+
       - name: Build Bun release artifact
         env:
           GAD_RELEASE_BUILD: '1'
