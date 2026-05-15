@@ -39,6 +39,14 @@ if ((Test-Path $Dst) -and -not ((Get-Item $Dst).Attributes -band [System.IO.File
     Write-Host "install.ps1: backed up existing hook to pre-push.bak-$Ts"
 }
 
-Copy-Item -Path $Src -Destination $Dst -Force
-Write-Host "install.ps1: copied $Src -> $Dst"
+# Write a tiny POSIX-sh wrapper that exec's the canonical script by absolute
+# path. This is safer than Copy on Windows because:
+#   1. Git for Windows runs hooks via sh.exe — POSIX wrapper is portable.
+#   2. The dispatcher needs pre-push.cjs as a sibling; pointing at the repo
+#      path keeps the sibling-lookup correct.
+# Forward slashes work in sh on Windows.
+$SrcPosix = $Src -replace '\\', '/'
+$WrapperContent = "#!/usr/bin/env sh`nexec `"$SrcPosix`" `"`$@`"`n"
+Set-Content -Path $Dst -Value $WrapperContent -NoNewline -Encoding ASCII
+Write-Host "install.ps1: wrapper $Dst -> $Src"
 Write-Host "install.ps1: pre-push hook installed."

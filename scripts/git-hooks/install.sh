@@ -43,14 +43,16 @@ if [ -e "$DST" ] && [ ! -L "$DST" ]; then
   echo "install.sh: backed up existing hook to pre-push.bak-$TS"
 fi
 
-# Prefer symlink (so edits to scripts/git-hooks/pre-push are picked up live).
-# Fall back to copy on systems without symlink support (some Windows setups).
+# Prefer symlink (so edits to scripts/git-hooks/pre-push are picked up live
+# and the dispatcher can locate pre-push.cjs as a sibling via readlink).
+# Fall back to writing a tiny wrapper that points back to $SRC by absolute
+# path when symlinks aren't supported (some Windows setups).
 if ln -sf "$SRC" "$DST" 2>/dev/null; then
   echo "install.sh: symlinked $DST -> $SRC"
 else
-  cp "$SRC" "$DST"
+  printf '#!/usr/bin/env sh\nexec "%s" "$@"\n' "$SRC" > "$DST"
   chmod +x "$DST"
-  echo "install.sh: copied $SRC -> $DST"
+  echo "install.sh: wrapper $DST -> $SRC"
 fi
 
 chmod +x "$DST" 2>/dev/null || true

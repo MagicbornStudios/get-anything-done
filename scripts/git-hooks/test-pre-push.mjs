@@ -25,7 +25,10 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const HOOK = resolve(__dirname, 'pre-push');
+// Drive the Node implementation directly (skip the POSIX-sh dispatcher).
+// The dispatcher only resolves which `node` to invoke; the .cjs is the
+// source of truth and is what we want to exercise in tests.
+const HOOK = resolve(__dirname, 'pre-push.cjs');
 
 const ZERO = '0000000000000000000000000000000000000000';
 let failed = 0;
