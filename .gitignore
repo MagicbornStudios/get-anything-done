@@ -162,3 +162,20 @@ site/public/llms-full.txt
 site/public/api/docs.json
 site/public/downloads/*.zip
 site/public/downloads/planning/*.zip
+
+# Training-data jsonl is high-churn + sometimes large (>100MB);
+# never commit. Re-derive locally from .gad-log + state events.
+.planning/datasets/
+
+# Rotated trace events — per-machine local-only operational data.
+# Re-derived from .planning/.trace-events.jsonl + .gad-log/. Has occasionally
+# captured tool-use inputs that secret-scanners flag (false positives —
+# e.g. demo strings like sk_live_FakeStripe in trace logs).
+.planning/.trace-archive/
+
+# Per-agent session state from `gad startup` / `gad session new`.
+# Sessions are local-only and never read by another agent's clone.
+.planning/.sessions/
+
+# Per-machine presence heartbeat — `gad presence touch`.
+.planning/.presence/
