@@ -1,0 +1,30 @@
+{
+  "id": "77-04",
+  "phase": "77",
+  "status": "done",
+  "goal": "Add --runtime flag to gad projects init. Default 'claude' — the most-used runtime. Comma-separated for multiple ('claude,gemini'). Known: claude, cursor, gemini, opencode, codex, none. AGENTS.md + .planning/AGENTS.md remain always-written base targets; the selected runtime layers its entrypoint (CLAUDE.md from template, .cursorrules / GEMINI.md / .opencode/AGENTS.md generated as thin pointer-back-to-AGENTS.md bodies). codex+none skip the extra entrypoint entirely. Unknown runtimes are rejected with a list of known values. Default behavior unchanged from a consumer perspective — claude entrypoint still written by default.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "77-03"
+  ],
+  "commands": [],
+  "files": [
+    "bin/commands/projects/init.cjs",
+    "bin/commands/projects/init-contract.cjs"
+  ],
+  "agent_id": "claude-opus-4-7",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed_by": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "completed_at": "",
+  "resolution": "",
+  "created_at": "2026-05-15T20:14:48.883Z",
+  "updated_at": "2026-05-15T20:14:51.947Z"
+}

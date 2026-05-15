@@ -2159,5 +2159,16 @@ Operator priority statement: "I just need it working right now. If we can put it
     </references>
   </decision>
 
+  <decision id="gad-287">
+    <title>gad projects init: --runtime &lt;name&gt; selects the entrypoint; default 'claude', other runtimes opt-in</title>
+    <date>2026-05-15</date>
+    <summary>Pairs with gad-286 (drop dead runtime scaffolding). With scaffolding-by-default removed, operators need an explicit way to ask init to write entrypoint(s) for runtimes they ARE using. Add --runtime flag, default 'claude' — the runtime used in 95%+ of consumer projects today and the one with a hand-curated template body. Accept comma-separated list for multi-runtime projects ('claude,gemini'). Other recognized values: cursor, gemini, opencode (each gets a generated thin pointer back to AGENTS.md), codex (reads AGENTS.md directly — no extra entrypoint needed), none (AGENTS.md + .planning/AGENTS.md only). Unknown values rejected with the list of known names. AGENTS.md + .planning/AGENTS.md remain always-written base targets regardless of --runtime selection.</summary>
+    <impact>Default consumer experience unchanged: gad projects init still produces AGENTS.md + CLAUDE.md + .planning/AGENTS.md. Operators adopting non-Claude runtimes can now say --runtime gemini / --runtime cursor instead of hand-creating the file. The framework no longer guesses or recommends; it does exactly what the operator asked for.</impact>
+    <references>
+      <file path="bin/commands/projects/init.cjs"/>
+      <file path="bin/commands/projects/init-contract.cjs"/>
+    </references>
+  </decision>
+
 </decisions>
 

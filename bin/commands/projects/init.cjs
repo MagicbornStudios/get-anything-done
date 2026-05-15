@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
-const { scaffoldProjectInitInstructions } = require('./init-contract.cjs');
+const { scaffoldProjectInitInstructions, parseRuntimesArg, DEFAULT_RUNTIMES } = require('./init-contract.cjs');
 
 // MD planning artifact filenames that indicate an operator-written planning
 // scaffold already exists. If any of these are present, `gad projects init`
@@ -40,6 +40,11 @@ function createProjectsInitCommand(deps) {
       format: { type: 'string', description: 'Scaffold format: xml (default) or md (legacy)', default: 'xml' },
       force: { type: 'boolean', description: 'Overwrite existing files', default: false },
       'xml-scaffold': { type: 'boolean', description: 'Force XML scaffold even when MD planning artifacts exist', default: false },
+      runtime: {
+        type: 'string',
+        description: 'Runtime entrypoint(s) to scaffold alongside AGENTS.md. Default: claude. Comma-separated for multiple (e.g. "claude,gemini"). Known: claude, cursor, gemini, opencode, codex, none.',
+        default: '',
+      },
     },
     run({ args }) {
       const projectPath = path.resolve(args.path || process.cwd());
@@ -54,6 +59,16 @@ function createProjectsInitCommand(deps) {
         project_name: projectName,
         project_upper: projectId.toUpperCase(),
       };
+
+      let runtimes;
+      try {
+        runtimes = parseRuntimesArg(args.runtime);
+      } catch (err) {
+        console.error(`✗ ${err.message}`);
+        process.exitCode = 1;
+        return;
+      }
+      const runtimeOptions = { runtimes };
 
       if (format !== 'xml' && format !== 'md') {
         console.error(`✗ Unknown --format "${args.format}". Expected xml or md.`);
@@ -99,7 +114,7 @@ function createProjectsInitCommand(deps) {
           console.log(`  Already registered as [${projectId}].`);
         }
 
-        const instructionResults = scaffoldProjectInitInstructions(projectPath, initVars);
+        const instructionResults = scaffoldProjectInitInstructions(projectPath, initVars, runtimeOptions);
         console.log('  Initial instructions:');
         for (const result of instructionResults) {
           if (result.existed) {
@@ -171,7 +186,8 @@ function createProjectsInitCommand(deps) {
       console.log(`  Files written (${written.length}):`);
       for (const file of written) console.log(`    ${file}`);
 
-      const instructionResults = scaffoldProjectInitInstructions(projectPath, initVars);
+      const instructionResults = scaffoldProjectInitInstructions(projectPath, initVars, runtimeOptions);
+      console.log(`  Runtimes: ${runtimes.join(', ')}`);
       console.log('  Initial instructions:');
       for (const result of instructionResults) {
         if (result.existed) {
