@@ -61,6 +61,11 @@ is active and the work has been explicitly split into lanes.
 
 ## Files
 
-- `AGENTS.md` is the source contract.
-- `CLAUDE.md` is the runtime mirror.
+- `AGENTS.md` (this file) is the **source contract** for every runtime.
+- `CLAUDE.md` is a thin entrypoint for Claude Code that points back here
+  and adds Claude-only addenda (skills, subagents, Claude harness tools).
+- Other runtime entrypoints (`.cursorrules`, codex `AGENTS.md`,
+  `GEMINI.md`, etc.) should follow the same pattern: read this file,
+  then add only runtime-specific addenda. Do not duplicate the contract
+  into every entrypoint — drift is inevitable.
 - `.planning/AGENTS.md` narrows the rules for planning-only edits.

@@ -164,12 +164,15 @@ const INIT_XML_TEMPLATES = {
 `,
 };
 
+// Init scaffolds the canonical minimum only. Per-task JSON under
+// .planning/tasks/<id>.json is the source of truth (decision 63-53); the
+// legacy TASK-REGISTRY.xml was retired. REQUIREMENTS.xml is optional —
+// projects that need it can add it via `gad requirements add` or by hand;
+// many projects capture scope in ROADMAP.xml goals + decisions instead.
 const INIT_XML_FILES = [
   'STATE.xml',
   'ROADMAP.xml',
-  'TASK-REGISTRY.xml',
   'DECISIONS.xml',
-  'REQUIREMENTS.xml',
   'ERRORS-AND-ATTEMPTS.xml',
 ];
 
@@ -183,7 +186,6 @@ const RECOMMENDED_FILES = ['DECISIONS.xml', 'DECISIONS.md', 'AGENTS.md', 'REQUIR
 const CANONICAL_MINIMUM_FILES = [
   'STATE.xml',
   'ROADMAP.xml',
-  'TASK-REGISTRY.xml',
   'DECISIONS.xml',
 ];
 
