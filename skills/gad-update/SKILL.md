@@ -6,7 +6,7 @@ type: command-wrapper
 allowed-tools:
   - Bash
   - AskUserQuestion
-workflow: workflows/update.md
+workflow: ./workflows/update.md
 ---
 
 <objective>
