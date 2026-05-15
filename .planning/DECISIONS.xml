@@ -2146,5 +2146,18 @@ Operator priority statement: "I just need it working right now. If we can put it
     </references>
   </decision>
 
+  <decision id="gad-286">
+    <title>gad projects init does not preemptively scaffold non-default runtime entrypoints; SOUL.md becomes opt-in via gad souls init</title>
+    <date>2026-05-15</date>
+    <summary>External reviewer of a consumer project (B2Gdevs/textual-crosstalk) flagged .cursorrules, GEMINI.md, .opencode/AGENTS.md, and SOUL.md as junk files cluttering the repo root — the project only used Claude Code. Root cause: (a) the templates/project-init/AGENTS.md + CLAUDE.md templates told the setup agent 'Other runtime entrypoints should follow the same pattern', which agents executed as 'create these files', and (b) PROJECT_INIT_TARGETS auto-wrote SOUL.md as a pointer with no narrative body (gad souls init was never run). Decision: drop SOUL.md from PROJECT_INIT_TARGETS — it's still written by gad souls init via writeSoulPointer, which writes both the pointer and the matching narrative/souls/&lt;id&gt;.md body. Rewrite the templates to say 'not scaffolded by default. Add one only when you actually adopt that runtime' so setup agents stop preemptively creating multi-runtime scaffolding.</summary>
+    <impact>New gad projects init runs produce only AGENTS.md, CLAUDE.md, and .planning/AGENTS.md at the project root — no SOUL.md, no scaffolded sibling runtime files. Existing projects are unaffected (no migration). gad souls init still works end-to-end. Consumer-init test updated to match.</impact>
+    <references>
+      <file path="bin/commands/projects/init-contract.cjs"/>
+      <file path="templates/project-init/AGENTS.md"/>
+      <file path="templates/project-init/CLAUDE.md"/>
+      <file path="tests/consumer-init-install.test.cjs"/>
+    </references>
+  </decision>
+
 </decisions>
 

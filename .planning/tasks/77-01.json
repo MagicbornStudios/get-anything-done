@@ -1,0 +1,27 @@
+{
+  "id": "77-01",
+  "phase": "77",
+  "status": "done",
+  "goal": "Remove SOUL.md from PROJECT_INIT_TARGETS in bin/commands/projects/init-contract.cjs. SOUL.md is still written by gad souls init via writeSoulPointer in lib/souls.cjs — only the auto-write from gad projects init is dropped. This eliminates the dead soul pointer that appears in every consumer repo without a matching narrative body.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [],
+  "commands": [],
+  "files": [
+    "bin/commands/projects/init-contract.cjs"
+  ],
+  "agent_id": "claude-opus-4-7",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed_by": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "completed_at": "",
+  "resolution": "",
+  "created_at": "2026-05-15T20:01:15.517Z",
+  "updated_at": "2026-05-15T20:01:56.993Z"
+}

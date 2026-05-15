@@ -3,12 +3,9 @@
 Project name: `{{project_name}}`
 Project id: `{{project_id}}`
 
-## Soul pointer
-
-Read `SOUL.md` first, then read the soul body it points to under
-`narrative/souls/` when present. Gilgamesh of Uruk is the default setup soul.
-Projects can override that by updating `SOUL.md` with a stable project-specific
-soul pointer.
+If a `SOUL.md` pointer exists in this repo, read it first and follow it to
+the narrative body under `narrative/souls/`. If it doesn't exist, skip this
+step — souls are opt-in via `gad souls init`.
 
 ## Loop
 
@@ -61,11 +58,13 @@ is active and the work has been explicitly split into lanes.
 
 ## Files
 
-- `AGENTS.md` (this file) is the **source contract** for every runtime.
-- `CLAUDE.md` is a thin entrypoint for Claude Code that points back here
-  and adds Claude-only addenda (skills, subagents, Claude harness tools).
-- Other runtime entrypoints (`.cursorrules`, codex `AGENTS.md`,
-  `GEMINI.md`, etc.) should follow the same pattern: read this file,
-  then add only runtime-specific addenda. Do not duplicate the contract
-  into every entrypoint — drift is inevitable.
-- `.planning/AGENTS.md` narrows the rules for planning-only edits.
+- `AGENTS.md` (this file) — the source contract for every runtime.
+- `CLAUDE.md` — Claude Code entrypoint, points back here with
+  Claude-only addenda (skills, subagents, harness tools).
+- `.planning/AGENTS.md` — narrows the rules for planning-only edits.
+
+Other runtime entrypoints (`.cursorrules`, codex `AGENTS.md`, `GEMINI.md`,
+`.opencode/AGENTS.md`, etc.) are **not scaffolded by default**. Add one
+only when you actually adopt that runtime on this project; otherwise it
+just becomes noise in the repo root. When you do add one, keep it thin —
+read `AGENTS.md` and append runtime-specific addenda only.

@@ -1,0 +1,29 @@
+{
+  "id": "77-03",
+  "phase": "77",
+  "status": "done",
+  "goal": "Update tests/consumer-init-install.test.cjs to match new init behavior: SOUL.md is NOT created by gad projects init (assert absence), the Gilgamesh-of-Uruk template assertion is removed (no longer in AGENTS.md by default), and the .SOUL.md.gad-init fallback test is dropped from the preserve-existing flow. Test passes locally.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "77-02"
+  ],
+  "commands": [],
+  "files": [
+    "tests/consumer-init-install.test.cjs"
+  ],
+  "agent_id": "claude-opus-4-7",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed_by": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "completed_at": "",
+  "resolution": "",
+  "created_at": "2026-05-15T20:01:23.743Z",
+  "updated_at": "2026-05-15T20:01:58.524Z"
+}

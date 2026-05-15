@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<state>
-  <level value="3" xp="0" xp_to_next="600" loaded_skills="0"/>
+<state>  <level value="3" xp="0.5" xp_to_next="600" loaded_skills="0"/>
+  <stamped-tasks>
+    77-01
+  </stamped-tasks>
   <!-- Framework evolution level seeded 2026-05-09 per operator rule "evolving
        means we go up a level. that's how we track evolutions." Level 3
        reflects v1.32-1.35 release window with team substrate, dispatcher,
@@ -57,6 +59,7 @@
   <last-updated>2026-05-13T22:16:54.481Z</last-updated>
   <sink-compiled sink="docs/get-anything-done/planning/" at="2026-05-13T17:59:32.311Z" />
   <state-log>
+    <entry agent="unknown" at="2026-05-15T20:01:59.215Z">Phase 77 closed — projects init no longer auto-writes SOUL.md or implicitly tells agents to scaffold .cursorrules/GEMINI.md/.opencode. Templates rewritten with explicit 'not scaffolded by default' wording. Test updated. Decision gad-286 records the rationale.</entry>
     <entry agent="team-w3" at="2026-05-13T14:32:16.093Z" tags="95-10">Completed 95-10: dropped runtime parking — just-try-it redesign</entry>
     <entry agent="unknown" at="2026-05-08T18:26:59.634Z">feat(35-44,35-45,GLOBAL-D-323-C): to_agent field on handoffs + Kael cross-project activity tab shipped</entry>
     <entry agent="unknown" at="2026-05-08T18:21:43.695Z">35-46 done: cross-project watcher daemon + notify Tauri command + snooze controls (GLOBAL-D-323 Phase D)</entry>

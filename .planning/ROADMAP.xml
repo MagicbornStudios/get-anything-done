@@ -520,5 +520,12 @@
     <depends></depends>
   </phase>
 
+  <phase id="77">
+    <title>Project init: drop dead runtime scaffolding + SOUL.md auto-write</title>
+    <goal>Stop telling agents to preemptively scaffold .cursorrules / GEMINI.md / .opencode/AGENTS.md, and stop auto-writing SOUL.md from gad projects init. External reviewers of consumer projects flagged these as junk files — they appeared in repo roots without ever being used by the project. Souls become opt-in via gad souls init (which already writes both SOUL.md and the matching narrative body in one shot); runtime entrypoints become opt-in too, with template wording that explicitly tells the next agent not to preemptively create them.</goal>
+    <status>in-progress</status>
+    <depends>74</depends>
+  </phase>
+
 </roadmap>
 

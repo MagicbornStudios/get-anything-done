@@ -5,10 +5,14 @@ const path = require('path');
 
 const PROJECT_INIT_TEMPLATE_DIR = path.join(__dirname, '..', '..', '..', 'templates', 'project-init');
 
+// SOUL.md is intentionally NOT in this list. `gad projects init` should not
+// drop a dead soul pointer into every consumer repo — without a matching
+// narrative body it reads as a junk file to outside reviewers. Souls are
+// now opt-in via `gad souls init`, which writes both SOUL.md and the
+// matching narrative/souls/<id>.md body in one shot.
 const PROJECT_INIT_TARGETS = [
   { template: 'AGENTS.md', relativePath: 'AGENTS.md' },
   { template: 'CLAUDE.md', relativePath: 'CLAUDE.md' },
-  { template: 'SOUL.md', relativePath: 'SOUL.md' },
   { template: 'planning-AGENTS.md', relativePath: path.join('.planning', 'AGENTS.md') },
 ];
 

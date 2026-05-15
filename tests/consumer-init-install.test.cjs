@@ -180,13 +180,15 @@ describe('Flow B — gad projects init (consumer scaffold)', () => {
     const soulPath = path.join(consumerDir, 'SOUL.md');
     const planningAgentsPath = path.join(planning, 'AGENTS.md');
 
-    for (const fp of [agentsPath, claudePath, soulPath, planningAgentsPath]) {
+    for (const fp of [agentsPath, claudePath, planningAgentsPath]) {
       assert.ok(fs.existsSync(fp), `${path.relative(consumerDir, fp)} present`);
     }
+    // SOUL.md is opt-in via `gad souls init` — `gad projects init` should
+    // not drop a dead soul pointer alongside the contract files.
+    assert.ok(!fs.existsSync(soulPath), 'SOUL.md is NOT created by `gad projects init`');
 
     const agentsBody = fs.readFileSync(agentsPath, 'utf8');
     assert.match(agentsBody, /Project id: `test-consumer`/);
-    assert.match(agentsBody, /Gilgamesh of Uruk/);
     assert.match(agentsBody, /TEST-CONSUMER-D-<n>/);
     assert.match(agentsBody, /gad snapshot --projectid test-consumer/);
 
@@ -197,7 +199,6 @@ describe('Flow B — gad projects init (consumer scaffold)', () => {
   test('preserves existing instruction files and writes .gad-init fallbacks', () => {
     fs.writeFileSync(path.join(consumerDir, 'AGENTS.md'), '# Existing agent contract\n');
     fs.writeFileSync(path.join(consumerDir, 'CLAUDE.md'), '# Existing claude contract\n');
-    fs.writeFileSync(path.join(consumerDir, 'SOUL.md'), '# Existing soul\n');
     fs.writeFileSync(path.join(consumerDir, '.planning', 'AGENTS.md'), '# Existing planning agent contract\n');
 
     const rerun = runGadCli(
@@ -217,12 +218,10 @@ describe('Flow B — gad projects init (consumer scaffold)', () => {
     assert.ok(rerun.success, `rerun failed: ${rerun.error}`);
     assert.match(rerun.output, /Preserved AGENTS\.md; wrote \.AGENTS\.md\.gad-init/);
     assert.match(rerun.output, /Preserved CLAUDE\.md; wrote \.CLAUDE\.md\.gad-init/);
-    assert.match(rerun.output, /Preserved SOUL\.md; wrote \.SOUL\.md\.gad-init/);
 
     for (const fp of [
       path.join(consumerDir, '.AGENTS.md.gad-init'),
       path.join(consumerDir, '.CLAUDE.md.gad-init'),
-      path.join(consumerDir, '.SOUL.md.gad-init'),
       path.join(consumerDir, '.planning', '.AGENTS.md.gad-init'),
     ]) {
       assert.ok(fs.existsSync(fp), `${path.relative(consumerDir, fp)} present`);

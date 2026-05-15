@@ -1,0 +1,30 @@
+{
+  "id": "77-02",
+  "phase": "77",
+  "status": "done",
+  "goal": "Rewrite templates/project-init/AGENTS.md and templates/project-init/CLAUDE.md so they no longer instruct agents to scaffold .cursorrules / GEMINI.md / .opencode/AGENTS.md. Old wording said 'Other runtime entrypoints should follow the same pattern' which setup agents read as 'create these files'. New wording: 'not scaffolded by default. Add one only when you actually adopt that runtime on this project; otherwise it just becomes noise in the repo root.' Soul-pointer section in AGENTS.md also softened to a conditional 'if SOUL.md exists, read it'.",
+  "type": "framework",
+  "keywords": "",
+  "depends": [
+    "77-01"
+  ],
+  "commands": [],
+  "files": [
+    "templates/project-init/AGENTS.md",
+    "templates/project-init/CLAUDE.md"
+  ],
+  "agent_id": "claude-opus-4-7",
+  "agent_role": "",
+  "runtime": "claude-code",
+  "model_profile": "",
+  "resolved_model": "",
+  "skill": "",
+  "claimed_by": "",
+  "claimed": false,
+  "claimed_at": "",
+  "lease_expires_at": "",
+  "completed_at": "",
+  "resolution": "",
+  "created_at": "2026-05-15T20:01:19.547Z",
+  "updated_at": "2026-05-15T20:01:57.782Z"
+}
