@@ -103,17 +103,45 @@ export default function createVisualContextOverlay(options = {}) {
       return;
     }
 
-    // Ctrl+;: UPDATE quick-prompt — copies structured UPDATE string to clipboard
+    // Ctrl+;: UPDATE quick-prompt — copies structured UPDATE string to clipboard.
+    // The composer textarea inside the panel feeds operator-prompt text into
+    // the template; Ctrl+; is the keyboard equivalent of clicking the button.
     if (e.ctrlKey && e.key === ';') {
       e.preventDefault();
-      const str = buildUpdateString(voice.tags, cidPrefix);
+      const operatorText = textarea ? textarea.value.trim() : '';
+      const str = buildUpdateString(voice.tags, cidPrefix, operatorText);
       navigator.clipboard.writeText(str).then(() => {
+        flashComposerStatus('copied via ctrl+;');
         if (onUpdate) onUpdate(str);
-      }).catch(() => {});
+      }).catch(() => {
+        flashComposerStatus('copy failed', true);
+      });
     }
   }
 
   // ─── Alt+click voice tag ─────────────────────────────────────────────────
+  //
+  // 2026-05-13 (phase 201): the previous blanket exclusion
+  // `cid.startsWith(cidPrefix + '-vcs-')` filtered out EVERY overlay-internal
+  // cid — including the panel itself, its header, and the tag-list region.
+  // That made the panel un-self-selectable: operator could not voice-tag the
+  // panel chrome to record context ABOUT the panel itself. Now we only
+  // exclude the specific control elements that should never be voice-tag
+  // targets (the dot, the new composer textarea/button, the clear-all
+  // button, the dev-hint bar). Everything else inside the panel — the
+  // panel root, the header, the tag-list, individual tag rows — is fair
+  // game for Alt+click.
+
+  const internalControlCids = new Set([
+    cidPrefix + '-vcs-dot',
+    cidPrefix + '-vcs-devhint',
+    cidPrefix + '-vcs-panel-clear',
+    cidPrefix + '-vcs-composer',
+    cidPrefix + '-vcs-composer-textarea',
+    cidPrefix + '-vcs-composer-button',
+    cidPrefix + '-vcs-composer-status',
+    cidPrefix + '-vcs-composer-label',
+  ]);
 
   function onAltClick(e) {
     if (disposed) return;
@@ -121,8 +149,9 @@ export default function createVisualContextOverlay(options = {}) {
     const target = e.target.closest('[data-cid]');
     if (!target) return;
     const cid = target.getAttribute('data-cid');
-    // Skip overlay internals
-    if (cid.startsWith(cidPrefix + '-vcs-') || cid === cidPrefix + '-vcs-dot') return;
+    // Skip only the explicit control elements; everything else (including
+    // the panel chrome itself) is selectable.
+    if (internalControlCids.has(cid)) return;
     e.preventDefault();
     e.stopPropagation();
 
@@ -300,7 +329,92 @@ export default function createVisualContextOverlay(options = {}) {
 
   const tagList = el('div', { className: 'vcs-tag-list', attrs: { 'data-cid': cidPrefix + '-vcs-tag-list' } });
   panel.appendChild(tagList);
+
+  // ─── Composer (phase 201) ───────────────────────────────────────────────
+  //
+  // The pre-rewrite env-panel had a chat-style composer (textarea +
+  // "copy update prompt" button) that stripped out in commit 4c2686fe with
+  // a note that "the global Visual Context Panel will be the single source."
+  // That migration was never completed — the panel only had the tag list +
+  // a Ctrl+; hotkey. Operator (2026-05-13): "the context panel in the dev
+  // tools ... needs its composer back for me to click and copy the update
+  // prompt and not rely solely on ctrl+;." This block restores it as a
+  // panel footer.
+
+  const composer = el('div', {
+    className: 'vcs-composer',
+    attrs: { 'data-cid': cidPrefix + '-vcs-composer' },
+  });
+
+  const composerLabel = el('label', {
+    className: 'vcs-composer-label',
+    htmlFor: cidPrefix + '-vcs-composer-textarea',
+    attrs: { 'data-cid': cidPrefix + '-vcs-composer-label' },
+  }, 'operator prompt');
+
+  const textarea = el('textarea', {
+    className: 'vcs-composer-textarea',
+    id: cidPrefix + '-vcs-composer-textarea',
+    placeholder: 'add a prompt — the tags above will be attached to the UPDATE template',
+    spellcheck: false,
+    rows: 3,
+    attrs: {
+      'data-cid': cidPrefix + '-vcs-composer-textarea',
+      autocorrect: 'off',
+      autocapitalize: 'off',
+      autocomplete: 'off',
+    },
+  });
+
+  const composerActions = el('div', { className: 'vcs-composer-actions' });
+  const composerStatus = el('span', {
+    className: 'vcs-composer-status',
+    attrs: { 'data-cid': cidPrefix + '-vcs-composer-status' },
+  }, '');
+  const copyBtn = el('button', {
+    className: 'vcs-composer-btn',
+    type: 'button',
+    attrs: { 'data-cid': cidPrefix + '-vcs-composer-button' },
+    onclick: () => copyUpdatePrompt(),
+  }, 'copy update prompt');
+  composerActions.appendChild(composerStatus);
+  composerActions.appendChild(copyBtn);
+
+  composer.appendChild(composerLabel);
+  composer.appendChild(textarea);
+  composer.appendChild(composerActions);
+  panel.appendChild(composer);
+
   container.appendChild(panel);
+
+  let composerStatusTimer = null;
+  function flashComposerStatus(text, isError) {
+    composerStatus.textContent = text;
+    composerStatus.classList.toggle('vcs-composer-status--ok', !isError);
+    composerStatus.classList.toggle('vcs-composer-status--err', !!isError);
+    if (composerStatusTimer) clearTimeout(composerStatusTimer);
+    composerStatusTimer = setTimeout(() => {
+      composerStatus.textContent = '';
+      composerStatus.classList.remove('vcs-composer-status--ok');
+      composerStatus.classList.remove('vcs-composer-status--err');
+      composerStatusTimer = null;
+    }, 1600);
+  }
+
+  function copyUpdatePrompt() {
+    const operatorText = textarea.value.trim();
+    if (!operatorText && voice.tags.length === 0) {
+      flashComposerStatus('nothing to copy — add a prompt or tag a target', true);
+      return;
+    }
+    const str = buildUpdateString(voice.tags, cidPrefix, operatorText);
+    navigator.clipboard.writeText(str).then(() => {
+      flashComposerStatus('copied');
+      if (onUpdate) onUpdate(str);
+    }).catch(() => {
+      flashComposerStatus('copy failed', true);
+    });
+  }
 
   // ─── Tag list renderer ───────────────────────────────────────────────────
 
@@ -314,8 +428,9 @@ export default function createVisualContextOverlay(options = {}) {
         'No context yet.',
         el('br'), el('br'),
         'Hold ', el('kbd', null, 'Alt'), ' and click any element to record a voice tag. ',
-        el('kbd', null, 'Alt+I'), ' toggles dev outline. ',
-        el('kbd', null, 'Ctrl+;'), ' copies UPDATE prompt.',
+        el('kbd', null, 'Alt+I'), ' toggles dev outline. Type below + click ',
+        el('strong', null, 'copy update prompt'),
+        ' (or press ', el('kbd', null, 'Ctrl+;'), ') to capture the UPDATE template.',
       ));
       return;
     }
@@ -373,8 +488,14 @@ export default function createVisualContextOverlay(options = {}) {
   }
 
   // ─── UPDATE quick-prompt builder ─────────────────────────────────────────
+  //
+  // operatorText (phase 201, 2026-05-13) — when the panel composer textarea
+  // carries content, it lands as a "## Operator prompt" section so the agent
+  // reading the clipboard has the operator's free-form context, not just the
+  // voice-tag list. Empty operatorText skips that section so quick Ctrl+;
+  // copies without typing still work as before.
 
-  function buildUpdateString(tags, prefix) {
+  function buildUpdateString(tags, prefix, operatorText) {
     const lines = [
       '# UPDATE — Update the targets below using the operator notes.',
       '',
@@ -384,10 +505,15 @@ export default function createVisualContextOverlay(options = {}) {
       for (const t of tags) lines.push('- **' + t.cid + '**: ' + t.text);
       lines.push('');
     }
+    if (operatorText) {
+      lines.push('## Operator prompt');
+      lines.push(operatorText);
+      lines.push('');
+    }
     lines.push('## Context prefix: ' + prefix);
     lines.push('');
     lines.push('## Action');
-    lines.push('Proceed with updating the targets above.');
+    lines.push('Proceed with updating the targets above using the operator prompt as context.');
     return lines.join('\n');
   }
 
@@ -409,6 +535,10 @@ export default function createVisualContextOverlay(options = {}) {
     if (disposed) return;
     disposed = true;
     clearInterval(dotInterval);
+    if (composerStatusTimer) {
+      clearTimeout(composerStatusTimer);
+      composerStatusTimer = null;
+    }
     document.removeEventListener('keydown', onKeydown);
     document.removeEventListener('click', onAltClick, true);
     document.removeEventListener('voice-tag-recorded', onVoiceTagEvent);

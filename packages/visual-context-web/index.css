@@ -278,6 +278,106 @@ body.vcs-devid::before {
   border-color: var(--vcs-red);
 }
 
+/* ─── Composer (phase 201) ───────────────────────────────────────────────── */
+/* Footer block inside the side panel: label, textarea, and a "copy update
+   prompt" button. Restores the per-panel composer that was stripped from
+   env-panel in 0.0.13 but never landed in the global VCP. Operator wants a
+   click-driven entrypoint to the UPDATE template alongside the Ctrl+; hotkey. */
+
+.vcs-composer {
+  border-top: 1px solid var(--vcs-border);
+  background: var(--vcs-bg2);
+  padding: 0.6rem 0.8rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-family: var(--vcs-mono);
+  flex-shrink: 0;
+}
+
+.vcs-composer-label {
+  font-size: 0.52rem;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--vcs-accent-dark);
+}
+
+.vcs-composer-textarea {
+  width: 100%;
+  min-height: 3.2rem;
+  max-height: 8rem;
+  resize: vertical;
+  background: var(--vcs-card);
+  border: 1px solid var(--vcs-accent-dark);
+  color: var(--vcs-accent-bright);
+  font-family: var(--vcs-mono);
+  font-size: 0.7rem;
+  line-height: 1.45;
+  padding: 0.4rem 0.5rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.vcs-composer-textarea:focus {
+  border-color: var(--vcs-accent);
+  background: rgba(212, 160, 23, 0.04);
+}
+
+.vcs-composer-textarea::placeholder {
+  color: var(--vcs-fg-dim);
+  opacity: 0.55;
+}
+
+.vcs-composer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.vcs-composer-status {
+  font-size: 0.55rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vcs-fg-dim);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vcs-composer-status.vcs-composer-status--ok {
+  color: var(--vcs-accent);
+}
+
+.vcs-composer-status.vcs-composer-status--err {
+  color: var(--vcs-red);
+}
+
+.vcs-composer-btn {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-family: var(--vcs-mono);
+  background: rgba(212, 160, 23, 0.10);
+  border: 1px solid var(--vcs-accent);
+  color: var(--vcs-accent-bright);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.vcs-composer-btn:hover {
+  background: rgba(212, 160, 23, 0.20);
+  border-color: var(--vcs-accent-bright);
+}
+
+.vcs-composer-btn:active {
+  background: rgba(212, 160, 23, 0.30);
+}
+
 /* ─── Typewriter merge animation ────────────────────────────────────────── */
 
 .vcs-typewriter-cursor {
@@ -304,6 +404,11 @@ body.vcs-devid::before {
 }
 
 /* ─── Dev hint bar ───────────────────────────────────────────────────────── */
+/* Hidden by default — only shown while body.vcs-devid (Alt+I) is active    */
+
+body:not(.vcs-devid) .vcs-devhint {
+  display: none;
+}
 
 .vcs-devhint {
   position: fixed;
