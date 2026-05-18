@@ -182,6 +182,7 @@ function buildPromote(deps) {
       id: { type: 'positional', description: 'Model id', required: true },
       'min-elo-improvement': { type: 'string', description: 'Min ELO improvement over current active (default: from settings)', required: false },
       force: { type: 'boolean', description: 'Skip ELO gate and promote unconditionally', default: false },
+      json: { type: 'boolean', alias: 'j', description: 'Output gate decision as JSON', default: false },
     },
     run({ args }) {
       const projectRoot = resolveProjectRoot(deps);
@@ -193,31 +194,39 @@ function buildPromote(deps) {
       const allModels = registry.listModels(projectRoot, { kind: candidate.kind });
       const current = allModels.find((m) => m.status === 'active' && m.id !== args.id);
 
-      if (!args.force && current) {
-        const currentElo = registry.getCurrentElo(projectRoot, current.id);
-        const candidateElo = registry.getCurrentElo(projectRoot, args.id);
-        if (currentElo !== null && candidateElo !== null) {
-          let minImprovement = 10;
-          try {
-            const { getSetting } = require('../../lib/settings-registry.cjs');
-            minImprovement = getSetting('workflow.training.min_elo_improvement') || 10;
-          } catch (_) {}
-          const delta = candidateElo - currentElo;
-          if (delta < minImprovement) {
-            console.error(`Bench gate FAILED: candidate ELO ${candidateElo} vs active ${currentElo} (delta=${delta} < min=${minImprovement})`);
+      if (!args.force) {
+        const { shouldPromote } = require('../../lib/models/bench-gate.cjs');
+        const gateOpts = {};
+        if (args['min-elo-improvement'] !== undefined && args['min-elo-improvement'] !== '') {
+          const n = Number(args['min-elo-improvement']);
+          if (Number.isFinite(n)) gateOpts.minImprovement = n;
+        }
+        const decision = shouldPromote(projectRoot, args.id, current ? current.id : null, gateOpts);
+
+        if (shouldJson(args)) { printJson({ ...decision, action: decision.pass ? 'promoting' : 'blocked' }); }
+
+        if (!decision.pass) {
+          if (!shouldJson(args)) {
+            console.error(`Bench gate FAILED: ${decision.reasons.join('; ')}`);
+            if (decision.regressions.length > 0) {
+              console.error('Regressions:');
+              for (const r of decision.regressions) console.error(`  - ${r}`);
+            }
             console.error('Use --force to override or run `gad models lifecycle bench` first.');
-            process.exit(1);
           }
-          console.log(`Bench gate PASSED: delta_elo=${delta} ≥ ${minImprovement}`);
-        } else {
-          console.log('No ELO comparison available (missing bench results). Proceeding with promotion.');
+          process.exit(1);
+        }
+        if (!shouldJson(args)) {
+          console.log(`Bench gate PASSED: ${decision.reasons.join('; ')}`);
         }
       }
 
       const promoted = registry.promoteModel(projectRoot, args.id);
-      console.log(`Promoted: ${promoted.id} → status=active`);
-      if (current) {
-        console.log(`Previous active: ${current.id} → status=staging`);
+      if (!shouldJson(args)) {
+        console.log(`Promoted: ${promoted.id} → status=active`);
+        if (current) {
+          console.log(`Previous active: ${current.id} → status=staging`);
+        }
       }
     },
   });
