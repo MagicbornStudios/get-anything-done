@@ -234,36 +234,99 @@ function buildPromote(deps) {
 
 function buildArchive(deps) {
   return defineCommand({
-    meta: { name: 'archive', description: 'Archive a model to local dir (HF push wired in 253-08)' },
+    meta: { name: 'archive', description: 'Archive a model: push to HF (if configured) or save locally' },
     args: {
       id: { type: 'positional', description: 'Model id', required: true },
+      repo: { type: 'string', description: 'HF repo slug (e.g. owner/repo); overrides training.hf_archive_repo', required: false },
+      'token-env': { type: 'string', description: 'Env var holding HF token (default: HF_TOKEN)', required: false },
+      'commit-message': { type: 'string', description: 'HF commit message', required: false },
+      'force-local': { type: 'boolean', description: 'Skip HF; archive locally only', default: false },
+      'no-private': { type: 'boolean', description: 'Create HF repo as public (default: private)', default: false },
+      'dry-run': { type: 'boolean', description: 'Describe the action without executing', default: false },
+      json: { type: 'boolean', alias: 'j', description: 'Output JSON', default: false },
     },
     run({ args }) {
       const projectRoot = resolveProjectRoot(deps);
       const registry = reg(projectRoot);
       const model = registry.getModel(projectRoot, args.id);
-      if (!model) { console.error(`Model not found: ${args.id}`); process.exit(1); }
-
-      // Check HF config
-      let hfRepo = null;
-      try {
-        const { getSetting } = require('../../lib/settings-registry.cjs');
-        hfRepo = getSetting('training.hf_archive_repo');
-      } catch (_) {}
-
-      if (hfRepo) {
-        console.log(`HF archive stub: would push ${args.id} to ${hfRepo}`);
-        console.log('Actual HF push wired in task 253-08.');
-      } else {
-        const archiveDir = path.join(projectRoot, '.planning', 'models', 'archive', args.id);
-        fs.mkdirSync(archiveDir, { recursive: true });
-        const metaPath = path.join(archiveDir, 'meta.json');
-        fs.writeFileSync(metaPath, JSON.stringify({ ...model, archived_at: new Date().toISOString() }, null, 2) + '\n', 'utf8');
-        console.log(`Archived locally: ${metaPath}`);
+      if (!model) {
+        if (shouldJson(args)) { printJson({ ok: false, code: 'NO_MODEL', error: `model not found: ${args.id}` }); }
+        else { console.error(`Model not found: ${args.id}`); }
+        process.exit(1);
       }
 
-      registry.archiveModel(projectRoot, args.id);
-      console.log(`Registry updated: ${args.id} → status=archived`);
+      const { archiveModel: runArchive } = require('../../lib/retraining/archiver.cjs');
+      let result;
+      try {
+        result = runArchive(projectRoot, args.id, {
+          repo: args.repo || undefined,
+          tokenEnv: args['token-env'] || undefined,
+          commitMsg: args['commit-message'] || undefined,
+          dryRun: !!args['dry-run'],
+          private: !args['no-private'],
+          forceLocal: !!args['force-local'],
+        });
+      } catch (err) {
+        // HF push errors: fall back to local archive (best-effort) unless this
+        // was a dry-run. NO_MODEL is unreachable here (we just checked).
+        const fatalCodes = new Set(['NO_TOKEN', 'NO_REPO', 'NO_ARTIFACT', 'CLI_MISSING', 'CLI_FAILED']);
+        if (fatalCodes.has(err.code) && !args['dry-run']) {
+          if (shouldJson(args)) {
+            printJson({
+              ok: false,
+              code: err.code,
+              error: err.message,
+              fallback: 'local',
+            });
+          } else {
+            console.error(`HF archive failed (${err.code}): ${err.message}`);
+            console.error('Falling back to local archive…');
+          }
+          try {
+            result = runArchive(projectRoot, args.id, { forceLocal: true });
+          } catch (err2) {
+            if (shouldJson(args)) { printJson({ ok: false, code: err2.code || 'ARCHIVE_FAILED', error: err2.message }); }
+            else { console.error(`Local archive also failed: ${err2.message}`); }
+            process.exit(1);
+          }
+        } else {
+          if (shouldJson(args)) { printJson({ ok: false, code: err.code || 'ARCHIVE_FAILED', error: err.message }); }
+          else { console.error(`Archive failed: ${err.message}`); }
+          process.exit(1);
+        }
+      }
+
+      // Flip registry status to archived (skip on dry-run).
+      if (!args['dry-run']) {
+        registry.archiveModel(projectRoot, args.id);
+      }
+
+      if (shouldJson(args)) {
+        printJson({ ok: true, id: args.id, ...result, registry_status: args['dry-run'] ? model.status : 'archived' });
+        return;
+      }
+
+      if (result.mode === 'hf') {
+        if (result.dryRun) {
+          console.log(`[dry-run] Would push ${args.id} → ${result.repo} (${result.private ? 'private' : 'public'})`);
+          console.log(`[dry-run] artifact: ${result.artifactPath}`);
+          console.log(`[dry-run] huggingface-cli ${result.cliArgs.join(' ')}`);
+        } else {
+          console.log(`Pushed to HF: ${result.repoUrl} (path: ${result.pathInRepo})`);
+          if (result.commitSha) console.log(`Commit sha: ${result.commitSha}`);
+          if (result.output) console.log(result.output);
+        }
+      } else {
+        if (result.dryRun) {
+          console.log(`[dry-run] Would write meta to: ${result.metaPath}`);
+        } else {
+          console.log(`Archived locally: ${result.metaPath}`);
+        }
+      }
+
+      if (!args['dry-run']) {
+        console.log(`Registry updated: ${args.id} → status=archived`);
+      }
     },
   });
 }
