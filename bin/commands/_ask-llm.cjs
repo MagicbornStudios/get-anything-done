@@ -1,6 +1,11 @@
 'use strict';
 /**
- * gad ask llm — MVP LLM Q&A routing (2026-05-10).
+ * gad ask llm — LLM Q&A routing with context-index injection (2026-05-10 / phase 245-07).
+ *
+ * Before calling the LLM, queries the context-index for top-3 relevant chunks
+ * and injects them as a "Prior context:" block in the system prompt.
+ * Use --no-context to skip retrieval (old literal-question behaviour).
+ *
  *
  * Operator UX: `gad ask "what is GLOBAL-D-330"` (top-level positional in
  * ask.cjs delegates here) OR `gad ask llm "..."` (explicit).
@@ -16,13 +21,12 @@
  * Output: stream tokens to stdout as they arrive.  --json buffers and emits
  *   { backend, model, text, durationMs, error? }.
  *
- * MVP scope: NO RAG, NO planning-doc retrieval. The LLM gets:
- *   - a tiny system prompt naming the soul
- *   - the operator's question
- * Future work (TODO): MoE-style retrieval over .planning/, decisions, tasks
- * — see slm_learning/reports/research/gad_ask_moe_entry_point.md.
+ * System prompt now has two layers:
+ *   1. Soul framing + "no RAG" disclaimer (preserved from MVP, used when --no-context)
+ *   2. Context block prepended from context-index top-3 hits (new default)
  */
 
+const path = require('node:path');
 const { defineCommand } = require('citty');
 const { checkBudget, truncateToBudget, budgetForModel, estimateTokens } = require('../../lib/token-budget/index.cjs');
 
@@ -55,19 +59,40 @@ function resolveBackend(requested) {
 
 // ── System prompt ────────────────────────────────────────────────────────────
 
-function buildSystemPrompt(soul) {
-  return `You are ${soul}, a coding/operator assistant inside the GAD framework.\n` +
+function buildSystemPrompt(soul, contextChunks) {
+  const base =
+    `You are ${soul}, a coding/operator assistant inside the GAD framework.\n` +
     `Answer the operator's question concisely and directly.\n` +
-    `MVP mode: you have no RAG, no planning-doc retrieval. If the question references an ID like GLOBAL-D-330 or a phase number you don't know, say so plainly and suggest the operator run \`gad decisions show <id>\` or \`gad snapshot --projectid <id>\` for ground truth.`;
+    `If the question references an entity ID you don't know, say so and suggest \`gad decisions show <id>\` or \`gad snapshot --projectid <id>\` for ground truth.`;
+  if (!contextChunks || contextChunks.length === 0) return base;
+  const block = contextChunks
+    .map((r, i) => `[${i + 1}] (${r.source ?? 'unknown'}) ${(r.snippet || r.text || '').slice(0, 400)}`)
+    .join('\n\n');
+  return base + '\n\nPrior context (retrieved from project index — use for grounding):\n' + block;
+}
+
+// ── Context-index retrieval ───────────────────────────────────────────────────
+
+/**
+ * Query the context-index for up to topK chunks relevant to `question`.
+ * Returns [] on any error (context injection is best-effort).
+ */
+async function fetchContextChunks(question, { projectRoot, topK = 3 }) {
+  try {
+    const { query } = require('../../lib/context-index/index.cjs');
+    return await query(question, { projectRoot, topK });
+  } catch {
+    return [];
+  }
 }
 
 // ── Backend implementations ──────────────────────────────────────────────────
 
-async function callModal({ url, question, soul, maxTokens, onToken }) {
+async function callModal({ url, question, soul, maxTokens, onToken, systemPrompt }) {
   const body = {
     model: process.env.MODAL_VLLM_MODEL || 'unknown',
     messages: [
-      { role: 'system', content: buildSystemPrompt(soul) },
+      { role: 'system', content: systemPrompt ?? buildSystemPrompt(soul) },
       { role: 'user', content: question },
     ],
     max_tokens: maxTokens,
@@ -110,7 +135,7 @@ async function callModal({ url, question, soul, maxTokens, onToken }) {
   return { text: full, model: body.model };
 }
 
-async function callViaAiSdk({ provider, modelString, question, soul, maxTokens, onToken }) {
+async function callViaAiSdk({ provider, modelString, question, soul, maxTokens, onToken, systemPrompt }) {
   // Lazy require: ai sdk isn't a hard dep of vendor/get-anything-done.
   // It resolves via the monorepo root node_modules at runtime.
   let streamText, modelFactory;
@@ -135,7 +160,7 @@ async function callViaAiSdk({ provider, modelString, question, soul, maxTokens, 
   }
   const result = await streamText({
     model,
-    system: buildSystemPrompt(soul),
+    system: systemPrompt ?? buildSystemPrompt(soul),
     prompt: question,
     maxOutputTokens: maxTokens,
   });
@@ -149,7 +174,7 @@ async function callViaAiSdk({ provider, modelString, question, soul, maxTokens, 
 
 // ── Main runner ──────────────────────────────────────────────────────────────
 
-async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens }) {
+async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens, noContext, projectRoot }) {
   let question = questionIn;
   const started = Date.now();
   let chosen, modelLabel;
@@ -164,9 +189,17 @@ async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens 
     process.exit(1);
   }
 
+  // ── Context-index injection (phase 245-07) ───────────────────────────────
+  let contextChunks = [];
+  if (!noContext) {
+    const root = projectRoot || process.cwd();
+    contextChunks = await fetchContextChunks(question, { projectRoot: root, topK: 3 });
+  }
+  const resolvedSystemPrompt = buildSystemPrompt(soul, contextChunks);
+
   // ── Token budget pre-send check ──────────────────────────────────────────
   {
-    const systemPrompt = buildSystemPrompt(soul);
+    const systemPrompt = resolvedSystemPrompt;
     // Resolve model label early enough for budget lookup (use env or defaults)
     const modelForBudget = chosen === 'gateway'
       ? (process.env.GAD_ASK_GATEWAY_MODEL || 'anthropic/claude-sonnet-4-6')
@@ -195,6 +228,7 @@ async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens 
       result = await callModal({
         url: process.env.MODAL_VLLM_URL,
         question, soul, maxTokens, onToken,
+        systemPrompt: resolvedSystemPrompt,
       });
       modelLabel = result.model;
     } else if (chosen === 'gateway') {
@@ -202,12 +236,14 @@ async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens 
       result = await callViaAiSdk({
         provider: 'gateway', modelString: modelLabel,
         question, soul, maxTokens, onToken,
+        systemPrompt: resolvedSystemPrompt,
       });
     } else if (chosen === 'direct') {
       modelLabel = process.env.GAD_ASK_DIRECT_MODEL || 'claude-sonnet-4-5';
       result = await callViaAiSdk({
         provider: 'direct', modelString: modelLabel,
         question, soul, maxTokens, onToken,
+        systemPrompt: resolvedSystemPrompt,
       });
     }
     if (!json) process.stdout.write('\n');
@@ -240,14 +276,38 @@ function createAskLlmCommand(_deps) {
       soul: { type: 'string', description: 'Soul name for system framing', default: 'kael' },
       json: { type: 'boolean', description: 'Emit JSON {backend, model, text, durationMs, error?}', default: false },
       'max-tokens': { type: 'string', description: 'Max output tokens', default: '4096' },
+      'no-context': { type: 'boolean', description: 'Skip context-index retrieval; use literal question only', default: false },
+      projectid: { type: 'string', description: 'Project id for context-index root resolution', default: '' },
     },
     async run({ args }) {
+      // Resolve project root for context-index lookup
+      let projectRoot = process.cwd();
+      if (args.projectid) {
+        try {
+          const { findRepoRoot } = require('../../lib/repo-root.cjs');
+          const repoRoot = findRepoRoot(process.cwd());
+          if (repoRoot) {
+            // Try to get planning dir from config
+            const gadConfig = require('../../lib/gad-config.cjs');
+            const cfg = gadConfig.load(repoRoot);
+            const projects = cfg.projects || [];
+            const found = projects.find(p => p.id === args.projectid);
+            if (found && found.planningDir) {
+              projectRoot = path.resolve(repoRoot, path.dirname(found.planningDir));
+            } else {
+              projectRoot = repoRoot;
+            }
+          }
+        } catch { /* best-effort */ }
+      }
       await runAskLlm({
         question: String(args.question),
         backend: String(args.backend || 'auto'),
         soul: String(args.soul || 'kael'),
         json: !!args.json,
         maxTokens: parseInt(String(args['max-tokens'] || '4096'), 10) || 4096,
+        noContext: !!args['no-context'],
+        projectRoot,
       });
     },
   });
