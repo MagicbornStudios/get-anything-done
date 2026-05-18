@@ -7,6 +7,7 @@ If a `SOUL.md` pointer exists in this repo, read it first and follow it to
 the narrative body under `narrative/souls/`. If it doesn't exist, skip this
 step — souls are opt-in via `gad souls init`.
 
+{{project_intent}}
 ## Loop
 
 Use this loop every session:

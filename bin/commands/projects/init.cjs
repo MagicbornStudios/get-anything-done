@@ -4,6 +4,20 @@ const fs = require('fs');
 const path = require('path');
 const { defineCommand } = require('citty');
 const { scaffoldProjectInitInstructions, parseRuntimesArg, DEFAULT_RUNTIMES } = require('./init-contract.cjs');
+const { collectProjectIntent, renderProjectIntentSection } = require('../../../lib/projects/intent-prompt.cjs');
+
+// Deprecated PROJECT.md stub kept for backwards-compat. Project intent now
+// lives in AGENTS.md ## Project Intent (operator direction 2026-05-18).
+const PROJECT_MD_STUB = [
+  '# PROJECT.md (deprecated)',
+  '',
+  'See `AGENTS.md` ## Project Intent — PROJECT.md is deprecated as of 2026-05-18.',
+  '',
+  'Project intent (purpose, audience, differentiators, non-goals) is captured at',
+  '`gad projects init` time and rendered into AGENTS.md so agents have a single',
+  'source of project context.',
+  '',
+].join('\n');
 
 // MD planning artifact filenames that indicate an operator-written planning
 // scaffold already exists. If any of these are present, `gad projects init`
@@ -45,8 +59,14 @@ function createProjectsInitCommand(deps) {
         description: 'Runtime entrypoint(s) to scaffold alongside AGENTS.md. Default: claude. Comma-separated for multiple (e.g. "claude,gemini"). Known: claude, cursor, gemini, opencode, codex, none.',
         default: '',
       },
+      // Project-intent capture (rendered into AGENTS.md ## Project Intent).
+      purpose: { type: 'string', description: 'Project purpose (1–2 sentences).', default: '' },
+      audience: { type: 'string', description: 'Target audience (1–2 lines).', default: '' },
+      differentiators: { type: 'string', description: 'Top differentiators, semicolon-separated.', default: '' },
+      'non-goals': { type: 'string', description: 'Top non-goals, semicolon-separated.', default: '' },
+      'non-interactive': { type: 'boolean', description: 'Skip interactive intent prompts; use flags + placeholders.', default: false },
     },
-    run({ args }) {
+    async run({ args }) {
       const projectPath = path.resolve(args.path || process.cwd());
       const baseDir = findRepoRoot(projectPath);
       const config = gadConfig.load(baseDir);
@@ -54,10 +74,17 @@ function createProjectsInitCommand(deps) {
       const projectId = (args.projectid || projectName).toLowerCase().replace(/[^a-z0-9-]/g, '-');
       const planDir = path.join(projectPath, '.planning');
       const format = (args.format || 'xml').toLowerCase();
+      // Capture project intent (purpose, audience, differentiators, non-goals).
+      // Renders into AGENTS.md ## Project Intent. Flags + --non-interactive
+      // skip the prompts; interactive mode runs when stdin is a TTY.
+      const intent = await collectProjectIntent(args);
+      const projectIntentBlock = renderProjectIntentSection(intent);
+
       const initVars = {
         project_id: projectId,
         project_name: projectName,
         project_upper: projectId.toUpperCase(),
+        project_intent: projectIntentBlock,
       };
 
       let runtimes;
@@ -155,6 +182,12 @@ function createProjectsInitCommand(deps) {
         for (const file of INIT_XML_FILES) {
           fs.writeFileSync(path.join(planDir, file), INIT_XML_TEMPLATES[file](projectId, today));
           written.push(file);
+        }
+        // Deprecated stub for backwards-compat — content lives in AGENTS.md.
+        const projectMdPath = path.join(planDir, 'PROJECT.md');
+        if (!fs.existsSync(projectMdPath) || args.force) {
+          fs.writeFileSync(projectMdPath, PROJECT_MD_STUB);
+          written.push('PROJECT.md');
         }
       } else {
         const templateDir = path.join(__dirname, '..', '..', '..', 'templates');

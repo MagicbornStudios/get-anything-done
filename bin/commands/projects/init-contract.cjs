@@ -50,7 +50,10 @@ function parseRuntimesArg(value) {
 }
 
 function renderProjectInitTemplate(templateBody, vars) {
-  return templateBody.replace(/\{\{\s*(project_id|project_name|project_upper)\s*\}\}/g, (_, key) => vars[key] || '');
+  return templateBody.replace(/\{\{\s*(project_id|project_name|project_upper|project_intent)\s*\}\}/g, (_, key) => {
+    const value = vars[key];
+    return value == null ? '' : String(value);
+  });
 }
 
 function loadProjectInitTemplate(templateName) {
