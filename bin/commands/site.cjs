@@ -161,7 +161,7 @@ function createSiteCommand(deps) {
 
       if (templateArg === 'gad') {
         // Use lib/site-template generator (primary path).
-        const { generateSite, runGhInit, runVercelLink } = require('../../lib/site-template/index.cjs');
+        const { generateSite, addToPnpmWorkspace, runGhInit, runVercelLink } = require('../../lib/site-template/index.cjs');
 
         if (!dryRun && fs.existsSync(targetDir)) {
           outputError(`Target directory already exists: ${targetDir}`);
@@ -183,9 +183,25 @@ function createSiteCommand(deps) {
             console.log(`File plan (${result.files.length} files):`);
             for (const f of result.files) console.log(`  ${f}`);
             console.log('');
+            // Dry-run pnpm-workspace check.
+            const wsPath = path.join(repoRoot, 'pnpm-workspace.yaml');
+            const wsResult = addToPnpmWorkspace({ slug: args.slug, workspaceYamlPath: wsPath, dryRun: true });
+            if (wsResult.reason && wsResult.reason !== 'dry-run') {
+              console.log(`  [pnpm-workspace] ${wsResult.reason}`);
+            }
             if (doGhInit) runGhInit({ slug: args.slug, org: ghOrg, targetDir, dryRun: true });
             if (doVercelLink) runVercelLink({ slug: args.slug, team: vercelTeam, targetDir, dryRun: true });
             return;
+          }
+
+          // Append `sites/<slug>` to pnpm-workspace.yaml (idempotent — no-op
+          // if a `sites/*` glob or explicit entry already covers it).
+          const wsPath = path.join(repoRoot, 'pnpm-workspace.yaml');
+          const wsResult = addToPnpmWorkspace({ slug: args.slug, workspaceYamlPath: wsPath });
+          if (wsResult.touched) {
+            console.log(`[pnpm-workspace] ${wsResult.reason}`);
+          } else {
+            console.log(`[pnpm-workspace] no-op (${wsResult.reason})`);
           }
 
           if (doGhInit) runGhInit({ slug: args.slug, org: ghOrg, targetDir });
