@@ -129,6 +129,8 @@ function serializeTomlValue(value) {
 
 /** Preferred TOML filenames (first match wins). */
 const GAD_TOML_PRIMARY = 'gad-config.toml';
+/** Hidden user-local override file (phase 121-05). Loaded and merged on top of primary. */
+const GAD_TOML_USER_LOCAL = '.gad-config.toml';
 const GAD_TOML_LEGACY = 'planning-config.toml';
 
 // Track roots that have already received the dual-config deprecation warning so we
@@ -170,6 +172,40 @@ function resolveTomlPath(root) {
   return null;
 }
 
+/**
+ * Resolve path to user-local override TOML (.gad-config.toml), or null if not present.
+ * Phase 121-05: user-local overrides take precedence over canonical config entries.
+ */
+function resolveUserLocalTomlPath(root) {
+  const p = path.join(root, GAD_TOML_USER_LOCAL);
+  return fs.existsSync(p) ? p : null;
+}
+
+/**
+ * Deep-merge two config objects. `override` values win over `base`.
+ * Arrays are replaced (not concatenated) by the override.
+ * Nested objects are recursively merged.
+ * Phase 121-05.
+ *
+ * @param {object} base
+ * @param {object} override
+ * @returns {object}
+ */
+function deepMergeConfig(base, override) {
+  if (!override || typeof override !== 'object') return base;
+  if (!base || typeof base !== 'object') return override;
+  const out = { ...base };
+  for (const [key, val] of Object.entries(override)) {
+    if (val !== null && typeof val === 'object' && !Array.isArray(val) &&
+        typeof out[key] === 'object' && out[key] !== null && !Array.isArray(out[key])) {
+      out[key] = deepMergeConfig(out[key], val);
+    } else {
+      out[key] = val;
+    }
+  }
+  return out;
+}
+
 function mergeSectionsIntoRoots(roots, sections) {
   const seen = new Set(roots.map((r) => r.id));
   const out = roots.slice();
@@ -195,6 +231,7 @@ function mergeSectionsIntoRoots(roots, sections) {
  * Load GAD configuration for a project root.
  *
  * Resolution order:
+ *   0. GAD_CONFIG env var (absolute or relative path to a TOML or JSON config file)
  *   1. <root>/gad-config.toml
  *   2. <root>/.planning/gad-config.toml
  *   3. <root>/planning-config.toml (legacy)
@@ -219,23 +256,62 @@ function mergeSectionsIntoRoots(roots, sections) {
 function load(root) {
   root = root || process.cwd();
 
+  // Priority 0: GAD_CONFIG env var override.
+  // Supports absolute paths or paths relative to cwd.
+  const gadConfigEnv = process.env.GAD_CONFIG;
+  if (gadConfigEnv && gadConfigEnv.trim()) {
+    const envPath = path.isAbsolute(gadConfigEnv)
+      ? gadConfigEnv
+      : path.resolve(process.cwd(), gadConfigEnv);
+    if (!fs.existsSync(envPath)) {
+      process.stderr.write(
+        `[gad-config] WARN: GAD_CONFIG="${gadConfigEnv}" resolves to "${envPath}" which does not exist. Falling back to default resolution.\n`,
+      );
+    } else {
+      const ext = path.extname(envPath).toLowerCase();
+      if (ext === '.json') {
+        return fromJson(envPath, path.dirname(envPath));
+      }
+      // Treat as TOML for .toml or any other extension
+      return fromToml(envPath, path.dirname(envPath));
+    }
+  }
+
   const tomlPath = resolveTomlPath(root);
+  const userLocalPath = resolveUserLocalTomlPath(root);
   const planningJsonPath = path.join(root, '.planning', 'config.json');
   const jsonPath = path.join(root, 'config.json');
 
+  let base;
   if (tomlPath) {
-    return fromToml(tomlPath, root);
+    base = fromToml(tomlPath, root);
+  } else if (fs.existsSync(planningJsonPath)) {
+    base = fromJson(planningJsonPath, root);
+  } else if (fs.existsSync(jsonPath)) {
+    base = fromJson(jsonPath, root);
+  } else {
+    base = defaults(root);
   }
 
-  if (fs.existsSync(planningJsonPath)) {
-    return fromJson(planningJsonPath, root);
+  // Phase 121-05: apply user-local .gad-config.toml overrides on top of base.
+  // User-local file takes precedence over canonical config entries.
+  if (userLocalPath) {
+    try {
+      const userLocalRaw = fs.readFileSync(userLocalPath, 'utf8');
+      const userLocalData = parseToml(userLocalRaw);
+      // Re-parse through fromToml shape by writing to a temp structure,
+      // then deep-merge scalar/leaf fields only (avoid full re-parse overhead).
+      const userOverride = fromToml(userLocalPath, root);
+      base = deepMergeConfig(base, userOverride);
+      base.userLocalConfigPath = userLocalPath;
+    } catch (err) {
+      process.stderr.write(
+        `[gad-config] WARN: Failed to load user-local config "${userLocalPath}": ${err.message}\n`,
+      );
+    }
   }
 
-  if (fs.existsSync(jsonPath)) {
-    return fromJson(jsonPath, root);
-  }
-
-  return defaults(root);
+  return base;
 }
 
 function fromToml(tomlPath, root) {
