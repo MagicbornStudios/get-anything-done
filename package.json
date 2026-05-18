@@ -49,6 +49,7 @@
     "citty": "^0.1.6",
     "js-tiktoken": "^1.0.21",
     "mime-types": "^2.1.35",
+    "minisearch": "^7.2.0",
     "pdf-parse": "^2.4.5"
   },
   "optionalDependencies": {
