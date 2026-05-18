@@ -48,31 +48,43 @@ function register({ common }) {
   // ── Subcommands ────────────────────────────────────────────────────────────
 
   const queryCmd = defineCommand({
-    meta: { name: 'query', description: 'BM25 search over the context index' },
+    meta: { name: 'query', description: 'Hybrid BM25+reranker search over the context index' },
     args: {
       text: { type: 'positional', description: 'Search query', required: true },
       projectid: { type: 'string', description: 'Project id', default: '' },
       json: { type: 'boolean', description: 'Emit JSON array', default: false },
       top: { type: 'string', description: 'Max results (default 10)', default: '10' },
+      rerank: { type: 'boolean', description: 'Enable bge-reranker reranking (default true; use --no-rerank to disable)', default: true },
+      embed: { type: 'boolean', description: 'Enable Ollama cosine rerank step (default false)', default: false },
     },
     async run({ args }) {
       const projectRoot = getProjectRoot(args);
       try {
         const { query } = require('../../lib/context-index/index.cjs');
+        const topK = parseInt(String(args.top || '10'), 10) || 10;
+        const t0 = Date.now();
         const results = await query(String(args.text), {
           projectRoot,
-          topK: parseInt(String(args.top || '10'), 10) || 10,
+          topK,
+          rerank: args.rerank !== false,
+          embed: !!args.embed,
         });
+        const elapsed = Date.now() - t0;
         if (args.json) {
-          console.log(JSON.stringify(results, null, 2));
+          console.log(JSON.stringify({ results, elapsed_ms: elapsed }, null, 2));
         } else {
           if (results.length === 0) {
             process.stdout.write('No results found.\n');
             return;
           }
+          const method = results[0] && results[0].retrieval_method ? results[0].retrieval_method : 'bm25';
+          process.stdout.write(`[${method}] ${results.length} results (${elapsed}ms)\n\n`);
           for (const r of results) {
+            const scoreStr = r.rerank_score != null
+              ? `bm25=${(r.bm25_score ?? r.score ?? 0).toFixed(3)} rerank=${r.rerank_score.toFixed(3)}`
+              : `score=${(r.score ?? 0).toFixed(3)}`;
             process.stdout.write(
-              `[${r.source}] ${r.id} (score ${(r.score ?? 0).toFixed(3)})\n` +
+              `[${r.source}] ${r.id} (${scoreStr})\n` +
               `  ${(r.snippet || r.text || '').slice(0, 160).replace(/\n/g, ' ')}\n\n`
             );
           }
