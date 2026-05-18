@@ -413,6 +413,19 @@ function createPhasesCommand(deps) {
         process.exit(1);
         return;
       }
+      // Producer #4 (phase 111): emit a notification on successful close.
+      try {
+        const { createNotification } = require('../../lib/notifications/index.cjs');
+        const title = (phase && phase.title) ? String(phase.title).slice(0, 80) : `Phase ${phaseId}`;
+        createNotification({
+          severity: 'info',
+          source: 'phases',
+          title: `Phase ${phaseId} closed: ${title}`,
+          message: `Tasks: ${counts.done} done, ${counts.cancelled} cancelled. ROADMAP.xml advanced.`,
+          fingerprint: `phases:closed:${args.projectid || 'unknown'}:${phaseId}`,
+          _baseDir: baseDir,
+        });
+      } catch { /* best-effort — notifications must never block phase close */ }
       console.log(`Closed phase ${phaseId}.`);
       console.log(`File: ${path.relative(baseDir, filePath)}`);
       console.log(`Tasks: ${counts.done} done, ${counts.cancelled} cancelled`);

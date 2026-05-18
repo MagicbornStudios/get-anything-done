@@ -33,6 +33,7 @@ const { defineCommand } = require('citty');
 const { runCuration } = require('../../lib/datasets/curator.cjs');
 const { pushToSupabase } = require('../../lib/datasets/remote-supabase.cjs');
 const { extractDesignReasoning } = require('../../lib/datasets-curator-design-decisions.cjs');
+const { createExportCommand } = require('./datasets/export.cjs');
 
 const DEFAULT_TICK_MINUTES = 30;
 const PIDFILE_NAME  = 'datasets-curator.pid';
@@ -641,6 +642,9 @@ function createDatasetsCommand(deps) {
     },
   });
 
+  // ── export (Phase 244 scaffold — typed JSONL extraction from .planning/) ────
+  const exportCmd = createExportCommand(deps);
+
   // ── root command ─────────────────────────────────────────────────────────────
   return defineCommand({
     meta: {
@@ -654,6 +658,7 @@ function createDatasetsCommand(deps) {
       timeline:     timelineCmd,
       report:       reportCmd,
       'push-remote': pushRemoteCmd,
+      export:       exportCmd,
     },
   });
 }

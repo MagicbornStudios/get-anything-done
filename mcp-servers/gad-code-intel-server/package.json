@@ -1,0 +1,14 @@
+{
+  "name": "@gad/mcp-code-intel-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MCP server exposing structured code access (search, definition/reference heuristics, file/import listing) backed by ripgrep with a node-stdlib fallback",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.29.0"
+  }
+}

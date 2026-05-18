@@ -104,18 +104,31 @@ function createNotifyListCmd(deps) {
       severity:           { type: 'string',  description: 'Filter by severity', default: '' },
       source:             { type: 'string',  description: 'Filter by source',   default: '' },
       'include-dismissed': { type: 'boolean', description: 'Include dismissed entries', default: false },
+      since:              { type: 'string',  description: 'Only entries with ts >= this ISO timestamp', default: '' },
       json:               { type: 'boolean', description: 'JSON output',        default: false },
       projectid:          { type: 'string',  description: 'Project scope',      default: '' },
     },
     run({ args }) {
       const baseDir = resolveBaseDir(deps, args.projectid || '');
       try {
-        const entries = listActive({
+        let entries = listActive({
           severity: args.severity || undefined,
           source: args.source || undefined,
           includeDismissed: args['include-dismissed'],
           _baseDir: baseDir,
         });
+
+        // --since filter (phase 111 consumer support: SessionStart wants
+        // entries newer than the last session-start timestamp).
+        if (args.since) {
+          const sinceMs = Date.parse(args.since);
+          if (Number.isFinite(sinceMs)) {
+            entries = entries.filter(e => {
+              const ts = e.ts ? Date.parse(e.ts) : 0;
+              return Number.isFinite(ts) && ts >= sinceMs;
+            });
+          }
+        }
 
         if (args.json) {
           console.log(JSON.stringify(entries, null, 2));
@@ -170,6 +183,38 @@ function createNotifyDismissCmd(deps) {
           console.log(`Not found: ${args.id}`);
           process.exit(1);
         }
+      } catch (e) {
+        if (outputError) outputError(e.message);
+        else console.error(e.message);
+        process.exit(1);
+      }
+    },
+  });
+}
+
+function createNotifyDismissAllCmd(deps) {
+  const { outputError } = deps;
+  return defineCommand({
+    meta: { name: 'dismiss-all', description: 'Mark all active notifications as dismissed (filter by --severity / --source)' },
+    args: {
+      severity:  { type: 'string', description: 'Only dismiss entries matching this severity', default: '' },
+      source:    { type: 'string', description: 'Only dismiss entries matching this source',   default: '' },
+      projectid: { type: 'string', description: 'Project scope', default: '' },
+    },
+    run({ args }) {
+      const baseDir = resolveBaseDir(deps, args.projectid || '');
+      try {
+        const entries = listActive({
+          severity: args.severity || undefined,
+          source: args.source || undefined,
+          _baseDir: baseDir,
+        });
+        let n = 0;
+        for (const e of entries) {
+          const r = dismissNotification(e.id, baseDir);
+          if (r.found) n++;
+        }
+        console.log(`Dismissed ${n} notification(s).`);
       } catch (e) {
         if (outputError) outputError(e.message);
         else console.error(e.message);
@@ -257,6 +302,7 @@ function createNotifyCommand(deps) {
       create:         createNotifyCreateCmd(deps),
       list:           createNotifyListCmd(deps),
       dismiss:        createNotifyDismissCmd(deps),
+      'dismiss-all':  createNotifyDismissAllCmd(deps),
       'clear-expired': createNotifyClearExpiredCmd(deps),
       summary:        createNotifySummaryCmd(deps),
     },
