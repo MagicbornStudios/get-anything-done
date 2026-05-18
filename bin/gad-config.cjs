@@ -276,6 +276,11 @@ function fromToml(tomlPath, root) {
     enabled: r.enabled !== false,
   }));
 
+  // [runtimes.<projectid>] — per-project account allowlist (GLOBAL-T-87-03).
+  // Shape: { <projectid>: { <provider>: string[] } }. Consumers in
+  // lib/team/per-project-scope.cjs filter the global account pool.
+  const runtimesScope = (data.runtimes && typeof data.runtimes === 'object') ? data.runtimes : {};
+
   return {
     configPath: tomlPath,
     mode: data.mode || 'interactive',
@@ -288,6 +293,7 @@ function fromToml(tomlPath, root) {
     exa_search: data.exa_search === true,
     roots: rootsMerged,
     evalsRoots,
+    runtimes: runtimesScope,
     docs_sink: planning.docs_sink || null,
     docs_path: docs.path || docs.docs_path || planning.docs_path || null,
     // Bulk ignore list for `gad sink compile` — project ids skipped

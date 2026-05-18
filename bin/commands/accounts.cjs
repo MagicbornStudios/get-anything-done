@@ -20,6 +20,8 @@ const {
   rotateRuntimeAccount,
 } = require('../../lib/team/rate-limit.cjs');
 const { pollOnce } = require('../../lib/team/account-poller.cjs');
+const { loadProjectAccountScope, isAccountInProjectScope } = require('../../lib/team/per-project-scope.cjs');
+const { buildAccountHints } = require('../../lib/team/account-hints.cjs');
 
 function createAccountsCommand(deps) {
   const {
@@ -82,11 +84,21 @@ function createAccountsCommand(deps) {
     args: {
       projectid: { type: 'string', description: 'Project id whose team registry to inspect', default: '' },
       provider: { type: 'string', description: 'Optional provider filter', default: '' },
+      scoped: { type: 'boolean', description: 'Filter rows to accounts allowed by [runtimes.<projectid>] in gad-config.toml (87-03).', default: false },
       json: { type: 'boolean', description: 'Emit JSON instead of text', default: false },
     },
     run({ args }) {
-      const { baseDir } = resolveBaseDir(args);
-      const rows = collectAccounts(baseDir, String(args.provider || ''));
+      const { repoRoot, baseDir } = resolveBaseDir(args);
+      let rows = collectAccounts(baseDir, String(args.provider || ''));
+      const pid = args && args.projectid ? String(args.projectid) : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+      const scope = args.scoped ? loadProjectAccountScope(repoRoot, pid) : null;
+      if (args.scoped) {
+        if (!scope) {
+          if (!args.json) console.log(`(no [runtimes.${pid || '<projectid>'}] scope in gad-config.toml — showing full pool)`);
+        } else {
+          rows = rows.filter((row) => isAccountInProjectScope(scope, row.provider, row.label));
+        }
+      }
       if (args.json) {
         console.log(JSON.stringify(rows, null, 2));
         return;
@@ -389,10 +401,55 @@ function createAccountsCommand(deps) {
     },
   });
 
+  // ---------------------------------------------------------------------------
+  // hints — surface accounts hitting repeated rate-limits (GLOBAL-T-87-05)
+  // ---------------------------------------------------------------------------
+
+  const hints = defineCommand({
+    meta: {
+      name: 'hints',
+      description: 'Surface accounts that hit rate-limit repeatedly in a sliding window (default: 2x in 24h). Reads supervisor + worker logs.',
+    },
+    args: {
+      projectid: { type: 'string', description: 'Project id whose team logs to scan', default: '' },
+      threshold: { type: 'string', description: 'Minimum rate-limit count to trigger hint (default 2)', default: '' },
+      'window-hours': { type: 'string', description: 'Sliding window in hours (default 24)', default: '' },
+      scoped: { type: 'boolean', description: 'Filter to accounts in [runtimes.<projectid>] scope', default: false },
+      json: { type: 'boolean', description: 'Emit JSON', default: false },
+    },
+    run({ args }) {
+      const { repoRoot, baseDir } = resolveBaseDir(args);
+      const pid = args && args.projectid ? String(args.projectid) : (getLastActiveProjectid ? getLastActiveProjectid() || '' : '');
+      const scope = args.scoped ? loadProjectAccountScope(repoRoot, pid) : null;
+      const scopePredicate = scope
+        ? (provider, label) => isAccountInProjectScope(scope, provider, label)
+        : null;
+      const opts = {
+        threshold: args.threshold ? Number(args.threshold) : undefined,
+        windowHours: args['window-hours'] ? Number(args['window-hours']) : undefined,
+        scopePredicate,
+      };
+      const rows = buildAccountHints(baseDir, opts);
+      if (args.json) {
+        console.log(JSON.stringify({ hints: rows, threshold: opts.threshold || 2, window_hours: opts.windowHours || 24 }, null, 2));
+        return;
+      }
+      if (rows.length === 0) {
+        console.log('No account-upgrade hints in window.');
+        return;
+      }
+      console.log(`Account hints (${rows.length}):`);
+      for (const h of rows) {
+        console.log(`  ${h.provider}:${h.label}  count=${h.count}  window=${h.window_hours}h  last=${h.last_ts}`);
+        console.log(`    -> ${h.recommendation}`);
+      }
+    },
+  });
+
   return defineCommand({
     meta: {
       name: 'accounts',
-      description: 'Manage provider-aware runtime accounts for team workers: list, add, login, use, pause, resume, remove, rotate, poll.',
+      description: 'Manage provider-aware runtime accounts for team workers: list, add, login, use, pause, resume, remove, rotate, poll, hints.',
     },
     subCommands: {
       list,
@@ -404,6 +461,7 @@ function createAccountsCommand(deps) {
       remove,
       rotate,
       poll,
+      hints,
     },
   });
 }
