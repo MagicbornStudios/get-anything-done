@@ -217,7 +217,7 @@ function createTasksStampCommand(deps) {
 
             // Read current level
             let xml = fs.readFileSync(stateXmlPath, 'utf8');
-            const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+)"\s+xp_to_next="(\d+)"\s+loaded_skills="(\d+)"\/?>/);
+            const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+(?:\.\d+)?)"\s+xp_to_next="(\d+(?:\.\d+)?)"\s+loaded_skills="(\d+)"\/?>/);
             if (levelMatch) {
               const curValue = parseInt(levelMatch[1], 10);
               const curXp = parseInt(levelMatch[2], 10);

@@ -154,7 +154,7 @@ function createSpeciesCommand(deps) {
       }
 
       const xml = fs.readFileSync(stateXmlPath, 'utf8');
-      const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+)"\s+xp_to_next="(\d+)"\s+loaded_skills="(\d+)"\/?>/);
+      const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+(?:\.\d+)?)"\s+xp_to_next="(\d+(?:\.\d+)?)"\s+loaded_skills="(\d+)"\/?>/);
       if (!levelMatch) {
         console.error('<level> element not found in STATE.xml');
         process.exit(1);
@@ -242,7 +242,7 @@ function createSpeciesCommand(deps) {
 
       // Read current level to preserve value and loaded_skills
       let xml = fs.readFileSync(stateXmlPath, 'utf8');
-      const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+)"\s+xp_to_next="(\d+)"\s+loaded_skills="(\d+)"\/?>/);
+      const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+(?:\.\d+)?)"\s+xp_to_next="(\d+(?:\.\d+)?)"\s+loaded_skills="(\d+)"\/?>/);
       if (!levelMatch) {
         console.error('<level> element not found in STATE.xml');
         process.exit(1);
@@ -265,9 +265,12 @@ function createSpeciesCommand(deps) {
         finalXpToNext = xpMath.xpToNextLevel(finalValue);
       }
 
-      // Write updated level
-      const levelTag = `  <level value="${finalValue}" xp="${finalXp}" xp_to_next="${finalXpToNext}" loaded_skills="${curLoadedSkills}"/>`;
-      xml = xml.replace(/(\s*<level\s[^>]*\/?>)/, levelTag);
+      // Write updated level — round XP to integer so state-reader.cjs regex (\d+) accepts it.
+      // Skill weights can be decimal internally; storage stays integer-only.
+      // Replacement preserves a newline + 2-space indent so the element doesn't
+      // concatenate onto a preceding comment's closing -->.
+      const levelTag = `\n  <level value="${finalValue}" xp="${Math.round(finalXp)}" xp_to_next="${Math.round(finalXpToNext)}" loaded_skills="${curLoadedSkills}"/>`;
+      xml = xml.replace(/\n?[ \t]*<level\s[^>]*\/?>/, levelTag);
 
       // Write stamped-tasks
       const stampedContent = stampedTaskIds.map(id => `    ${id.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}`).join('\n');

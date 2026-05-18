@@ -13,7 +13,7 @@ const { defineCommand } = require('citty');
 function readLevel(stateXmlPath) {
   if (!fs.existsSync(stateXmlPath)) return { value: 1, xp: 0, xpToNext: 100, loadedSkills: 0 };
   const xml = fs.readFileSync(stateXmlPath, 'utf8');
-  const m = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+)"\s+xp_to_next="(\d+)"\s+loaded_skills="(\d+)"\/?>/);
+  const m = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+(?:\.\d+)?)"\s+xp_to_next="(\d+(?:\.\d+)?)"\s+loaded_skills="(\d+)"\/?>/);
   if (m) {
     return {
       value: parseInt(m[1], 10),

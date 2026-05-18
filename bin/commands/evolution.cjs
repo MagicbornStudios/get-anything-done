@@ -32,7 +32,7 @@ const { loadSessions } = require('./session.cjs');
 function readLevelFromStateXml(stateXmlPath) {
   if (!fs.existsSync(stateXmlPath)) return null;
   const xml = fs.readFileSync(stateXmlPath, 'utf8');
-  const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+)"\s+xp_to_next="(\d+)"\s+loaded_skills="(\d+)"\/?>/);
+  const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+(?:\.\d+)?)"\s+xp_to_next="(\d+(?:\.\d+)?)"\s+loaded_skills="(\d+)"\/?>/);
   if (levelMatch) {
     return {
       value: parseInt(levelMatch[1], 10),
