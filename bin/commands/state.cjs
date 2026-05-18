@@ -177,12 +177,13 @@ function createStateCommand(deps) {
   // reserved for "what should the next agent do RIGHT NOW" — short and
   // current — while <state-log> carries the running journal.
   const stateLogCmd = defineCommand({
-    meta: { name: 'log', description: 'Append a one-line entry to <state-log> in STATE.xml. Append-only — never overwrites prior entries.' },
+    meta: { name: 'log', description: 'Append a one-line entry to <state-log> in STATE.xml. Use --tail N to read recent entries instead.' },
     args: {
-      message: { type: 'positional', description: 'One-line summary of what just happened', required: true },
+      message: { type: 'positional', description: 'One-line summary of what just happened (omit with --tail to read-only)', required: false },
       tags: { type: 'string', description: 'Comma-separated tags (e.g. diff-noise,sweep-d)', default: '' },
       agent: { type: 'string', description: 'Agent slug (defaults to $GAD_AGENT_NAME)', default: '' },
       projectid: { type: 'string', description: 'Scope to one project by id', default: '' },
+      tail: { type: 'string', description: 'Print last N <state-log> entries and exit (no write)', default: '' },
     },
     run({ args }) {
       const baseDir = findRepoRoot();
@@ -200,6 +201,58 @@ function createStateCommand(deps) {
       const stateXml = path.join(baseDir, root.path, root.planningDir, 'STATE.xml');
       if (!fs.existsSync(stateXml)) {
         outputError(`STATE.xml not found at ${stateXml}`);
+        process.exit(1);
+        return;
+      }
+
+      // --tail N: read-only mode — parse last N entries and print them.
+      const tailArg = String(args.tail || '').trim();
+      if (tailArg) {
+        const n = parseInt(tailArg, 10);
+        if (!n || n < 1) {
+          outputError('--tail requires a positive integer (e.g. --tail 5)');
+          process.exit(1);
+          return;
+        }
+        const xml = fs.readFileSync(stateXml, 'utf8');
+        // Extract all <entry …>…</entry> elements from <state-log>
+        const logMatch = xml.match(/<state-log>([\s\S]*?)<\/state-log>/);
+        if (!logMatch) {
+          console.log('(no <state-log> block found in STATE.xml)');
+          return;
+        }
+        const logBody = logMatch[1];
+        // Parse entries: <entry agent="X" at="ISO" [tags="T"]>msg</entry>
+        const entryRe = /<entry([^>]*)>([\s\S]*?)<\/entry>/g;
+        const entries = [];
+        let m;
+        while ((m = entryRe.exec(logBody)) !== null) {
+          const attrs = m[1];
+          const text = m[2].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+          const agentM = attrs.match(/agent="([^"]*)"/);
+          const atM = attrs.match(/at="([^"]*)"/);
+          const tagsM = attrs.match(/tags="([^"]*)"/);
+          entries.push({
+            agent: agentM ? agentM[1] : '?',
+            at: atM ? atM[1] : '?',
+            tags: tagsM ? tagsM[1] : '',
+            text,
+          });
+        }
+        // Entries are newest-first in the file; take the first N.
+        const slice = entries.slice(0, n);
+        console.log(`[state log --tail ${n}] (${slice.length} of ${entries.length} entries)`);
+        for (const e of slice) {
+          const tagsLabel = e.tags ? ` [${e.tags}]` : '';
+          console.log(`  ${e.at}  ${e.agent}${tagsLabel}`);
+          console.log(`    ${e.text}`);
+        }
+        return;
+      }
+
+      // No --tail: write mode — require message.
+      if (!args.message) {
+        outputError('Missing required positional argument: MESSAGE (or pass --tail N to read recent entries)');
         process.exit(1);
         return;
       }
