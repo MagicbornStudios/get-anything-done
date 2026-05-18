@@ -214,7 +214,7 @@ function register({ common }) {
   });
 
   const contextCmd = defineCommand({
-    meta: { name: 'context', description: 'Context-index CLI: query / summarize / rebuild / status' },
+    meta: { name: 'context-index', description: 'Context-index CLI: query / summarize / rebuild / status' },
     subCommands: {
       query: queryCmd,
       summarize: summarizeCmd,
@@ -223,7 +223,7 @@ function register({ common }) {
     },
   });
 
-  return { context: contextCmd };
+  return { 'context-index': contextCmd };
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
