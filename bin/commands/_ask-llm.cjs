@@ -24,6 +24,7 @@
  */
 
 const { defineCommand } = require('citty');
+const { checkBudget, truncateToBudget, budgetForModel, estimateTokens } = require('../../lib/token-budget/index.cjs');
 
 // ── Backend detection ────────────────────────────────────────────────────────
 
@@ -148,7 +149,8 @@ async function callViaAiSdk({ provider, modelString, question, soul, maxTokens, 
 
 // ── Main runner ──────────────────────────────────────────────────────────────
 
-async function runAskLlm({ question, backend, soul, json, maxTokens }) {
+async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens }) {
+  let question = questionIn;
   const started = Date.now();
   let chosen, modelLabel;
   try {
@@ -160,6 +162,25 @@ async function runAskLlm({ question, backend, soul, json, maxTokens }) {
       process.stderr.write(`gad ask: ${err.message}\n`);
     }
     process.exit(1);
+  }
+
+  // ── Token budget pre-send check ──────────────────────────────────────────
+  {
+    const systemPrompt = buildSystemPrompt(soul);
+    // Resolve model label early enough for budget lookup (use env or defaults)
+    const modelForBudget = chosen === 'gateway'
+      ? (process.env.GAD_ASK_GATEWAY_MODEL || 'anthropic/claude-sonnet-4-6')
+      : chosen === 'direct'
+        ? (process.env.GAD_ASK_DIRECT_MODEL || 'claude-sonnet-4-5')
+        : (process.env.MODAL_VLLM_MODEL || 'default-small');
+    const budget = budgetForModel(modelForBudget);
+    const budgetResult = checkBudget({ system: systemPrompt, user: question }, budget);
+    if (!budgetResult.withinBudget) {
+      process.stderr.write(
+        `gad ask: prompt is ${budgetResult.tokens} tokens — ${budgetResult.overBy} over budget (${budget}) for ${modelForBudget}. Truncating user prompt.\n`
+      );
+      question = truncateToBudget(question, budget - estimateTokens(systemPrompt), 'cl100k_base');
+    }
   }
 
   let buffered = '';
