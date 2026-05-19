@@ -274,6 +274,323 @@ test('parse throws on unrecognised string', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Edge cases / cron field syntax (phase 254-15)
+// ---------------------------------------------------------------------------
+
+test('parse list cron field "0,15,30,45 * * * *" → kind=cron', () => {
+  const r = parse('0,15,30,45 * * * *');
+  assert.strictEqual(r.kind, 'cron');
+  assert.strictEqual(r.expression, '0,15,30,45 * * * *');
+});
+
+test('parse step cron field "*/5 * * * *" → kind=cron', () => {
+  const r = parse('*/5 * * * *');
+  assert.strictEqual(r.kind, 'cron');
+});
+
+test('parse range cron field "0 9-17 * * *" → kind=cron', () => {
+  const r = parse('0 9-17 * * *');
+  assert.strictEqual(r.kind, 'cron');
+});
+
+test('parse @hourly → cron 0 * * * *', () => {
+  const r = parse('@hourly');
+  assert.strictEqual(r.kind, 'cron');
+  assert.strictEqual(r.expression, '0 * * * *');
+});
+
+test('parse @yearly → cron 0 0 1 1 *', () => {
+  const r = parse('@yearly');
+  assert.strictEqual(r.kind, 'cron');
+  assert.strictEqual(r.expression, '0 0 1 1 *');
+});
+
+test('parse @midnight → cron 0 0 * * *', () => {
+  const r = parse('@midnight');
+  assert.strictEqual(r.kind, 'cron');
+  assert.strictEqual(r.expression, '0 0 * * *');
+});
+
+test('parse cron with leading/trailing whitespace trims', () => {
+  const r = parse('  0 3 * * *  ');
+  assert.strictEqual(r.kind, 'cron');
+  assert.strictEqual(r.expression, '0 3 * * *');
+});
+
+test('parse cron field out-of-range rejected (minute=60)', () => {
+  assert.throws(() => parse('60 0 * * *'), /out of range/);
+});
+
+test('parse cron field out-of-range rejected (hour=24)', () => {
+  assert.throws(() => parse('0 24 * * *'), /out of range/);
+});
+
+test('parse cron field out-of-range rejected (month=13)', () => {
+  assert.throws(() => parse('0 0 1 13 *'), /out of range/);
+});
+
+test('parse cron field invalid syntax rejected (alpha)', () => {
+  assert.throws(() => parse('foo bar baz qux quux'), /invalid cron field/);
+});
+
+test('parse 0hz rejected', () => {
+  assert.throws(() => parse('0hz'), /hz must be > 0/);
+});
+
+test('parse predicate with string value (quoted)', () => {
+  const r = parse('when:phase_status == "done"');
+  assert.strictEqual(r.kind, 'predicate');
+  assert.strictEqual(r.value, 'done');
+});
+
+test('parse predicate with negative value', () => {
+  const r = parse('when:level_delta >= -1');
+  assert.strictEqual(r.kind, 'predicate');
+  assert.strictEqual(r.value, -1);
+});
+
+test('parse predicate with operator <=', () => {
+  const r = parse('when:open_tasks <= 50');
+  assert.strictEqual(r.kind, 'predicate');
+  assert.strictEqual(r.op, '<=');
+});
+
+test('parse predicate with operator ==', () => {
+  const r = parse('when:drift_flag == false');
+  assert.strictEqual(r.kind, 'predicate');
+  assert.strictEqual(r.value, false);
+});
+
+test('parse on:deploy → known event', () => {
+  const r = parse('on:deploy');
+  assert.strictEqual(r.kind, 'event');
+  assert.strictEqual(r.known, true);
+});
+
+test('parse on:bench-complete → known event', () => {
+  const r = parse('on:bench-complete');
+  assert.strictEqual(r.kind, 'event');
+  assert.strictEqual(r.known, true);
+});
+
+test('parse uppercase unit "5M" → interval m', () => {
+  const r = parse('5M');
+  assert.strictEqual(r.kind, 'interval');
+  assert.strictEqual(r.unit, 'm');
+  assert.strictEqual(r.ms, 5 * 60 * 1000);
+});
+
+test('parse uppercase HZ "10HZ" → hz', () => {
+  const r = parse('10HZ');
+  assert.strictEqual(r.kind, 'hz');
+  assert.strictEqual(r.intervalMs, 100);
+});
+
+test('validate every shape returns valid', () => {
+  const samples = [
+    '30s', '5m', '1h', '1d',
+    '10hz', '0.5hz',
+    '@daily', '@weekly', '@hourly', '@monthly', '@yearly', '@midnight',
+    '0 3 * * *', '*/5 * * * *', '0 9-17 * * 1-5', '0,30 * * * *',
+    'on:commit', 'on:phase-close', 'on:level-up', 'on:task-stamp', 'on:custom',
+    'when:level_delta >= 2', 'when:flag == true', 'when:count != 0',
+  ];
+  for (const s of samples) {
+    const r = validate(s);
+    assert.strictEqual(r.valid, true, `expected ${s} to be valid, got: ${r.error}`);
+  }
+});
+
+test('validate rejects known-bad strings with errors', () => {
+  const samples = [
+    '',                  // empty
+    'banana',            // unknown
+    '60 0 * * *',        // out-of-range minute
+    '0hz',               // hz must be >0
+    'when:',             // malformed predicate
+    'on:',               // malformed event
+  ];
+  for (const s of samples) {
+    const r = validate(s);
+    assert.strictEqual(r.valid, false, `expected ${s} to be invalid`);
+    assert.ok(r.error && r.error.length > 0, `expected ${s} to have an error message`);
+  }
+});
+
+test('nextRun cron step "*/15 * * * *" advances by 15-min boundaries', () => {
+  const now = new Date(2026, 4, 18, 10, 7, 0); // local 10:07
+  const p = parse('*/15 * * * *');
+  const nr = nextRun(p, now);
+  assert.ok(nr instanceof Date);
+  // next match must be at a minute divisible by 15 and >= 10:08
+  assert.strictEqual(nr.getMinutes() % 15, 0);
+});
+
+test('nextRun cron with list "0,30 * * * *" hits next 30-min slot', () => {
+  const now = new Date(2026, 4, 18, 10, 14, 0); // local 10:14
+  const p = parse('0,30 * * * *');
+  const nr = nextRun(p, now);
+  assert.ok(nr instanceof Date);
+  assert.strictEqual(nr.getMinutes(), 30);
+  assert.strictEqual(nr.getHours(), 10);
+});
+
+test('nextRun cron range "0 9-17 * * *" — 18:00 → 09:00 next day', () => {
+  const now = new Date(2026, 4, 18, 18, 0, 0); // local 18:00
+  const p = parse('0 9-17 * * *');
+  const nr = nextRun(p, now);
+  assert.ok(nr instanceof Date);
+  assert.strictEqual(nr.getHours(), 9);
+  assert.strictEqual(nr.getMinutes(), 0);
+  assert.ok(nr.getDate() > now.getDate() || nr.getMonth() > now.getMonth());
+});
+
+// ---------------------------------------------------------------------------
+// Integration with lib/cron validators (phase 254-05)
+// ---------------------------------------------------------------------------
+
+const {
+  validateScheduleString,
+  validateScheduleEntry,
+  validateCronJsonShape,
+} = require(path.join(__dirname, '../lib/cron/index.cjs'));
+
+test('cron.validateScheduleString accepts unified syntax', () => {
+  for (const s of ['5m', '10hz', '0 3 * * *', '@daily', 'on:commit', 'when:flag == true']) {
+    const r = validateScheduleString(s);
+    assert.strictEqual(r.valid, true, `expected ${s} valid`);
+    assert.ok(r.kind);
+  }
+});
+
+test('cron.validateScheduleString rejects garbage', () => {
+  const r = validateScheduleString('every tuesday');
+  assert.strictEqual(r.valid, false);
+});
+
+test('cron.validateScheduleEntry rejects entry without schedule', () => {
+  const r = validateScheduleEntry({ id: 'x', command: 'gad noop' });
+  assert.strictEqual(r.valid, false);
+  assert.ok(r.errors.some((e) => /schedule/.test(e)));
+});
+
+test('cron.validateScheduleEntry rejects entry without command', () => {
+  const r = validateScheduleEntry({ id: 'x', schedule: '5m' });
+  assert.strictEqual(r.valid, false);
+  assert.ok(r.errors.some((e) => /command/.test(e)));
+});
+
+test('cron.validateScheduleEntry rejects entry without id/name', () => {
+  const r = validateScheduleEntry({ schedule: '5m', command: 'gad noop' });
+  assert.strictEqual(r.valid, false);
+});
+
+test('cron.validateScheduleEntry accepts complete entry (id form)', () => {
+  const r = validateScheduleEntry({
+    id: 'deploy-on-level-up',
+    schedule: 'on:level-up',
+    command: 'gad desk ship',
+    enabled: true,
+  });
+  assert.strictEqual(r.valid, true);
+  assert.deepStrictEqual(r.errors, []);
+});
+
+test('cron.validateScheduleEntry accepts legacy name+schedule entry', () => {
+  const r = validateScheduleEntry({
+    name: 'retrain-tick',
+    schedule: '0 3 * * *',
+    command: 'gad models lifecycle trigger --all',
+  });
+  assert.strictEqual(r.valid, true);
+});
+
+test('cron.validateCronJsonShape accepts object form { entries:[...] }', () => {
+  const doc = {
+    entries: [
+      { id: 'a', schedule: '5m', command: 'gad x' },
+      { id: 'b', schedule: '@daily', command: 'gad y' },
+    ],
+  };
+  const r = validateCronJsonShape(doc);
+  assert.strictEqual(r.valid, true);
+  assert.strictEqual(r.entries.length, 2);
+});
+
+test('cron.validateCronJsonShape accepts legacy array form', () => {
+  const doc = [{ name: 'a', schedule: '5m', command: 'gad x' }];
+  const r = validateCronJsonShape(doc);
+  assert.strictEqual(r.valid, true);
+  assert.strictEqual(r.entries.length, 1);
+});
+
+test('cron.validateCronJsonShape rejects duplicate ids', () => {
+  const doc = {
+    entries: [
+      { id: 'dup', schedule: '5m', command: 'gad x' },
+      { id: 'dup', schedule: '@daily', command: 'gad y' },
+    ],
+  };
+  const r = validateCronJsonShape(doc);
+  assert.strictEqual(r.valid, false);
+  assert.ok(r.errors.some((e) => /duplicate id/.test(e)));
+});
+
+test('cron.validateCronJsonShape rejects non-array, non-object doc', () => {
+  const r = validateCronJsonShape('garbage');
+  assert.strictEqual(r.valid, false);
+  assert.ok(r.errors.some((e) => /array|entries/.test(e)));
+});
+
+// ---------------------------------------------------------------------------
+// Integration smoke: gad schedule CLI (phase 254-14 smoke via spawnSync)
+// ---------------------------------------------------------------------------
+
+const { spawnSync } = require('node:child_process');
+const GAD = path.join(__dirname, '..', 'bin', 'gad.cjs');
+
+function runGad(args, env) {
+  return spawnSync(process.execPath, [GAD, ...args], {
+    encoding: 'utf8',
+    env: { ...process.env, ...(env || {}) },
+  });
+}
+
+test('gad schedule validate "5m" → exit 0', () => {
+  const r = runGad(['schedule', 'validate', '5m']);
+  assert.strictEqual(r.status, 0, `stdout:${r.stdout} stderr:${r.stderr}`);
+  assert.ok(/VALID/.test(r.stdout));
+  assert.ok(/interval/.test(r.stdout));
+});
+
+test('gad schedule validate "garbage" → exit 1', () => {
+  const r = runGad(['schedule', 'validate', 'garbage']);
+  assert.strictEqual(r.status, 1);
+  assert.ok(/INVALID/.test(r.stdout));
+});
+
+test('gad schedule validate --json emits parseable JSON', () => {
+  const r = runGad(['schedule', 'validate', '@daily', '--json']);
+  assert.strictEqual(r.status, 0);
+  const parsedOut = JSON.parse(r.stdout);
+  assert.strictEqual(parsedOut.valid, true);
+  assert.strictEqual(parsedOut.parsed.kind, 'cron');
+});
+
+test('gad schedule next-run "5m" --count 3 → 3 ISO timestamps', () => {
+  const r = runGad(['schedule', 'next-run', '5m', '--count', '3']);
+  assert.strictEqual(r.status, 0);
+  const matches = r.stdout.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/g) || [];
+  assert.ok(matches.length >= 3, `expected 3+ timestamps in ${r.stdout}`);
+});
+
+test('gad schedule next-run "on:commit" → reports no fire-time', () => {
+  const r = runGad(['schedule', 'next-run', 'on:commit']);
+  assert.strictEqual(r.status, 0);
+  assert.ok(/no deterministic fire-time/.test(r.stdout));
+});
+
+// ---------------------------------------------------------------------------
 // Summary
 // ---------------------------------------------------------------------------
 
