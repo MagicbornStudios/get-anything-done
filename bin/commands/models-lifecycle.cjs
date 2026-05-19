@@ -3,6 +3,7 @@
  * gad models lifecycle — retraining pipeline CLI.
  *
  * Subcommands:
+ *   list [--kind X] [--json]      registry view incl. adapters + checkpoints (248-07)
  *   status [--id X] [--json]      show registry (all or one model)
  *   trigger <id> [--force]        evaluate triggers; queue training if fired
  *   train <id> [--dry-run]        invoke trainer (stub — wired in 253-05)
@@ -59,6 +60,87 @@ function printModel(m) {
 // ---------------------------------------------------------------------------
 // Subcommands
 // ---------------------------------------------------------------------------
+
+function buildList(deps) {
+  return defineCommand({
+    meta: {
+      name: 'list',
+      description: 'Registry view: id, kind, status, ELO, adapters, checkpoints (248-07)',
+    },
+    args: {
+      kind: { type: 'string', description: 'Filter by kind (llm|mid|knn|intent)', required: false },
+      status: { type: 'string', description: 'Filter by status (active|staging|archived)', required: false },
+      json: { type: 'boolean', alias: 'j', description: 'Output JSON', default: false },
+    },
+    run({ args }) {
+      const projectRoot = resolveProjectRoot(deps);
+      const registry = reg(projectRoot);
+      let models = registry.listModels(projectRoot, { kind: args.kind || undefined });
+      if (args.status) models = models.filter((m) => (m.status || 'staging') === args.status);
+
+      if (shouldJson(args)) {
+        // Project adapter + checkpoint fields so JSON consumers don't have to
+        // poke through bench_results to find ELO.
+        const projected = models.map((m) => {
+          const latest = (m.bench_results && m.bench_results.length > 0)
+            ? m.bench_results[m.bench_results.length - 1]
+            : null;
+          return {
+            id: m.id,
+            kind: m.kind,
+            base: m.base || null,
+            precision: m.precision,
+            status: m.status || 'staging',
+            adapters: Array.isArray(m.adapters) ? m.adapters : [],
+            checkpoints: Array.isArray(m.checkpoints) ? m.checkpoints : [],
+            artifact_path: m.artifact_path || null,
+            latest_elo: latest ? latest.elo : null,
+            latest_bench_set: latest ? latest.set : null,
+            last_train_at: m.last_train_at || null,
+            last_bench_at: m.last_bench_at || null,
+            promoted_at: m.promoted_at || null,
+            archived_at: m.archived_at || null,
+          };
+        });
+        printJson(projected);
+        return;
+      }
+
+      if (models.length === 0) {
+        console.log('No models registered.');
+        console.log('Filter applied:'
+          + (args.kind ? ` kind=${args.kind}` : '')
+          + (args.status ? ` status=${args.status}` : '')
+          + (!args.kind && !args.status ? ' (none)' : ''));
+        return;
+      }
+
+      // Compact tabular view: 1 line per model, adapters/checkpoints listed indented.
+      const pad = (s, n) => String(s == null ? '' : s).padEnd(n).slice(0, n);
+      console.log(`${pad('ID', 28)} ${pad('KIND', 6)} ${pad('STATUS', 9)} ${pad('ELO', 6)} ${pad('LAST_BENCH', 20)}`);
+      console.log('-'.repeat(28 + 1 + 6 + 1 + 9 + 1 + 6 + 1 + 20));
+      for (const m of models) {
+        const latest = (m.bench_results && m.bench_results.length > 0)
+          ? m.bench_results[m.bench_results.length - 1]
+          : null;
+        const elo = latest ? String(latest.elo) : '-';
+        const last = m.last_bench_at || '-';
+        console.log(`${pad(m.id, 28)} ${pad(m.kind, 6)} ${pad(m.status || 'staging', 9)} ${pad(elo, 6)} ${pad(last, 20)}`);
+        const adapters = Array.isArray(m.adapters) ? m.adapters : [];
+        const checkpoints = Array.isArray(m.checkpoints) ? m.checkpoints : [];
+        if (adapters.length > 0) {
+          console.log(`    adapters:    ${adapters.join(', ')}`);
+        }
+        if (checkpoints.length > 0) {
+          console.log(`    checkpoints: ${checkpoints.join(', ')}`);
+        }
+        if (m.artifact_path) {
+          console.log(`    artifact:    ${m.artifact_path}`);
+        }
+      }
+    },
+  });
+}
 
 function buildStatus(deps) {
   return defineCommand({
@@ -336,6 +418,7 @@ function buildArchive(deps) {
 // ---------------------------------------------------------------------------
 
 function createModelsLifecycleCommand(deps) {
+  const list = buildList(deps);
   const status = buildStatus(deps);
   const trigger = buildTrigger(deps);
   const train = buildTrain(deps);
@@ -344,8 +427,8 @@ function createModelsLifecycleCommand(deps) {
   const archive = buildArchive(deps);
 
   return defineCommand({
-    meta: { name: 'lifecycle', description: 'Retraining pipeline: status / trigger / train / bench / promote / archive' },
-    subCommands: { status, trigger, train, bench, promote, archive },
+    meta: { name: 'lifecycle', description: 'Retraining pipeline: list / status / trigger / train / bench / promote / archive' },
+    subCommands: { list, status, trigger, train, bench, promote, archive },
   });
 }
 

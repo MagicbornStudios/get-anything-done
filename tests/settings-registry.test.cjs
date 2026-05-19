@@ -164,3 +164,118 @@ test('set: rejects unknown key via validateSetting', () => {
   const e = findEntry('totally.unknown.key');
   assert.equal(e, undefined, 'findEntry returns undefined for unknown key');
 });
+
+// ---------------------------------------------------------------------------
+// Test 6: phase 252 risk-mode workflow settings registered with correct shape
+// ---------------------------------------------------------------------------
+test('phase 252: new risk-mode workflow keys are present in REGISTRY', () => {
+  const expected = [
+    { key: 'workflow.subagent_parallelism_max', type: 'integer', default: 5 },
+    { key: 'workflow.subagent_typecheck_trust', type: 'boolean', default: false },
+    { key: 'workflow.task_stamp_batch', type: 'boolean', default: false },
+    { key: 'workflow.cheap_model_for_mechanical', type: 'boolean', default: false },
+    { key: 'workflow.risk_tolerance', type: 'string', default: 'low' },
+  ];
+  for (const spec of expected) {
+    const entry = findEntry(spec.key);
+    assert.ok(entry, `${spec.key} should be registered`);
+    assert.equal(entry.type, spec.type, `${spec.key} type mismatch`);
+    assert.equal(entry.default, spec.default, `${spec.key} default mismatch`);
+    assert.equal(typeof entry.validate, 'function', `${spec.key} should have validate fn`);
+    assert.ok(typeof entry.description === 'string' && entry.description.length > 0,
+      `${spec.key} should have non-empty description`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Test 7: phase 252 settings — validators enforce range/enum constraints
+// ---------------------------------------------------------------------------
+test('phase 252: subagent_parallelism_max enforces 1..15 range', () => {
+  // Valid
+  assert.equal(validateSetting('workflow.subagent_parallelism_max', 1).valid, true);
+  assert.equal(validateSetting('workflow.subagent_parallelism_max', 5).valid, true);
+  assert.equal(validateSetting('workflow.subagent_parallelism_max', 15).valid, true);
+
+  // Invalid
+  assert.equal(validateSetting('workflow.subagent_parallelism_max', 0).valid, false,
+    'parallelism_max=0 must fail');
+  assert.equal(validateSetting('workflow.subagent_parallelism_max', 16).valid, false,
+    'parallelism_max=16 must fail');
+  assert.equal(validateSetting('workflow.subagent_parallelism_max', 3.5).valid, false,
+    'non-integer must fail');
+  assert.equal(validateSetting('workflow.subagent_parallelism_max', 'three').valid, false,
+    'string must fail');
+});
+
+test('phase 252: risk_tolerance enforces low|medium|high enum', () => {
+  assert.equal(validateSetting('workflow.risk_tolerance', 'low').valid, true);
+  assert.equal(validateSetting('workflow.risk_tolerance', 'medium').valid, true);
+  assert.equal(validateSetting('workflow.risk_tolerance', 'high').valid, true);
+
+  assert.equal(validateSetting('workflow.risk_tolerance', 'extreme').valid, false,
+    'unknown level must fail');
+  assert.equal(validateSetting('workflow.risk_tolerance', 'LOW').valid, false,
+    'case-sensitive: LOW must fail');
+  assert.equal(validateSetting('workflow.risk_tolerance', '').valid, false,
+    'empty string must fail');
+  assert.equal(validateSetting('workflow.risk_tolerance', 1).valid, false,
+    'integer must fail');
+});
+
+test('phase 252: boolean risk settings reject non-boolean', () => {
+  for (const key of [
+    'workflow.subagent_typecheck_trust',
+    'workflow.task_stamp_batch',
+    'workflow.cheap_model_for_mechanical',
+  ]) {
+    assert.equal(validateSetting(key, true).valid, true, `${key} accepts true`);
+    assert.equal(validateSetting(key, false).valid, true, `${key} accepts false`);
+    assert.equal(validateSetting(key, 'true').valid, false,
+      `${key} rejects string "true"`);
+    assert.equal(validateSetting(key, 1).valid, false, `${key} rejects integer`);
+    assert.equal(validateSetting(key, null).valid, false, `${key} rejects null`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Test 8: phase 252 settings — defaults resolve from REGISTRY when no overrides
+// ---------------------------------------------------------------------------
+test('phase 252: defaults resolve correctly with no overrides', () => {
+  const tmp = makeTmpDir();
+  try {
+    const projToml = path.join(tmp, 'gad-config.toml');
+    const userToml = path.join(tmp, 'settings.toml');
+    const opts = { projectTomlPath: projToml, userTomlPath: userToml };
+
+    assert.equal(getSetting('workflow.subagent_parallelism_max', undefined, opts), 5);
+    assert.equal(getSetting('workflow.subagent_typecheck_trust', undefined, opts), false);
+    assert.equal(getSetting('workflow.task_stamp_batch', undefined, opts), false);
+    assert.equal(getSetting('workflow.cheap_model_for_mechanical', undefined, opts), false);
+    assert.equal(getSetting('workflow.risk_tolerance', undefined, opts), 'low');
+  } finally {
+    cleanup(tmp);
+  }
+});
+
+test('phase 252: user TOML overrides default for risk settings', () => {
+  const tmp = makeTmpDir();
+  try {
+    const projToml = path.join(tmp, 'gad-config.toml');
+    const userToml = path.join(tmp, 'settings.toml');
+    const opts = { projectTomlPath: projToml, userTomlPath: userToml };
+
+    writeTomlKey(userToml, 'settings', 'workflow.subagent_parallelism_max', 10);
+    writeTomlKey(userToml, 'settings', 'workflow.risk_tolerance', 'high');
+    writeTomlKey(userToml, 'settings', 'workflow.cheap_model_for_mechanical', true);
+
+    assert.equal(getSetting('workflow.subagent_parallelism_max', undefined, opts), 10);
+    assert.equal(getSetting('workflow.risk_tolerance', undefined, opts), 'high');
+    assert.equal(getSetting('workflow.cheap_model_for_mechanical', undefined, opts), true);
+
+    const src = resolveSettingSource('workflow.risk_tolerance', opts);
+    assert.equal(src.source, 'user');
+    assert.equal(src.value, 'high');
+  } finally {
+    cleanup(tmp);
+  }
+});

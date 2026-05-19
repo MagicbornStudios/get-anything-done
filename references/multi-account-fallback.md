@@ -208,3 +208,81 @@ Gap G3 is a monitoring gap only — rate-limit events still trigger account rota
 | Handoff-level per-runtime retry cap | `lib/team/rate-limit.cjs` `isHandoffExhaustedForRuntime` | 122 |
 | On-demand sweep / MCP dispatch | `lib/mcp/`, `gad handoffs sweep` | 164 |
 | Legacy bridge script | `scripts/gad-accounts.mjs` | pre-110 |
+| Quota observation persistence | `lib/team/accounts-registry.cjs::recordAccountQuotaState` + `lib/team/worker-loop.cjs::persistAccountQuotaObservation` | 110-06 |
+
+---
+
+## Layer separation (phase 110-09 verification)
+
+The substrate has **two distinct fallback layers** and 110-09 was the
+task of confirming they are correctly composed:
+
+### Layer 1 — Account rotation (per-runtime)
+
+When a runtime invocation returns a rate-limit signal:
+
+1. `handleRateLimitedHandoff` calls `persistAccountQuotaObservation`
+   to write `status='rate-limited'`, `last_error`, `reset_at`, and
+   `current_quota` onto the account record (110-06).
+2. `rotateRuntimeAccount` advances to the next *usable* account for
+   the same runtime. Paused / rate-limited accounts are skipped.
+3. The handoff loop retries the same handoff under the new account.
+4. After `MAX_RATE_LIMIT_RETRIES` (3) rotations on the same handoff,
+   the handoff is `unclaim`ed with `reason: 'rate-limit'`.
+
+This layer never changes the runtime — only the credential file
+pointed at by `CODEX_HOME` / `GEMINI_CONFIG_DIR` / canonical paths.
+
+### Layer 2 — Runtime fallback (per-handoff)
+
+Once a handoff is unclaimed with `reason: 'rate-limit'`:
+
+1. The handoff returns to `.planning/handoffs/open/`.
+2. `unclaim_history` accumulates per-runtime rate-limit counts.
+3. `sortHandoffsForPickup` (via `runtimeAffinityRank`) re-ranks open
+   handoffs against the available worker pool. Workers whose runtime
+   appears in the handoff's `runtime_fallbacks` (frontmatter override)
+   or in `loadGlobalFallbacks` get higher pickup priority.
+4. A different worker (likely a different runtime per the ranking
+   above) self-claims and retries the handoff.
+5. `isHandoffExhaustedForRuntime` tracks per-runtime caps so a handoff
+   that bounced 3x off gemini-cli is still eligible for codex / etc.
+
+This layer changes the runtime but inherits whatever active account
+each runtime has in its registry.
+
+### Why the two layers compose correctly
+
+- Layer 1 fires inside a single worker process. Layer 2 fires across
+  worker processes via the open-handoff queue.
+- Layer 1 rotation is invisible to Layer 2: a handoff that succeeds
+  after rotating accounts within `codex-cli` never reaches Layer 2.
+- Layer 2 only engages when Layer 1 has exhausted all accounts AND
+  unclaimed the handoff. At that point Layer 2 picks a *different*
+  runtime, which has its OWN account pool that Layer 1 will iterate
+  through on the new worker.
+- `MAX_RATE_LIMIT_RETRIES` is per-runtime in Layer 2 — so the same
+  handoff can legitimately bounce `n_runtimes * MAX_RATE_LIMIT_RETRIES`
+  times before being permanently blocked. That bound is intentional.
+
+The composed behavior delivers phase 87's contract: a handoff never
+stalls on a single rate-limit; it walks the union of (accounts per
+runtime) × (runtimes in fallback chain) before being marked
+permanently un-dispatchable.
+
+### Confirmation of wiring (2026-05-19)
+
+- `lib/team/worker-loop.cjs` imports both `rotateRuntimeAccount` (Layer 1)
+  and `loadGlobalFallbacks` (Layer 2 inputs).
+- `lib/team/dispatcher.cjs` reads `loadGlobalFallbacks` for
+  `runtimeAffinityRank` scoring.
+- `bin/commands/team/dispatch.cjs` and `bin/commands/handoffs.cjs`
+  both use `isHandoffExhaustedForRuntimes` to filter open handoffs.
+- `tests/team-worker-rate-limit-rotation.test.cjs` exercises Layer 1
+  end-to-end (`resolves active account env and rotates to the next
+  configured account` + `logs runtime-account-rotated before requeue
+  when accounts are exhausted`).
+- `tests/handoffs-quality-gate.test.cjs` covers Layer 2 routing.
+
+No additional wiring is required to satisfy 110-09. The two layers are
+already composed correctly via the existing entrypoints.
