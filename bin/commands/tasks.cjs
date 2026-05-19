@@ -18,7 +18,6 @@ const { createTasksUpdateCommand } = require('./tasks/update.cjs');
 const { createTasksMigrateCommand } = require('./tasks/migrate.cjs');
 const { createTasksStampCommand } = require('./tasks/stamp.cjs');
 const { createTasksAuditCommand } = require('./tasks/audit.cjs');
-const { createTasksDedupeCommand } = require('./tasks/dedupe.cjs');
 
 function createTasksCommand(deps) {
   const commandDeps = {
@@ -42,7 +41,6 @@ function createTasksCommand(deps) {
       migrate: createTasksMigrateCommand(commandDeps),
       stamp: createTasksStampCommand(commandDeps),
       audit: createTasksAuditCommand(commandDeps),
-      dedupe: createTasksDedupeCommand(commandDeps),
     },
   });
 }
