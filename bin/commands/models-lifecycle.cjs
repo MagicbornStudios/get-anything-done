@@ -245,25 +245,76 @@ function buildBench(deps) {
     args: {
       id: { type: 'positional', description: 'Model id', required: true },
       'bench-set': { type: 'string', description: 'Bench set id (default: model default)', required: false },
+      'dry-run': { type: 'boolean', description: 'Resolve set+contestant; skip actual run', default: false },
+      json: { type: 'boolean', alias: 'j', description: 'Output JSON', default: false },
     },
-    run({ args }) {
+    async run({ args }) {
       const projectRoot = resolveProjectRoot(deps);
-      const model = reg(projectRoot).getModel(projectRoot, args.id);
-      if (!model) { console.error(`Model not found: ${args.id}`); process.exit(1); }
-      const set = args['bench-set'] || `${model.kind}-default`;
-      console.log(`Bench stub for: ${args.id} (set=${set})`);
-      console.log('Actual bench harness invocation wired in task 253-06 (phase 247 harness).');
+      const { runBenchForModel } = require('../../lib/retraining/bench-runner.cjs');
+
+      let result;
+      try {
+        result = await runBenchForModel(projectRoot, args.id, {
+          set: args['bench-set'] || undefined,
+          dryRun: !!args['dry-run'],
+        });
+      } catch (err) {
+        if (shouldJson(args)) {
+          printJson({ ok: false, code: err.code || 'BENCH_FAILED', error: err.message });
+        } else {
+          console.error(`Bench failed: ${err.message}`);
+        }
+        process.exit(1);
+      }
+
+      if (shouldJson(args)) { printJson(result); return; }
+
+      if (result.dryRun) {
+        console.log(`[dry-run] Would bench ${args.id} on set=${result.set} (problems=${result.problems}, contestant=${result.contestantId})`);
+        return;
+      }
+      console.log(`Bench complete: ${args.id}`);
+      console.log(`  set:           ${result.set}`);
+      console.log(`  contestant:    ${result.contestantId}`);
+      console.log(`  pass:          ${result.passCount}/${result.problems} (rate=${(result.passRate * 100).toFixed(1)}%)`);
+      console.log(`  elo:           ${result.elo}`);
+      console.log(`  result file:   ${result.writtenPath}`);
+      console.log(`  registry:      ${args.id}.bench_results appended`);
     },
   });
 }
 
+function emitArchiveEvent(projectRoot, displacedId, promotedId, reasons) {
+  // Append a JSON-line event for the archive watcher (desk-hook hf-archive-tick.mjs
+  // already polls .planning/models/ events). Best-effort — never fails promote.
+  try {
+    const dir = path.join(projectRoot, '.planning', 'models');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const eventsPath = path.join(dir, 'archive-events.jsonl');
+    const entry = {
+      ts: new Date().toISOString(),
+      type: 'displaced_by_promote',
+      displaced_id: displacedId,
+      promoted_id: promotedId,
+      reasons: Array.isArray(reasons) ? reasons : [],
+      status: 'pending',
+    };
+    fs.appendFileSync(eventsPath, JSON.stringify(entry) + '\n', 'utf8');
+    return { ok: true, path: eventsPath, event: entry };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
 function buildPromote(deps) {
   return defineCommand({
-    meta: { name: 'promote', description: 'Bench-gate check; swap active pointer; archive previous' },
+    meta: { name: 'promote', description: 'Bench-gate check; swap active pointer; emit archive event for displaced model' },
     args: {
       id: { type: 'positional', description: 'Model id', required: true },
       'min-elo-improvement': { type: 'string', description: 'Min ELO improvement over current active (default: from settings)', required: false },
       force: { type: 'boolean', description: 'Skip ELO gate and promote unconditionally', default: false },
+      'archive-displaced': { type: 'boolean', description: 'Inline call to archive subcommand for the displaced model', default: false },
+      'skip-event': { type: 'boolean', description: 'Skip writing archive-events.jsonl entry for displaced model', default: false },
       json: { type: 'boolean', alias: 'j', description: 'Output gate decision as JSON', default: false },
     },
     run({ args }) {
@@ -276,19 +327,20 @@ function buildPromote(deps) {
       const allModels = registry.listModels(projectRoot, { kind: candidate.kind });
       const current = allModels.find((m) => m.status === 'active' && m.id !== args.id);
 
+      let decision = null;
       if (!args.force) {
-        const { shouldPromote } = require('../../lib/models/bench-gate.cjs');
+        const { shouldPromote } = require('../../lib/retraining/gate.cjs');
         const gateOpts = {};
         if (args['min-elo-improvement'] !== undefined && args['min-elo-improvement'] !== '') {
           const n = Number(args['min-elo-improvement']);
           if (Number.isFinite(n)) gateOpts.minImprovement = n;
         }
-        const decision = shouldPromote(projectRoot, args.id, current ? current.id : null, gateOpts);
-
-        if (shouldJson(args)) { printJson({ ...decision, action: decision.pass ? 'promoting' : 'blocked' }); }
+        decision = shouldPromote(projectRoot, args.id, current ? current.id : null, gateOpts);
 
         if (!decision.pass) {
-          if (!shouldJson(args)) {
+          if (shouldJson(args)) {
+            printJson({ ...decision, action: 'blocked' });
+          } else {
             console.error(`Bench gate FAILED: ${decision.reasons.join('; ')}`);
             if (decision.regressions.length > 0) {
               console.error('Regressions:');
@@ -304,10 +356,51 @@ function buildPromote(deps) {
       }
 
       const promoted = registry.promoteModel(projectRoot, args.id);
-      if (!shouldJson(args)) {
-        console.log(`Promoted: ${promoted.id} → status=active`);
-        if (current) {
-          console.log(`Previous active: ${current.id} → status=staging`);
+
+      // Emit archive event for displaced model (default behavior; suppressed with --skip-event).
+      let archiveEvent = null;
+      if (current && !args['skip-event']) {
+        archiveEvent = emitArchiveEvent(
+          projectRoot,
+          current.id,
+          promoted.id,
+          decision ? decision.reasons : ['force-promoted']
+        );
+      }
+
+      // Optional inline archive (sync passthrough to archive subcommand logic).
+      let archiveResult = null;
+      if (current && args['archive-displaced']) {
+        try {
+          const { archiveModel: runArchive } = require('../../lib/retraining/archiver.cjs');
+          archiveResult = runArchive(projectRoot, current.id, { forceLocal: true });
+          registry.archiveModel(projectRoot, current.id);
+        } catch (err) {
+          archiveResult = { ok: false, error: err.message };
+        }
+      }
+
+      if (shouldJson(args)) {
+        printJson({
+          ok: true,
+          action: 'promoted',
+          promoted_id: promoted.id,
+          displaced_id: current ? current.id : null,
+          decision: decision || { pass: true, reasons: ['force'] },
+          archive_event: archiveEvent,
+          archive_result: archiveResult,
+        });
+        return;
+      }
+
+      console.log(`Promoted: ${promoted.id} → status=active`);
+      if (current) {
+        console.log(`Previous active: ${current.id} → status=staging`);
+        if (archiveEvent && archiveEvent.ok) {
+          console.log(`Archive event emitted: ${archiveEvent.path}`);
+        }
+        if (archiveResult && archiveResult.mode) {
+          console.log(`Archived inline (${archiveResult.mode}): ${archiveResult.metaPath || archiveResult.repoUrl}`);
         }
       }
     },
