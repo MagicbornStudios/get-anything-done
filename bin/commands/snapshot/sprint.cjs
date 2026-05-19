@@ -167,11 +167,45 @@ function handleSprintSnapshot(deps, context, args) {
 
   const modeTag = isActiveMode ? 'active' : `sprint ${sprintIndex}`;
   console.log(`\nSnapshot (${modeTag}): ${root.id} - phases ${sprintPhaseIds.join(', ')}${sessionSuffix}\n`);
+  printActiveHandoff(deps, context);
   deps.printSections(sections);
   console.log(`-- end snapshot (~${deps.countSectionTokensApprox(sections)} tokens) --`);
   if (snapshotSession) {
     console.log(`Reuse: --session ${snapshotSession.id}  (next call auto-downgrades to active mode)`);
   }
+}
+
+// Operator 2026-05-19: snapshot should auto-surface the rolling handoff doc
+// at .planning/HANDOFF.md so the next-session agent can't miss it. Single
+// canonical file (not the timestamped handoff queue under .planning/handoffs/
+// — that's the work-stealing queue for inter-agent task passing). When this
+// file exists, snapshot prints it inline as the first section after the
+// header. Operator updates it on session close; new session reads it
+// automatically via the normal `gad snapshot` call.
+function printActiveHandoff(deps, context) {
+  const path = require('path');
+  const fs = require('fs');
+  const baseDir = deps.findRepoRoot();
+  const root = context.root;
+  if (!root) return;
+  const handoffPath = path.join(baseDir, root.path, root.planningDir, 'HANDOFF.md');
+  if (!fs.existsSync(handoffPath)) return;
+  let content = '';
+  let stat;
+  try {
+    content = fs.readFileSync(handoffPath, 'utf8');
+    stat = fs.statSync(handoffPath);
+  } catch {
+    return;
+  }
+  if (!content.trim()) return;
+  const ageHours = stat ? Math.round((Date.now() - stat.mtimeMs) / 3_600_000) : null;
+  const ageLabel = ageHours == null ? '' : ageHours < 1 ? ' (<1h old)' :
+                   ageHours < 24 ? ` (${ageHours}h old)` :
+                   ` (${Math.round(ageHours / 24)}d old)`;
+  console.log(`-- HANDOFF (${path.relative(baseDir, handoffPath).replace(/\\/g, '/')}${ageLabel}) -------------------`);
+  console.log(content.trim());
+  console.log('-- end HANDOFF — clear / overwrite when read so next session sees fresh content --\n');
 }
 
 module.exports = { handleSprintSnapshot };
