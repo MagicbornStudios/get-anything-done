@@ -227,50 +227,44 @@ function createSpeciesCommand(deps) {
         return;
       }
 
-      // Read all tasks
+      // Read all tasks.
+      // Operator 2026-05-07 (xp-math.cjs DEFAULT_DONE_SKILL): every done task
+      // counts. Missing skill defaults to gad-execute-phase (workflow weight 5)
+      // so retro-stamps don't require a manual skill tag. Use the canonical
+      // computeXpFromTasks helper so this command and the claude statusline
+      // produce IDENTICAL XP totals.
       const allTasks = taskFiles.listAll(planningDir);
-      const doneWithSkill = allTasks.filter(t => t.status === 'done' && t.skill);
+      const doneTasks = allTasks.filter(t => t.status === 'done');
+      const totalXp = xpMath.computeXpFromTasks(doneTasks);
+      const stampedTaskIds = doneTasks.map(t => t.id);
 
-      // Sum XP
-      let totalXp = 0;
-      const stampedTaskIds = [];
-      for (const task of doneWithSkill) {
-        const weight = xpMath.getSkillWeight(task.skill);
-        totalXp += weight;
-        stampedTaskIds.push(task.id);
-      }
-
-      // Read current level to preserve value and loaded_skills
+      // Read STATE.xml. Preserve loaded_skills if the element exists; derive
+      // level/xp from scratch via xpMath.computeLevel — same formula the claude
+      // statusline uses, so this command and the statusline cannot diverge.
+      // The prior loop iterated from `curValue` and added to it, double-counting
+      // XP that was already accumulated when curValue was last written.
       let xml = fs.readFileSync(stateXmlPath, 'utf8');
       const levelMatch = xml.match(/<level\s+value="(\d+)"\s+xp="(\d+(?:\.\d+)?)"\s+xp_to_next="(\d+(?:\.\d+)?)"\s+loaded_skills="(\d+)"\/?>/);
-      if (!levelMatch) {
-        console.error('<level> element not found in STATE.xml');
-        process.exit(1);
-        return;
-      }
 
-      const curValue = parseInt(levelMatch[1], 10);
-      const curLoadedSkills = parseInt(levelMatch[4], 10);
-      const newXpToNext = xpMath.xpToNextLevel(curValue);
+      const curValue = levelMatch ? parseInt(levelMatch[1], 10) : 1;
+      const curLoadedSkills = levelMatch ? parseInt(levelMatch[4], 10) : 0;
 
-      // Auto-advance level if XP exceeds current threshold
-      let finalValue = curValue;
-      let finalXp = totalXp;
-      let finalXpToNext = newXpToNext;
-
-      while (finalXp >= finalXpToNext) {
-        // Level up: reset XP, advance level, recalc threshold with phase 127 formula
-        finalXp -= finalXpToNext;
-        finalValue += 1;
-        finalXpToNext = xpMath.xpToNextLevel(finalValue);
-      }
+      const computed = xpMath.computeLevel(doneTasks);
+      const finalValue = computed.level;
+      const finalXp = computed.xpInLevel;
+      const finalXpToNext = computed.xpToNext;
 
       // Write updated level — round XP to integer so state-reader.cjs regex (\d+) accepts it.
       // Skill weights can be decimal internally; storage stays integer-only.
       // Replacement preserves a newline + 2-space indent so the element doesn't
       // concatenate onto a preceding comment's closing -->.
       const levelTag = `\n  <level value="${finalValue}" xp="${Math.round(finalXp)}" xp_to_next="${Math.round(finalXpToNext)}" loaded_skills="${curLoadedSkills}"/>`;
-      xml = xml.replace(/\n?[ \t]*<level\s[^>]*\/?>/, levelTag);
+      if (levelMatch) {
+        xml = xml.replace(/\n?[ \t]*<level\s[^>]*\/?>/, levelTag);
+      } else {
+        // Insert right after <state ...> opening tag, before any other content.
+        xml = xml.replace(/(<state[^>]*>)/, `$1${levelTag}`);
+      }
 
       // Write stamped-tasks
       const stampedContent = stampedTaskIds.map(id => `    ${id.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}`).join('\n');
@@ -285,7 +279,7 @@ function createSpeciesCommand(deps) {
 
       // Summary
       console.log(`Recalculated XP for project "${args.projectid}":`);
-      console.log(`  Done tasks with skill: ${doneWithSkill.length}`);
+      console.log(`  Done tasks counted: ${doneTasks.length}`);
       console.log(`  Total XP: ${totalXp}`);
       console.log(`  Level: ${finalValue} (XP ${finalXp} / ${finalXpToNext})`);
       if (finalValue > curValue) {
