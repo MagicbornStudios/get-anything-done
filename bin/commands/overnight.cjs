@@ -160,9 +160,10 @@ function stepProvenance(projects, log) {
   return { ok: true };
 }
 
-function stepSweepPhases(projects, log) {
+function stepSweepPhases(projects, log, deadline) {
   let total = 0;
   for (const p of projects) {
+    if (deadline && Date.now() > deadline) { log('sweep: budget reached — deferring remaining projects to next tick'); break; }
     const r = runGad(['phases', 'sweep', '--auto-close', '--projectid', p.projectId]);
     if (r.status === 0) {
       const closedCount = (r.stdout || '').match(/CLOSED/g);
@@ -173,9 +174,10 @@ function stepSweepPhases(projects, log) {
   return { closed: total };
 }
 
-function stepEnsureHandoffs(projects, log) {
+function stepEnsureHandoffs(projects, log, deadline) {
   let created = 0;
   for (const p of projects) {
+    if (deadline && Date.now() > deadline) { log('handoffs: budget reached — deferring remaining projects to next tick'); break; }
     // Get phases that are open with planned tasks
     const phasesResult = runGad(['phases', 'list', '--projectid', p.projectId, '--json']);
     if (phasesResult.status !== 0) continue;
@@ -193,6 +195,7 @@ function stepEnsureHandoffs(projects, log) {
     }
 
     for (const phase of phases) {
+      if (deadline && Date.now() > deadline) { log('handoffs: budget reached mid-project — deferring remaining phases to next tick'); break; }
       if (phase.status !== 'planned' && phase.status !== 'in-progress') continue;
       const phaseId = String(phase.id);
       if (existingPhases.has(phaseId)) continue;
@@ -223,13 +226,20 @@ async function runTick(deps, log) {
   }
   _runtime.ticking = true;
   const t0 = Date.now();
+  // Wall-clock budget so a single tick can't blow the desk-hook's 120s timeout
+  // (overnight-tick.mjs) and trip its circuit breaker. The expensive steps
+  // (sweep + ensure-handoffs) iterate every project × every planned phase with
+  // a synchronous `gad` spawn each; on a many-phase repo that runs long. Work
+  // is idempotent across ticks, so bailing early just defers to the next tick.
+  const TICK_BUDGET_MS = 90_000;
+  const deadline = t0 + TICK_BUDGET_MS;
   log('--- tick start ---');
   try {
     const { baseDir, projects } = getProjects(deps);
     try { stepHealth(null, log); } catch (e) { log(`health error: ${e.message}`); }
     try { stepProvenance(projects, log); } catch (e) { log(`provenance error: ${e.message}`); }
-    try { stepSweepPhases(projects, log); } catch (e) { log(`sweep error: ${e.message}`); }
-    try { stepEnsureHandoffs(projects, log); } catch (e) { log(`handoff error: ${e.message}`); }
+    try { stepSweepPhases(projects, log, deadline); } catch (e) { log(`sweep error: ${e.message}`); }
+    try { stepEnsureHandoffs(projects, log, deadline); } catch (e) { log(`handoff error: ${e.message}`); }
     // Write SITREP digest for passive operator visibility (GLOBAL-D-315)
     try {
       const projectid = (projects[0] && projects[0].projectId) || 'global';
