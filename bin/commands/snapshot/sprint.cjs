@@ -109,6 +109,17 @@ function handleSprintSnapshot(deps, context, args) {
   const agentPresenceSection = buildAgentPresenceSection({ baseDir, config: _presenceConfig });
   if (agentPresenceSection) sections.push(agentPresenceSection);
 
+  // Task 265-19: Surface subagent dispatch protocol
+  // Shows in both full and active modes — it's a standing rule every session needs
+  const subagentDispatchContent = [
+    'haiku — clear-contract panel insertion, mechanical refactor, file rewrite from spec, audit-and-list',
+    'sonnet — architecture detection (vendor-synced files, shared state, iframe vs refactor), cross-file invariant work',
+    'opus — new protocol design, multi-system integration, decisions-then-code, parallel agent coordination',
+    '',
+    'Standing rules: pass explicit model: to Agent tool. Concurrent dispatch 3-5 in parallel. Subagents stage explicit files only (no git add -A). DO NOT commit — main thread serializes.',
+  ].join('\n');
+  sections.push({ title: 'SUBAGENT DISPATCH PROTOCOL', content: subagentDispatchContent });
+
   const sprintEvolutionSection = deps.buildEvolutionSection(root, baseDir);
   if (sprintEvolutionSection) sections.push(sprintEvolutionSection);
 
