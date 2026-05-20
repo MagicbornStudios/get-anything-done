@@ -29,6 +29,7 @@ const { createProjectsAuditCommand } = require('./projects/audit.cjs');
 const { createProjectsCreateCommand } = require('./projects/create.cjs');
 const { createProjectsEditCommand } = require('./projects/edit.cjs');
 const { createProjectsArchiveCommand } = require('./projects/archive.cjs');
+const { createProjectsScanCommand } = require('./projects/scan.cjs');
 
 function createProjectsCommands(deps) {
   const commandDeps = {
@@ -55,6 +56,7 @@ function createProjectsCommands(deps) {
   const projectsCreate = createProjectsCreateCommand(commandDeps);
   const projectsEdit = createProjectsEditCommand(commandDeps);
   const projectsArchive = createProjectsArchiveCommand(commandDeps);
+  const projectsScan = createProjectsScanCommand(commandDeps);
 
   const projectsCmd = defineCommand({
     meta: { name: 'projects', description: 'Manage projects — list, sync roots, create, edit, archive' },
@@ -68,6 +70,7 @@ function createProjectsCommands(deps) {
       sync: projectsSync,
       add: projectsAdd,
       ignore: projectsIgnore,
+      scan: projectsScan,
     },
   });
 
