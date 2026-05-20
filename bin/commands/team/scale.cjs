@@ -131,8 +131,21 @@ function nextWorkerId(specs) {
   return `w${max + 1}`;
 }
 
-function makeNewWorkerSpec(id, runtime) {
-  return { id, role: 'executor', lane: null, runtime, runtime_cmd: null };
+function makeNewWorkerSpec(id, runtime, extras = {}) {
+  const spec = {
+    id,
+    role: extras.role || 'executor',
+    lane: extras.lane || null,
+    runtime,
+    runtime_cmd: null,
+  };
+  // GLOBAL-D-406: persist per-worker agent-profile + overrides so the model
+  // is no longer dropped and soul/skills resolve at spawn time.
+  if (extras.agentProfile) spec.agent_profile = extras.agentProfile;
+  if (extras.soul) spec.soul = extras.soul;
+  if (extras.model) spec.model = extras.model;
+  if (Array.isArray(extras.skills) && extras.skills.length) spec.skills = extras.skills;
+  return spec;
 }
 
 async function waitForWorkerStop(baseDir, id, waitMs) {
@@ -172,7 +185,7 @@ function spawnConfiguredWorker(baseDir, cfg, id, gadBinary, options = {}) {
     role: spec.role || 'executor',
     lane: spec.lane || null,
     runtime: spec.runtime || cfg.runtime,
-    runtime_cmd: resolveRuntimeCmd(cfg, id),
+    runtime_cmd: resolveRuntimeCmd(cfg, id, baseDir),
     pid: null,
     started_at: null,
     last_heartbeat: null,
@@ -203,6 +216,12 @@ function createScaleCommand(deps) {
       remove: { type: 'string', description: 'Remove worker ids, comma-separated.', default: '' },
       to: { type: 'string', description: 'Scale to N total workers.', default: '' },
       runtime: { type: 'string', description: 'Runtime override for newly added workers.', default: '' },
+      lane: { type: 'string', description: 'Lane for newly added workers.', default: '' },
+      'agent-profile': { type: 'string', description: 'Agent-profile preset id for new workers (GLOBAL-D-406).', default: '' },
+      soul: { type: 'string', description: 'Soul slug for new workers (overrides profile).', default: '' },
+      model: { type: 'string', description: 'Model id for new workers (overrides profile).', default: '' },
+      role: { type: 'string', description: 'Role for new workers (executor|reasoner).', default: '' },
+      skills: { type: 'string', description: 'Comma-separated skill slugs for new workers.', default: '' },
       'wait-ms': { type: 'string', description: 'Graceful shutdown wait before force cleanup.', default: '10000' },
     },
     async run({ args }) {
@@ -217,6 +236,14 @@ function createScaleCommand(deps) {
       const currentSpec = collectWorkerSpecs(cfg);
       const validIds = new Set(currentSpec.map((spec) => spec.id));
       const runtimeForNewWorkers = String(args.runtime || '').trim() || cfg.runtime || 'claude-code';
+      const newWorkerExtras = {
+        lane: String(args.lane || '').trim() || null,
+        agentProfile: String(args['agent-profile'] || '').trim() || null,
+        soul: String(args.soul || '').trim() || null,
+        model: String(args.model || '').trim() || null,
+        role: String(args.role || '').trim() || null,
+        skills: String(args.skills || '').split(',').map((s) => s.trim()).filter(Boolean),
+      };
       const waitMs = parseNonNegativeInt(args['wait-ms'], '--wait-ms', outputError);
 
       let removeIds = [];
@@ -226,7 +253,7 @@ function createScaleCommand(deps) {
         const addCount = parseNonNegativeInt(args.add, '--add', outputError);
         for (let i = 0; i < addCount; i += 1) {
           const id = nextWorkerId(nextSpec);
-          nextSpec.push(makeNewWorkerSpec(id, runtimeForNewWorkers));
+          nextSpec.push(makeNewWorkerSpec(id, runtimeForNewWorkers, newWorkerExtras));
         }
       } else if (String(args.to) !== '') {
         const target = parseNonNegativeInt(args.to, '--to', outputError);
@@ -234,7 +261,7 @@ function createScaleCommand(deps) {
           const addCount = target - nextSpec.length;
           for (let i = 0; i < addCount; i += 1) {
             const id = nextWorkerId(nextSpec);
-            nextSpec.push(makeNewWorkerSpec(id, runtimeForNewWorkers));
+            nextSpec.push(makeNewWorkerSpec(id, runtimeForNewWorkers, newWorkerExtras));
           }
         } else if (target < nextSpec.length) {
           removeIds = nextSpec
