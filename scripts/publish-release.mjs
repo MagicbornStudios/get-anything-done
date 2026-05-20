@@ -43,6 +43,7 @@ export function isReleaseArtifactName(name) {
     name === CURRENT_TARBALL_NAME ||
     name === CURRENT_SITE_ZIP_NAME ||
     name === 'install-gad-windows.ps1' ||
+    name === 'install-gad-unix.sh' ||
     name === 'INSTALL.txt'
   );
 }
