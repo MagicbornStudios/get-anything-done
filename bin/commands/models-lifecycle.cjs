@@ -210,31 +210,58 @@ function buildTrigger(deps) {
 
 function buildTrain(deps) {
   return defineCommand({
-    meta: { name: 'train', description: 'Invoke trainer for a model (routes to slm-learning for LLM, local for kNN/intent)' },
+    meta: { name: 'train', description: 'Invoke trainer for a model (kNN/intent → in-process JS trainer; LLM/mid → slm_learning scripts)' },
     args: {
       id: { type: 'positional', description: 'Model id', required: true },
       'dry-run': { type: 'boolean', description: 'Print invocation without executing', default: false },
+      'dataset-id': { type: 'string', description: 'Override dataset dir under .planning/data-dungeon/ (knn/intent only)', required: false },
+      'trainer-script': { type: 'string', description: 'Override trainer script path (relative to project root or absolute)', required: false },
+      json: { type: 'boolean', alias: 'j', description: 'Output JSON', default: false },
     },
     run({ args }) {
       const projectRoot = resolveProjectRoot(deps);
-      const model = reg(projectRoot).getModel(projectRoot, args.id);
-      if (!model) { console.error(`Model not found: ${args.id}`); process.exit(1); }
+      const { trainModel } = require('../../lib/retraining/trainer-dispatch.cjs');
 
-      const invocation = model.kind === 'llm'
-        ? `slm_learning/scripts/train_qlora.py --model-id ${args.id}`
-        : model.kind === 'mid'
-          ? `slm_learning/src/trainers/mid_trainer.py --model-id ${args.id}`
-          : `slm_learning/src/trainers/knn_trainer.py --model-id ${args.id}`;
+      let result;
+      try {
+        result = trainModel(projectRoot, args.id, {
+          dryRun: !!args['dry-run'],
+          datasetId: args['dataset-id'] || undefined,
+          trainerScript: args['trainer-script'] || undefined,
+        });
+      } catch (err) {
+        if (shouldJson(args)) {
+          printJson({ ok: false, code: err.code || 'TRAIN_FAILED', error: err.message });
+        } else {
+          console.error(`Train failed (${err.code || 'error'}): ${err.message}`);
+          if (err.stderr) console.error(`stderr:\n${err.stderr.slice(0, 1000)}`);
+        }
+        process.exit(1);
+      }
 
-      if (args['dry-run']) {
-        console.log(`[dry-run] Would invoke: python ${invocation}`);
-        console.log('Trainer dispatch wired in task 253-05.');
+      if (shouldJson(args)) { printJson(result); return; }
+
+      if (result.mode === 'gap') {
+        console.warn(`[GAP] ${result.message}`);
+        console.warn(`  missing: ${result.missingPath}`);
+        console.warn(`  suggestion: ${result.suggestion}`);
+        console.warn('Registry NOT updated. Create the trainer script to enable this model class.');
         return;
       }
-      // 253-05: actual subprocess invocation — stub for now
-      console.log(`Training stub for: ${args.id} (kind=${model.kind})`);
-      console.log(`Would invoke: python ${invocation}`);
-      console.log('Actual TRL+PEFT invocation wired in task 253-05.');
+
+      if (result.dryRun) {
+        console.log(`[dry-run] Model:  ${args.id}  (kind=${result.kind})`);
+        console.log(`[dry-run] Mode:   ${result.mode}`);
+        if (result.invocation) console.log(`[dry-run] Would run: ${result.invocation}`);
+        if (result.datasetDir) console.log(`[dry-run] Dataset: ${result.datasetDir}`);
+        return;
+      }
+
+      console.log(`Trained: ${args.id}  (kind=${result.kind}, mode=${result.mode})`);
+      if (result.artifactPath) console.log(`  artifact:  ${result.artifactPath}`);
+      if (result.metaPath)     console.log(`  meta:      ${result.metaPath}`);
+      if (result.runId)        console.log(`  run_id:    ${result.runId}`);
+      console.log(`  registry:  ${args.id} → status=staging, last_train_at updated`);
     },
   });
 }
