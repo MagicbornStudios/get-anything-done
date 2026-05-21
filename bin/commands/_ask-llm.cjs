@@ -12,11 +12,14 @@
  *
  * Backend resolution (--backend):
  *   auto     — pick first reachable in priority order below
+ *   desktop  — Desk Assistant endpoint (default http://127.0.0.1:5400, env GAD_DESK_ASSISTANT_URL)
  *   modal    — Modal vLLM endpoint via MODAL_VLLM_URL (OpenAI-compatible POST)
  *   gateway  — Vercel AI Gateway via AI_GATEWAY_API_KEY (model 'anthropic/claude-sonnet-4-6')
  *   direct   — Anthropic direct via ANTHROPIC_API_KEY (@ai-sdk/anthropic)
  *
- * Priority: modal > gateway > direct (per gad_ask_moe_entry_point design).
+ * Priority: desktop > modal > gateway > direct (per GLOBAL-D-452 / GLOBAL-D-462).
+ * Desktop health check uses an 800 ms timeout so a powered-off desk never
+ * slows down the fallback chain.
  *
  * Output: stream tokens to stdout as they arrive.  --json buffers and emits
  *   { backend, model, text, durationMs, error? }.
@@ -30,10 +33,69 @@ const path = require('node:path');
 const { defineCommand } = require('citty');
 const { checkBudget, truncateToBudget, budgetForModel, estimateTokens } = require('../../lib/token-budget/index.cjs');
 
+// ── Desktop Assistant endpoint ───────────────────────────────────────────────
+
+/**
+ * Base URL for the desk Assistant endpoint.
+ * Default: http://127.0.0.1:5400
+ * Override: GAD_DESK_ASSISTANT_URL env var.
+ */
+function deskAssistantBaseUrl() {
+  return (process.env.GAD_DESK_ASSISTANT_URL || 'http://127.0.0.1:5400').replace(/\/$/, '');
+}
+
+/**
+ * Check whether the desk Assistant is reachable.
+ * Returns { ok, backend, model } on success, throws on failure.
+ * Uses an AbortSignal-based timeout so a powered-off desk fails fast.
+ *
+ * @param {number} [timeoutMs=800]
+ */
+async function checkDeskHealth(timeoutMs = 800) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${deskAssistantBaseUrl()}/assistant/health`, {
+      signal: ac.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) throw new Error(`health check returned ${res.status}`);
+    const body = await res.json();
+    if (!body.ok) throw new Error('health check ok:false');
+    return body; // { ok, backend, model }
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
+/**
+ * Send a chat request to the desk Assistant endpoint.
+ * Returns { reply, model, backend }.
+ *
+ * @param {{ messages: Array<{role:string,content:string}>, model?: string }} opts
+ */
+async function callDesktopAssistant({ messages, model }) {
+  const body = { messages, stream: false };
+  if (model) body.model = model;
+  const res = await fetch(`${deskAssistantBaseUrl()}/assistant/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`desk /assistant/chat ${res.status}: ${txt}`);
+  }
+  const data = await res.json();
+  return data; // { reply, model, backend }
+}
+
 // ── Backend detection ────────────────────────────────────────────────────────
 
 function detectBackends() {
-  const out = { modal: false, gateway: false, direct: false };
+  const out = { desktop: true, modal: false, gateway: false, direct: false };
+  // desktop is always "configured" — the health check decides reachability at runtime
   if (process.env.MODAL_VLLM_URL) out.modal = true;
   if (process.env.AI_GATEWAY_API_KEY) out.gateway = true;
   if (process.env.ANTHROPIC_API_KEY) out.direct = true;
@@ -43,18 +105,27 @@ function detectBackends() {
 function resolveBackend(requested) {
   const detected = detectBackends();
   if (requested === 'auto') {
-    if (detected.modal) return 'modal';
-    if (detected.gateway) return 'gateway';
-    if (detected.direct) return 'direct';
-    throw new Error(
-      'No LLM backend available. Set one of: MODAL_VLLM_URL, AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY'
-    );
+    // desktop is always first candidate; reachability verified later at call time
+    return 'desktop';
   }
+  if (requested === 'desktop') return 'desktop';
   if (!detected[requested]) {
     const envKey = requested === 'modal' ? 'MODAL_VLLM_URL' : requested === 'gateway' ? 'AI_GATEWAY_API_KEY' : 'ANTHROPIC_API_KEY';
     throw new Error(`Backend '${requested}' selected but ${envKey} is not set.`);
   }
   return requested;
+}
+
+/**
+ * When auto-routing and desktop is unavailable, return the next backend in the
+ * fallback chain (modal → gateway → direct).  Returns null if nothing is available.
+ */
+function fallbackBackend() {
+  const detected = detectBackends();
+  if (detected.modal) return 'modal';
+  if (detected.gateway) return 'gateway';
+  if (detected.direct) return 'direct';
+  return null;
 }
 
 // ── System prompt ────────────────────────────────────────────────────────────
@@ -189,6 +260,41 @@ async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens,
     process.exit(1);
   }
 
+  // ── Desktop health probe (auto or explicit desktop) ──────────────────────
+  // If chosen === 'desktop', verify the endpoint is live with a short-circuit
+  // timeout (800 ms).  On failure silently fall through to modal → gateway →
+  // direct unless the operator explicitly requested --backend desktop.
+  let deskHealth = null;
+  if (chosen === 'desktop') {
+    try {
+      deskHealth = await checkDeskHealth(800);
+    } catch {
+      // Desk is off or unreachable — fall back only when in auto mode
+      if (backend === 'auto' || backend === 'desktop' && !process.env.GAD_DESK_ASSISTANT_REQUIRE) {
+        const fb = fallbackBackend();
+        if (!fb) {
+          const msg = 'No LLM backend available. Desk is offline and no fallback env set (MODAL_VLLM_URL / AI_GATEWAY_API_KEY / ANTHROPIC_API_KEY).';
+          if (json) {
+            console.log(JSON.stringify({ backend: 'desktop', model: null, text: '', durationMs: Date.now() - started, error: msg }));
+          } else {
+            process.stderr.write(`gad ask: ${msg}\n`);
+          }
+          process.exit(1);
+        }
+        chosen = fb;
+      } else {
+        // --backend desktop was explicitly requested and REQUIRE is set
+        const msg = 'Desk Assistant endpoint unreachable (--backend desktop explicit).';
+        if (json) {
+          console.log(JSON.stringify({ backend: 'desktop', model: null, text: '', durationMs: Date.now() - started, error: msg }));
+        } else {
+          process.stderr.write(`gad ask: ${msg}\n`);
+        }
+        process.exit(1);
+      }
+    }
+  }
+
   // ── Context-index injection (phase 245-07) ───────────────────────────────
   let contextChunks = [];
   if (!noContext) {
@@ -198,21 +304,20 @@ async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens,
   const resolvedSystemPrompt = buildSystemPrompt(soul, contextChunks);
 
   // ── Token budget pre-send check ──────────────────────────────────────────
-  {
-    const systemPrompt = resolvedSystemPrompt;
-    // Resolve model label early enough for budget lookup (use env or defaults)
+  // Skip for desktop (the desk manages its own context window)
+  if (chosen !== 'desktop') {
     const modelForBudget = chosen === 'gateway'
       ? (process.env.GAD_ASK_GATEWAY_MODEL || 'anthropic/claude-sonnet-4-6')
       : chosen === 'direct'
         ? (process.env.GAD_ASK_DIRECT_MODEL || 'claude-sonnet-4-5')
         : (process.env.MODAL_VLLM_MODEL || 'default-small');
     const budget = budgetForModel(modelForBudget);
-    const budgetResult = checkBudget({ system: systemPrompt, user: question }, budget);
+    const budgetResult = checkBudget({ system: resolvedSystemPrompt, user: question }, budget);
     if (!budgetResult.withinBudget) {
       process.stderr.write(
         `gad ask: prompt is ${budgetResult.tokens} tokens — ${budgetResult.overBy} over budget (${budget}) for ${modelForBudget}. Truncating user prompt.\n`
       );
-      question = truncateToBudget(question, budget - estimateTokens(systemPrompt), 'cl100k_base');
+      question = truncateToBudget(question, budget - estimateTokens(resolvedSystemPrompt), 'cl100k_base');
     }
   }
 
@@ -224,7 +329,19 @@ async function runAskLlm({ question: questionIn, backend, soul, json, maxTokens,
 
   try {
     let result;
-    if (chosen === 'modal') {
+    if (chosen === 'desktop') {
+      // Build messages array (system + user) for the desk endpoint
+      const messages = [
+        { role: 'system', content: resolvedSystemPrompt },
+        { role: 'user', content: question },
+      ];
+      const deskResult = await callDesktopAssistant({ messages });
+      const reply = deskResult.reply || '';
+      modelLabel = deskResult.model || (deskHealth && deskHealth.model) || 'desk-assistant';
+      // Emit reply token-by-token so callers get consistent streaming behaviour
+      onToken(reply);
+      result = { text: reply, model: modelLabel };
+    } else if (chosen === 'modal') {
       result = await callModal({
         url: process.env.MODAL_VLLM_URL,
         question, soul, maxTokens, onToken,
@@ -268,11 +385,11 @@ function createAskLlmCommand(_deps) {
   return defineCommand({
     meta: {
       name: 'llm',
-      description: 'Send a question to the best available LLM backend (auto: modal → gateway → direct). Streams to stdout. --json for tool-friendly output.',
+      description: 'Send a question to the best available LLM backend (auto: desktop → modal → gateway → direct). Streams to stdout. --json for tool-friendly output.',
     },
     args: {
       question: { type: 'positional', description: 'Question for the LLM', required: true },
-      backend: { type: 'string', description: 'auto | modal | gateway | direct', default: 'auto' },
+      backend: { type: 'string', description: 'auto | desktop | modal | gateway | direct', default: 'auto' },
       soul: { type: 'string', description: 'Soul name for system framing', default: 'kael' },
       json: { type: 'boolean', description: 'Emit JSON {backend, model, text, durationMs, error?}', default: false },
       'max-tokens': { type: 'string', description: 'Max output tokens', default: '4096' },
@@ -313,4 +430,4 @@ function createAskLlmCommand(_deps) {
   });
 }
 
-module.exports = { createAskLlmCommand, runAskLlm, resolveBackend, detectBackends };
+module.exports = { createAskLlmCommand, runAskLlm, resolveBackend, detectBackends, checkDeskHealth, deskAssistantBaseUrl, fallbackBackend };
