@@ -411,6 +411,7 @@ function createHandoffsCommand(deps) {
       'runtime-required': { type: 'boolean', description: 'Treat runtime_preference as a hard requirement', default: false },
       'to-agent': { type: 'string', description: 'Direct this handoff to a specific agent slug from the presence ledger (e.g. gilgamesh-monorepo, dr-stein-slm-learning). When set the handoff appears in BOTH the recipient project snapshot AND that agent\'s session-open notice.', default: '' },
       quick: { type: 'boolean', description: 'Bypass all quality gate checks (logs a WARN; emergency use only)', default: false },
+      'no-context-pack': { type: 'boolean', description: 'Skip auto-injection of context pack (## Context pack section) into the handoff body. Default: context pack is injected when task-id is present.', default: false },
     },
     run({ args }) {
       const target = resolveTargetRoot(args.projectid);
@@ -477,6 +478,7 @@ function createHandoffsCommand(deps) {
           runtimeFallbacks,
           runtimeRequired: args['runtime-required'] === true,
           toAgent: args['to-agent'] ? String(args['to-agent']).trim() : undefined,
+          noContextPack: args['no-context-pack'] === true,
         });
 
         if (args.quick) {
@@ -567,6 +569,7 @@ function createHandoffsCommand(deps) {
       'runtime-preference': { type: 'string', description: `REQUIRED: one of ${ALLOWED_RUNTIMES.join('|')}`, required: true },
       priority: { type: 'string', description: 'low | normal | high (default: normal)', default: 'normal' },
       body: { type: 'string', description: 'Optional: body text to use instead of the template skeleton', default: '' },
+      'no-context-pack': { type: 'boolean', description: 'Skip auto-injection of context pack into the handoff body', default: false },
     },
     run({ args }) {
       const target = resolveTargetRoot(args.projectid);
@@ -633,6 +636,7 @@ function createHandoffsCommand(deps) {
           body,
           createdBy: process.env.GAD_AGENT || 'unknown',
           runtimePreference: rp,
+          noContextPack: args['no-context-pack'] === true,
         });
 
         console.log(`Created: ${result.id}`);
