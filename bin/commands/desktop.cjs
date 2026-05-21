@@ -47,6 +47,7 @@ function tryGetByok(keyName, projectId) {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
       maxBuffer: 4 * 1024 * 1024,
+      windowsHide: true,
     });
     if (r.status === 0) return (r.stdout || '').trim();
   } catch {}
@@ -89,6 +90,7 @@ function hasRustToolchain() {
     const r = spawnSync('cargo', ['--version'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
     });
     return r.status === 0;
   } catch {
@@ -285,6 +287,7 @@ const launchCmd = defineCommand({
       stdio,
       detached: !!args.detach,
       shell: process.platform === 'win32',
+      windowsHide: true,
     });
 
     if (args.detach) {

@@ -142,6 +142,7 @@ function spawnDetached(baseDir, cmd, cmdArgs, logPath) {
     stdio: ['ignore', logFd, logFd],
     cwd: baseDir,
     shell: false,
+    windowsHide: true,
   });
   child.unref();
   fs.closeSync(logFd);

@@ -361,7 +361,7 @@ const restartCmd = defineCommand({
     const target = filterByOnlyOrSkip(all, only, skip);
     target.map(stopSingleton);
     // Wait briefly for processes to exit
-    spawnSync('node', ['-e', 'setTimeout(()=>{},2000)'], { stdio: 'ignore' });
+    spawnSync('node', ['-e', 'setTimeout(()=>{},2000)'], { stdio: 'ignore', windowsHide: true });
     all = snapshotSingletons(repoRoot, projectid);
     const refreshed = filterByOnlyOrSkip(all, only, skip);
     const startResults = refreshed.map((s) => startSingleton(s, repoRoot));

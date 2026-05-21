@@ -58,6 +58,7 @@ function runGad(args, opts = {}) {
   return spawnSync('node', [gadCli(), ...args], {
     encoding: 'utf8',
     maxBuffer: 32 * 1024 * 1024,
+    windowsHide: true,
     ...opts,
   });
 }
@@ -284,6 +285,7 @@ function createOvernightCommand(deps) {
           detached: true,
           stdio: 'ignore',
           env: { ...process.env, GAD_OVERNIGHT_CHILD: '1' },
+          windowsHide: true,
         });
         child.unref();
         // Write pidfile

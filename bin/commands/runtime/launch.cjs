@@ -308,6 +308,7 @@ function createRuntimeLaunchCommand({
           env: process.env,
           stdio: 'inherit',
           shell: false,
+          windowsHide: true,
         });
         if (child.error) throw child.error;
         // Post-completion dispatch record — model_id is null because stdio:inherit

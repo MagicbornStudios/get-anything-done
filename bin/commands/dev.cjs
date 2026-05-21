@@ -120,9 +120,9 @@ function openBrowser(url) {
       : process.platform === 'darwin' ? 'open'
       : 'xdg-open';
     if (process.platform === 'win32') {
-      spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore' }).unref();
+      spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
     } else {
-      spawn(cmd, [url], { detached: true, stdio: 'ignore' }).unref();
+      spawn(cmd, [url], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
     }
   } catch {}
 }
@@ -228,6 +228,7 @@ function spawnSurface(surface, repoRoot, envExtra) {
       stdio: ['ignore', outFd, errFd],
       detached: true,
       shell: isWindows,
+      windowsHide: true,
     });
     if (typeof outFd === 'number') try { fs.closeSync(outFd); } catch {}
     if (typeof errFd === 'number' && errFd !== outFd) try { fs.closeSync(errFd); } catch {}
@@ -249,6 +250,7 @@ function tryGetByok(gadBin, keyName, projectId) {
       stdio: ['ignore', 'pipe', 'ignore'],
       maxBuffer: 4 * 1024 * 1024,
       timeout: 5000,
+      windowsHide: true,
     });
     if (r.status === 0) return (r.stdout || '').trim() || null;
   } catch {}
@@ -449,6 +451,7 @@ const launchCmd = defineCommand({
           env: { ...process.env, ...kaelResolution.envExtra },
           detached: true,
           stdio: 'ignore',
+          windowsHide: true,
         });
         child.unref();
         state.pid_per_surface['kael-internal'] = child.pid;
@@ -463,6 +466,7 @@ const launchCmd = defineCommand({
           encoding: 'utf8',
           stdio: ['ignore', 'pipe', 'pipe'],
           timeout: 15000,
+          windowsHide: true,
         });
         if (r.stderr) process.stderr.write(r.stderr);
         if (r.stdout) process.stdout.write(r.stdout);
