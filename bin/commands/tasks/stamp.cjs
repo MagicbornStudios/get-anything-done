@@ -22,13 +22,13 @@
 
 const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const { defineCommand } = require('citty');
 const taskFiles = require('../../../lib/task-files.cjs');
 const xpMath = require('../../../lib/xp-math.cjs');
 
-function runGit(baseDir, command) {
-  return execSync(command, {
+function runGit(baseDir, args) {
+  return execFileSync('git', args, {
     cwd: baseDir,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -49,7 +49,7 @@ function commitTouchesTaskScope(baseDir, commitSha, scopeFiles) {
   if (scopeFiles.length === 0) {
     return { ok: false, reason: 'Task has no known file scope. Add task files before stamping done.' };
   }
-  const output = runGit(baseDir, `git diff-tree --no-commit-id --name-only -r ${commitSha}`);
+  const output = runGit(baseDir, ['diff-tree', '--no-commit-id', '--name-only', '-r', commitSha]);
   const changed = output.split(/\r?\n/).map(normalizeGitPath).filter(Boolean);
   const touches = changed.some((changedPath) => scopeFiles.includes(changedPath));
   if (!touches) {
@@ -69,8 +69,7 @@ function gitLogTouchesTaskScope(baseDir, task) {
   if (scopeFiles.length === 0) {
     return { ok: false, reason: 'Task has no known file scope. Add task files before stamping done.' };
   }
-  const quotedFiles = scopeFiles.map((file) => `"${file.replace(/"/g, '\\"')}"`).join(' ');
-  const output = runGit(baseDir, `git log --since="${task.created_at}" --format=%H -- ${quotedFiles}`);
+  const output = runGit(baseDir, ['log', `--since=${task.created_at}`, '--format=%H', '--', ...scopeFiles]);
   if (!output) {
     return {
       ok: false,
@@ -86,7 +85,7 @@ function evaluateDoneEvidence(baseDir, task, args) {
 
   if (commitSha) {
     try {
-      const commit = runGit(baseDir, `git rev-list --max-count=1 ${commitSha}`);
+      const commit = runGit(baseDir, ['rev-list', '--max-count=1', commitSha]);
       if (!commit) {
         return { ok: false, reason: `Invalid --commit-sha: ${commitSha} not found in git history.` };
       }
