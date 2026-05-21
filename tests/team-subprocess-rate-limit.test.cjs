@@ -20,18 +20,19 @@ let originalSpawn;
 class FakeStream extends EventEmitter {}
 
 class FakeChild extends EventEmitter {
-  constructor({ naturalExitMs = 5000 } = {}) {
+  constructor({ naturalExitMs = 50, naturalExitCode = 0 } = {}) {
     super();
     this.stdout = new FakeStream();
     this.stderr = new FakeStream();
     this.killCalls = [];
     this.naturalExitMs = naturalExitMs;
+    this.naturalExitCode = naturalExitCode;
     this.naturalExitTimer = null;
   }
 
   start() {
     this.naturalExitTimer = setTimeout(() => {
-      this.emit('close', 0);
+      this.emit('close', this.naturalExitCode);
     }, this.naturalExitMs);
     if (this.naturalExitTimer.unref) this.naturalExitTimer.unref();
   }
@@ -67,11 +68,11 @@ describe('team subprocess rate-limit handling', () => {
     delete require.cache[MODULE_PATH];
   });
 
-  test('kills a rate-limited child midstream and resolves before its natural exit', async () => {
+  test('midstream quota stderr followed by exit 0 is not classified as failure', async () => {
     let fakeChild = null;
     const logEntries = [];
     const runSubprocess = loadRunSubprocessWithSpawn(() => {
-      fakeChild = new FakeChild({ naturalExitMs: 5000 });
+      fakeChild = new FakeChild({ naturalExitMs: 40, naturalExitCode: 0 });
       fakeChild.start();
       return fakeChild;
     });
@@ -93,27 +94,21 @@ describe('team subprocess rate-limit handling', () => {
     const elapsedMs = Date.now() - startedAt;
 
     assert.ok(fakeChild, 'fake child created');
-    assert.strictEqual(result.rate_limited, true);
+    assert.strictEqual(result.rate_limited, false);
+    assert.strictEqual(result.classification.class, 'unknown');
     assert.match(result.stderr, /RESOURCE_EXHAUSTED/);
-    assert.ok(elapsedMs < 2000, `expected early resolve, got ${elapsedMs}ms`);
-    assert.ok(elapsedMs < fakeChild.naturalExitMs, 'resolved before natural exit');
-    assert.deepStrictEqual(fakeChild.killCalls.map((call) => call.signal), ['SIGTERM']);
-    assert.ok(
-      logEntries.some((entry) => entry.kind === 'rate-limit-detected-midstream'),
-      'midstream detection should be logged (legacy back-compat)',
-    );
-    assert.ok(
-      logEntries.some((entry) => entry.kind === 'runtime-failure-classified'),
-      'new classification log entry should also be emitted',
-    );
+    assert.ok(elapsedMs >= fakeChild.naturalExitMs, `expected natural exit, got ${elapsedMs}ms`);
+    assert.deepStrictEqual(fakeChild.killCalls, []);
+    assert.ok(!logEntries.some((entry) => entry.kind === 'rate-limit-detected-midstream'));
+    assert.ok(!logEntries.some((entry) => entry.kind === 'runtime-failure-classified'));
   });
 
   // S1: quota_soft — exhausted capacity + parseable duration
-  test('S1: terminates on quota_soft (exhausted + reset duration) and logs classification', async () => {
+  test('S1: exit failure with quota_soft stderr is classified terminally', async () => {
     let fakeChild = null;
     const logEntries = [];
     const runSubprocess = loadRunSubprocessWithSpawn(() => {
-      fakeChild = new FakeChild({ naturalExitMs: 5000 });
+      fakeChild = new FakeChild({ naturalExitMs: 40, naturalExitCode: 1 });
       fakeChild.start();
       return fakeChild;
     });
@@ -130,11 +125,11 @@ describe('team subprocess rate-limit handling', () => {
   });
 
   // S2: quota_soft — RESOURCE_EXHAUSTED in Gaxios error
-  test('S2: terminates on RESOURCE_EXHAUSTED / MODEL_CAPACITY_EXHAUSTED', async () => {
+  test('S2: exit failure with RESOURCE_EXHAUSTED is quota_soft', async () => {
     let fakeChild = null;
     const logEntries = [];
     const runSubprocess = loadRunSubprocessWithSpawn(() => {
-      fakeChild = new FakeChild({ naturalExitMs: 5000 });
+      fakeChild = new FakeChild({ naturalExitMs: 40, naturalExitCode: 1 });
       fakeChild.start();
       return fakeChild;
     });
@@ -148,10 +143,10 @@ describe('team subprocess rate-limit handling', () => {
   });
 
   // S3: quota_soft — model-specific capacity
-  test('S3: terminates on No capacity available for model', async () => {
+  test('S3: exit failure with model capacity text is quota_soft', async () => {
     let fakeChild = null;
     const runSubprocess = loadRunSubprocessWithSpawn(() => {
-      fakeChild = new FakeChild({ naturalExitMs: 5000 });
+      fakeChild = new FakeChild({ naturalExitMs: 40, naturalExitCode: 1 });
       fakeChild.start();
       return fakeChild;
     });
@@ -168,7 +163,7 @@ describe('team subprocess rate-limit handling', () => {
   test('S4: output_unparseable ([object Object]) is NOT quota', async () => {
     let fakeChild = null;
     const runSubprocess = loadRunSubprocessWithSpawn(() => {
-      fakeChild = new FakeChild({ naturalExitMs: 5000 });
+      fakeChild = new FakeChild({ naturalExitMs: 40, naturalExitCode: 1 });
       fakeChild.start();
       return fakeChild;
     });
@@ -183,10 +178,10 @@ describe('team subprocess rate-limit handling', () => {
   });
 
   // S5: quota_soft — rateLimitExceeded
-  test('S5: terminates on rateLimitExceeded in JSON body', async () => {
+  test('S5: exit failure with rateLimitExceeded in JSON body is quota_soft', async () => {
     let fakeChild = null;
     const runSubprocess = loadRunSubprocessWithSpawn(() => {
-      fakeChild = new FakeChild({ naturalExitMs: 5000 });
+      fakeChild = new FakeChild({ naturalExitMs: 40, naturalExitCode: 1 });
       fakeChild.start();
       return fakeChild;
     });
@@ -203,7 +198,7 @@ describe('team subprocess rate-limit handling', () => {
   test('S6: runtime_crash (AttachConsole failed) is NOT quota or unknown', async () => {
     let fakeChild = null;
     const runSubprocess = loadRunSubprocessWithSpawn(() => {
-      fakeChild = new FakeChild({ naturalExitMs: 5000 });
+      fakeChild = new FakeChild({ naturalExitMs: 40, naturalExitCode: 1 });
       fakeChild.start();
       return fakeChild;
     });
@@ -218,11 +213,11 @@ describe('team subprocess rate-limit handling', () => {
   });
 
   // Back-compat: legacy kind still emitted
-  test('legacy kind rate-limit-detected-midstream still emitted for quota_soft', async () => {
+  test('legacy kind rate-limit-detected-midstream still emitted for terminal quota_soft failures', async () => {
     let fakeChild = null;
     const logEntries = [];
     const runSubprocess = loadRunSubprocessWithSpawn(() => {
-      fakeChild = new FakeChild({ naturalExitMs: 5000 });
+      fakeChild = new FakeChild({ naturalExitMs: 40, naturalExitCode: 1 });
       fakeChild.start();
       return fakeChild;
     });

@@ -50,9 +50,9 @@ describe('reclaimStaleClaims', () => {
       });
       claimHandoff({ baseDir: tmpDir, id: created.id, agent: 'team-w7' });
 
-      // Backdate the claim to 12 hours ago so it's beyond the 6h default.
-      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
-      backdateClaim(tmpDir, created.id, twelveHoursAgo);
+      // Backdate beyond the default 90s threshold.
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      backdateClaim(tmpDir, created.id, twoMinutesAgo);
 
       const result = reclaimStaleClaims({ baseDir: tmpDir });
 
@@ -71,6 +71,8 @@ describe('reclaimStaleClaims', () => {
       assert.strictEqual(after.frontmatter.unclaim_history.length, 1);
       assert.strictEqual(after.frontmatter.unclaim_history[0].reason, 'orphaned-claim');
       assert.strictEqual(after.frontmatter.unclaim_history[0].by, 'reclaim-sweeper');
+      const secondPass = reclaimStaleClaims({ baseDir: tmpDir });
+      assert.strictEqual(secondPass.reclaimed.length, 0, 'second sweep should be a no-op');
     } finally {
       cleanup(tmpDir);
     }
@@ -132,7 +134,7 @@ describe('reclaimStaleClaims', () => {
         createdBy: 'team-w9',
       });
       claimHandoff({ baseDir: tmpDir, id: created.id, agent: 'team-w9' });
-      backdateClaim(tmpDir, created.id, new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString());
+      backdateClaim(tmpDir, created.id, new Date(Date.now() - 2 * 60 * 1000).toISOString());
 
       const result = reclaimStaleClaims({ baseDir: tmpDir, dryRun: true });
 
