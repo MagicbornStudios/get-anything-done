@@ -3,6 +3,9 @@
 const { beforeEach, afterEach, describe, test } = require('node:test');
 const assert = require('node:assert');
 const { EventEmitter } = require('node:events');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 // S1-S6 real stderr fixtures from .planning/team/workers/w2/log.jsonl
 const FIXTURE_S1 = 'TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 13h55m22s.';
@@ -228,5 +231,42 @@ describe('team subprocess rate-limit handling', () => {
 
     assert.ok(logEntries.some((e) => e.kind === 'rate-limit-detected-midstream'), 'legacy kind must still be emitted');
     assert.ok(logEntries.some((e) => e.kind === 'runtime-failure-classified'), 'new kind must also be emitted');
+  });
+
+  test('launching with an isolated codex profile does not rewrite canonical auth.json', async () => {
+    let spawnCall = null;
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gad-team-subprocess-'));
+    const canonicalHome = path.join(tmpDir, 'home');
+    const canonicalAuthDir = path.join(canonicalHome, '.codex');
+    const canonicalAuthPath = path.join(canonicalAuthDir, 'auth.json');
+    const profileDir = path.join(tmpDir, '.planning', 'team', 'workers', 'w5', 'accounts', 'codex-cli', 'secondary');
+    const runtimeEnv = {
+      HOME: profileDir,
+      USERPROFILE: profileDir,
+      XDG_CONFIG_HOME: path.join(profileDir, '.config'),
+      CODEX_HOME: path.join(profileDir, '.codex'),
+      GAD_RUNTIME_ACCOUNT_LABEL: 'secondary',
+      GAD_RUNTIME_ACCOUNT_FILE: path.join(profileDir, '.codex', 'auth.json'),
+    };
+
+    fs.mkdirSync(canonicalAuthDir, { recursive: true });
+    fs.mkdirSync(path.dirname(runtimeEnv.GAD_RUNTIME_ACCOUNT_FILE), { recursive: true });
+    fs.writeFileSync(canonicalAuthPath, '{"token":"canonical"}', 'utf8');
+    fs.writeFileSync(runtimeEnv.GAD_RUNTIME_ACCOUNT_FILE, '{"token":"secondary"}', 'utf8');
+
+    const runSubprocess = loadRunSubprocessWithSpawn((command, args, options) => {
+      spawnCall = { command, args, options };
+      const fakeChild = new FakeChild({ naturalExitMs: 5, naturalExitCode: 0 });
+      fakeChild.start();
+      return fakeChild;
+    });
+
+    await runSubprocess(tmpDir, 'w5', 'codex exec', 'prompt.md', () => {}, runtimeEnv, { runtimeId: 'codex-cli' });
+
+    assert.ok(spawnCall, 'spawn should be invoked');
+    assert.equal(spawnCall.options.env.CODEX_HOME, runtimeEnv.CODEX_HOME);
+    assert.equal(spawnCall.options.env.HOME, runtimeEnv.HOME);
+    assert.equal(spawnCall.options.env.GAD_RUNTIME_ACCOUNT_LABEL, 'secondary');
+    assert.equal(fs.readFileSync(canonicalAuthPath, 'utf8'), '{"token":"canonical"}');
   });
 });
