@@ -117,6 +117,35 @@ test('aggregateWorkerTokens respects since= filter (ISO timestamp)', () => {
   }
 });
 
+test('aggregateWorkerTokens prefers work-complete token fields when runtimes report input/output counts', () => {
+  const root = mkProjectRoot('runtime-budget-fields-');
+  try {
+    writeWorkerLog(root, 'w1', [
+      { kind: 'worker-start', runtime: 'claude-code', ts: '2026-05-17T10:00:00.000Z' },
+      { kind: 'work-start', ref: 'h-fields', runtime: 'claude-code', ts: '2026-05-17T10:00:00.000Z' },
+      {
+        kind: 'work-complete',
+        ref: 'h-fields',
+        ts: '2026-05-17T10:01:00.000Z',
+        duration_ms: 60000,
+        rate_limited: false,
+        tokens_input: 2048,
+        tokens_output: 256,
+        tokens_total: 2304,
+      },
+    ]);
+
+    const recs = aggregateWorkerTokens({ projectRoot: root });
+    assert.equal(recs.length, 1);
+    assert.equal(recs[0].handoffId, 'h-fields');
+    assert.equal(recs[0].inputTokens, 2048);
+    assert.equal(recs[0].outputTokens, 256);
+    assert.equal(recs[0].totalTokens, 2304);
+  } finally {
+    cleanup(root);
+  }
+});
+
 test('aggregateWorkerTokens returns [] when no worker logs exist', () => {
   const root = mkProjectRoot('runtime-budget-empty-');
   try {

@@ -21,6 +21,7 @@ const { createRestartCommand }  = require('./team/restart.cjs');
 const { createProfileCommand }  = require('./team/profile.cjs');
 const { createDispatcherCommand } = require('./team/dispatcher.cjs');
 const { createScaleCommand }    = require('./team/scale.cjs');
+const { createPerfCommand }     = require('./team/perf.cjs');
 const { createTeamsWebCommand } = require('./teams-web.cjs');
 
 function createTeamCommands(deps) {
@@ -41,6 +42,7 @@ function createTeamCommands(deps) {
       profile:  createProfileCommand(deps),
       scale:    createScaleCommand(deps),
       dispatcher: createDispatcherCommand(deps),
+      perf:     createPerfCommand(deps),
       web:      createTeamsWebCommand(),
     },
   });
