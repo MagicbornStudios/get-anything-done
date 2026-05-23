@@ -2,6 +2,7 @@
 
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const {
   getClaudeSettingsPath,
   readJsonSafe,
@@ -10,9 +11,35 @@ const {
   GAD_SESSION_END_HOOK_MARKER,
 } = require('../../../lib/install-helpers.cjs');
 
-function createHandlerEntry(handlerPath) {
+/**
+ * Resolve the node runner to use for Claude Code hook commands.
+ *
+ * On Windows, claude-code's hook executor calls child_process.spawn('node',
+ * [...]) without windowsHide:true, which allocates a fresh conhost.exe per
+ * hook invocation and produces visible black-window flashes.  The
+ * node-noflash.exe Rust wrapper (PE subsystem=2, GUI) calls CreateProcessW
+ * with CREATE_NO_WINDOW so no console is allocated.
+ *
+ * If the wrapper is present at the canonical path we use it; otherwise we
+ * fall back to bare 'node' with a one-time warning so non-Windows or
+ * not-yet-bootstrapped environments still work.
+ */
+function resolveNodeRunner() {
+  if (process.platform !== 'win32') return 'node';
+  const wrapper = path.join(os.homedir(), '.claude', 'hooks', 'node-noflash.exe');
+  if (fs.existsSync(wrapper)) return `"${wrapper}"`;
+  console.warn(
+    'gad install hooks: node-noflash.exe not found at ~/.claude/hooks/node-noflash.exe — ' +
+    'falling back to bare node (conhost.exe popup risk on Windows). ' +
+    'Build the wrapper: cargo build --release in ~/.claude/hooks/node-noflash-src/'
+  );
+  return 'node';
+}
+
+function createHandlerEntry(handlerPath, nodeRunner) {
+  const runner = nodeRunner || resolveNodeRunner();
   return {
-    hooks: [{ type: 'command', command: `node "${handlerPath}"` }],
+    hooks: [{ type: 'command', command: `${runner} "${handlerPath}"` }],
   };
 }
 
@@ -55,8 +82,9 @@ function createInstallHooksCommand({ defineCommand }) {
       const settings = readJsonSafe(settingsPath) || {};
       settings.hooks = settings.hooks || {};
 
-      const traceEntry = createHandlerEntry(traceHandlerPath);
-      const stopEntry = createHandlerEntry(stopHandlerPath);
+      const nodeRunner = resolveNodeRunner();
+      const traceEntry = createHandlerEntry(traceHandlerPath, nodeRunner);
+      const stopEntry = createHandlerEntry(stopHandlerPath, nodeRunner);
 
       for (const hookType of ['PreToolUse', 'PostToolUse']) {
         const existing = Array.isArray(settings.hooks[hookType]) ? settings.hooks[hookType] : [];
@@ -67,7 +95,7 @@ function createInstallHooksCommand({ defineCommand }) {
         // Keep existing entries that aren't GAD-managed, then add stop + session-end
         const filtered = filterHookEntries(existing);
         const newEntries = [stopEntry];
-        if (hasSessionEndHook) newEntries.push(createHandlerEntry(sessionEndHandlerPath));
+        if (hasSessionEndHook) newEntries.push(createHandlerEntry(sessionEndHandlerPath, nodeRunner));
         settings.hooks[hookType] = [...filtered, ...newEntries];
       }
 
