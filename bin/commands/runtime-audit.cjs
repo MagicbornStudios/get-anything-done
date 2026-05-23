@@ -255,3 +255,11 @@ function createRuntimeAuditCommand() {
 }
 
 module.exports = { createRuntimeAuditCommand };
+
+/**
+ * Loader registration — wires `gad runtime-audit` into the top-level subCommands map.
+ * No deps required; the command reads repo root from process.cwd() via findRepoRoot().
+ */
+module.exports.register = () => ({
+  'runtime-audit': createRuntimeAuditCommand(),
+});

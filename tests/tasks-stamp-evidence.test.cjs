@@ -45,14 +45,14 @@ function captureConsole(fn) {
 
 function loadCommandWithExecStub(execStub) {
   const stampPath = require.resolve('../bin/commands/tasks/stamp.cjs');
-  const originalExecSync = childProcess.execSync;
-  childProcess.execSync = execStub;
+  const originalExecFileSync = childProcess.execFileSync;
+  childProcess.execFileSync = execStub;
   delete require.cache[stampPath];
   const { createTasksStampCommand } = require('../bin/commands/tasks/stamp.cjs');
   return {
     createTasksStampCommand,
     restore() {
-      childProcess.execSync = originalExecSync;
+      childProcess.execFileSync = originalExecFileSync;
       delete require.cache[stampPath];
     },
   };
@@ -95,7 +95,7 @@ describe('gad tasks stamp evidence guardrail', () => {
     writeTask(planningDir);
     const errors = [];
     const { createTasksStampCommand, restore } = loadCommandWithExecStub(() => {
-      throw new Error('execSync should not run for missing evidence');
+      throw new Error('execFileSync should not run for missing evidence');
     });
 
     try {
@@ -128,7 +128,7 @@ describe('gad tasks stamp evidence guardrail', () => {
     writeTask(planningDir);
     const errors = [];
     const { createTasksStampCommand, restore } = loadCommandWithExecStub(() => {
-      throw new Error('execSync should not run for missing evidence');
+      throw new Error('execFileSync should not run for missing evidence');
     });
 
     try {
@@ -158,11 +158,12 @@ describe('gad tasks stamp evidence guardrail', () => {
     const { repoRoot, planningDir } = makeRepo();
     writeTask(planningDir);
     const errors = [];
-    const { createTasksStampCommand, restore } = loadCommandWithExecStub((command, options) => {
+    const { createTasksStampCommand, restore } = loadCommandWithExecStub((command, args, options) => {
       assert.strictEqual(options.cwd, repoRoot);
-      if (command.includes('git rev-list --max-count=1 abc123')) return 'abc123\n';
-      if (command.includes('git diff-tree --no-commit-id --name-only -r abc123')) return 'docs/elsewhere.txt\n';
-      throw new Error(`Unexpected git command: ${command}`);
+      if (command !== 'git') throw new Error(`Unexpected command: ${command}`);
+      if (args.join(' ') === 'rev-list --max-count=1 abc123') return 'abc123\n';
+      if (args.join(' ') === 'diff-tree --no-commit-id --name-only -r abc123') return 'docs/elsewhere.txt\n';
+      throw new Error(`Unexpected git args: ${args.join(' ')}`);
     });
 
     try {
@@ -190,10 +191,11 @@ describe('gad tasks stamp evidence guardrail', () => {
     const { repoRoot, planningDir } = makeRepo();
     writeTask(planningDir);
     const errors = [];
-    const { createTasksStampCommand, restore } = loadCommandWithExecStub((command, options) => {
+    const { createTasksStampCommand, restore } = loadCommandWithExecStub((command, args, options) => {
       assert.strictEqual(options.cwd, repoRoot);
-      if (command.includes('git log --since=')) return 'def456\n';
-      throw new Error(`Unexpected git command: ${command}`);
+      if (command !== 'git') throw new Error(`Unexpected command: ${command}`);
+      if (args[0] === 'log' && args[1] === '--since=2026-05-04T00:00:00.000Z') return 'def456\n';
+      throw new Error(`Unexpected git args: ${args.join(' ')}`);
     });
 
     try {

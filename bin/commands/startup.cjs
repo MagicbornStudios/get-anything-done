@@ -54,6 +54,7 @@ function buildStartupCmd() {
       'no-side-effects': { type: 'boolean', description: 'Read-only startup: suppress .planning/ writes, user-setting stamps, and session creation.', default: false },
     },
     run({ args }) {
+      console.warn('[deprecated] `gad startup` is an alias for `gad snapshot`; use `gad snapshot --projectid <id>` instead. This command will be removed in v2.0.');
       const baseDir = findRepoRoot();
       const frameworkDir = path.resolve(__dirname, '..', '..');
       const sideEffectsMode = resolveSideEffectsMode();

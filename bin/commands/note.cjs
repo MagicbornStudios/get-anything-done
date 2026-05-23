@@ -160,5 +160,14 @@ function createNoteCommand(deps) {
 module.exports = { createNoteCommand };
 module.exports.register = (ctx) => {
   const cmd = createNoteCommand(ctx.common);
-  return { note: cmd, notes: cmd };
+  // Deprecated alias: `gad notes` → warn + delegate to `gad note`.
+  const notesDeprecatedCmd = defineCommand({
+    meta: { name: 'notes', description: '[deprecated] Use `gad note` instead.' },
+    subCommands: cmd.subCommands,
+    run(ctx2) {
+      console.warn('[deprecated] `gad notes` is an alias for `gad note`; use `gad note` instead. This command will be removed in v2.0.');
+      if (cmd.run) cmd.run(ctx2);
+    },
+  });
+  return { note: cmd, notes: notesDeprecatedCmd };
 };

@@ -286,6 +286,10 @@ function createIssuesCommand(deps) {
       dev: devCmd,
     },
     run({ args }) {
+      // Deprecation warn when invoked as `gad inbox` (alias for `gad issues`).
+      if ((Array.isArray(RAW_ARGV) ? RAW_ARGV : process.argv).some((part) => part === 'inbox')) {
+        console.warn('[deprecated] `gad inbox` is an alias for `gad issues`; use `gad issues` instead. This command will be removed in v2.0.');
+      }
       if (hasExplicitIssuesSubcommand()) return;
       if (args.web) {
         // [deprecated 2026-05-12, phase 196]: --web is now a stub.
