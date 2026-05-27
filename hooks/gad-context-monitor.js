@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 // gad-hook-version: {{GAD_VERSION}}
+// @source-of-truth: tools/gad-cli/hooks/gad-context-monitor.js
+// @deployed-to: ~/.claude/hooks/gad-context-monitor.js, vendor/get-anything-done/hooks/gad-context-monitor.js
+// @sync-via: gad install hooks
+// @do-not-edit-copies: edit this file then run sync
 // Context Monitor - PostToolUse/AfterTool hook (Gemini uses AfterTool)
 // Reads context metrics from the statusline bridge file and injects
 // warnings when context usage is high. This makes the AGENT aware of

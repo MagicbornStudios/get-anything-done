@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 'use strict';
+// @gad implements GLOBAL-D-507
 /**
  * gad — planning CLI for get-anything-done
  *
@@ -24,6 +25,7 @@
  *   gad session close <id>
  *   gad context [--session <id>] [--project <id>]
  *   gad refs [--projectid …] | gad refs list|verify|migrate|watch
+ *   gad rankup [same surface as gad evolution]
  */
 
 const { defineCommand, runMain, createMain } = require('citty');
@@ -272,7 +274,7 @@ const {
   readEvolutionScan,
 } = require('../lib/skill-helpers.cjs');
 
-// evolution-config bundles wrappers (evolutionPaths, resolveSkillRoots,
+// rank-up/evolution-config bundles wrappers (evolutionPaths, resolveSkillRoots,
 // build/writeEvolutionScan, validateSkillLaneFilter, resolveProtoSkillInstallRuntimes,
 // buildEvolutionSection). → lib/evolution-config.cjs
 const {
@@ -375,6 +377,49 @@ const { registerProjectCommands } = require('../lib/project-commands/index.cjs')
 
 const builtInLoad = require('./commands/_loader.cjs').load({ common, extras: {} });
 const subCommands = builtInLoad.subCommands;
+if (!subCommands.audit) {
+  subCommands.audit = require('./commands/audit.cjs').createAuditCommand(common);
+}
+
+const { createCliCommand } = require('./commands/cli.cjs');
+subCommands.cli = createCliCommand({
+  ...common,
+  rootSubCommands: subCommands,
+});
+
+// GLOBAL-T-292-49: Experience Search Bar — BM25 keyword + AI semantic
+const { createSearchCommand } = require('./commands/search.cjs');
+subCommands.search = createSearchCommand(common);
+
+// GLOBAL-T-292-53: tier/classify/label/annotate doctrine
+const { createTagCommand } = require('./commands/tag.cjs');
+subCommands.tag = createTagCommand(common);
+const { createClassifyCommand } = require('./commands/classify.cjs');
+subCommands.classify = createClassifyCommand(common);
+
+// Wave 14 L40: gad util — wrappers for repeated subagent patterns
+const { createUtilCommand } = require('./commands/util.cjs');
+subCommands.util = createUtilCommand(common);
+
+// Wave 22 L06: gad util-discover — long-term heuristic for recurring bash pattern detection (GLOBAL-T-319-06)
+const { createUtilDiscoverCommand } = require('./commands/util-discover.cjs');
+subCommands['util-discover'] = createUtilDiscoverCommand(common);
+
+// Wave 25 L13: gad re-experiment — RE-SLM pipeline (dataset extract, experiment runs, eval)
+const { createReExperimentCommand } = require('./commands/re-experiment.cjs');
+subCommands['re-experiment'] = createReExperimentCommand(common);
+
+// Wave 27 L07: gad game-gen — ETD one-shot generation harness (7 frameworks, llms-full.txt context)
+const { createGameGenCommand } = require('./commands/game-gen.cjs');
+subCommands['game-gen'] = createGameGenCommand(common);
+
+// Wave 27 L17: gad skill cadence — experience-threshold optimizer for skill creation (GLOBAL-D-<tbd>)
+const { createSkillCadenceCommand } = require('./commands/skill-cadence.cjs');
+subCommands['skill-cadence'] = createSkillCadenceCommand(common);
+
+// Wave 27 L18: gad onboard — new-machine onboarding + profile restore (GLOBAL-T-321-18)
+const { createOnboardCommand } = require('./commands/onboard.cjs');
+subCommands.onboard = createOnboardCommand({ defineCommand });
 
 // Resolve project roots from gad-config for project-command discovery.
 // Pass defineCommand so factory-style commands receive it in deps.
@@ -389,7 +434,7 @@ registerProjectCommands(subCommands, __pcRoots, { ...common, defineCommand });
 const main = defineCommand({
   meta: {
     name: 'gad',
-    description: 'Planning CLI for get-anything-done',
+    description: 'Experience planning CLI for get-anything-done',
     version: pkg.version,
   },
   subCommands,

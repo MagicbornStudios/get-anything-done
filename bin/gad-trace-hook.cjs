@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// @source-of-truth: tools/gad-cli/bin/gad-trace-hook.cjs
+// @deployed-to: ~/.claude/hooks/gad-trace-hook.cjs, vendor/get-anything-done/bin/gad-trace-hook.cjs
+// @sync-via: gad install hooks
+// @do-not-edit-copies: edit this file then run sync
 /**
  * GAD trace hook — Claude Code PreToolUse / PostToolUse handler.
  *
@@ -36,10 +40,70 @@
 'use strict';
 
 const fs = require('fs');
+const http = require('http');
 const path = require('path');
 
 const NO_SIDE_EFFECTS_FLAG = '--no-side-effects';
 const NO_SIDE_EFFECTS_MARKER = '.gad-release-build';
+
+// -------------------------------------------------------------------------
+// Agent heartbeat — GLOBAL-T-317-09 / W21-L22
+// -------------------------------------------------------------------------
+// Posts a fire-and-forget heartbeat to the automation server on every
+// PostToolUse event so the server can track which agents are active vs idle.
+//
+// Failure modes are all silent: if the server is not running (ECONNREFUSED),
+// the request times out, or JSON serialisation fails, we log to stderr (not
+// hooks.log to avoid noise) and continue. The hook MUST NOT block the agent.
+//
+// The heartbeat body mirrors HeartbeatRequest in agent_tracker.rs:
+//   { agent_id, runtime, agent_role?, current_handoff_id? }
+//
+// agent_id is sourced from GAD_AGENT_ID env > payload.session_id > "unknown".
+// current_handoff_id is sourced from GAD_CURRENT_HANDOFF env (set by the
+// dispatcher when a worker picks up a handoff).
+
+const HEARTBEAT_URL_HOST = '127.0.0.1';
+const HEARTBEAT_URL_PORT = 7421;
+const HEARTBEAT_PATH = '/agents/heartbeat';
+const HEARTBEAT_TIMEOUT_MS = 800; // well below any human-perceptible pause
+
+function postHeartbeat(agentId, runtime, agentRole, currentHandoffId) {
+  const body = JSON.stringify({
+    agent_id: agentId,
+    runtime: runtime || 'claude-code',
+    ...(agentRole ? { agent_role: agentRole } : {}),
+    ...(currentHandoffId ? { current_handoff_id: currentHandoffId } : {}),
+  });
+
+  const options = {
+    hostname: HEARTBEAT_URL_HOST,
+    port: HEARTBEAT_URL_PORT,
+    path: HEARTBEAT_PATH,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': Buffer.byteLength(body),
+    },
+  };
+
+  try {
+    const req = http.request(options, (res) => {
+      // Drain the response body so the socket is returned to the pool.
+      res.resume();
+    });
+    req.setTimeout(HEARTBEAT_TIMEOUT_MS, () => {
+      req.destroy();
+    });
+    req.on('error', () => {
+      // Server not running or network error — silent skip.
+    });
+    req.write(body);
+    req.end();
+  } catch {
+    // Synchronous errors (e.g. DNS lookup) — silent skip.
+  }
+}
 
 const {
   makeToolUseEvent,
@@ -559,6 +623,26 @@ async function main() {
       });
       for (const ev of events) {
         appendEvent(projectRoot, ev, payload);
+      }
+
+      // --- Agent heartbeat (GLOBAL-T-317-09) ---
+      // Fire-and-forget: inform the automation server that this agent is alive.
+      // The agent_id is derived from GAD_AGENT_ID > session_id > 'unknown'.
+      // current_handoff_id comes from GAD_CURRENT_HANDOFF (set by dispatcher).
+      // This call is synchronous only in that we start the request; the socket
+      // I/O is non-blocking and the hook does NOT await the response.
+      try {
+        const heartbeatAgentId =
+          process.env.GAD_AGENT_ID ||
+          (runtime && runtime.session_id) ||
+          payload.session_id ||
+          'unknown';
+        const heartbeatRuntime = (runtime && runtime.id) || 'claude-code';
+        const heartbeatRole = process.env.GAD_AGENT_ROLE || (agent && agent.agent_role) || null;
+        const heartbeatHandoff = process.env.GAD_CURRENT_HANDOFF || null;
+        postHeartbeat(heartbeatAgentId, heartbeatRuntime, heartbeatRole, heartbeatHandoff);
+      } catch {
+        // Heartbeat failures are fully silent — never block the agent.
       }
 
       // Pop skill stack AFTER emitting events so the Skill tool's own

@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 // gad-hook-version: {{GAD_VERSION}}
+// @source-of-truth: tools/gad-cli/hooks/gad-workflow-guard.js
+// @deployed-to: ~/.claude/hooks/gad-workflow-guard.js, vendor/get-anything-done/hooks/gad-workflow-guard.js
+// @sync-via: gad install hooks
+// @do-not-edit-copies: edit this file then run sync
 // GAD workflow guard - PreToolUse hook
 // Detects when Claude attempts file edits outside a GAD workflow context
 // (no active tracked workflow entrypoint or Task subagent) and injects an advisory warning.

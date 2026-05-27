@@ -41,6 +41,10 @@ test('recommendTeamProfile: returns required keys', () => {
   assert.ok('recommended_team_profile' in result);
   assert.ok('recommended_local_model_tier' in result);
   assert.ok('runtime_mix' in result);
+  assert.ok('where_used' in result);
+  assert.ok('disk_mb' in result);
+  assert.ok('usage_level' in result);
+  assert.ok(Array.isArray(result.where_used));
   assert.ok(Array.isArray(result.warnings));
 });
 
@@ -235,4 +239,11 @@ test('runtime_mix: Tiny contains "Solo Safe" content', () => {
 test('runtime_mix: Workstation contains multiple runtimes reference', () => {
   const r = recommendTeamProfile(mk(32));
   assert.match(r.runtime_mix, /coding runtimes/i);
+});
+
+test('metadata: fields are surfaced on the recommendation', () => {
+  const r = recommendTeamProfile(mk(12));
+  assert.ok(r.where_used.includes('structured DSL generation') || r.where_used.includes('local code review'));
+  assert.equal(typeof r.disk_mb, 'number');
+  assert.ok(['hot', 'warm', 'cold', 'none'].includes(r.usage_level));
 });

@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 // gad-hook-version: {{GAD_VERSION}}
+// @source-of-truth: tools/gad-cli/hooks/gad-check-update.js
+// @deployed-to: ~/.claude/hooks/gad-check-update.js, vendor/get-anything-done/hooks/gad-check-update.js
+// @sync-via: gad install hooks
+// @do-not-edit-copies: edit this file then run sync
 // Check for GAD updates in background, write result to cache
 // Called by SessionStart hook - runs once per session
 

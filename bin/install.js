@@ -37,6 +37,7 @@ const CODEX_AGENT_SANDBOX = {
 
 // Get version from package.json
 const pkg = require('../package.json');
+const { checkOverwriteRisk, printBlockedAndExit } = require('../lib/install/pre-overwrite-guard.cjs');
 
 // Parse args
 const args = process.argv.slice(2);
@@ -55,6 +56,7 @@ const hasSdk = args.includes('--sdk');
 const hasBoth = args.includes('--both'); // Legacy flag, keeps working
 const hasAll = args.includes('--all');
 const hasUninstall = args.includes('--uninstall') || args.includes('-u');
+const hasForceOverwrite = args.includes('--force-overwrite');
 
 // 44-28 spine: feature flags for the consumer-facing installer.
 // These are independent of runtime selection — a consumer can install just
@@ -4096,6 +4098,22 @@ function install(isGlobal, runtime = 'claude') {
         const srcFile = path.join(hooksSrc, entry);
         if (fs.statSync(srcFile).isFile()) {
           const destFile = path.join(hooksDest, entry);
+          // Pre-overwrite guard: block if source is significantly smaller than dest
+          // (regression guard -- prevents vendor/dist copy from clobbering operator-edited hook).
+          // W25-L08/L09: guard impl in lib/install/pre-overwrite-guard.cjs
+          // W25-L15: hook files carry @source-of-truth headers; runbook at
+          //   .planning/notes/2026-05-27-wave25-L15-source-of-truth-runbook.md
+          // Git pre-commit guard: templates/git-hooks/pre-commit-source-of-truth-guard.sh
+          const guardResult = checkOverwriteRisk(srcFile, destFile);
+          if (!guardResult.safe) {
+            if (hasForceOverwrite) {
+              console.warn('[install] WARN: --force-overwrite bypassing risk for ' + entry + ': ' + guardResult.reason);
+            } else {
+              printBlockedAndExit(srcFile, destFile, guardResult);
+            }
+          } else if (guardResult.warnings && guardResult.warnings.length) {
+            guardResult.warnings.forEach((w) => console.warn('[install] WARN (' + entry + '): ' + w));
+          }
           // Template .js files to replace '.claude' with runtime-specific config dir
           // and stamp the current GAD version into the hook version header
           if (entry.endsWith('.js')) {

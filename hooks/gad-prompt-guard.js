@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 // gad-hook-version: {{GAD_VERSION}}
+// @source-of-truth: tools/gad-cli/hooks/gad-prompt-guard.js
+// @deployed-to: ~/.claude/hooks/gad-prompt-guard.js, vendor/get-anything-done/hooks/gad-prompt-guard.js
+// @sync-via: gad install hooks
+// @do-not-edit-copies: edit this file then run sync
 // GAD prompt injection guard - PreToolUse hook
 // Scans file content being written to .planning/ for prompt injection patterns.
 // Defense-in-depth: catches injected instructions before they enter agent context.
